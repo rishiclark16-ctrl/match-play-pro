@@ -1,22 +1,40 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Users, X, Loader2 } from 'lucide-react';
+import { Plus, Users, X, Loader2, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RoundCard } from '@/components/golf/RoundCard';
 import { useRounds } from '@/hooks/useRounds';
 import { useJoinRound } from '@/hooks/useJoinRound';
+import { useAuth } from '@/hooks/useAuth';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
+import { toast } from 'sonner';
 
 export default function Home() {
   const navigate = useNavigate();
   const { getRecentRounds } = useRounds();
+  const { user, signOut } = useAuth();
   const { joinRound, loading: joinLoading, error: joinError, clearError } = useJoinRound();
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinCode, setJoinCode] = useState('');
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const recentRounds = getRecentRounds(10);
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    hapticLight();
+    const { error } = await signOut();
+    if (error) {
+      toast.error('Failed to sign out');
+      hapticError();
+    } else {
+      hapticSuccess();
+      toast.success('Signed out');
+    }
+    setIsSigningOut(false);
+  };
 
   const handleJoinRound = async () => {
     const round = await joinRound(joinCode.trim());
@@ -36,12 +54,18 @@ export default function Home() {
       {/* Header */}
       <header className="pt-12 pb-6 px-6 safe-top flex items-center justify-between">
         <h1 className="text-3xl font-bold text-primary tracking-tight">MATCH</h1>
-        <Link 
-          to="/auth" 
-          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+        <button
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
         >
-          Sign In
-        </Link>
+          {isSigningOut ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <LogOut className="w-4 h-4" />
+          )}
+          <span className="hidden sm:inline">Sign Out</span>
+        </button>
       </header>
 
       {/* Content */}
