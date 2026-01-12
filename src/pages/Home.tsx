@@ -1,13 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Users, X, Loader2, LogOut, RefreshCw } from 'lucide-react';
+import { Plus, Users, X, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RoundCard } from '@/components/golf/RoundCard';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useRounds } from '@/hooks/useRounds';
 import { useJoinRound } from '@/hooks/useJoinRound';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { useDeleteRound } from '@/hooks/useDeleteRound';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
@@ -17,13 +19,23 @@ import { Round } from '@/types/golf';
 export default function Home() {
   const navigate = useNavigate();
   const { deleteRound: deleteLocalRound } = useRounds();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
+  const { profile } = useProfile();
   const { joinRound, loading: joinLoading, error: joinError, clearError } = useJoinRound();
   const { deleteRound: deleteSupabaseRound, loading: deleteLoading } = useDeleteRound();
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinCode, setJoinCode] = useState('');
-  const [isSigningOut, setIsSigningOut] = useState(false);
   const [deletingRoundId, setDeletingRoundId] = useState<string | null>(null);
+
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return '?';
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
   
   // Fetch rounds from Supabase
   const [rounds, setRounds] = useState<Round[]>([]);
@@ -70,20 +82,6 @@ export default function Home() {
     fetchRounds();
   }, [fetchRounds]);
 
-  const handleSignOut = async () => {
-    setIsSigningOut(true);
-    hapticLight();
-    const { error } = await signOut();
-    if (error) {
-      toast.error('Failed to sign out');
-      hapticError();
-    } else {
-      hapticSuccess();
-      toast.success('Signed out');
-    }
-    setIsSigningOut(false);
-  };
-
   const handleDeleteRound = async (roundId: string) => {
     setDeletingRoundId(roundId);
     hapticLight();
@@ -122,16 +120,18 @@ export default function Home() {
       <header className="pt-12 pb-6 px-6 safe-top flex items-center justify-between">
         <h1 className="text-3xl font-bold text-primary tracking-tight">MATCH</h1>
         <button
-          onClick={handleSignOut}
-          disabled={isSigningOut}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+          onClick={() => {
+            hapticLight();
+            navigate('/profile');
+          }}
+          className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full"
         >
-          {isSigningOut ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <LogOut className="w-4 h-4" />
-          )}
-          <span className="hidden sm:inline">Sign Out</span>
+          <Avatar className="h-10 w-10 border-2 border-primary/20">
+            <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || 'Profile'} />
+            <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
+              {getInitials(profile?.full_name)}
+            </AvatarFallback>
+          </Avatar>
         </button>
       </header>
 
