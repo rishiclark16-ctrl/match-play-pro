@@ -96,7 +96,12 @@ export function useGolfCourseSearch() {
         throw new Error(`Failed to get course details: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('Course details response:', data);
+      
+      // Handle both wrapped and unwrapped response formats
+      const courseData = data.course || data;
+      return courseData;
     } catch (err) {
       console.error('Course details error:', err);
       setError(err instanceof Error ? err.message : 'Failed to get course details');
