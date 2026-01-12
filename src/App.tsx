@@ -18,6 +18,7 @@ const Scorecard = lazy(() => import("./pages/Scorecard"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const RoundComplete = lazy(() => import("./pages/RoundComplete"));
 const Auth = lazy(() => import("./pages/Auth"));
+const Profile = lazy(() => import("./pages/Profile"));
 
 const queryClient = new QueryClient();
 
@@ -103,6 +104,16 @@ const App = () => {
                 <AuthGuard>
                   <Suspense fallback={<PageSkeleton variant="default" />}>
                     <RoundComplete />
+                  </Suspense>
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <AuthGuard>
+                  <Suspense fallback={<PageSkeleton variant="default" />}>
+                    <Profile />
                   </Suspense>
                 </AuthGuard>
               } 
