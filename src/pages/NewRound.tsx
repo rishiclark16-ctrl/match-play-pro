@@ -202,9 +202,43 @@ export default function NewRound() {
                 
                 {selectedCourse && (
                   <div className="card-premium p-4 border-2 border-primary">
-                    <div className="flex items-center gap-2">
-                      <Check className="w-5 h-5 text-primary" />
-                      <span className="font-medium">{selectedCourse.name}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-5 h-5 text-primary" />
+                        <div>
+                          <span className="font-medium">{selectedCourse.name}</span>
+                          {selectedCourse.location && (
+                            <p className="text-sm text-muted-foreground">{selectedCourse.location}</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Rating & Slope */}
+                      {(selectedCourse.rating || selectedCourse.slope) && (
+                        <div className="text-right">
+                          <div className="flex items-center gap-2 text-sm">
+                            {selectedCourse.rating && (
+                              <div className="px-2 py-1 rounded bg-primary/10 text-primary font-medium">
+                                {selectedCourse.rating.toFixed(1)}
+                              </div>
+                            )}
+                            {selectedCourse.slope && (
+                              <div className="px-2 py-1 rounded bg-muted text-muted-foreground font-medium">
+                                {selectedCourse.slope}
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Rating / Slope
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Par info */}
+                    <div className="mt-2 pt-2 border-t border-border/50 flex items-center gap-4 text-sm text-muted-foreground">
+                      <span>{selectedCourse.holes.length} holes</span>
+                      <span>Par {selectedCourse.holes.reduce((sum, h) => sum + h.par, 0)}</span>
                     </div>
                   </div>
                 )}
