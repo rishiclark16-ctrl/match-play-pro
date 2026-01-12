@@ -18,6 +18,7 @@ import { parseVoiceInput, ParseResult, ParsedScore } from '@/lib/voiceParser';
 import { Press, PlayerWithScores } from '@/types/golf';
 import { calculatePlayingHandicap, getStrokesPerHole, calculateTotalNetStrokes } from '@/lib/handicapUtils';
 import { toast } from 'sonner';
+import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -219,6 +220,7 @@ export default function Scorecard() {
 
   const handleScoreSelect = useCallback((score: number) => {
     if (selectedPlayerId && round) {
+      hapticSuccess();
       // Save to both Supabase and local
       saveScoreToSupabase(selectedPlayerId, currentHole, score);
       setPlayerScore(round.id, selectedPlayerId, currentHole, score);
@@ -300,8 +302,12 @@ export default function Scorecard() {
         <div className="pt-12 pb-3 px-4 safe-top flex items-center justify-between">
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={() => setShowExitDialog(true)}
+            onClick={() => {
+              hapticLight();
+              setShowExitDialog(true);
+            }}
             className="w-10 h-10 rounded-full bg-muted/80 flex items-center justify-center"
+            aria-label="Exit round"
           >
             <X className="w-5 h-5" />
           </motion.button>

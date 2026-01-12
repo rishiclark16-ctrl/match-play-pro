@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { RoundCard } from '@/components/golf/RoundCard';
 import { useRounds } from '@/hooks/useRounds';
 import { useJoinRound } from '@/hooks/useJoinRound';
+import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -20,10 +21,13 @@ export default function Home() {
   const handleJoinRound = async () => {
     const round = await joinRound(joinCode.trim());
     if (round) {
+      hapticSuccess();
       // Navigate with spectator flag
       navigate(`/round/${round.id}?spectator=true`);
       setShowJoinModal(false);
       setJoinCode('');
+    } else {
+      hapticError();
     }
   };
 
@@ -69,7 +73,10 @@ export default function Home() {
         <div className="space-y-3">
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button 
-              onClick={() => navigate('/new-round')}
+              onClick={() => {
+                hapticLight();
+                navigate('/new-round');
+              }}
               className="w-full py-6 text-lg font-semibold rounded-xl"
             >
               <Plus className="w-5 h-5 mr-2" />
@@ -79,7 +86,10 @@ export default function Home() {
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button 
               variant="outline"
-              onClick={() => setShowJoinModal(true)}
+              onClick={() => {
+                hapticLight();
+                setShowJoinModal(true);
+              }}
               className="w-full py-6 text-lg font-semibold rounded-xl border-primary text-primary hover:bg-primary-light"
             >
               <Users className="w-5 h-5 mr-2" />

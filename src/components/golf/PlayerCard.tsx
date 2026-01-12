@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { PlayerWithScores, getScoreColor, formatRelativeToPar } from '@/types/golf';
 import { cn } from '@/lib/utils';
-
+import { hapticLight } from '@/lib/haptics';
 interface PlayerCardProps {
   player: PlayerWithScores;
   currentHoleScore?: number;
@@ -75,9 +75,12 @@ export function PlayerCard({
           : "border-transparent hover:shadow-md"
       )}
       onClick={() => {
+        hapticLight();
         onScoreTap();
         triggerAnimation();
       }}
+      role="button"
+      aria-label={`Enter score for ${player.name}. Current score: ${currentHoleScore ?? 'not entered'}`}
     >
       {/* Avatar */}
       <div className={cn(

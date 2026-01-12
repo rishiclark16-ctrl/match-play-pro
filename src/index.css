@@ -132,11 +132,33 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   /* Tabular numbers for scores */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
+  }
+  
+  /* Prevent iOS zoom on input focus */
+  input, select, textarea {
+    font-size: 16px;
+  }
+  
+  /* Enhanced focus states for accessibility */
+  :focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
+  
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
   }
 }
 
@@ -166,6 +188,23 @@
   .score-double {
     @apply text-danger;
   }
+  
+  /* Button variants */
+  .btn-primary {
+    @apply w-full py-4 px-6 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 active:scale-[0.98] transition-all;
+  }
+  
+  .btn-secondary {
+    @apply w-full py-4 px-6 bg-white text-primary font-semibold rounded-xl border-2 border-primary hover:bg-primary/5 active:scale-[0.98] transition-all;
+  }
+  
+  .btn-ghost {
+    @apply py-2 px-4 text-muted-foreground font-medium hover:text-foreground hover:bg-muted rounded-lg transition-all;
+  }
+  
+  .btn-danger {
+    @apply py-4 px-6 bg-destructive text-destructive-foreground font-semibold rounded-xl hover:bg-destructive/90 active:scale-[0.98] transition-all;
+  }
 }
 
 @layer utilities {
@@ -176,5 +215,28 @@
   
   .safe-top {
     padding-top: env(safe-area-inset-top);
+  }
+  
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  /* Touch feedback utility */
+  .touch-feedback {
+    @apply active:scale-[0.98] transition-transform duration-100;
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }

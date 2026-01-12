@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { getScoreLabel, getScoreColor } from '@/types/golf';
 import { cn } from '@/lib/utils';
-
+import { hapticLight, hapticSuccess } from '@/lib/haptics';
 interface ScoreInputSheetProps {
   isOpen: boolean;
   onClose: () => void;
@@ -25,10 +25,7 @@ export function ScoreInputSheet({
   const scores = Array.from({ length: 12 }, (_, i) => i + 1);
 
   const handleSelectScore = (score: number) => {
-    // Haptic feedback if available
-    if ('vibrate' in navigator) {
-      navigator.vibrate(10);
-    }
+    hapticSuccess();
     onSelectScore(score);
     onClose();
   };
@@ -82,8 +79,12 @@ export function ScoreInputSheet({
               </div>
               <motion.button
                 whileTap={{ scale: 0.9 }}
-                onClick={onClose}
+                onClick={() => {
+                  hapticLight();
+                  onClose();
+                }}
                 className="w-10 h-10 rounded-full bg-muted flex items-center justify-center"
+                aria-label="Close score input"
               >
                 <X className="w-5 h-5" />
               </motion.button>

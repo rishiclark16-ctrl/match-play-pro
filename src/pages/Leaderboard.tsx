@@ -6,6 +6,7 @@ import { useRounds } from '@/hooks/useRounds';
 import { formatRelativeToPar, getScoreColor, PlayerWithScores } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { hapticLight } from '@/lib/haptics';
 
 export default function Leaderboard() {
   const { id } = useParams<{ id: string }>();
@@ -144,8 +145,12 @@ export default function Leaderboard() {
       <header className="pt-12 pb-4 px-6 safe-top flex items-center gap-4">
         <motion.button
           whileTap={{ scale: 0.9 }}
-          onClick={() => navigate(`/round/${round.id}`)}
+          onClick={() => {
+            hapticLight();
+            navigate(`/round/${round.id}`);
+          }}
           className="w-10 h-10 rounded-full bg-muted flex items-center justify-center"
+          aria-label="Back to scorecard"
         >
           <ArrowLeft className="w-5 h-5" />
         </motion.button>
