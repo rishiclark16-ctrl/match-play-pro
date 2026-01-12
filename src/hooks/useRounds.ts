@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { Round, Player, Score, PlayerWithScores, generateId, generateJoinCode, HoleInfo } from '@/types/golf';
+import { calculatePlayingHandicap, getStrokesPerHole, calculateTotalNetStrokes } from '@/lib/handicapUtils';
 
 const ROUNDS_KEY = 'match_rounds';
 const PLAYERS_KEY = 'match_players';
@@ -18,7 +19,9 @@ export function useRounds() {
     holeInfo: HoleInfo[],
     strokePlay: boolean,
     matchPlay: boolean,
-    stakes?: number
+    stakes?: number,
+    slope?: number,
+    rating?: number
   ): Round => {
     const newRound: Round = {
       id: generateId(),
@@ -29,6 +32,8 @@ export function useRounds() {
       strokePlay,
       matchPlay,
       stakes,
+      slope,
+      rating,
       status: 'active',
       createdAt: new Date(),
       joinCode: generateJoinCode(),
@@ -93,7 +98,12 @@ export function useRounds() {
     });
   }, [setScores]);
 
-  const getPlayersWithScores = useCallback((roundId: string, holeInfo: HoleInfo[]): PlayerWithScores[] => {
+  const getPlayersWithScores = useCallback((
+    roundId: string, 
+    holeInfo: HoleInfo[],
+    slope?: number,
+    holes: 9 | 18 = 18
+  ): PlayerWithScores[] => {
     const roundPlayers = getPlayersForRound(roundId);
     const roundScores = getScoresForRound(roundId);
 
@@ -106,12 +116,42 @@ export function useRounds() {
         return sum + (s.strokes - (hole?.par || 4));
       }, 0);
 
+      // Calculate handicap-adjusted scores if player has a handicap
+      let playingHandicap: number | undefined;
+      let strokesPerHole: Map<number, number> | undefined;
+      let totalNetStrokes: number | undefined;
+      let netRelativeToPar: number | undefined;
+
+      if (player.handicap !== undefined && player.handicap !== null) {
+        playingHandicap = calculatePlayingHandicap(player.handicap, slope || 113, holes);
+        strokesPerHole = getStrokesPerHole(playingHandicap, holeInfo);
+        
+        // Calculate net strokes
+        totalNetStrokes = calculateTotalNetStrokes(
+          totalStrokes,
+          playingHandicap,
+          playerScores.length,
+          holes
+        );
+        
+        // Calculate net relative to par
+        const totalPar = playerScores.reduce((sum, s) => {
+          const hole = holeInfo.find(h => h.number === s.holeNumber);
+          return sum + (hole?.par || 4);
+        }, 0);
+        netRelativeToPar = totalNetStrokes - totalPar;
+      }
+
       return {
         ...player,
         scores: playerScores,
         totalStrokes,
         totalRelativeToPar,
         holesPlayed: playerScores.length,
+        playingHandicap,
+        strokesPerHole,
+        totalNetStrokes,
+        netRelativeToPar,
       };
     });
   }, [getPlayersForRound, getScoresForRound]);

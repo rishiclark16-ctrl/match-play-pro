@@ -18,17 +18,17 @@ export default function Leaderboard() {
 
   const playersWithScores = useMemo(() => {
     if (!round) return [];
-    return getPlayersWithScores(round.id, round.holeInfo);
+    return getPlayersWithScores(round.id, round.holeInfo, round.slope, round.holes);
   }, [round, getPlayersWithScores]);
 
-  const hasHandicaps = playersWithScores.some(p => p.handicap !== undefined && p.handicap > 0);
+  const hasHandicaps = playersWithScores.some(p => p.playingHandicap !== undefined && p.playingHandicap > 0);
 
   // Sort players by score
   const sortedPlayers = useMemo(() => {
     return [...playersWithScores].sort((a, b) => {
       if (viewMode === 'net' && hasHandicaps) {
-        const aNet = a.totalStrokes - (a.handicap || 0);
-        const bNet = b.totalStrokes - (b.handicap || 0);
+        const aNet = a.totalNetStrokes ?? a.totalStrokes;
+        const bNet = b.totalNetStrokes ?? b.totalStrokes;
         return aNet - bNet;
       }
       return a.totalStrokes - b.totalStrokes;
@@ -83,11 +83,15 @@ export default function Leaderboard() {
   }
 
   const getPlayerDisplay = (player: PlayerWithScores, rank: number) => {
-    const netScore = player.totalStrokes - (player.handicap || 0);
-    const displayScore = viewMode === 'net' && hasHandicaps ? netScore : player.totalStrokes;
-    const parForHolesPlayed = player.holesPlayed * 4; // Approximation
+    const displayScore = viewMode === 'net' && hasHandicaps 
+      ? (player.totalNetStrokes ?? player.totalStrokes) 
+      : player.totalStrokes;
+    const parForHolesPlayed = player.scores.reduce((sum, s) => {
+      const hole = round.holeInfo.find(h => h.number === s.holeNumber);
+      return sum + (hole?.par || 4);
+    }, 0);
     const relativeToPar = viewMode === 'net' && hasHandicaps 
-      ? netScore - parForHolesPlayed 
+      ? (player.netRelativeToPar ?? player.totalRelativeToPar)
       : player.totalRelativeToPar;
 
     return (
@@ -114,8 +118,8 @@ export default function Leaderboard() {
         {/* Name */}
         <div className="flex-1">
           <h4 className="font-medium">{player.name}</h4>
-          {player.handicap && viewMode === 'net' && (
-            <p className="text-xs text-muted-foreground">HCP: {player.handicap}</p>
+          {player.playingHandicap !== undefined && viewMode === 'net' && (
+            <p className="text-xs text-muted-foreground">Playing HCP: {player.playingHandicap}</p>
           )}
         </div>
 

@@ -162,7 +162,9 @@ export default function NewRound() {
       holeInfo,
       strokePlay,
       matchPlay,
-      stakes ? Number(stakes) : undefined
+      stakes ? Number(stakes) : undefined,
+      selectedCourse.slope,
+      selectedCourse.rating
     );
 
     players
