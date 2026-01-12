@@ -66,7 +66,7 @@ export default function Scorecard() {
 
   const playersWithScores = useMemo(() => {
     if (!round) return [];
-    return getPlayersWithScores(round.id, round.holeInfo);
+    return getPlayersWithScores(round.id, round.holeInfo, round.slope, round.holes);
   }, [round, getPlayersWithScores]);
 
   // Calculate how many holes have been fully scored
@@ -275,8 +275,10 @@ export default function Scorecard() {
                     player={player}
                     currentHoleScore={holeScore}
                     currentHolePar={currentHoleInfo.par}
+                    currentHoleNumber={currentHole}
                     isLeading={player.id === leadingPlayerId}
                     onScoreTap={() => setSelectedPlayerId(player.id)}
+                    showNetScores={true}
                   />
                 </motion.div>
               );

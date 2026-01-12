@@ -28,6 +28,9 @@ export interface Round {
   createdAt: Date;
   joinCode: string;
   holeInfo: HoleInfo[];
+  // Course rating info for handicap calculations
+  slope?: number;
+  rating?: number;
 }
 
 export interface Player {
@@ -51,6 +54,11 @@ export interface PlayerWithScores extends Player {
   totalStrokes: number;
   totalRelativeToPar: number;
   holesPlayed: number;
+  // Net score calculations (handicap-adjusted)
+  playingHandicap?: number;
+  totalNetStrokes?: number;
+  netRelativeToPar?: number;
+  strokesPerHole?: Map<number, number>;
 }
 
 export type ScoreType = 'ace' | 'albatross' | 'eagle' | 'birdie' | 'par' | 'bogey' | 'double' | 'triple' | 'worse';
