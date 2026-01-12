@@ -5,13 +5,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AuthGuard } from "@/components/AuthGuard";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { Capacitor } from '@capacitor/core';
 import { setStatusBarDark } from '@/lib/statusBar';
-import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 
-// Lazy load heavier pages for better initial load
+// Lazy load all pages for better initial load
+const Home = lazy(() => import("./pages/Home"));
 const NewRound = lazy(() => import("./pages/NewRound"));
 const Scorecard = lazy(() => import("./pages/Scorecard"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
@@ -45,7 +46,7 @@ const App = () => {
         />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Home />} />
+            {/* Auth page - public */}
             <Route 
               path="/auth" 
               element={
@@ -54,36 +55,56 @@ const App = () => {
                 </Suspense>
               } 
             />
+            
+            {/* Protected routes - require authentication */}
+            <Route 
+              path="/" 
+              element={
+                <AuthGuard>
+                  <Suspense fallback={<PageSkeleton variant="default" />}>
+                    <Home />
+                  </Suspense>
+                </AuthGuard>
+              } 
+            />
             <Route 
               path="/new-round" 
               element={
-                <Suspense fallback={<PageSkeleton variant="default" />}>
-                  <NewRound />
-                </Suspense>
+                <AuthGuard>
+                  <Suspense fallback={<PageSkeleton variant="default" />}>
+                    <NewRound />
+                  </Suspense>
+                </AuthGuard>
               } 
             />
             <Route 
               path="/round/:id" 
               element={
-                <Suspense fallback={<PageSkeleton variant="scorecard" />}>
-                  <Scorecard />
-                </Suspense>
+                <AuthGuard>
+                  <Suspense fallback={<PageSkeleton variant="scorecard" />}>
+                    <Scorecard />
+                  </Suspense>
+                </AuthGuard>
               } 
             />
             <Route 
               path="/round/:id/leaderboard" 
               element={
-                <Suspense fallback={<PageSkeleton variant="list" />}>
-                  <Leaderboard />
-                </Suspense>
+                <AuthGuard>
+                  <Suspense fallback={<PageSkeleton variant="list" />}>
+                    <Leaderboard />
+                  </Suspense>
+                </AuthGuard>
               } 
             />
             <Route 
               path="/round/:id/complete" 
               element={
-                <Suspense fallback={<PageSkeleton variant="default" />}>
-                  <RoundComplete />
-                </Suspense>
+                <AuthGuard>
+                  <Suspense fallback={<PageSkeleton variant="default" />}>
+                    <RoundComplete />
+                  </Suspense>
+                </AuthGuard>
               } 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
