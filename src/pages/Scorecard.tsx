@@ -209,6 +209,30 @@ export default function Scorecard() {
   const isLastHole = round ? currentHole === round.holes : false;
   const canFinish = isLastHole && allHolesScored;
 
+  // Handle quick score from +/- buttons
+  const handleQuickScore = useCallback((playerId: string, score: number) => {
+    if (!round) return;
+    hapticSuccess();
+    saveScoreToSupabase(playerId, currentHole, score);
+    setPlayerScore(round.id, playerId, currentHole, score);
+    
+    // Check if all players now have scores for current hole after this update
+    setTimeout(() => {
+      const allScored = playersWithScores.every(player => {
+        if (player.id === playerId) return true; // This player just scored
+        return player.scores.some(s => s.holeNumber === currentHole);
+      });
+
+      // Auto-advance to next hole if all scored and not on last hole
+      if (allScored && currentHole < round.holes) {
+        setTimeout(() => {
+          setCurrentHole(h => h + 1);
+          toast.info(`Hole ${currentHole + 1}`, { duration: 1500 });
+        }, 800);
+      }
+    }, 100);
+  }, [round, currentHole, saveScoreToSupabase, setPlayerScore, playersWithScores]);
+
   const handleScoreSelect = useCallback((score: number) => {
     if (selectedPlayerId && round) {
       hapticSuccess();
@@ -216,8 +240,22 @@ export default function Scorecard() {
       saveScoreToSupabase(selectedPlayerId, currentHole, score);
       setPlayerScore(round.id, selectedPlayerId, currentHole, score);
       toast.success('Score saved', { duration: 1500 });
+      
+      // Check if all players now have scores for current hole
+      const allScored = playersWithScores.every(player => {
+        if (player.id === selectedPlayerId) return true;
+        return player.scores.some(s => s.holeNumber === currentHole);
+      });
+
+      // Auto-advance to next hole if all scored and not on last hole
+      if (allScored && currentHole < round.holes) {
+        setTimeout(() => {
+          setCurrentHole(h => h + 1);
+          toast.info(`Hole ${currentHole + 1}`, { duration: 1500 });
+        }, 800);
+      }
     }
-  }, [selectedPlayerId, round, currentHole, saveScoreToSupabase, setPlayerScore]);
+  }, [selectedPlayerId, round, currentHole, saveScoreToSupabase, setPlayerScore, playersWithScores]);
 
   const handleFinishRound = useCallback(() => {
     if (round) {
@@ -402,6 +440,7 @@ export default function Scorecard() {
                     currentHoleNumber={currentHole}
                     isLeading={player.id === leadingPlayerId}
                     onScoreTap={isSpectator ? undefined : () => setSelectedPlayerId(player.id)}
+                    onQuickScore={isSpectator ? undefined : (score) => handleQuickScore(player.id, score)}
                     showNetScores={true}
                   />
                 </motion.div>

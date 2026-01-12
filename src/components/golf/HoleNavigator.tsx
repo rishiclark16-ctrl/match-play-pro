@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { HoleInfo } from '@/types/golf';
 import { cn } from '@/lib/utils';
+import { hapticLight } from '@/lib/haptics';
 
 interface HoleNavigatorProps {
   currentHole: number;
@@ -22,14 +23,15 @@ export function HoleNavigator({
   const canGoPrevious = currentHole > 1;
   const canGoNext = currentHole < totalHoles;
   const [direction, setDirection] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const threshold = 50;
     if (info.offset.x > threshold && canGoPrevious) {
+      hapticLight();
       setDirection(-1);
       onPrevious();
     } else if (info.offset.x < -threshold && canGoNext) {
+      hapticLight();
       setDirection(1);
       onNext();
     }
@@ -37,6 +39,7 @@ export function HoleNavigator({
 
   const handlePrevious = () => {
     if (canGoPrevious) {
+      hapticLight();
       setDirection(-1);
       onPrevious();
     }
@@ -44,6 +47,7 @@ export function HoleNavigator({
 
   const handleNext = () => {
     if (canGoNext) {
+      hapticLight();
       setDirection(1);
       onNext();
     }
@@ -51,7 +55,7 @@ export function HoleNavigator({
 
   const variants = {
     enter: (direction: number) => ({
-      x: direction > 0 ? 100 : -100,
+      x: direction > 0 ? 60 : -60,
       opacity: 0,
     }),
     center: {
@@ -59,43 +63,38 @@ export function HoleNavigator({
       opacity: 1,
     },
     exit: (direction: number) => ({
-      x: direction < 0 ? 100 : -100,
+      x: direction < 0 ? 60 : -60,
       opacity: 0,
     }),
   };
 
   return (
-    <div 
-      ref={containerRef}
-      className="flex items-center justify-center gap-4 py-8 px-6 select-none"
-    >
+    <div className="flex items-center justify-between px-4 py-3 bg-card/50 border-b border-border/30">
       {/* Previous Button */}
       <motion.button
         whileTap={{ scale: 0.9 }}
         onClick={handlePrevious}
         disabled={!canGoPrevious}
         className={cn(
-          "w-14 h-14 rounded-full flex items-center justify-center transition-all",
+          "w-12 h-12 rounded-full flex items-center justify-center transition-all",
           canGoPrevious 
-            ? "bg-card border border-border shadow-sm hover:shadow-md text-foreground" 
+            ? "bg-muted text-foreground active:bg-muted-foreground/20" 
             : "opacity-0 pointer-events-none"
         )}
+        aria-label="Previous hole"
       >
-        <ChevronLeft className="w-7 h-7" />
+        <ChevronLeft className="w-6 h-6" />
       </motion.button>
 
-      {/* Hole Display - Swipeable */}
+      {/* Hole Display - Compact and Swipeable */}
       <motion.div
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.2}
+        dragElastic={0.15}
         onDragEnd={handleDragEnd}
-        className="flex-1 max-w-[200px] cursor-grab active:cursor-grabbing touch-pan-y"
+        className="flex-1 max-w-[180px] cursor-grab active:cursor-grabbing touch-pan-y"
       >
-        <div className="text-center overflow-hidden">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-1">
-            HOLE
-          </p>
+        <div className="overflow-hidden">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={currentHole}
@@ -104,15 +103,33 @@ export function HoleNavigator({
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="flex flex-col items-center"
+              transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+              className="flex items-center justify-center gap-4"
             >
-              <span className="text-7xl font-bold tracking-tight text-primary">
-                {currentHole}
-              </span>
-              <span className="inline-flex items-center justify-center px-4 py-1 mt-2 rounded-full bg-muted text-muted-foreground text-sm font-semibold">
-                PAR {holeInfo.par}
-              </span>
+              {/* Hole Number */}
+              <div className="text-center">
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
+                  HOLE
+                </p>
+                <span className="text-4xl font-bold tracking-tight text-primary leading-none">
+                  {currentHole}
+                </span>
+              </div>
+              
+              {/* Divider */}
+              <div className="w-px h-10 bg-border" />
+              
+              {/* Par & Yardage */}
+              <div className="text-center">
+                <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-sm font-semibold">
+                  PAR {holeInfo.par}
+                </span>
+                {holeInfo.yardage && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {holeInfo.yardage} yds
+                  </p>
+                )}
+              </div>
             </motion.div>
           </AnimatePresence>
         </div>
@@ -124,13 +141,14 @@ export function HoleNavigator({
         onClick={handleNext}
         disabled={!canGoNext}
         className={cn(
-          "w-14 h-14 rounded-full flex items-center justify-center transition-all",
+          "w-12 h-12 rounded-full flex items-center justify-center transition-all",
           canGoNext 
-            ? "bg-card border border-border shadow-sm hover:shadow-md text-foreground" 
+            ? "bg-muted text-foreground active:bg-muted-foreground/20" 
             : "opacity-0 pointer-events-none"
         )}
+        aria-label="Next hole"
       >
-        <ChevronRight className="w-7 h-7" />
+        <ChevronRight className="w-6 h-6" />
       </motion.button>
     </div>
   );
