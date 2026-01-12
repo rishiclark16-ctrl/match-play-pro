@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Users, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -34,8 +34,14 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="pt-12 pb-6 px-6 safe-top">
+      <header className="pt-12 pb-6 px-6 safe-top flex items-center justify-between">
         <h1 className="text-3xl font-bold text-primary tracking-tight">MATCH</h1>
+        <Link 
+          to="/auth" 
+          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+        >
+          Sign In
+        </Link>
       </header>
 
       {/* Content */}
