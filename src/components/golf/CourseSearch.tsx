@@ -36,7 +36,7 @@ export function CourseSearch({ courses, onSelectCourse, onCreateNew, onSelectApi
 
   const filteredLocalCourses = query.trim()
     ? courses.filter(c => 
-        c.name.toLowerCase().includes(query.toLowerCase()) ||
+        c.name?.toLowerCase().includes(query.toLowerCase()) ||
         c.location?.toLowerCase().includes(query.toLowerCase())
       )
     : courses.slice(0, 5);
