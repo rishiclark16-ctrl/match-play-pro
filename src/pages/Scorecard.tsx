@@ -99,16 +99,22 @@ export default function Scorecard() {
   const playersWithScores: PlayerWithScores[] = useMemo(() => {
     if (!round) return [];
     
-    // If we have Supabase players, use those
-    const basePlayers = supabasePlayers.length > 0 ? supabasePlayers : [];
+    // Determine if we should use Supabase data
+    // Use Supabase players if: 1) We have them, OR 2) Supabase is still loading, OR 3) Supabase returned a round
+    const useSupabase = supabasePlayers.length > 0 || supabaseLoading || supabaseRound !== null;
     
-    if (basePlayers.length === 0) {
-      // Fall back to local storage
+    if (!useSupabase) {
+      // Fall back to local storage when Supabase has no data for this round
       return getPlayersWithScores(round.id, round.holeInfo, round.slope, round.holes);
     }
     
+    // If still loading, wait for Supabase data
+    if (supabaseLoading && supabasePlayers.length === 0) {
+      return [];
+    }
+    
     // Build PlayerWithScores from Supabase data
-    return basePlayers.map(player => {
+    return supabasePlayers.map(player => {
       const playerScores = roundScores.filter(s => s.playerId === player.id);
       const totalStrokes = playerScores.reduce((sum, s) => sum + s.strokes, 0);
       
@@ -146,7 +152,7 @@ export default function Scorecard() {
         netRelativeToPar,
       };
     });
-  }, [round, supabasePlayers, roundScores, getPlayersWithScores]);
+  }, [round, supabasePlayers, supabaseLoading, supabaseRound, roundScores, getPlayersWithScores]);
 
   // Calculate how many holes have been fully scored
   const completedHoles = useMemo(() => {
