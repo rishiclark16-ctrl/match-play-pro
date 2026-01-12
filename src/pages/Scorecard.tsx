@@ -85,6 +85,8 @@ export default function Scorecard() {
     transcript,
     error: voiceError,
     reset: resetVoice,
+  } = useVoiceRecognition();
+
   // Use Supabase round if available, otherwise fall back to local
   const localRound = getRoundById(id || '');
   const round = supabaseRound || localRound;
@@ -253,6 +255,7 @@ export default function Scorecard() {
 
   const handleVoiceConfirm = (scores: ParsedScore[]) => {
     scores.forEach(({ playerId, score }) => {
+      saveScoreToSupabase(playerId, currentHole, score);
       setPlayerScore(round.id, playerId, currentHole, score);
     });
     
@@ -321,54 +324,36 @@ export default function Scorecard() {
             >
               <Share2 className="w-5 h-5" />
             </motion.button>
-          
-          <div className="text-center flex-1 px-4">
-            <h1 className="text-lg font-semibold truncate">{round.courseName}</h1>
-            <p className="text-xs text-muted-foreground">
-              Code: <span className="font-mono font-bold">{round.joinCode}</span>
-            </p>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  className="w-10 h-10 rounded-full bg-muted/80 flex items-center justify-center"
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </motion.button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => setShowShareModal(true)}>
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share Round
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast.info('Reset feature coming soon')}>
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Reset This Hole
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={() => setShowEndDialog(true)}
+                  className="text-danger focus:text-danger"
+                >
+                  <Flag className="w-4 h-4 mr-2" />
+                  End Round Early
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                className="w-10 h-10 rounded-full bg-muted/80 flex items-center justify-center"
-              >
-                <MoreVertical className="w-5 h-5" />
-              </motion.button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => setShowShareModal(true)}>
-                <Share2 className="w-4 h-4 mr-2" />
-                Share Round
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast.info('Reset feature coming soon')}>
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Reset This Hole
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => setShowEndDialog(true)}
-                className="text-danger focus:text-danger"
-              >
-                <Flag className="w-4 h-4 mr-2" />
-                End Round Early
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          </div>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => setShowEndDialog(true)}
-                className="text-danger focus:text-danger"
-              >
-                <Flag className="w-4 h-4 mr-2" />
-                End Round Early
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </header>
 
@@ -404,11 +389,6 @@ export default function Scorecard() {
                     onScoreTap={isSpectator ? undefined : () => setSelectedPlayerId(player.id)}
                     showNetScores={true}
                   />
-                    currentHoleNumber={currentHole}
-                    isLeading={player.id === leadingPlayerId}
-                    onScoreTap={() => setSelectedPlayerId(player.id)}
-                    showNetScores={true}
-                  />
                 </motion.div>
               );
             })}
@@ -428,18 +408,11 @@ export default function Scorecard() {
         
         {/* Voice hint - only for non-spectators */}
         {!isSpectator && isSupported && playersWithScores.length > 0 && (
-        </div>
-        
-        {!isSpectator && isSupported && playersWithScores.length > 0 && (
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
             className="text-center text-xs text-muted-foreground mt-6"
-          >
-            💡 Tap the mic and say "{playersWithScores[0]?.name.split(' ')[0]} 5, {playersWithScores[1]?.name.split(' ')[0] || 'Tim'} 4"
-          </motion.p>
-        )}
           >
             💡 Tap the mic and say "{playersWithScores[0]?.name.split(' ')[0]} 5, {playersWithScores[1]?.name.split(' ')[0] || 'Tim'} 4"
           </motion.p>
@@ -460,16 +433,19 @@ export default function Scorecard() {
           </motion.button>
 
           {/* Voice Button - Only for non-spectators */}
-          {!isSpectator && (
+          {!isSpectator ? (
             <VoiceButton
               isListening={isListening}
               isProcessing={isProcessing}
               isSupported={isSupported}
               onPress={handleVoicePress}
             />
+          ) : (
+            <div className="w-16" />
           )}
-          
-          {isSpectator && <div className="w-16" />}
+
+          {/* Finish / Progress */}
+          {canFinish && !isSpectator ? (
             <motion.div whileTap={{ scale: 0.95 }}>
               <Button 
                 onClick={handleFinishRound} 
@@ -512,6 +488,14 @@ export default function Scorecard() {
         players={playersWithScores}
         holeNumber={currentHole}
         par={currentHoleInfo.par}
+      />
+
+      {/* Share Join Code Modal */}
+      <ShareJoinCodeModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        joinCode={round.joinCode}
+        courseName={round.courseName}
       />
 
       {/* Exit Dialog */}
