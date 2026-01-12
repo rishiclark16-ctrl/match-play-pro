@@ -1,56 +1,108 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, X } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Mic, MicOff, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export function VoiceButton() {
-  const [showModal, setShowModal] = useState(false);
+interface VoiceButtonProps {
+  isListening: boolean;
+  isProcessing: boolean;
+  isSupported: boolean;
+  onPress: () => void;
+  disabled?: boolean;
+}
+
+export function VoiceButton({
+  isListening,
+  isProcessing,
+  isSupported,
+  onPress,
+  disabled = false,
+}: VoiceButtonProps) {
+  const isActive = isListening || isProcessing;
+  
+  const handlePress = () => {
+    if (disabled || isProcessing) return;
+    
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate(20);
+    }
+    
+    onPress();
+  };
 
   return (
-    <>
+    <div className="relative">
+      {/* Pulsing rings when listening */}
+      {isListening && (
+        <>
+          <motion.div
+            className="absolute inset-0 rounded-full bg-primary"
+            animate={{
+              scale: [1, 1.6, 1.6],
+              opacity: [0.4, 0.1, 0],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeOut",
+            }}
+          />
+          <motion.div
+            className="absolute inset-0 rounded-full bg-primary"
+            animate={{
+              scale: [1, 1.4, 1.4],
+              opacity: [0.3, 0.1, 0],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeOut",
+              delay: 0.3,
+            }}
+          />
+        </>
+      )}
+      
+      {/* Main button */}
       <motion.button
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setShowModal(true)}
-        className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg"
-      >
-        <Mic className="w-7 h-7" />
-      </motion.button>
-
-      <AnimatePresence>
-        {showModal && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-40"
-              onClick={() => setShowModal(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-x-6 top-1/2 -translate-y-1/2 bg-background rounded-2xl p-6 z-50 shadow-xl"
-            >
-              <button
-                onClick={() => setShowModal(false)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-muted flex items-center justify-center"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              
-              <div className="text-center pt-4">
-                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Mic className="w-10 h-10 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Voice Scoring</h3>
-                <p className="text-muted-foreground">
-                  Voice scoring is coming soon! You'll be able to say "Jack got a birdie" and we'll record it automatically.
-                </p>
-              </div>
-            </motion.div>
-          </>
+        whileTap={{ scale: isActive ? 1 : 0.95 }}
+        onClick={handlePress}
+        disabled={disabled || !isSupported}
+        className={cn(
+          "relative w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all",
+          !isSupported && "bg-muted cursor-not-allowed",
+          isSupported && !isActive && "bg-primary shadow-primary/25",
+          isListening && "bg-primary/90",
+          isProcessing && "bg-primary/80",
+          disabled && "opacity-50 cursor-not-allowed"
         )}
-      </AnimatePresence>
-    </>
+      >
+        {isProcessing ? (
+          <Loader2 className="w-7 h-7 text-primary-foreground animate-spin" />
+        ) : isListening ? (
+          <motion.div
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 0.5, repeat: Infinity }}
+          >
+            <Mic className="w-7 h-7 text-primary-foreground" />
+          </motion.div>
+        ) : !isSupported ? (
+          <MicOff className="w-7 h-7 text-muted-foreground" />
+        ) : (
+          <Mic className="w-7 h-7 text-primary-foreground" />
+        )}
+      </motion.button>
+      
+      {/* Listening indicator text */}
+      {isListening && (
+        <motion.p
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-medium text-primary whitespace-nowrap"
+        >
+          Listening...
+        </motion.p>
+      )}
+    </div>
   );
 }
