@@ -13,7 +13,8 @@ import { TeeSelector } from '@/components/golf/TeeSelector';
 import { useRounds } from '@/hooks/useRounds';
 import { useCourses } from '@/hooks/useCourses';
 import { useGolfCourseSearch, GolfCourseResult, GolfCourseDetails } from '@/hooks/useGolfCourseSearch';
-import { Course, HoleInfo, GameConfig, generateId } from '@/types/golf';
+import { Course, HoleInfo, GameConfig, Team, generateId } from '@/types/golf';
+import { createDefaultTeams } from '@/lib/games/bestball';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -64,6 +65,14 @@ export default function NewRound() {
   const [nassauEnabled, setNassauEnabled] = useState(false);
   const [nassauStakes, setNassauStakes] = useState('5');
   const [nassauAutoPress, setNassauAutoPress] = useState(false);
+  
+  // Stableford
+  const [stablefordEnabled, setStablefordEnabled] = useState(false);
+  const [stablefordModified, setStablefordModified] = useState(false);
+  
+  // Best Ball
+  const [bestBallEnabled, setBestBallEnabled] = useState(false);
+  const [bestBallTeams, setBestBallTeams] = useState<Team[]>([]);
 
   const canProceedCourse = selectedCourse || (showCourseForm && courseName.trim());
   const canProceedPlayers = players.filter(p => p.name.trim()).length >= 2;
@@ -182,6 +191,30 @@ export default function NewRound() {
         type: 'nassau',
         stakes: Number(nassauStakes) || 5,
         autoPress: nassauAutoPress,
+      });
+    }
+    
+    if (stablefordEnabled) {
+      games.push({
+        id: generateId(),
+        type: 'stableford',
+        stakes: 0,
+        modifiedStableford: stablefordModified,
+      });
+    }
+    
+    if (bestBallEnabled && players.filter(p => p.name.trim()).length >= 2) {
+      // Generate teams based on players
+      const validPlayers = players.filter(p => p.name.trim());
+      const teams = bestBallTeams.length > 0 ? bestBallTeams : createDefaultTeams(
+        validPlayers.map((p, i) => ({ id: p.id, roundId: '', name: p.name, orderIndex: i }))
+      );
+      
+      games.push({
+        id: generateId(),
+        type: 'bestball',
+        stakes: 0,
+        teams,
       });
     }
     
@@ -589,6 +622,102 @@ export default function NewRound() {
                   </motion.div>
                 )}
               </div>
+              
+              {/* Stableford */}
+              <div className={cn(
+                "card-premium p-4 transition-all",
+                stablefordEnabled && "ring-2 ring-primary/20"
+              )}>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      {stablefordEnabled && <Check className="w-4 h-4 text-primary" />}
+                      <h4 className="font-medium">Stableford</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Points-based scoring (higher is better)</p>
+                  </div>
+                  <Switch
+                    checked={stablefordEnabled}
+                    onCheckedChange={setStablefordEnabled}
+                  />
+                </div>
+                
+                {stablefordEnabled && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-3 pt-3 border-t border-border/50 space-y-3"
+                  >
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <p>🦅 Eagle: 4 pts • 🐦 Birdie: 3 pts • Par: 2 pts</p>
+                      <p>Bogey: 1 pt • Double+: 0 pts</p>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="modifiedStableford"
+                        checked={stablefordModified}
+                        onCheckedChange={(checked) => setStablefordModified(checked === true)}
+                      />
+                      <label htmlFor="modifiedStableford" className="text-sm">
+                        Modified (aggressive scoring with negatives)
+                      </label>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+              
+              {/* Best Ball */}
+              {players.filter(p => p.name.trim()).length >= 2 && (
+                <div className={cn(
+                  "card-premium p-4 transition-all",
+                  bestBallEnabled && "ring-2 ring-primary/20"
+                )}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        {bestBallEnabled && <Check className="w-4 h-4 text-primary" />}
+                        <h4 className="font-medium">Best Ball</h4>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {players.filter(p => p.name.trim()).length === 4 
+                          ? "2v2 team format - best score counts"
+                          : "Team format - best score counts"}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={bestBallEnabled}
+                      onCheckedChange={setBestBallEnabled}
+                    />
+                  </div>
+                  
+                  {bestBallEnabled && players.filter(p => p.name.trim()).length === 4 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-3 pt-3 border-t border-border/50 space-y-2"
+                    >
+                      <p className="text-xs text-muted-foreground mb-2">Teams will be auto-assigned:</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-2 rounded-lg bg-success/10 border border-success/20">
+                          <p className="text-xs font-medium text-success">Team 1</p>
+                          <p className="text-sm truncate">
+                            {players.filter(p => p.name.trim())[0]?.name.split(' ')[0]} & {players.filter(p => p.name.trim())[1]?.name.split(' ')[0]}
+                          </p>
+                        </div>
+                        <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                          <p className="text-xs font-medium text-primary">Team 2</p>
+                          <p className="text-sm truncate">
+                            {players.filter(p => p.name.trim())[2]?.name.split(' ')[0]} & {players.filter(p => p.name.trim())[3]?.name.split(' ')[0]}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              )}
             </div>
           </motion.div>
         );
