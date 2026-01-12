@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { Capacitor } from '@capacitor/core';
+import { setStatusBarDark } from '@/lib/statusBar';
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 
@@ -18,7 +20,15 @@ const Auth = lazy(() => import("./pages/Auth"));
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  // Initialize native status bar styling on app start
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      setStatusBarDark();
+    }
+  }, []);
+
+  return (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -83,6 +93,7 @@ const App = () => (
       </TooltipProvider>
     </QueryClientProvider>
   </ErrorBoundary>
-);
+  );
+};
 
 export default App;
