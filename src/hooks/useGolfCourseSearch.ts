@@ -112,8 +112,15 @@ export function useGolfCourseSearch() {
   }, []);
 
   // Convert API course details to our app's HoleInfo format
-  const convertToHoleInfo = useCallback((details: GolfCourseDetails, teeName?: string): HoleInfo[] => {
-    const tees = details.tees?.male || details.tees?.female || [];
+  const convertToHoleInfo = useCallback((
+    details: GolfCourseDetails, 
+    teeName?: string,
+    gender: 'male' | 'female' = 'male'
+  ): HoleInfo[] => {
+    const tees = gender === 'male' 
+      ? (details.tees?.male || details.tees?.female || [])
+      : (details.tees?.female || details.tees?.male || []);
+    
     const selectedTee = teeName 
       ? tees.find(t => t.tee_name === teeName) 
       : tees[0];
@@ -134,6 +141,16 @@ export function useGolfCourseSearch() {
     }));
   }, []);
 
+  // Get tee info by name and gender
+  const getTeeInfo = useCallback((
+    details: GolfCourseDetails,
+    teeName: string,
+    gender: 'male' | 'female'
+  ) => {
+    const tees = gender === 'male' ? details.tees?.male : details.tees?.female;
+    return tees?.find(t => t.tee_name === teeName);
+  }, []);
+
   const clearResults = useCallback(() => {
     setSearchResults([]);
     setError(null);
@@ -143,6 +160,7 @@ export function useGolfCourseSearch() {
     searchCourses,
     getCourseDetails,
     convertToHoleInfo,
+    getTeeInfo,
     clearResults,
     searchResults,
     isSearching,

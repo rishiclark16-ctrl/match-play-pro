@@ -8,9 +8,10 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { CourseSearch } from '@/components/golf/CourseSearch';
 import { PlayerInput } from '@/components/golf/PlayerInput';
+import { TeeSelector } from '@/components/golf/TeeSelector';
 import { useRounds } from '@/hooks/useRounds';
 import { useCourses } from '@/hooks/useCourses';
-import { useGolfCourseSearch, GolfCourseResult } from '@/hooks/useGolfCourseSearch';
+import { useGolfCourseSearch, GolfCourseResult, GolfCourseDetails } from '@/hooks/useGolfCourseSearch';
 import { Course, HoleInfo } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -27,10 +28,15 @@ export default function NewRound() {
   const navigate = useNavigate();
   const { createRound, addPlayerToRound } = useRounds();
   const { courses, createCourse, getDefaultHoles } = useCourses();
-  const { getCourseDetails, convertToHoleInfo, isLoadingDetails } = useGolfCourseSearch();
+  const { getCourseDetails, convertToHoleInfo, getTeeInfo, isLoadingDetails } = useGolfCourseSearch();
 
   const [step, setStep] = useState<Step>('course');
   const [isLoadingApiCourse, setIsLoadingApiCourse] = useState(false);
+  
+  // Tee selection state
+  const [showTeeSelector, setShowTeeSelector] = useState(false);
+  const [pendingCourseDetails, setPendingCourseDetails] = useState<GolfCourseDetails | null>(null);
+  const [pendingApiCourse, setPendingApiCourse] = useState<GolfCourseResult | null>(null);
   
   // Course step
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -72,32 +78,62 @@ export default function NewRound() {
     try {
       const details = await getCourseDetails(apiCourse.id);
       if (details) {
-        const holes = convertToHoleInfo(details);
-        const location = [details.location?.city, details.location?.state]
-          .filter(Boolean)
-          .join(', ');
+        // Check if course has tee options
+        const hasTees = (details.tees?.male?.length || 0) + (details.tees?.female?.length || 0) > 0;
         
-        // Use course_name from details, fallback to apiCourse
-        const courseName = details.course_name || apiCourse.course_name;
-        
-        // Create and save course locally
-        const course = createCourse(
-          courseName,
-          location || undefined,
-          holes,
-          details.tees?.male?.[0]?.slope_rating,
-          details.tees?.male?.[0]?.course_rating
-        );
-        
-        setSelectedCourse(course);
-        setHoleCount(holes.length === 9 ? 9 : 18);
-        toast.success(`Loaded ${courseName} with real par data!`);
+        if (hasTees) {
+          // Show tee selector
+          setPendingCourseDetails(details);
+          setPendingApiCourse(apiCourse);
+          setShowTeeSelector(true);
+        } else {
+          // No tees available, use defaults
+          finalizeCourseSelection(details, apiCourse);
+        }
       }
     } catch (err) {
       toast.error('Failed to load course details');
     } finally {
       setIsLoadingApiCourse(false);
     }
+  };
+
+  const handleTeeSelect = (teeName: string, gender: 'male' | 'female') => {
+    if (!pendingCourseDetails || !pendingApiCourse) return;
+    
+    const teeInfo = getTeeInfo(pendingCourseDetails, teeName, gender);
+    finalizeCourseSelection(pendingCourseDetails, pendingApiCourse, teeName, gender, teeInfo);
+    setShowTeeSelector(false);
+    setPendingCourseDetails(null);
+    setPendingApiCourse(null);
+  };
+
+  const finalizeCourseSelection = (
+    details: GolfCourseDetails, 
+    apiCourse: GolfCourseResult,
+    teeName?: string,
+    gender: 'male' | 'female' = 'male',
+    teeInfo?: { slope_rating: number; course_rating: number }
+  ) => {
+    const holes = convertToHoleInfo(details, teeName, gender);
+    const location = [details.location?.city, details.location?.state]
+      .filter(Boolean)
+      .join(', ');
+    
+    const courseName = details.course_name || apiCourse.course_name;
+    const displayName = teeName ? `${courseName} (${teeName})` : courseName;
+    
+    const course = createCourse(
+      displayName,
+      location || undefined,
+      holes,
+      teeInfo?.slope_rating || details.tees?.male?.[0]?.slope_rating,
+      teeInfo?.course_rating || details.tees?.male?.[0]?.course_rating
+    );
+    
+    setSelectedCourse(course);
+    setHoleCount(holes.length === 9 ? 9 : 18);
+    toast.success(`Loaded ${displayName} with real par data!`);
   };
 
   const addPlayer = () => {
@@ -422,6 +458,18 @@ export default function NewRound() {
           </motion.div>
         )}
       </div>
+
+      {/* Tee Selector Modal */}
+      <TeeSelector
+        isOpen={showTeeSelector}
+        courseDetails={pendingCourseDetails}
+        onSelectTee={handleTeeSelect}
+        onClose={() => {
+          setShowTeeSelector(false);
+          setPendingCourseDetails(null);
+          setPendingApiCourse(null);
+        }}
+      />
     </div>
   );
 }
