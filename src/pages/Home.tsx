@@ -1,0 +1,148 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Users, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { RoundCard } from '@/components/golf/RoundCard';
+import { useRounds } from '@/hooks/useRounds';
+
+export default function Home() {
+  const navigate = useNavigate();
+  const { getRecentRounds, getRoundByJoinCode } = useRounds();
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [joinCode, setJoinCode] = useState('');
+  const [joinError, setJoinError] = useState('');
+
+  const recentRounds = getRecentRounds(10);
+
+  const handleJoinRound = () => {
+    const round = getRoundByJoinCode(joinCode.trim());
+    if (round) {
+      navigate(`/round/${round.id}`);
+      setShowJoinModal(false);
+    } else {
+      setJoinError('Round not found. Check the code and try again.');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <header className="pt-12 pb-6 px-6 safe-top">
+        <h1 className="text-3xl font-bold text-primary tracking-tight">MATCH</h1>
+      </header>
+
+      {/* Content */}
+      <main className="flex-1 px-6 pb-32 overflow-auto">
+        {recentRounds.length > 0 ? (
+          <div className="space-y-3">
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+              Recent Rounds
+            </h2>
+            {recentRounds.map((round) => (
+              <RoundCard
+                key={round.id}
+                round={round}
+                onClick={() => navigate(
+                  round.status === 'active' 
+                    ? `/round/${round.id}` 
+                    : `/round/${round.id}/complete`
+                )}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-20 h-20 rounded-full bg-primary-light flex items-center justify-center mb-4">
+              <span className="text-4xl">⛳</span>
+            </div>
+            <h2 className="text-xl font-semibold mb-2">No rounds yet</h2>
+            <p className="text-muted-foreground">Start your first round to track scores with your group!</p>
+          </div>
+        )}
+      </main>
+
+      {/* Bottom Buttons */}
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent safe-bottom">
+        <div className="space-y-3">
+          <motion.div whileTap={{ scale: 0.98 }}>
+            <Button 
+              onClick={() => navigate('/new-round')}
+              className="w-full py-6 text-lg font-semibold rounded-xl"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              New Round
+            </Button>
+          </motion.div>
+          <motion.div whileTap={{ scale: 0.98 }}>
+            <Button 
+              variant="outline"
+              onClick={() => setShowJoinModal(true)}
+              className="w-full py-6 text-lg font-semibold rounded-xl border-primary text-primary hover:bg-primary-light"
+            >
+              <Users className="w-5 h-5 mr-2" />
+              Join Round
+            </Button>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Join Modal */}
+      <AnimatePresence>
+        {showJoinModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-40"
+              onClick={() => setShowJoinModal(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-x-6 top-1/2 -translate-y-1/2 bg-background rounded-2xl p-6 z-50 shadow-xl"
+            >
+              <button
+                onClick={() => setShowJoinModal(false)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-muted flex items-center justify-center"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              
+              <h3 className="text-xl font-semibold mb-2">Join a Round</h3>
+              <p className="text-muted-foreground mb-4">
+                Enter the 6-character code shared by the round creator.
+              </p>
+              
+              <Input
+                placeholder="Enter code (e.g. ABC123)"
+                value={joinCode}
+                onChange={(e) => {
+                  setJoinCode(e.target.value.toUpperCase());
+                  setJoinError('');
+                }}
+                maxLength={6}
+                className="py-6 text-center text-2xl font-bold tracking-widest uppercase"
+              />
+              
+              {joinError && (
+                <p className="text-danger text-sm mt-2">{joinError}</p>
+              )}
+              
+              <Button 
+                onClick={handleJoinRound}
+                disabled={joinCode.length !== 6}
+                className="w-full mt-4 py-6 text-lg font-semibold rounded-xl"
+              >
+                Join Round
+              </Button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
