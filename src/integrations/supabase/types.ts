@@ -14,7 +14,207 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      players: {
+        Row: {
+          created_at: string | null
+          handicap: number | null
+          id: string
+          name: string
+          order_index: number
+          round_id: string | null
+          team_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          handicap?: number | null
+          id?: string
+          name: string
+          order_index: number
+          round_id?: string | null
+          team_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          handicap?: number | null
+          id?: string
+          name?: string
+          order_index?: number
+          round_id?: string | null
+          team_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      presses: {
+        Row: {
+          created_at: string | null
+          id: string
+          initiated_by: string | null
+          round_id: string | null
+          stakes: number
+          start_hole: number
+          status: string | null
+          winner_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          initiated_by?: string | null
+          round_id?: string | null
+          stakes: number
+          start_hole: number
+          status?: string | null
+          winner_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          initiated_by?: string | null
+          round_id?: string | null
+          stakes?: number
+          start_hole?: number
+          status?: string | null
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "presses_initiated_by_fkey"
+            columns: ["initiated_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "presses_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "presses_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rounds: {
+        Row: {
+          course_id: string | null
+          course_name: string
+          created_at: string | null
+          games: Json | null
+          hole_info: Json
+          holes: number
+          id: string
+          join_code: string
+          match_play: boolean | null
+          modified_stableford: boolean | null
+          rating: number | null
+          slope: number | null
+          stableford: boolean | null
+          stakes: number | null
+          status: string | null
+          stroke_play: boolean | null
+          teams: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          course_id?: string | null
+          course_name: string
+          created_at?: string | null
+          games?: Json | null
+          hole_info: Json
+          holes?: number
+          id?: string
+          join_code: string
+          match_play?: boolean | null
+          modified_stableford?: boolean | null
+          rating?: number | null
+          slope?: number | null
+          stableford?: boolean | null
+          stakes?: number | null
+          status?: string | null
+          stroke_play?: boolean | null
+          teams?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          course_id?: string | null
+          course_name?: string
+          created_at?: string | null
+          games?: Json | null
+          hole_info?: Json
+          holes?: number
+          id?: string
+          join_code?: string
+          match_play?: boolean | null
+          modified_stableford?: boolean | null
+          rating?: number | null
+          slope?: number | null
+          stableford?: boolean | null
+          stakes?: number | null
+          status?: string | null
+          stroke_play?: boolean | null
+          teams?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      scores: {
+        Row: {
+          created_at: string | null
+          hole_number: number
+          id: string
+          player_id: string | null
+          round_id: string | null
+          strokes: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          hole_number: number
+          id?: string
+          player_id?: string | null
+          round_id?: string | null
+          strokes: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          hole_number?: number
+          id?: string
+          player_id?: string | null
+          round_id?: string | null
+          strokes?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scores_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scores_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

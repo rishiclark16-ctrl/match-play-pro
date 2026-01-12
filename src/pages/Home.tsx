@@ -1,28 +1,29 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Users, X } from 'lucide-react';
+import { Plus, Users, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RoundCard } from '@/components/golf/RoundCard';
 import { useRounds } from '@/hooks/useRounds';
+import { useJoinRound } from '@/hooks/useJoinRound';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { getRecentRounds, getRoundByJoinCode } = useRounds();
+  const { getRecentRounds } = useRounds();
+  const { joinRound, loading: joinLoading, error: joinError, clearError } = useJoinRound();
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinCode, setJoinCode] = useState('');
-  const [joinError, setJoinError] = useState('');
 
   const recentRounds = getRecentRounds(10);
 
-  const handleJoinRound = () => {
-    const round = getRoundByJoinCode(joinCode.trim());
+  const handleJoinRound = async () => {
+    const round = await joinRound(joinCode.trim());
     if (round) {
-      navigate(`/round/${round.id}`);
+      // Navigate with spectator flag
+      navigate(`/round/${round.id}?spectator=true`);
       setShowJoinModal(false);
-    } else {
-      setJoinError('Round not found. Check the code and try again.');
+      setJoinCode('');
     }
   };
 
@@ -122,7 +123,7 @@ export default function Home() {
                 value={joinCode}
                 onChange={(e) => {
                   setJoinCode(e.target.value.toUpperCase());
-                  setJoinError('');
+                  clearError();
                 }}
                 maxLength={6}
                 className="py-6 text-center text-2xl font-bold tracking-widest uppercase"
@@ -134,11 +135,18 @@ export default function Home() {
               
               <Button 
                 onClick={handleJoinRound}
-                disabled={joinCode.length !== 6}
+                disabled={joinCode.length !== 6 || joinLoading}
                 className="w-full mt-4 py-6 text-lg font-semibold rounded-xl"
               >
+                {joinLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : null}
                 Join Round
               </Button>
+              
+              <p className="text-xs text-muted-foreground text-center mt-3">
+                You'll be able to follow along live and see scores in real-time
+              </p>
             </motion.div>
           </>
         )}

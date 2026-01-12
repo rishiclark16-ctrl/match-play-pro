@@ -1,17 +1,22 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MoreVertical, BarChart3, RotateCcw, Flag } from 'lucide-react';
+import { X, MoreVertical, BarChart3, RotateCcw, Flag, Share2 } from 'lucide-react';
 import { HoleNavigator } from '@/components/golf/HoleNavigator';
 import { PlayerCard } from '@/components/golf/PlayerCard';
 import { ScoreInputSheet } from '@/components/golf/ScoreInputSheet';
 import { VoiceButton } from '@/components/golf/VoiceButton';
 import { VoiceConfirmationModal } from '@/components/golf/VoiceConfirmationModal';
 import { GamesSection } from '@/components/golf/GamesSection';
+import { ShareJoinCodeModal } from '@/components/golf/ShareJoinCodeModal';
+import { ConnectionStatus } from '@/components/golf/ConnectionStatus';
+import { SpectatorBanner } from '@/components/golf/SpectatorBanner';
 import { useRounds } from '@/hooks/useRounds';
+import { useSupabaseRound } from '@/hooks/useSupabaseRound';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
 import { parseVoiceInput, ParseResult, ParsedScore } from '@/lib/voiceParser';
-import { Press } from '@/types/golf';
+import { Press, PlayerWithScores } from '@/types/golf';
+import { calculatePlayingHandicap, getStrokesPerHole, calculateTotalNetStrokes } from '@/lib/handicapUtils';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -35,20 +40,37 @@ import { cn } from '@/lib/utils';
 
 export default function Scorecard() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const isSpectator = searchParams.get('spectator') === 'true';
+  
+  // Use Supabase for live sync
+  const { 
+    round: supabaseRound, 
+    players: supabasePlayers, 
+    scores: supabaseScores,
+    isOnline,
+    saveScore: saveScoreToSupabase,
+    addPress: addPressToSupabase,
+    completeRound: completeRoundSupabase,
+    loading: supabaseLoading 
+  } = useSupabaseRound(id || null);
+  
+  // Fallback to local storage
   const { 
     getRoundById, 
     getPlayersWithScores, 
     setPlayerScore, 
-    completeRound,
+    completeRound: completeRoundLocal,
     getScoresForRound,
-    addPress,
+    addPress: addPressLocal,
   } = useRounds();
 
   const [currentHole, setCurrentHole] = useState(1);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [showEndDialog, setShowEndDialog] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   
   // Voice recognition state
   const [showVoiceModal, setShowVoiceModal] = useState(false);
@@ -63,17 +85,65 @@ export default function Scorecard() {
     transcript,
     error: voiceError,
     reset: resetVoice,
-  } = useVoiceRecognition();
+  // Use Supabase round if available, otherwise fall back to local
+  const localRound = getRoundById(id || '');
+  const round = supabaseRound || localRound;
 
-  const round = getRoundById(id || '');
-
-  // Get scores first to use as a dependency for reactivity
-  const roundScores = getScoresForRound(round?.id || '');
+  // Get scores - prefer Supabase data
+  const roundScores = supabaseScores.length > 0 ? supabaseScores : getScoresForRound(round?.id || '');
   
-  const playersWithScores = useMemo(() => {
+  // Build players with scores
+  const playersWithScores: PlayerWithScores[] = useMemo(() => {
     if (!round) return [];
-    return getPlayersWithScores(round.id, round.holeInfo, round.slope, round.holes);
-  }, [round, getPlayersWithScores, roundScores]);
+    
+    // If we have Supabase players, use those
+    const basePlayers = supabasePlayers.length > 0 ? supabasePlayers : [];
+    
+    if (basePlayers.length === 0) {
+      // Fall back to local storage
+      return getPlayersWithScores(round.id, round.holeInfo, round.slope, round.holes);
+    }
+    
+    // Build PlayerWithScores from Supabase data
+    return basePlayers.map(player => {
+      const playerScores = roundScores.filter(s => s.playerId === player.id);
+      const totalStrokes = playerScores.reduce((sum, s) => sum + s.strokes, 0);
+      
+      const totalRelativeToPar = playerScores.reduce((sum, s) => {
+        const hole = round.holeInfo.find(h => h.number === s.holeNumber);
+        return sum + (s.strokes - (hole?.par || 4));
+      }, 0);
+
+      // Calculate handicap-adjusted scores
+      let playingHandicap: number | undefined;
+      let strokesPerHole: Map<number, number> | undefined;
+      let totalNetStrokes: number | undefined;
+      let netRelativeToPar: number | undefined;
+
+      if (player.handicap !== undefined && player.handicap !== null) {
+        playingHandicap = calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes);
+        strokesPerHole = getStrokesPerHole(playingHandicap, round.holeInfo);
+        totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
+        const totalPar = playerScores.reduce((sum, s) => {
+          const hole = round.holeInfo.find(h => h.number === s.holeNumber);
+          return sum + (hole?.par || 4);
+        }, 0);
+        netRelativeToPar = totalNetStrokes - totalPar;
+      }
+
+      return {
+        ...player,
+        scores: playerScores,
+        totalStrokes,
+        totalRelativeToPar,
+        holesPlayed: playerScores.length,
+        playingHandicap,
+        strokesPerHole,
+        totalNetStrokes,
+        netRelativeToPar,
+      };
+    });
+  }, [round, supabasePlayers, roundScores, getPlayersWithScores]);
 
   // Calculate how many holes have been fully scored
   const completedHoles = useMemo(() => {
@@ -147,17 +217,27 @@ export default function Scorecard() {
 
   const handleScoreSelect = useCallback((score: number) => {
     if (selectedPlayerId && round) {
+      // Save to both Supabase and local
+      saveScoreToSupabase(selectedPlayerId, currentHole, score);
       setPlayerScore(round.id, selectedPlayerId, currentHole, score);
       toast.success('Score saved', { duration: 1500 });
     }
-  }, [selectedPlayerId, round, currentHole, setPlayerScore]);
+  }, [selectedPlayerId, round, currentHole, saveScoreToSupabase, setPlayerScore]);
 
   const handleFinishRound = useCallback(() => {
     if (round) {
-      completeRound(round.id);
+      completeRoundSupabase();
+      completeRoundLocal(round.id);
       navigate(`/round/${round.id}/complete`);
     }
-  }, [round, completeRound, navigate]);
+  }, [round, completeRoundSupabase, completeRoundLocal, navigate]);
+
+  const handleAddPress = useCallback((press: Press) => {
+    if (round) {
+      addPressToSupabase(press);
+      addPressLocal(round.id, press);
+    }
+  }, [round, addPressToSupabase, addPressLocal]);
 
   const handleVoicePress = () => {
     if (isListening) {
@@ -209,6 +289,9 @@ export default function Scorecard() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Spectator Banner */}
+      {isSpectator && <SpectatorBanner />}
+      
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border/50">
         <div className="pt-12 pb-3 px-4 safe-top flex items-center justify-between">
@@ -219,6 +302,25 @@ export default function Scorecard() {
           >
             <X className="w-5 h-5" />
           </motion.button>
+          
+          <div className="text-center flex-1 px-4">
+            <div className="flex items-center justify-center gap-2">
+              <h1 className="text-lg font-semibold truncate">{round.courseName}</h1>
+              <ConnectionStatus isOnline={isOnline} />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Code: <span className="font-mono font-bold">{round.joinCode}</span>
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowShareModal(true)}
+              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary"
+            >
+              <Share2 className="w-5 h-5" />
+            </motion.button>
           
           <div className="text-center flex-1 px-4">
             <h1 className="text-lg font-semibold truncate">{round.courseName}</h1>
@@ -237,9 +339,25 @@ export default function Scorecard() {
               </motion.button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setShowShareModal(true)}>
+                <Share2 className="w-4 h-4 mr-2" />
+                Share Round
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => toast.info('Reset feature coming soon')}>
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset This Hole
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => setShowEndDialog(true)}
+                className="text-danger focus:text-danger"
+              >
+                <Flag className="w-4 h-4 mr-2" />
+                End Round Early
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          </div>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
@@ -283,6 +401,11 @@ export default function Scorecard() {
                     currentHolePar={currentHoleInfo.par}
                     currentHoleNumber={currentHole}
                     isLeading={player.id === leadingPlayerId}
+                    onScoreTap={isSpectator ? undefined : () => setSelectedPlayerId(player.id)}
+                    showNetScores={true}
+                  />
+                    currentHoleNumber={currentHole}
+                    isLeading={player.id === leadingPlayerId}
                     onScoreTap={() => setSelectedPlayerId(player.id)}
                     showNetScores={true}
                   />
@@ -296,20 +419,27 @@ export default function Scorecard() {
             <GamesSection
               round={round}
               players={playersWithScores}
-              scores={getScoresForRound(round.id)}
+              scores={roundScores}
               currentHole={currentHole}
-              onAddPress={(press: Press) => addPress(round.id, press)}
+              onAddPress={handleAddPress}
             />
           )}
         </div>
         
-        {/* Voice hint */}
-        {isSupported && playersWithScores.length > 0 && (
+        {/* Voice hint - only for non-spectators */}
+        {!isSpectator && isSupported && playersWithScores.length > 0 && (
+        </div>
+        
+        {!isSpectator && isSupported && playersWithScores.length > 0 && (
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
             className="text-center text-xs text-muted-foreground mt-6"
+          >
+            💡 Tap the mic and say "{playersWithScores[0]?.name.split(' ')[0]} 5, {playersWithScores[1]?.name.split(' ')[0] || 'Tim'} 4"
+          </motion.p>
+        )}
           >
             💡 Tap the mic and say "{playersWithScores[0]?.name.split(' ')[0]} 5, {playersWithScores[1]?.name.split(' ')[0] || 'Tim'} 4"
           </motion.p>
@@ -329,16 +459,17 @@ export default function Scorecard() {
             <span className="font-medium text-sm">Board</span>
           </motion.button>
 
-          {/* Voice Button - Center */}
-          <VoiceButton
-            isListening={isListening}
-            isProcessing={isProcessing}
-            isSupported={isSupported}
-            onPress={handleVoicePress}
-          />
-
-          {/* Finish / Progress */}
-          {canFinish ? (
+          {/* Voice Button - Only for non-spectators */}
+          {!isSpectator && (
+            <VoiceButton
+              isListening={isListening}
+              isProcessing={isProcessing}
+              isSupported={isSupported}
+              onPress={handleVoicePress}
+            />
+          )}
+          
+          {isSpectator && <div className="w-16" />}
             <motion.div whileTap={{ scale: 0.95 }}>
               <Button 
                 onClick={handleFinishRound} 
