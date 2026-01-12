@@ -67,10 +67,13 @@ export default function Scorecard() {
 
   const round = getRoundById(id || '');
 
+  // Get scores first to use as a dependency for reactivity
+  const roundScores = getScoresForRound(round?.id || '');
+  
   const playersWithScores = useMemo(() => {
     if (!round) return [];
     return getPlayersWithScores(round.id, round.holeInfo, round.slope, round.holes);
-  }, [round, getPlayersWithScores]);
+  }, [round, getPlayersWithScores, roundScores]);
 
   // Calculate how many holes have been fully scored
   const completedHoles = useMemo(() => {
