@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion';
+import { useState, useRef } from 'react';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { HoleInfo } from '@/types/golf';
 import { cn } from '@/lib/utils';
@@ -20,54 +21,116 @@ export function HoleNavigator({
 }: HoleNavigatorProps) {
   const canGoPrevious = currentHole > 1;
   const canGoNext = currentHole < totalHoles;
+  const [direction, setDirection] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const threshold = 50;
+    if (info.offset.x > threshold && canGoPrevious) {
+      setDirection(-1);
+      onPrevious();
+    } else if (info.offset.x < -threshold && canGoNext) {
+      setDirection(1);
+      onNext();
+    }
+  };
+
+  const handlePrevious = () => {
+    if (canGoPrevious) {
+      setDirection(-1);
+      onPrevious();
+    }
+  };
+
+  const handleNext = () => {
+    if (canGoNext) {
+      setDirection(1);
+      onNext();
+    }
+  };
+
+  const variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 100 : -100,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      x: direction < 0 ? 100 : -100,
+      opacity: 0,
+    }),
+  };
 
   return (
-    <div className="flex items-center justify-center gap-6 py-6">
+    <div 
+      ref={containerRef}
+      className="flex items-center justify-center gap-4 py-8 px-6 select-none"
+    >
       {/* Previous Button */}
       <motion.button
         whileTap={{ scale: 0.9 }}
-        onClick={onPrevious}
+        onClick={handlePrevious}
         disabled={!canGoPrevious}
         className={cn(
-          "w-12 h-12 rounded-full flex items-center justify-center transition-colors",
+          "w-14 h-14 rounded-full flex items-center justify-center transition-all",
           canGoPrevious 
-            ? "bg-muted hover:bg-muted/80 text-foreground" 
-            : "bg-muted/50 text-muted-foreground cursor-not-allowed"
+            ? "bg-card border border-border shadow-sm hover:shadow-md text-foreground" 
+            : "opacity-0 pointer-events-none"
         )}
       >
-        <ChevronLeft className="w-6 h-6" />
+        <ChevronLeft className="w-7 h-7" />
       </motion.button>
 
-      {/* Hole Display */}
-      <div className="text-center">
-        <motion.div
-          key={currentHole}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center"
-        >
-          <span className="text-6xl font-bold tracking-tight text-foreground">
-            {currentHole}
-          </span>
-          <span className="text-lg font-medium text-muted-foreground mt-1">
-            PAR {holeInfo.par}
-          </span>
-        </motion.div>
-      </div>
+      {/* Hole Display - Swipeable */}
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.2}
+        onDragEnd={handleDragEnd}
+        className="flex-1 max-w-[200px] cursor-grab active:cursor-grabbing touch-pan-y"
+      >
+        <div className="text-center overflow-hidden">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-1">
+            HOLE
+          </p>
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={currentHole}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="flex flex-col items-center"
+            >
+              <span className="text-7xl font-bold tracking-tight text-primary">
+                {currentHole}
+              </span>
+              <span className="inline-flex items-center justify-center px-4 py-1 mt-2 rounded-full bg-muted text-muted-foreground text-sm font-semibold">
+                PAR {holeInfo.par}
+              </span>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </motion.div>
 
       {/* Next Button */}
       <motion.button
         whileTap={{ scale: 0.9 }}
-        onClick={onNext}
+        onClick={handleNext}
         disabled={!canGoNext}
         className={cn(
-          "w-12 h-12 rounded-full flex items-center justify-center transition-colors",
+          "w-14 h-14 rounded-full flex items-center justify-center transition-all",
           canGoNext 
-            ? "bg-muted hover:bg-muted/80 text-foreground" 
-            : "bg-muted/50 text-muted-foreground cursor-not-allowed"
+            ? "bg-card border border-border shadow-sm hover:shadow-md text-foreground" 
+            : "opacity-0 pointer-events-none"
         )}
       >
-        <ChevronRight className="w-6 h-6" />
+        <ChevronRight className="w-7 h-7" />
       </motion.button>
     </div>
   );
