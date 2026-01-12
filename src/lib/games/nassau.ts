@@ -234,3 +234,79 @@ export function formatNassauStatus(
   
   return `${leader.name} ${margin} UP`;
 }
+
+// Hole-specific context for Nassau game
+export interface NassauHoleContext {
+  segment: string;          // "Front 9", "Back 9", "Overall"
+  status: string;           // "Mike 2 UP", "All square"
+  message: string;          // "Win to cut deficit to 1"
+  urgency: 'normal' | 'opportunity' | 'critical';
+  canPress: boolean;
+}
+
+export function getNassauHoleContext(
+  scores: Score[],
+  players: Player[],
+  currentHole: number,
+  stakes: number,
+  presses: Press[],
+  holesInRound: 9 | 18 = 18
+): NassauHoleContext {
+  const result = calculateNassau(scores, players, stakes, presses, holesInRound);
+  
+  // Determine which segment we're in
+  let segment = 'Front 9';
+  let segmentData = result.front9;
+  
+  if (currentHole > 9 && holesInRound === 18) {
+    segment = 'Back 9';
+    segmentData = result.back9;
+  }
+  
+  // Format status
+  const leaderId = segmentData.winnerId;
+  const margin = segmentData.margin;
+  let status = 'All square';
+  let urgency: 'normal' | 'opportunity' | 'critical' = 'normal';
+  let message = '';
+  
+  if (leaderId && margin > 0) {
+    const leader = players.find(p => p.id === leaderId);
+    status = `${leader?.name.split(' ')[0] || 'Leader'} ${margin} UP`;
+    
+    // Check if current player is down
+    if (players.length === 2) {
+      const loser = players.find(p => p.id !== leaderId);
+      const holesRemaining = (currentHole <= 9 ? 10 : holesInRound + 1) - currentHole;
+      
+      if (margin >= holesRemaining) {
+        urgency = 'critical';
+        message = 'Must win to stay alive';
+      } else if (margin >= 2) {
+        urgency = 'critical';
+        message = `${margin} down with ${holesRemaining} to play`;
+      } else if (margin === 1) {
+        urgency = 'opportunity';
+        message = 'Win to square up';
+      }
+    }
+  } else {
+    status = 'All square';
+    urgency = 'opportunity';
+    message = 'Win to go 1 UP';
+  }
+  
+  // Check if press is available
+  const playerStanding = players.length === 2 
+    ? (leaderId === players[0].id ? -margin : margin)
+    : 0;
+  const pressAvailable = canPress(currentHole, playerStanding, presses, holesInRound);
+  
+  return {
+    segment,
+    status,
+    message,
+    urgency,
+    canPress: pressAvailable
+  };
+}

@@ -323,7 +323,7 @@ export function useSupabaseRound(roundId: string | null) {
     }
   }, [roundId]);
 
-  // Complete round
+// Complete round
   const completeRound = useCallback(async () => {
     if (!roundId) return;
 
@@ -340,6 +340,27 @@ export function useSupabaseRound(roundId: string | null) {
     }
   }, [roundId]);
 
+  // Update games configuration
+  const updateGames = useCallback(async (games: GameConfig[]) => {
+    if (!roundId) return;
+
+    try {
+      const { error } = await supabase
+        .from('rounds')
+        .update({ 
+          games: games as any,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', roundId);
+
+      if (error) throw error;
+      setRound(prev => prev ? { ...prev, games } : null);
+    } catch (err) {
+      console.error('Error updating games:', err);
+      throw err;
+    }
+  }, [roundId]);
+
   return {
     round,
     players,
@@ -351,5 +372,6 @@ export function useSupabaseRound(roundId: string | null) {
     saveScore,
     addPress,
     completeRound,
+    updateGames,
   };
 }
