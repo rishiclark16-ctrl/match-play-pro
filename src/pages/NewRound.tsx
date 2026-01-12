@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CourseSearch } from '@/components/golf/CourseSearch';
 import { PlayerInput } from '@/components/golf/PlayerInput';
 import { TeeSelector } from '@/components/golf/TeeSelector';
 import { useRounds } from '@/hooks/useRounds';
 import { useCourses } from '@/hooks/useCourses';
 import { useGolfCourseSearch, GolfCourseResult, GolfCourseDetails } from '@/hooks/useGolfCourseSearch';
-import { Course, HoleInfo } from '@/types/golf';
+import { Course, HoleInfo, GameConfig, generateId } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -55,6 +56,14 @@ export default function NewRound() {
   const [strokePlay, setStrokePlay] = useState(true);
   const [matchPlay, setMatchPlay] = useState(false);
   const [stakes, setStakes] = useState<string>('');
+  
+  // Betting games
+  const [skinsEnabled, setSkinsEnabled] = useState(false);
+  const [skinsStakes, setSkinsStakes] = useState('2');
+  const [skinsCarryover, setSkinsCarryover] = useState(true);
+  const [nassauEnabled, setNassauEnabled] = useState(false);
+  const [nassauStakes, setNassauStakes] = useState('5');
+  const [nassauAutoPress, setNassauAutoPress] = useState(false);
 
   const canProceedCourse = selectedCourse || (showCourseForm && courseName.trim());
   const canProceedPlayers = players.filter(p => p.name.trim()).length >= 2;
@@ -155,6 +164,35 @@ export default function NewRound() {
 
     const holeInfo: HoleInfo[] = selectedCourse.holes.slice(0, holeCount);
     
+    // Build games array
+    const games: GameConfig[] = [];
+    
+    if (skinsEnabled) {
+      games.push({
+        id: generateId(),
+        type: 'skins',
+        stakes: Number(skinsStakes) || 2,
+        carryover: skinsCarryover,
+      });
+    }
+    
+    if (nassauEnabled) {
+      games.push({
+        id: generateId(),
+        type: 'nassau',
+        stakes: Number(nassauStakes) || 5,
+        autoPress: nassauAutoPress,
+      });
+    }
+    
+    if (matchPlay && stakes) {
+      games.push({
+        id: generateId(),
+        type: 'match',
+        stakes: Number(stakes) || 0,
+      });
+    }
+    
     const round = createRound(
       selectedCourse.id,
       selectedCourse.name,
@@ -164,7 +202,8 @@ export default function NewRound() {
       matchPlay,
       stakes ? Number(stakes) : undefined,
       selectedCourse.slope,
-      selectedCourse.rating
+      selectedCourse.rating,
+      games
     );
 
     players
@@ -375,54 +414,181 @@ export default function NewRound() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="space-y-4"
+            className="space-y-6"
           >
-            {/* Stroke Play */}
-            <div className={cn(
-              "card-premium p-4 flex items-center justify-between",
-              strokePlay && "ring-2 ring-primary/20"
-            )}>
-              <div className="flex-1">
-                <h4 className="font-medium">Stroke Play</h4>
-                <p className="text-sm text-muted-foreground">Traditional scoring, lowest total wins</p>
-              </div>
-              <Switch
-                checked={strokePlay}
-                onCheckedChange={setStrokePlay}
-              />
-            </div>
-
-            {/* Match Play */}
-            <div className={cn(
-              "card-premium p-4 flex items-center justify-between",
-              matchPlay && "ring-2 ring-primary/20"
-            )}>
-              <div className="flex-1">
-                <h4 className="font-medium">Match Play</h4>
-                <p className="text-sm text-muted-foreground">Hole-by-hole competition</p>
-              </div>
-              <Switch
-                checked={matchPlay}
-                onCheckedChange={setMatchPlay}
-              />
-            </div>
-
-            {/* Stakes */}
-            <div className="card-premium p-4 space-y-3">
-              <Label htmlFor="stakes" className="font-medium">Stakes (optional)</Label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                <Input
-                  id="stakes"
-                  type="number"
-                  placeholder="0"
-                  value={stakes}
-                  onChange={(e) => setStakes(e.target.value)}
-                  className="pl-8 py-6"
-                  min={0}
+            {/* Scoring Section */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                Scoring
+              </Label>
+              
+              {/* Stroke Play */}
+              <div className={cn(
+                "card-premium p-4 flex items-center justify-between",
+                strokePlay && "ring-2 ring-primary/20"
+              )}>
+                <div className="flex-1">
+                  <h4 className="font-medium">Stroke Play</h4>
+                  <p className="text-sm text-muted-foreground">Traditional scoring, lowest total wins</p>
+                </div>
+                <Switch
+                  checked={strokePlay}
+                  onCheckedChange={setStrokePlay}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">Amount per player</p>
+
+              {/* Match Play */}
+              <div className={cn(
+                "card-premium p-4",
+                matchPlay && "ring-2 ring-primary/20"
+              )}>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-medium">Match Play</h4>
+                    <p className="text-sm text-muted-foreground">Hole-by-hole competition</p>
+                  </div>
+                  <Switch
+                    checked={matchPlay}
+                    onCheckedChange={setMatchPlay}
+                  />
+                </div>
+                
+                {/* Match Play Stakes */}
+                {matchPlay && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-3 pt-3 border-t border-border/50"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">$</span>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={stakes}
+                        onChange={(e) => setStakes(e.target.value)}
+                        className="w-20 text-center"
+                        min={0}
+                      />
+                      <span className="text-sm text-muted-foreground">per match</span>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </div>
+
+            {/* Side Games Section */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                Side Games
+              </Label>
+              
+              {/* Skins */}
+              <div className={cn(
+                "card-premium p-4 transition-all",
+                skinsEnabled && "ring-2 ring-primary/20"
+              )}>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      {skinsEnabled && <Check className="w-4 h-4 text-primary" />}
+                      <h4 className="font-medium">Skins</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Win the hole outright to claim</p>
+                  </div>
+                  <Switch
+                    checked={skinsEnabled}
+                    onCheckedChange={setSkinsEnabled}
+                  />
+                </div>
+                
+                {skinsEnabled && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-3 pt-3 border-t border-border/50 space-y-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">$</span>
+                      <Input
+                        type="number"
+                        placeholder="2"
+                        value={skinsStakes}
+                        onChange={(e) => setSkinsStakes(e.target.value)}
+                        className="w-20 text-center"
+                        min={1}
+                      />
+                      <span className="text-sm text-muted-foreground">per hole</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="carryover"
+                        checked={skinsCarryover}
+                        onCheckedChange={(checked) => setSkinsCarryover(checked === true)}
+                      />
+                      <label htmlFor="carryover" className="text-sm">
+                        Carryovers (ties roll over)
+                      </label>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+              
+              {/* Nassau */}
+              <div className={cn(
+                "card-premium p-4 transition-all",
+                nassauEnabled && "ring-2 ring-primary/20"
+              )}>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      {nassauEnabled && <Check className="w-4 h-4 text-primary" />}
+                      <h4 className="font-medium">Nassau</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Front 9 + Back 9 + Overall</p>
+                  </div>
+                  <Switch
+                    checked={nassauEnabled}
+                    onCheckedChange={setNassauEnabled}
+                  />
+                </div>
+                
+                {nassauEnabled && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-3 pt-3 border-t border-border/50 space-y-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">$</span>
+                      <Input
+                        type="number"
+                        placeholder="5"
+                        value={nassauStakes}
+                        onChange={(e) => setNassauStakes(e.target.value)}
+                        className="w-20 text-center"
+                        min={1}
+                      />
+                      <span className="text-sm text-muted-foreground">per bet</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="autopress"
+                        checked={nassauAutoPress}
+                        onCheckedChange={(checked) => setNassauAutoPress(checked === true)}
+                      />
+                      <label htmlFor="autopress" className="text-sm">
+                        Auto-press when 2 down
+                      </label>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
             </div>
           </motion.div>
         );

@@ -9,6 +9,41 @@ export interface Course {
   createdAt: Date;
 }
 
+// Betting game configuration
+export interface GameConfig {
+  id: string;
+  type: 'skins' | 'nassau' | 'match';
+  stakes: number;
+  carryover?: boolean;      // Skins: ties carry to next hole
+  autoPress?: boolean;      // Nassau: auto-press when 2 down
+}
+
+// Skins game tracking
+export interface SkinResult {
+  holeNumber: number;
+  winnerId: string | null;  // null = carried over
+  value: number;            // skins this hole is worth
+}
+
+// Nassau press tracking
+export interface Press {
+  id: string;
+  startHole: number;
+  initiatedBy: string;
+  stakes: number;
+  status: 'active' | 'won' | 'lost' | 'pushed';
+}
+
+// Settlement for final payouts
+export interface Settlement {
+  fromPlayerId: string;
+  fromPlayerName: string;
+  toPlayerId: string;
+  toPlayerName: string;
+  amount: number;
+  description: string;
+}
+
 export interface HoleInfo {
   number: number;
   par: number;
@@ -31,6 +66,9 @@ export interface Round {
   // Course rating info for handicap calculations
   slope?: number;
   rating?: number;
+  // Betting games
+  games: GameConfig[];
+  presses: Press[];
 }
 
 export interface Player {
