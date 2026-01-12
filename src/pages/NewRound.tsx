@@ -10,9 +10,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CourseSearch } from '@/components/golf/CourseSearch';
 import { PlayerInput } from '@/components/golf/PlayerInput';
 import { TeeSelector } from '@/components/golf/TeeSelector';
-import { useRounds } from '@/hooks/useRounds';
 import { useCourses } from '@/hooks/useCourses';
 import { useGolfCourseSearch, GolfCourseResult, GolfCourseDetails } from '@/hooks/useGolfCourseSearch';
+import { useCreateSupabaseRound } from '@/hooks/useCreateSupabaseRound';
 import { Course, HoleInfo, GameConfig, Team, generateId } from '@/types/golf';
 import { createDefaultTeams } from '@/lib/games/bestball';
 import { cn } from '@/lib/utils';
@@ -28,9 +28,10 @@ interface PlayerData {
 
 export default function NewRound() {
   const navigate = useNavigate();
-  const { createRound, addPlayerToRound } = useRounds();
+  const { createRound } = useCreateSupabaseRound();
   const { courses, createCourse, getDefaultHoles } = useCourses();
   const { getCourseDetails, convertToHoleInfo, getTeeInfo, isLoadingDetails } = useGolfCourseSearch();
+  const [isCreating, setIsCreating] = useState(false);
 
   const [step, setStep] = useState<Step>('course');
   const [isLoadingApiCourse, setIsLoadingApiCourse] = useState(false);
@@ -168,82 +169,100 @@ export default function NewRound() {
     setPlayers(players.map(p => p.id === id ? { ...p, ...updates } : p));
   };
 
-  const handleStartRound = () => {
-    if (!selectedCourse) return;
+  const handleStartRound = async () => {
+    if (!selectedCourse || isCreating) return;
 
-    const holeInfo: HoleInfo[] = selectedCourse.holes.slice(0, holeCount);
+    setIsCreating(true);
     
-    // Build games array
-    const games: GameConfig[] = [];
-    
-    if (skinsEnabled) {
-      games.push({
-        id: generateId(),
-        type: 'skins',
-        stakes: Number(skinsStakes) || 2,
-        carryover: skinsCarryover,
-      });
-    }
-    
-    if (nassauEnabled) {
-      games.push({
-        id: generateId(),
-        type: 'nassau',
-        stakes: Number(nassauStakes) || 5,
-        autoPress: nassauAutoPress,
-      });
-    }
-    
-    if (stablefordEnabled) {
-      games.push({
-        id: generateId(),
-        type: 'stableford',
-        stakes: 0,
-        modifiedStableford: stablefordModified,
-      });
-    }
-    
-    if (bestBallEnabled && players.filter(p => p.name.trim()).length >= 2) {
-      // Generate teams based on players
-      const validPlayers = players.filter(p => p.name.trim());
-      const teams = bestBallTeams.length > 0 ? bestBallTeams : createDefaultTeams(
-        validPlayers.map((p, i) => ({ id: p.id, roundId: '', name: p.name, orderIndex: i }))
-      );
+    try {
+      const holeInfo: HoleInfo[] = selectedCourse.holes.slice(0, holeCount);
       
-      games.push({
-        id: generateId(),
-        type: 'bestball',
-        stakes: 0,
-        teams,
+      // Build games array
+      const games: GameConfig[] = [];
+      
+      if (skinsEnabled) {
+        games.push({
+          id: generateId(),
+          type: 'skins',
+          stakes: Number(skinsStakes) || 2,
+          carryover: skinsCarryover,
+        });
+      }
+      
+      if (nassauEnabled) {
+        games.push({
+          id: generateId(),
+          type: 'nassau',
+          stakes: Number(nassauStakes) || 5,
+          autoPress: nassauAutoPress,
+        });
+      }
+      
+      if (stablefordEnabled) {
+        games.push({
+          id: generateId(),
+          type: 'stableford',
+          stakes: 0,
+          modifiedStableford: stablefordModified,
+        });
+      }
+      
+      if (bestBallEnabled && players.filter(p => p.name.trim()).length >= 2) {
+        // Generate teams based on players
+        const validPlayers = players.filter(p => p.name.trim());
+        const teams = bestBallTeams.length > 0 ? bestBallTeams : createDefaultTeams(
+          validPlayers.map((p, i) => ({ id: p.id, roundId: '', name: p.name, orderIndex: i }))
+        );
+        
+        games.push({
+          id: generateId(),
+          type: 'bestball',
+          stakes: 0,
+          teams,
+        });
+      }
+      
+      if (matchPlay && stakes) {
+        games.push({
+          id: generateId(),
+          type: 'match',
+          stakes: Number(stakes) || 0,
+        });
+      }
+      
+      // Create round in Supabase
+      const round = await createRound({
+        courseId: selectedCourse.id,
+        courseName: selectedCourse.name,
+        holes: holeCount,
+        holeInfo,
+        strokePlay,
+        matchPlay,
+        stakes: stakes ? Number(stakes) : undefined,
+        slope: selectedCourse.slope,
+        rating: selectedCourse.rating,
+        games,
+        players: players
+          .filter(p => p.name.trim())
+          .map(p => ({ 
+            name: p.name.trim(), 
+            handicap: p.handicap,
+            teamId: bestBallTeams.find(t => t.playerIds.includes(p.id))?.id
+          })),
       });
-    }
-    
-    if (matchPlay && stakes) {
-      games.push({
-        id: generateId(),
-        type: 'match',
-        stakes: Number(stakes) || 0,
-      });
-    }
-    
-    const round = createRound(
-      selectedCourse.id,
-      selectedCourse.name,
-      holeCount,
-      holeInfo,
-      strokePlay,
-      matchPlay,
-      stakes ? Number(stakes) : undefined,
-      selectedCourse.slope,
-      selectedCourse.rating,
-      games
-    );
 
-    players
-      .filter(p => p.name.trim())
-      .forEach(p => addPlayerToRound(round.id, p.name.trim(), p.handicap));
-
-    navigate(`/round/${round.id}`);
+      if (round) {
+        toast.success(`Round created! Join code: ${round.joinCode}`);
+        navigate(`/round/${round.id}`);
+      } else {
+        toast.error('Failed to create round. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error creating round:', err);
+      toast.error('Failed to create round. Please try again.');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const renderStep = () => {
@@ -781,10 +800,17 @@ export default function NewRound() {
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button
               onClick={handleStartRound}
-              disabled={!strokePlay && !matchPlay}
+              disabled={(!strokePlay && !matchPlay) || isCreating}
               className="w-full py-6 text-lg font-semibold rounded-xl"
             >
-              Start Round
+              {isCreating ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Creating Round...
+                </>
+              ) : (
+                'Start Round'
+              )}
             </Button>
           </motion.div>
         )}
