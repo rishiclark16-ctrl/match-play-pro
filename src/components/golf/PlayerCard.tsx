@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Minus, Plus } from 'lucide-react';
 import { PlayerWithScores, getScoreColor, formatRelativeToPar } from '@/types/golf';
 import { cn } from '@/lib/utils';
-import { hapticLight } from '@/lib/haptics';
+import { hapticLight, hapticSuccess } from '@/lib/haptics';
+
 interface PlayerCardProps {
   player: PlayerWithScores;
   currentHoleScore?: number;
   currentHolePar: number;
   currentHoleNumber: number;
   isLeading: boolean;
-  onScoreTap: () => void;
+  onScoreTap?: () => void;
+  onQuickScore?: (score: number) => void;
   showNetScores?: boolean;
 }
 
@@ -20,6 +23,7 @@ export function PlayerCard({
   currentHoleNumber,
   isLeading, 
   onScoreTap,
+  onQuickScore,
   showNetScores = true,
 }: PlayerCardProps) {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -62,41 +66,67 @@ export function PlayerCard({
   };
 
   const hasHandicap = player.handicap !== undefined && player.handicap !== null;
+  
+  // Get display score or default to par
+  const displayScore = currentHoleScore ?? currentHolePar;
+
+  const handleDecrement = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    if (!onQuickScore) return;
+    hapticLight();
+    const newScore = Math.max(1, displayScore - 1);
+    onQuickScore(newScore);
+    triggerAnimation();
+  };
+
+  const handleIncrement = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    if (!onQuickScore) return;
+    hapticLight();
+    const newScore = Math.min(12, displayScore + 1);
+    onQuickScore(newScore);
+    triggerAnimation();
+  };
+
+  const handleCardTap = () => {
+    if (onScoreTap) {
+      hapticLight();
+      onScoreTap();
+      triggerAnimation();
+    }
+  };
 
   return (
     <motion.div
-      whileTap={{ scale: 0.98 }}
       animate={isAnimating ? { scale: [1, 1.02, 1] } : {}}
       transition={{ duration: 0.3 }}
       className={cn(
-        "bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 cursor-pointer transition-all border",
+        "bg-card rounded-xl shadow-sm p-3 flex items-center gap-3 transition-all border min-h-[72px]",
         isLeading && player.holesPlayed > 0
           ? "ring-2 ring-primary/30 border-primary/20 bg-primary-light/30" 
-          : "border-transparent hover:shadow-md"
+          : "border-border/50"
       )}
-      onClick={() => {
-        hapticLight();
-        onScoreTap();
-        triggerAnimation();
-      }}
-      role="button"
-      aria-label={`Enter score for ${player.name}. Current score: ${currentHoleScore ?? 'not entered'}`}
     >
-      {/* Avatar */}
-      <div className={cn(
-        "w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
-        isLeading && player.holesPlayed > 0
-          ? "bg-primary text-primary-foreground" 
-          : "bg-muted text-muted-foreground"
-      )}>
+      {/* Avatar - Tappable for full sheet */}
+      <motion.button
+        whileTap={{ scale: 0.9 }}
+        onClick={handleCardTap}
+        className={cn(
+          "w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
+          isLeading && player.holesPlayed > 0
+            ? "bg-primary text-primary-foreground" 
+            : "bg-muted text-muted-foreground"
+        )}
+        aria-label={`Open score sheet for ${player.name}`}
+      >
         {initials}
-      </div>
+      </motion.button>
 
       {/* Name & Running Total */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0" onClick={handleCardTap}>
         <div className="flex items-center gap-2">
-          <h4 className="font-semibold text-lg text-foreground truncate">
-            {player.name}
+          <h4 className="font-semibold text-base text-foreground truncate">
+            {player.name.split(' ')[0]}
           </h4>
           {hasHandicap && (
             <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
@@ -106,7 +136,7 @@ export function PlayerCard({
         </div>
         <div className="text-sm text-muted-foreground">
           {player.holesPlayed > 0 ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {/* Gross score */}
               <span className={cn("font-medium", getScoreColor(player.totalStrokes, player.holesPlayed * currentHolePar))}>
                 {formatRelativeToPar(player.totalRelativeToPar)}
@@ -117,60 +147,117 @@ export function PlayerCard({
                 <>
                   <span className="text-muted-foreground/50">→</span>
                   <span className={cn(
-                    "font-medium px-1.5 py-0.5 rounded text-xs",
-                    player.netRelativeToPar <= -1 ? "bg-success/10 text-success" :
-                    player.netRelativeToPar === 0 ? "bg-muted text-foreground" :
-                    player.netRelativeToPar === 1 ? "bg-warning/10 text-warning" :
-                    "bg-danger/10 text-danger"
+                    "font-medium text-xs",
+                    player.netRelativeToPar <= -1 ? "text-success" :
+                    player.netRelativeToPar === 0 ? "text-foreground" :
+                    player.netRelativeToPar === 1 ? "text-warning" :
+                    "text-danger"
                   )}>
                     Net {formatRelativeToPar(player.netRelativeToPar)}
                   </span>
                 </>
               )}
-              
-              <span className="ml-1">thru {player.holesPlayed}</span>
             </div>
           ) : (
-            <span className="italic">Tap to enter score</span>
+            <span className="text-xs italic">Thru {player.holesPlayed}</span>
           )}
         </div>
       </div>
 
-      {/* Current Hole Score Box */}
-      <div className="flex flex-col items-center gap-1">
+      {/* Quick Score Buttons */}
+      {onQuickScore ? (
+        <div className="flex items-center gap-1">
+          {/* Minus Button */}
+          <motion.button
+            whileTap={{ scale: 0.85 }}
+            onClick={handleDecrement}
+            disabled={displayScore <= 1}
+            className={cn(
+              "w-10 h-10 rounded-lg flex items-center justify-center transition-all",
+              "bg-muted active:bg-muted-foreground/20",
+              displayScore <= 1 ? "opacity-30" : "opacity-100"
+            )}
+            aria-label="Decrease score"
+          >
+            <Minus className="w-4 h-4" />
+          </motion.button>
+
+          {/* Score Display - Tap for full sheet */}
+          <motion.button 
+            whileTap={{ scale: 0.95 }}
+            onClick={handleCardTap}
+            className={cn(
+              "w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 transition-all relative",
+              getScoreBoxStyles()
+            )}
+            aria-label={`Score ${currentHoleScore ?? 'not set'}. Tap for more options`}
+          >
+            <span className="text-xl font-bold tabular-nums leading-none">
+              {currentHoleScore ?? '–'}
+            </span>
+            
+            {/* Stroke indicator dots */}
+            {holeStrokes > 0 && (
+              <div className="absolute -top-1 -right-1 flex gap-0.5">
+                {Array.from({ length: Math.min(holeStrokes, 2) }).map((_, i) => (
+                  <div 
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full bg-primary"
+                  />
+                ))}
+                {holeStrokes > 2 && (
+                  <span className="text-[8px] font-bold text-primary">+{holeStrokes - 2}</span>
+                )}
+              </div>
+            )}
+            
+            {/* Net score below */}
+            {showNetScores && holeStrokes > 0 && currentNetScore !== undefined && (
+              <span className="text-[10px] text-muted-foreground leading-none mt-0.5">
+                net {currentNetScore}
+              </span>
+            )}
+          </motion.button>
+
+          {/* Plus Button */}
+          <motion.button
+            whileTap={{ scale: 0.85 }}
+            onClick={handleIncrement}
+            disabled={displayScore >= 12}
+            className={cn(
+              "w-10 h-10 rounded-lg flex items-center justify-center transition-all",
+              "bg-muted active:bg-muted-foreground/20",
+              displayScore >= 12 ? "opacity-30" : "opacity-100"
+            )}
+            aria-label="Increase score"
+          >
+            <Plus className="w-4 h-4" />
+          </motion.button>
+        </div>
+      ) : (
+        /* Read-only score display for spectators */
         <div 
           className={cn(
-            "w-14 h-14 rounded-xl flex items-center justify-center shrink-0 transition-all relative",
+            "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all relative",
             getScoreBoxStyles()
           )}
         >
-          <span className="text-2xl font-bold tabular-nums">
+          <span className="text-xl font-bold tabular-nums">
             {currentHoleScore ?? '–'}
           </span>
           
-          {/* Stroke indicator dots */}
           {holeStrokes > 0 && (
             <div className="absolute -top-1 -right-1 flex gap-0.5">
-              {Array.from({ length: Math.min(holeStrokes, 3) }).map((_, i) => (
+              {Array.from({ length: Math.min(holeStrokes, 2) }).map((_, i) => (
                 <div 
                   key={i}
-                  className="w-2 h-2 rounded-full bg-primary shadow-sm"
+                  className="w-1.5 h-1.5 rounded-full bg-primary"
                 />
               ))}
-              {holeStrokes > 3 && (
-                <span className="text-[10px] font-bold text-primary">+{holeStrokes - 3}</span>
-              )}
             </div>
           )}
         </div>
-        
-        {/* Net score below gross */}
-        {showNetScores && holeStrokes > 0 && currentNetScore !== undefined && (
-          <span className="text-xs text-muted-foreground">
-            net {currentNetScore}
-          </span>
-        )}
-      </div>
+      )}
     </motion.div>
   );
 }
