@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Plus, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Plus, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -10,8 +10,10 @@ import { CourseSearch } from '@/components/golf/CourseSearch';
 import { PlayerInput } from '@/components/golf/PlayerInput';
 import { useRounds } from '@/hooks/useRounds';
 import { useCourses } from '@/hooks/useCourses';
+import { useGolfCourseSearch, GolfCourseResult } from '@/hooks/useGolfCourseSearch';
 import { Course, HoleInfo } from '@/types/golf';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 type Step = 'course' | 'players' | 'format';
 
@@ -25,8 +27,10 @@ export default function NewRound() {
   const navigate = useNavigate();
   const { createRound, addPlayerToRound } = useRounds();
   const { courses, createCourse, getDefaultHoles } = useCourses();
+  const { getCourseDetails, convertToHoleInfo, isLoadingDetails } = useGolfCourseSearch();
 
   const [step, setStep] = useState<Step>('course');
+  const [isLoadingApiCourse, setIsLoadingApiCourse] = useState(false);
   
   // Course step
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -60,6 +64,36 @@ export default function NewRound() {
       const course = createCourse(courseName.trim(), courseLocation.trim() || undefined, holes);
       setSelectedCourse(course);
       setShowCourseForm(false);
+    }
+  };
+
+  const handleSelectApiCourse = async (apiCourse: GolfCourseResult) => {
+    setIsLoadingApiCourse(true);
+    try {
+      const details = await getCourseDetails(apiCourse.id);
+      if (details) {
+        const holes = convertToHoleInfo(details);
+        const location = [details.location?.city, details.location?.state]
+          .filter(Boolean)
+          .join(', ');
+        
+        // Create and save course locally
+        const course = createCourse(
+          details.course_name,
+          location || undefined,
+          holes,
+          details.tees?.male?.[0]?.slope_rating,
+          details.tees?.male?.[0]?.course_rating
+        );
+        
+        setSelectedCourse(course);
+        setHoleCount(holes.length === 9 ? 9 : 18);
+        toast.success(`Loaded ${details.course_name} with real par data!`);
+      }
+    } catch (err) {
+      toast.error('Failed to load course details');
+    } finally {
+      setIsLoadingApiCourse(false);
     }
   };
 
@@ -111,11 +145,21 @@ export default function NewRound() {
           >
             {!showCourseForm ? (
               <>
-                <CourseSearch
-                  courses={courses}
-                  onSelectCourse={handleSelectCourse}
-                  onCreateNew={() => setShowCourseForm(true)}
-                />
+                {isLoadingApiCourse && (
+                  <div className="flex items-center justify-center py-8 gap-3">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <span className="text-muted-foreground">Loading course details...</span>
+                  </div>
+                )}
+                
+                {!isLoadingApiCourse && (
+                  <CourseSearch
+                    courses={courses}
+                    onSelectCourse={handleSelectCourse}
+                    onCreateNew={() => setShowCourseForm(true)}
+                    onSelectApiCourse={handleSelectApiCourse}
+                  />
+                )}
                 
                 {selectedCourse && (
                   <div className="card-premium p-4 border-2 border-primary">
