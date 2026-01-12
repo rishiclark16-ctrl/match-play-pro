@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Target, TrendingUp, Trophy, Users, Coins } from 'lucide-react';
-import { Round, Player, Score, PlayerWithScores, HoleInfo } from '@/types/golf';
+import { ChevronDown, ChevronUp, Target, TrendingUp, Trophy, Users, Coins, Crown, Dog } from 'lucide-react';
+import { Round, Player, Score, PlayerWithScores, HoleInfo, WolfHoleResult } from '@/types/golf';
 import { getSkinsHoleContext } from '@/lib/games/skins';
 import { getNassauHoleContext } from '@/lib/games/nassau';
 import { getBestBallHoleContext } from '@/lib/games/bestball';
+import { getWolfHoleContext } from '@/lib/games/wolf';
 import { getStrokesPerHole } from '@/lib/handicapUtils';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +24,7 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
   const nassauGame = round.games?.find(g => g.type === 'nassau');
   const bestBallGame = round.games?.find(g => g.type === 'bestball');
   const matchPlayGame = round.games?.find(g => g.type === 'match');
+  const wolfGame = round.games?.find(g => g.type === 'wolf');
   
   // Get stroke allocations for this hole
   const strokeAllocations = useMemo(() => {
@@ -73,6 +75,18 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
       currentHole
     );
   }, [bestBallGame, scores, players, round.holeInfo, currentHole]);
+  
+  // Get Wolf context
+  const wolfContext = useMemo(() => {
+    if (!wolfGame || players.length !== 4) return null;
+    return getWolfHoleContext(
+      players,
+      currentHole,
+      wolfGame.wolfResults || [],
+      wolfGame.stakes,
+      wolfGame.carryover ?? true
+    );
+  }, [wolfGame, players, currentHole]);
   
   // Calculate what each player needs this hole (after opponent has scored)
   const playerNeeds = useMemo(() => {
@@ -132,7 +146,7 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
     }).filter(Boolean);
   }, [players, scores, currentHole, currentHoleInfo.par]);
   
-  const hasContent = strokeAllocations.length > 0 || skinsContext || nassauContext || bestBallContext;
+  const hasContent = strokeAllocations.length > 0 || skinsContext || nassauContext || bestBallContext || wolfContext;
   
   if (!hasContent) return null;
   
@@ -269,7 +283,38 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
                 </div>
               )}
               
-              {/* What You Need (after opponent scored) */}
+              {/* Wolf Context */}
+              {wolfContext && (
+                <div className={cn(
+                  "flex items-center justify-between text-sm p-2 rounded-lg",
+                  wolfContext.isBlindWolf ? "bg-warning/20 border border-warning/40" :
+                  wolfContext.isLoneWolf ? "bg-warning/10 border border-warning/20" :
+                  "bg-muted/30"
+                )}>
+                  <div className="flex items-center gap-2">
+                    {wolfContext.isLoneWolf || wolfContext.isBlindWolf ? (
+                      <Dog className="w-4 h-4 text-warning" />
+                    ) : (
+                      <Crown className="w-4 h-4 text-primary" />
+                    )}
+                    <span className="font-medium">{wolfContext.message}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className={cn(
+                      "font-bold",
+                      wolfContext.carryovers > 0 ? "text-warning" : "text-primary"
+                    )}>
+                      ${wolfContext.potValue}
+                    </span>
+                    {wolfContext.carryovers > 0 && (
+                      <span className="text-xs text-warning ml-1">
+                        (+{wolfContext.carryovers})
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+              
               {playerNeeds.length > 0 && (
                 <div className="pt-1 border-t border-border/30 space-y-1">
                   {playerNeeds.map((need) => need && (

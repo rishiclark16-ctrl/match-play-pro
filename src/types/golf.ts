@@ -20,13 +20,25 @@ export interface Team {
 // Betting game configuration
 export interface GameConfig {
   id: string;
-  type: 'skins' | 'nassau' | 'match' | 'stableford' | 'bestball';
+  type: 'skins' | 'nassau' | 'match' | 'stableford' | 'bestball' | 'wolf';
   stakes: number;
-  carryover?: boolean;         // Skins: ties carry to next hole
-  autoPress?: boolean;         // Nassau: auto-press when 2 down
-  modifiedStableford?: boolean; // Stableford: modified scoring (negative points)
-  teams?: Team[];              // Best Ball: team assignments
-  useNet?: boolean;            // Use handicap strokes for this game
+  carryover?: boolean;           // Skins/Wolf: ties carry to next hole
+  autoPress?: boolean;           // Nassau: auto-press when 2 down
+  modifiedStableford?: boolean;  // Stableford: modified scoring (negative points)
+  teams?: Team[];                // Best Ball: team assignments
+  useNet?: boolean;              // Use handicap strokes for this game
+  blindWolfMultiplier?: number;  // Wolf: Blind Wolf point multiplier (default 2x)
+  wolfResults?: WolfHoleResult[]; // Wolf: Results for each hole
+}
+
+// Wolf hole result (imported from wolf.ts but defined here for type)
+export interface WolfHoleResult {
+  holeNumber: number;
+  wolfId: string;
+  partnerId: string | null;
+  isBlindWolf: boolean;
+  winningTeam: 'wolf' | 'hunters' | 'push';
+  points: number;
 }
 
 // Stableford point values

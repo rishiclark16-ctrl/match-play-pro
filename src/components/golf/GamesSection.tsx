@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Trophy, AlertCircle, Star, Users } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trophy, AlertCircle, Star, Users, Crown, Dog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Round, Player, Score, Press } from '@/types/golf';
 import { calculateSkins, SkinsResult } from '@/lib/games/skins';
 import { calculateNassau, NassauResult, formatNassauStatus, canPress, createPress } from '@/lib/games/nassau';
 import { calculateStableford, StablefordResult, getStablefordPointsColor } from '@/lib/games/stableford';
 import { calculateBestBall, BestBallResult, formatBestBallStatus } from '@/lib/games/bestball';
+import { calculateWolf, WolfResult, getWolfForHole } from '@/lib/games/wolf';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -35,6 +36,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
   const nassauGame = round.games?.find(g => g.type === 'nassau');
   const stablefordGame = round.games?.find(g => g.type === 'stableford');
   const bestBallGame = round.games?.find(g => g.type === 'bestball');
+  const wolfGame = round.games?.find(g => g.type === 'wolf');
   
   // Calculate the highest hole with all players scored
   const holesPlayed = useMemo(() => {
@@ -97,6 +99,19 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
     );
   }, [bestBallGame, scores, players, round.holeInfo, holesPlayed]);
   
+  // Calculate Wolf results
+  const wolfResult: WolfResult | null = useMemo(() => {
+    if (!wolfGame || players.length !== 4) return null;
+    return calculateWolf(
+      scores,
+      players,
+      wolfGame.wolfResults || [],
+      wolfGame.stakes,
+      wolfGame.carryover ?? true,
+      round.holes
+    );
+  }, [wolfGame, scores, players, round.holes]);
+  
   // Check if any player can press
   const pressablePlayer = useMemo(() => {
     if (!nassauResult || players.length !== 2) return null;
@@ -114,7 +129,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
     return null;
   }, [nassauResult, players, currentHole, round.presses, round.holes]);
   
-  if (!skinsGame && !nassauGame && !stablefordGame && !bestBallGame) return null;
+  if (!skinsGame && !nassauGame && !stablefordGame && !bestBallGame && !wolfGame) return null;
   
   const handleConfirmPress = () => {
     if (pressConfirmPlayer && nassauGame) {
@@ -376,9 +391,64 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
                                 .sort((a, b) => b.holesContributed - a.holesContributed)[0]?.playerName} 
                               ({standing.playerContributions
                                 .sort((a, b) => b.holesContributed - a.holesContributed)[0]?.holesContributed} holes)
-                            </div>
-                          )}
+                  </div>
+                )}
+                
+                {/* Divider before Wolf */}
+                {(skinsGame || nassauGame || stablefordGame || bestBallGame) && wolfGame && (
+                  <div className="border-t border-border/50" />
+                )}
+                
+                {/* Wolf Section */}
+                {wolfGame && wolfResult && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-sm flex items-center gap-2">
+                        <Crown className="w-4 h-4 text-warning" />
+                        WOLF (${wolfGame.stakes}/pt)
+                      </h4>
+                      <span className="text-xs text-muted-foreground">
+                        Thru {wolfResult.holesPlayed}
+                      </span>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      {wolfResult.standings.map((standing, index) => (
+                        <div
+                          key={standing.playerId}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <div className="flex items-center gap-2">
+                            {index === 0 && wolfResult.holesPlayed > 0 && (
+                              <Trophy className="w-3 h-3 text-warning" />
+                            )}
+                            <span>{standing.playerName.split(' ')[0]}</span>
+                            {standing.loneWolfWins > 0 && (
+                              <span className="text-xs text-warning">
+                                🐺{standing.loneWolfWins}
+                              </span>
+                            )}
+                          </div>
+                          <span className={cn(
+                            "font-medium",
+                            standing.earnings > 0 && "text-success",
+                            standing.earnings < 0 && "text-danger",
+                            standing.earnings === 0 && "text-muted-foreground"
+                          )}>
+                            {standing.earnings >= 0 ? '+' : ''}${standing.earnings}
+                          </span>
                         </div>
+                      ))}
+                    </div>
+                    
+                    {wolfResult.carryover > 0 && (
+                      <div className="text-xs text-warning px-2 py-1 bg-warning/10 rounded-lg">
+                        {wolfResult.carryover} points carrying over
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
                       ))}
                     </div>
                   </div>
