@@ -1,26 +1,74 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Users, X, Loader2, LogOut } from 'lucide-react';
+import { Plus, Users, X, Loader2, LogOut, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RoundCard } from '@/components/golf/RoundCard';
 import { useRounds } from '@/hooks/useRounds';
 import { useJoinRound } from '@/hooks/useJoinRound';
 import { useAuth } from '@/hooks/useAuth';
+import { useDeleteRound } from '@/hooks/useDeleteRound';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { Round } from '@/types/golf';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { getRecentRounds } = useRounds();
+  const { deleteRound: deleteLocalRound } = useRounds();
   const { user, signOut } = useAuth();
   const { joinRound, loading: joinLoading, error: joinError, clearError } = useJoinRound();
+  const { deleteRound: deleteSupabaseRound, loading: deleteLoading } = useDeleteRound();
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [isSigningOut, setIsSigningOut] = useState(false);
-
-  const recentRounds = getRecentRounds(10);
+  const [deletingRoundId, setDeletingRoundId] = useState<string | null>(null);
+  
+  // Fetch rounds from Supabase
+  const [rounds, setRounds] = useState<Round[]>([]);
+  const [loadingRounds, setLoadingRounds] = useState(true);
+  
+  const fetchRounds = useCallback(async () => {
+    setLoadingRounds(true);
+    try {
+      const { data, error } = await supabase
+        .from('rounds')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (error) throw error;
+      
+      const transformedRounds: Round[] = (data || []).map(r => ({
+        id: r.id,
+        courseId: r.course_id || '',
+        courseName: r.course_name,
+        holes: r.holes as 9 | 18,
+        strokePlay: r.stroke_play ?? true,
+        matchPlay: r.match_play ?? false,
+        stakes: r.stakes ?? undefined,
+        status: r.status as 'active' | 'complete',
+        createdAt: new Date(r.created_at || Date.now()),
+        joinCode: r.join_code,
+        holeInfo: r.hole_info as any,
+        slope: r.slope ?? undefined,
+        rating: r.rating ?? undefined,
+        games: (r.games as any) || [],
+        presses: [],
+      }));
+      
+      setRounds(transformedRounds);
+    } catch (err) {
+      console.error('Error fetching rounds:', err);
+    } finally {
+      setLoadingRounds(false);
+    }
+  }, []);
+  
+  useEffect(() => {
+    fetchRounds();
+  }, [fetchRounds]);
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -34,6 +82,25 @@ export default function Home() {
       toast.success('Signed out');
     }
     setIsSigningOut(false);
+  };
+
+  const handleDeleteRound = async (roundId: string) => {
+    setDeletingRoundId(roundId);
+    hapticLight();
+    
+    const success = await deleteSupabaseRound(roundId);
+    
+    if (success) {
+      deleteLocalRound(roundId); // Also clean up local storage
+      setRounds(prev => prev.filter(r => r.id !== roundId));
+      hapticSuccess();
+      toast.success('Round deleted');
+    } else {
+      hapticError();
+      toast.error('Failed to delete round');
+    }
+    
+    setDeletingRoundId(null);
   };
 
   const handleJoinRound = async () => {
@@ -70,12 +137,25 @@ export default function Home() {
 
       {/* Content */}
       <main className="flex-1 px-6 pb-32 overflow-auto">
-        {recentRounds.length > 0 ? (
+        {loadingRounds ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : rounds.length > 0 ? (
           <div className="space-y-3">
-            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-              Recent Rounds
-            </h2>
-            {recentRounds.map((round) => (
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                Recent Rounds
+              </h2>
+              <button
+                onClick={fetchRounds}
+                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+              >
+                <RefreshCw className="w-3 h-3" />
+                Refresh
+              </button>
+            </div>
+            {rounds.map((round) => (
               <RoundCard
                 key={round.id}
                 round={round}
@@ -84,6 +164,8 @@ export default function Home() {
                     ? `/round/${round.id}` 
                     : `/round/${round.id}/complete`
                 )}
+                onDelete={handleDeleteRound}
+                isDeleting={deletingRoundId === round.id}
               />
             ))}
           </div>
