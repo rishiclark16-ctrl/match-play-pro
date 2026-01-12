@@ -14,6 +14,7 @@ const NewRound = lazy(() => import("./pages/NewRound"));
 const Scorecard = lazy(() => import("./pages/Scorecard"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const RoundComplete = lazy(() => import("./pages/RoundComplete"));
+const Auth = lazy(() => import("./pages/Auth"));
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,14 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route 
+              path="/auth" 
+              element={
+                <Suspense fallback={<PageSkeleton variant="default" />}>
+                  <Auth />
+                </Suspense>
+              } 
+            />
             <Route 
               path="/new-round" 
               element={
