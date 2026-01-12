@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage';
-import { Round, Player, Score, PlayerWithScores, generateId, generateJoinCode, HoleInfo } from '@/types/golf';
+import { Round, Player, Score, PlayerWithScores, generateId, generateJoinCode, HoleInfo, GameConfig, Press } from '@/types/golf';
 import { calculatePlayingHandicap, getStrokesPerHole, calculateTotalNetStrokes } from '@/lib/handicapUtils';
 
 const ROUNDS_KEY = 'match_rounds';
@@ -21,7 +21,8 @@ export function useRounds() {
     matchPlay: boolean,
     stakes?: number,
     slope?: number,
-    rating?: number
+    rating?: number,
+    games: GameConfig[] = [],
   ): Round => {
     const newRound: Round = {
       id: generateId(),
@@ -37,6 +38,8 @@ export function useRounds() {
       status: 'active',
       createdAt: new Date(),
       joinCode: generateJoinCode(),
+      games,
+      presses: [],
     };
     setRounds(prev => [newRound, ...prev]);
     return newRound;
@@ -174,6 +177,22 @@ export function useRounds() {
       .slice(0, limit);
   }, [rounds]);
 
+  const addPress = useCallback((roundId: string, press: Press) => {
+    setRounds(prev => prev.map(r => 
+      r.id === roundId ? { ...r, presses: [...(r.presses || []), press] } : r
+    ));
+  }, [setRounds]);
+
+  const getGamesForRound = useCallback((roundId: string): GameConfig[] => {
+    const round = rounds.find(r => r.id === roundId);
+    return round?.games || [];
+  }, [rounds]);
+
+  const getPressesForRound = useCallback((roundId: string): Press[] => {
+    const round = rounds.find(r => r.id === roundId);
+    return round?.presses || [];
+  }, [rounds]);
+
   return {
     rounds,
     createRound,
@@ -188,5 +207,8 @@ export function useRounds() {
     completeRound,
     deleteRound,
     getRecentRounds,
+    addPress,
+    getGamesForRound,
+    getPressesForRound,
   };
 }

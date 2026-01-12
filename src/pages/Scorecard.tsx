@@ -7,9 +7,11 @@ import { PlayerCard } from '@/components/golf/PlayerCard';
 import { ScoreInputSheet } from '@/components/golf/ScoreInputSheet';
 import { VoiceButton } from '@/components/golf/VoiceButton';
 import { VoiceConfirmationModal } from '@/components/golf/VoiceConfirmationModal';
+import { GamesSection } from '@/components/golf/GamesSection';
 import { useRounds } from '@/hooks/useRounds';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
 import { parseVoiceInput, ParseResult, ParsedScore } from '@/lib/voiceParser';
+import { Press } from '@/types/golf';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -40,6 +42,7 @@ export default function Scorecard() {
     setPlayerScore, 
     completeRound,
     getScoresForRound,
+    addPress,
   } = useRounds();
 
   const [currentHole, setCurrentHole] = useState(1);
@@ -284,6 +287,17 @@ export default function Scorecard() {
               );
             })}
           </AnimatePresence>
+          
+          {/* Games Section (Skins, Nassau) */}
+          {round.games && round.games.length > 0 && (
+            <GamesSection
+              round={round}
+              players={playersWithScores}
+              scores={getScoresForRound(round.id)}
+              currentHole={currentHole}
+              onAddPress={(press: Press) => addPress(round.id, press)}
+            />
+          )}
         </div>
         
         {/* Voice hint */}
