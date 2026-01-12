@@ -9,13 +9,41 @@ export interface Course {
   createdAt: Date;
 }
 
+// Team for Best Ball format
+export interface Team {
+  id: string;
+  name: string;
+  playerIds: string[];
+  color: string;  // For visual distinction
+}
+
 // Betting game configuration
 export interface GameConfig {
   id: string;
-  type: 'skins' | 'nassau' | 'match';
+  type: 'skins' | 'nassau' | 'match' | 'stableford' | 'bestball';
   stakes: number;
-  carryover?: boolean;      // Skins: ties carry to next hole
-  autoPress?: boolean;      // Nassau: auto-press when 2 down
+  carryover?: boolean;         // Skins: ties carry to next hole
+  autoPress?: boolean;         // Nassau: auto-press when 2 down
+  modifiedStableford?: boolean; // Stableford: modified scoring (negative points)
+  teams?: Team[];              // Best Ball: team assignments
+}
+
+// Stableford point values
+export interface StablefordPoints {
+  albatross: number;   // -3 = 5 pts (or 8 modified)
+  eagle: number;       // -2 = 4 pts (or 5 modified)
+  birdie: number;      // -1 = 3 pts
+  par: number;         // 0 = 2 pts
+  bogey: number;       // +1 = 1 pt
+  doubleBogey: number; // +2 = 0 pts
+  worse: number;       // +3 or worse = 0 pts (or negative in modified)
+}
+
+// Best Ball hole result
+export interface BestBallHoleResult {
+  holeNumber: number;
+  teamScores: { teamId: string; bestScore: number; contributorId: string }[];
+  winningTeamId: string | null;
 }
 
 // Skins game tracking

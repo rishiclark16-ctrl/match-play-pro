@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Trophy, AlertCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trophy, AlertCircle, Star, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Round, Player, Score, Press } from '@/types/golf';
 import { calculateSkins, SkinsResult } from '@/lib/games/skins';
 import { calculateNassau, NassauResult, formatNassauStatus, canPress, createPress } from '@/lib/games/nassau';
+import { calculateStableford, StablefordResult, getStablefordPointsColor } from '@/lib/games/stableford';
+import { calculateBestBall, BestBallResult, formatBestBallStatus } from '@/lib/games/bestball';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -31,6 +33,8 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
   
   const skinsGame = round.games?.find(g => g.type === 'skins');
   const nassauGame = round.games?.find(g => g.type === 'nassau');
+  const stablefordGame = round.games?.find(g => g.type === 'stableford');
+  const bestBallGame = round.games?.find(g => g.type === 'bestball');
   
   // Calculate the highest hole with all players scored
   const holesPlayed = useMemo(() => {
@@ -70,6 +74,29 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
     );
   }, [nassauGame, scores, players, round.presses, round.holes]);
   
+  // Calculate Stableford results
+  const stablefordResult: StablefordResult | null = useMemo(() => {
+    if (!stablefordGame || players.length < 2) return null;
+    return calculateStableford(
+      scores,
+      players,
+      round.holeInfo,
+      stablefordGame.modifiedStableford ?? false
+    );
+  }, [stablefordGame, scores, players, round.holeInfo]);
+  
+  // Calculate Best Ball results
+  const bestBallResult: BestBallResult | null = useMemo(() => {
+    if (!bestBallGame?.teams || bestBallGame.teams.length < 2) return null;
+    return calculateBestBall(
+      scores,
+      players,
+      bestBallGame.teams,
+      round.holeInfo,
+      holesPlayed
+    );
+  }, [bestBallGame, scores, players, round.holeInfo, holesPlayed]);
+  
   // Check if any player can press
   const pressablePlayer = useMemo(() => {
     if (!nassauResult || players.length !== 2) return null;
@@ -87,7 +114,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
     return null;
   }, [nassauResult, players, currentHole, round.presses, round.holes]);
   
-  if (!skinsGame && !nassauGame) return null;
+  if (!skinsGame && !nassauGame && !stablefordGame && !bestBallGame) return null;
   
   const handleConfirmPress = () => {
     if (pressConfirmPlayer && nassauGame) {
@@ -248,6 +275,112 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
                         </Button>
                       </motion.div>
                     )}
+                  </div>
+                )}
+                
+                {/* Divider before Stableford */}
+                {(skinsGame || nassauGame) && stablefordGame && (
+                  <div className="border-t border-border/50" />
+                )}
+                
+                {/* Stableford Section */}
+                {stablefordGame && stablefordResult && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-sm flex items-center gap-2">
+                        <Star className="w-4 h-4 text-primary" />
+                        STABLEFORD {stablefordResult.modified && '(Modified)'}
+                      </h4>
+                      <span className="text-xs text-muted-foreground">
+                        {stablefordResult.holesScored} holes
+                      </span>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      {stablefordResult.standings.map((standing, index) => (
+                        <div
+                          key={standing.playerId}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <div className="flex items-center gap-2">
+                            {index === 0 && stablefordResult.holesScored > 0 && (
+                              <Trophy className="w-3 h-3 text-primary" />
+                            )}
+                            <span>{standing.playerName}</span>
+                          </div>
+                          <span className={cn(
+                            "font-bold tabular-nums",
+                            getStablefordPointsColor(standing.totalPoints)
+                          )}>
+                            {standing.totalPoints} pts
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Divider before Best Ball */}
+                {(skinsGame || nassauGame || stablefordGame) && bestBallGame && (
+                  <div className="border-t border-border/50" />
+                )}
+                
+                {/* Best Ball Section */}
+                {bestBallGame && bestBallResult && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-sm flex items-center gap-2">
+                        <Users className="w-4 h-4 text-primary" />
+                        BEST BALL
+                      </h4>
+                      <span className="text-xs text-muted-foreground">
+                        Thru {bestBallResult.holesPlayed}
+                      </span>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {bestBallResult.standings.map((standing, index) => (
+                        <div
+                          key={standing.teamId}
+                          className={cn(
+                            "p-2 rounded-lg",
+                            index === 0 ? "bg-primary/10 border border-primary/20" : "bg-muted/30"
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {index === 0 && standing.holesPlayed > 0 && (
+                                <Trophy className="w-3 h-3 text-primary" />
+                              )}
+                              <span className="font-medium text-sm">{standing.teamName}</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="font-bold text-sm tabular-nums">
+                                {standing.totalScore}
+                              </span>
+                              <span className={cn(
+                                "ml-2 text-xs",
+                                standing.relativeToPar < 0 && "text-success",
+                                standing.relativeToPar > 0 && "text-danger",
+                                standing.relativeToPar === 0 && "text-muted-foreground"
+                              )}>
+                                ({formatBestBallStatus(standing.relativeToPar)})
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {/* Show top contributor */}
+                          {standing.playerContributions.length > 0 && (
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              Top: {standing.playerContributions
+                                .sort((a, b) => b.holesContributed - a.holesContributed)[0]?.playerName} 
+                              ({standing.playerContributions
+                                .sort((a, b) => b.holesContributed - a.holesContributed)[0]?.holesContributed} holes)
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
