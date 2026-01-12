@@ -104,3 +104,53 @@ export function getSkinsHoleResult(
   
   return { winnerId: null, winnerName: null, value: 0, isCarryover: true };
 }
+
+// Get hole-specific context for skins game
+export interface SkinsHoleContext {
+  potValue: number;       // Total $ on the line for this hole
+  carryovers: number;     // Number of carried over skins
+  message: string;        // Human-readable context
+}
+
+export function getSkinsHoleContext(
+  scores: Score[],
+  players: Player[],
+  currentHole: number,
+  stakesPerSkin: number,
+  carryover: boolean,
+  totalHoles: number
+): SkinsHoleContext {
+  // Calculate carryovers up to current hole
+  let carryoverCount = 0;
+  
+  for (let hole = 1; hole < currentHole; hole++) {
+    const holeScores = scores.filter(s => s.holeNumber === hole);
+    
+    if (holeScores.length < players.length) {
+      continue; // Not all scored yet
+    }
+    
+    const sorted = [...holeScores].sort((a, b) => a.strokes - b.strokes);
+    const lowest = sorted[0].strokes;
+    const winners = sorted.filter(s => s.strokes === lowest);
+    
+    if (winners.length === 1) {
+      // Someone won, reset carryover
+      carryoverCount = 0;
+    } else if (carryover) {
+      // Tie, add to carryover
+      carryoverCount += 1;
+    }
+  }
+  
+  const baseValue = stakesPerSkin * players.length;
+  const potValue = baseValue * (1 + carryoverCount);
+  
+  return {
+    potValue,
+    carryovers: carryoverCount,
+    message: carryoverCount > 0 
+      ? `$${potValue} (${carryoverCount} carryover${carryoverCount > 1 ? 's' : ''})`
+      : `$${baseValue}`
+  };
+}

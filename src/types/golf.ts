@@ -26,6 +26,7 @@ export interface GameConfig {
   autoPress?: boolean;         // Nassau: auto-press when 2 down
   modifiedStableford?: boolean; // Stableford: modified scoring (negative points)
   teams?: Team[];              // Best Ball: team assignments
+  useNet?: boolean;            // Use handicap strokes for this game
 }
 
 // Stableford point values

@@ -8,6 +8,8 @@ import { ScoreInputSheet } from '@/components/golf/ScoreInputSheet';
 import { VoiceButton } from '@/components/golf/VoiceButton';
 import { VoiceConfirmationModal } from '@/components/golf/VoiceConfirmationModal';
 import { GamesSection } from '@/components/golf/GamesSection';
+import { HoleSummary } from '@/components/golf/HoleSummary';
+import { GameSettingsSheet } from '@/components/golf/GameSettingsSheet';
 import { ShareJoinCodeModal } from '@/components/golf/ShareJoinCodeModal';
 import { ConnectionStatus } from '@/components/golf/ConnectionStatus';
 import { SpectatorBanner } from '@/components/golf/SpectatorBanner';
@@ -16,7 +18,7 @@ import { useSupabaseRound } from '@/hooks/useSupabaseRound';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
 import { useKeepAwake } from '@/hooks/useKeepAwake';
 import { parseVoiceInput, ParseResult, ParsedScore } from '@/lib/voiceParser';
-import { Press, PlayerWithScores } from '@/types/golf';
+import { Press, PlayerWithScores, GameConfig } from '@/types/golf';
 import { calculatePlayingHandicap, getStrokesPerHole, calculateTotalNetStrokes } from '@/lib/handicapUtils';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
@@ -55,7 +57,7 @@ export default function Scorecard() {
     setStatusBarDark();
   }, []);
   
-  // Use Supabase for live sync
+// Use Supabase for live sync
   const { 
     round: supabaseRound, 
     players: supabasePlayers, 
@@ -64,6 +66,7 @@ export default function Scorecard() {
     saveScore: saveScoreToSupabase,
     addPress: addPressToSupabase,
     completeRound: completeRoundSupabase,
+    updateGames: updateGamesSupabase,
     loading: supabaseLoading 
   } = useSupabaseRound(id || null);
   
@@ -282,6 +285,11 @@ export default function Scorecard() {
     }
   }, [round, addPressToSupabase, addPressLocal]);
 
+  const handleUpdateGames = useCallback(async (games: GameConfig[]) => {
+    if (round) {
+      await updateGamesSupabase(games);
+    }
+  }, [round, updateGamesSupabase]);
   const handleVoicePress = useCallback(() => {
     if (isListening) {
       stopListening();
@@ -388,6 +396,15 @@ export default function Scorecard() {
               <Share2 className="w-5 h-5" />
             </motion.button>
             
+            {/* Game Settings - only for non-spectators */}
+            {!isSpectator && (
+              <GameSettingsSheet
+                round={round}
+                onUpdateGames={handleUpdateGames}
+                playerCount={playersWithScores.length}
+              />
+            )}
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <motion.button
@@ -432,6 +449,17 @@ export default function Scorecard() {
       {/* Player Cards */}
       <main className="flex-1 px-4 pb-36 overflow-auto">
         <div className="space-y-3">
+          {/* Hole Summary - game context at a glance */}
+          {(round.games?.length > 0 || playersWithScores.some(p => p.handicap !== undefined)) && (
+            <HoleSummary
+              round={round}
+              players={playersWithScores}
+              scores={roundScores}
+              currentHole={currentHole}
+              currentHoleInfo={currentHoleInfo}
+            />
+          )}
+          
           <AnimatePresence mode="popLayout">
             {playersWithScores.map((player, index) => {
               const holeScore = player.scores.find(s => s.holeNumber === currentHole)?.strokes;

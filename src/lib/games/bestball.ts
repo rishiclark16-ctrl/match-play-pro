@@ -232,3 +232,49 @@ export function formatBestBallStatus(relativeToPar: number): string {
   if (relativeToPar > 0) return `+${relativeToPar}`;
   return `${relativeToPar}`;
 }
+
+// Hole-specific context for best ball game
+export interface BestBallHoleContext {
+  status: string;           // "Team A 1 UP", "All square"
+  message: string;          // "Need birdie to tie"
+  urgency: 'normal' | 'opportunity' | 'critical';
+}
+
+export function getBestBallHoleContext(
+  scores: Score[],
+  players: Player[],
+  teams: Team[],
+  holeInfo: HoleInfo[],
+  currentHole: number
+): BestBallHoleContext {
+  // Calculate up to current hole - 1 to get status going into this hole
+  const holesPlayed = Math.max(0, currentHole - 1);
+  const result = calculateBestBallMatch(scores, players, teams, holeInfo, holesPlayed);
+  
+  const { status, margin, leadingTeamId } = result.matchStatus;
+  const holesRemaining = holeInfo.length - currentHole + 1;
+  
+  let urgency: 'normal' | 'opportunity' | 'critical' = 'normal';
+  let message = '';
+  
+  if (margin === 0) {
+    urgency = 'opportunity';
+    message = 'Win to go 1 UP';
+  } else if (leadingTeamId) {
+    if (margin >= holesRemaining) {
+      urgency = 'critical';
+      message = 'Must win to stay alive';
+    } else if (margin >= 2) {
+      urgency = 'critical';
+      message = `${margin} down - need a run`;
+    } else if (margin === 1) {
+      message = 'Win to square up';
+    }
+  }
+  
+  return {
+    status,
+    message,
+    urgency
+  };
+}
