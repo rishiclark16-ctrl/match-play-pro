@@ -202,26 +202,11 @@ export default function Scorecard() {
     }
   }, [voiceError, resetVoice]);
 
-  if (!round) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center px-6">
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-            <Flag className="w-8 h-8 text-muted-foreground" />
-          </div>
-          <h2 className="text-xl font-semibold mb-2">Round not found</h2>
-          <p className="text-muted-foreground mb-4">This round may have been deleted.</p>
-          <Button onClick={() => navigate('/')}>Go Home</Button>
-        </div>
-      </div>
-    );
-  }
-
-  const currentHoleInfo = round.holeInfo.find(h => h.number === currentHole) || { number: currentHole, par: 4 };
+  const currentHoleInfo = round?.holeInfo.find(h => h.number === currentHole) || { number: currentHole, par: 4 };
   const selectedPlayer = playersWithScores.find(p => p.id === selectedPlayerId);
   
-  const allHolesScored = playersWithScores.length > 0 && playersWithScores.every(p => p.holesPlayed === round.holes);
-  const isLastHole = currentHole === round.holes;
+  const allHolesScored = round && playersWithScores.length > 0 && playersWithScores.every(p => p.holesPlayed === round.holes);
+  const isLastHole = round ? currentHole === round.holes : false;
   const canFinish = isLastHole && allHolesScored;
 
   const handleScoreSelect = useCallback((score: number) => {
@@ -249,7 +234,7 @@ export default function Scorecard() {
     }
   }, [round, addPressToSupabase, addPressLocal]);
 
-  const handleVoicePress = () => {
+  const handleVoicePress = useCallback(() => {
     if (isListening) {
       stopListening();
     } else if (!isSupported) {
@@ -259,9 +244,11 @@ export default function Scorecard() {
     } else {
       startListening();
     }
-  };
+  }, [isListening, isSupported, stopListening, startListening]);
 
-  const handleVoiceConfirm = (scores: ParsedScore[]) => {
+  const handleVoiceConfirm = useCallback((scores: ParsedScore[]) => {
+    if (!round) return;
+    
     scores.forEach(({ playerId, score }) => {
       saveScoreToSupabase(playerId, currentHole, score);
       setPlayerScore(round.id, playerId, currentHole, score);
@@ -288,15 +275,31 @@ export default function Scorecard() {
         toast.info(`Moving to Hole ${currentHole + 1}`, { duration: 1500 });
       }, 500);
     }
-  };
+  }, [round, currentHole, saveScoreToSupabase, setPlayerScore, playersWithScores]);
 
-  const handleVoiceRetry = () => {
+  const handleVoiceRetry = useCallback(() => {
     setShowVoiceModal(false);
     setParseResult(null);
     setTimeout(() => {
       startListening();
     }, 300);
-  };
+  }, [startListening]);
+
+  // Early return AFTER all hooks are defined
+  if (!round) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center px-6">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+            <Flag className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Round not found</h2>
+          <p className="text-muted-foreground mb-4">This round may have been deleted.</p>
+          <Button onClick={() => navigate('/')}>Go Home</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
