@@ -74,6 +74,11 @@ export default function NewRound() {
   // Best Ball
   const [bestBallEnabled, setBestBallEnabled] = useState(false);
   const [bestBallTeams, setBestBallTeams] = useState<Team[]>([]);
+  
+  // Wolf
+  const [wolfEnabled, setWolfEnabled] = useState(false);
+  const [wolfStakes, setWolfStakes] = useState('2');
+  const [wolfCarryover, setWolfCarryover] = useState(true);
 
   const canProceedCourse = selectedCourse || (showCourseForm && courseName.trim());
   const canProceedPlayers = players.filter(p => p.name.trim()).length >= 2;
@@ -219,6 +224,15 @@ export default function NewRound() {
           type: 'bestball',
           stakes: 0,
           teams,
+        });
+      }
+      
+      if (wolfEnabled && players.filter(p => p.name.trim()).length === 4) {
+        games.push({
+          id: generateId(),
+          type: 'wolf',
+          stakes: Number(wolfStakes) || 2,
+          carryover: wolfCarryover,
         });
       }
       
@@ -732,6 +746,65 @@ export default function NewRound() {
                             {players.filter(p => p.name.trim())[2]?.name.split(' ')[0]} & {players.filter(p => p.name.trim())[3]?.name.split(' ')[0]}
                           </p>
                         </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              )}
+              
+              {/* Wolf - only for 4 players */}
+              {players.filter(p => p.name.trim()).length === 4 && (
+                <div className={cn(
+                  "card-premium p-4 transition-all",
+                  wolfEnabled && "ring-2 ring-warning/30"
+                )}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        {wolfEnabled && <Check className="w-4 h-4 text-warning" />}
+                        <h4 className="font-medium">Wolf</h4>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Rotating captain picks partner or goes alone</p>
+                    </div>
+                    <Switch
+                      checked={wolfEnabled}
+                      onCheckedChange={setWolfEnabled}
+                    />
+                  </div>
+                  
+                  {wolfEnabled && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-3 pt-3 border-t border-border/50 space-y-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">$</span>
+                        <Input
+                          type="number"
+                          placeholder="2"
+                          value={wolfStakes}
+                          onChange={(e) => setWolfStakes(e.target.value)}
+                          className="w-20 text-center"
+                          min={1}
+                        />
+                        <span className="text-sm text-muted-foreground">per point</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="wolfcarryover"
+                          checked={wolfCarryover}
+                          onCheckedChange={(checked) => setWolfCarryover(checked === true)}
+                        />
+                        <label htmlFor="wolfcarryover" className="text-sm">
+                          Carryovers (pushes roll over)
+                        </label>
+                      </div>
+                      
+                      <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-lg">
+                        🐺 Lone Wolf: 3x • ⚡ Blind Wolf: 6x
                       </div>
                     </motion.div>
                   )}

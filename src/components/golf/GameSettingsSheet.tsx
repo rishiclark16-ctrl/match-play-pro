@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, X, DollarSign, Check, AlertCircle } from 'lucide-react';
+import { Settings, X, DollarSign, Check, AlertCircle, Crown } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -38,6 +38,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
   const nassauGame = games.find(g => g.type === 'nassau');
   const stablefordGame = games.find(g => g.type === 'stableford');
   const bestBallGame = games.find(g => g.type === 'bestball');
+  const wolfGame = games.find(g => g.type === 'wolf');
   
   // Reset when sheet opens
   useEffect(() => {
@@ -328,7 +329,79 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
             </div>
           )}
           
-          {/* Display Settings */}
+          {/* Wolf - only for 4 players */}
+          {playerCount === 4 && (
+            <div className={cn(
+              "p-4 rounded-xl border transition-all",
+              wolfGame ? "border-warning/30 bg-warning/5" : "border-border"
+            )}>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Crown className="w-4 h-4 text-warning" />
+                    Wolf
+                  </h4>
+                  <p className="text-xs text-muted-foreground">Rotating captain picks partner or goes alone</p>
+                </div>
+                <Switch
+                  checked={!!wolfGame}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      updateGame('wolf', { stakes: 2, carryover: true, useNet: false, blindWolfMultiplier: 2 });
+                    } else {
+                      updateGame('wolf', null);
+                    }
+                  }}
+                />
+              </div>
+              
+              {wolfGame && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="space-y-3 pt-3 border-t border-border/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <Label className="text-sm text-muted-foreground w-20">Stakes</Label>
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="w-4 h-4 text-muted-foreground" />
+                      <Input
+                        type="number"
+                        value={wolfGame.stakes}
+                        onChange={(e) => updateGame('wolf', { stakes: Number(e.target.value) || 0 })}
+                        className="w-20 text-center"
+                        min={0}
+                      />
+                      <span className="text-sm text-muted-foreground">/point</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="wolf-carryover"
+                      checked={wolfGame.carryover ?? true}
+                      onCheckedChange={(checked) => updateGame('wolf', { carryover: checked === true })}
+                    />
+                    <Label htmlFor="wolf-carryover" className="text-sm">Carryovers (pushes roll over)</Label>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="wolf-net"
+                      checked={wolfGame.useNet ?? false}
+                      onCheckedChange={(checked) => updateGame('wolf', { useNet: checked === true })}
+                    />
+                    <Label htmlFor="wolf-net" className="text-sm">Net Wolf (use handicap strokes)</Label>
+                  </div>
+                  
+                  <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-lg">
+                    🐺 Lone Wolf: 3x points • ⚡ Blind Wolf: 6x points
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          )}
+          
           <div className="p-4 rounded-xl border border-border bg-muted/20">
             <h4 className="font-semibold mb-3">Display Settings</h4>
             <div className="space-y-3">
