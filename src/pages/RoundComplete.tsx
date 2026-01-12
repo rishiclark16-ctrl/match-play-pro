@@ -1,18 +1,22 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Trophy, Share2, Plus, Home, Medal, Award } from 'lucide-react';
+import { Trophy, Share2, Plus, Home, Medal, Award, Loader2, Image } from 'lucide-react';
 import { useRounds } from '@/hooks/useRounds';
-import { formatRelativeToPar, getScoreColor, PlayerWithScores } from '@/types/golf';
+import { formatRelativeToPar, getScoreColor, PlayerWithScores, Score, Player } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { shareResults, shareText } from '@/lib/shareResults';
+import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 
 export default function RoundComplete() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getRoundById, getPlayersWithScores, completeRound } = useRounds();
+  const { getRoundById, getPlayersWithScores, completeRound, getScoresForRound } = useRounds();
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareMode, setShareMode] = useState<'image' | 'text' | null>(null);
 
   const round = getRoundById(id || '');
 
@@ -91,22 +95,58 @@ export default function RoundComplete() {
   const totalPar = round.holeInfo.reduce((sum, h) => sum + h.par, 0);
   const dateStr = format(new Date(round.createdAt), 'MMMM d, yyyy');
 
-  const handleShare = async () => {
-    const winnerText = hasTie 
-      ? `🤝 Tied: ${sortedPlayers.filter(p => p.totalStrokes === winner?.totalStrokes).map(p => p.name).join(' & ')}`
-      : `🏆 Winner: ${winner?.name}`;
-    
-    const text = `⛳ MATCH Golf Round Complete!\n\n📍 ${round.courseName}\n📅 ${dateStr}\n${winnerText}\n\n${sortedPlayers.map((p, i) => `${i + 1}. ${p.name}: ${p.totalStrokes} (${formatRelativeToPar(p.totalRelativeToPar)})`).join('\n')}`;
+  // Get raw scores and players for share image
+  const scores = getScoresForRound(round.id);
+  const players: Player[] = playersWithScores.map(p => ({
+    id: p.id,
+    roundId: round.id,
+    name: p.name,
+    handicap: p.handicap,
+    orderIndex: 0,
+  }));
+
+  const handleShareImage = async () => {
+    hapticLight();
+    setIsSharing(true);
+    setShareMode('image');
     
     try {
-      if (navigator.share) {
-        await navigator.share({ text });
-      } else {
-        await navigator.clipboard.writeText(text);
-        toast.success('Results copied to clipboard!');
-      }
+      await shareResults(round, players, scores);
+      hapticSuccess();
+      toast.success('Results shared!');
     } catch (error) {
-      // User cancelled or share failed
+      console.error('Share failed:', error);
+      hapticError();
+      toast.error('Failed to share. Trying text instead...');
+      // Fall back to text share
+      try {
+        await shareText(round, playersWithScores);
+        hapticSuccess();
+        toast.success('Results copied to clipboard!');
+      } catch {
+        toast.error('Share failed. Please try again.');
+      }
+    } finally {
+      setIsSharing(false);
+      setShareMode(null);
+    }
+  };
+
+  const handleShareText = async () => {
+    hapticLight();
+    setIsSharing(true);
+    setShareMode('text');
+    
+    try {
+      await shareText(round, playersWithScores);
+      hapticSuccess();
+      toast.success(navigator.share ? 'Results shared!' : 'Results copied to clipboard!');
+    } catch (error) {
+      hapticError();
+      toast.error('Failed to share');
+    } finally {
+      setIsSharing(false);
+      setShareMode(null);
     }
   };
 
@@ -298,20 +338,46 @@ export default function RoundComplete() {
       {/* Bottom Buttons */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent safe-bottom">
         <div className="space-y-3">
+          {/* Share Image Button */}
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button
               variant="outline"
-              onClick={handleShare}
+              onClick={handleShareImage}
+              disabled={isSharing}
               className="w-full py-6 text-base font-semibold rounded-2xl border-2 border-primary/30 text-primary hover:bg-primary-light"
             >
-              <Share2 className="w-5 h-5 mr-2" />
-              Share Results
+              {isSharing && shareMode === 'image' ? (
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              ) : (
+                <Image className="w-5 h-5 mr-2" />
+              )}
+              Share as Image
+            </Button>
+          </motion.div>
+          
+          {/* Share Text Button */}
+          <motion.div whileTap={{ scale: 0.98 }}>
+            <Button
+              variant="ghost"
+              onClick={handleShareText}
+              disabled={isSharing}
+              className="w-full py-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              {isSharing && shareMode === 'text' ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Share2 className="w-4 h-4 mr-2" />
+              )}
+              Share as Text
             </Button>
           </motion.div>
           
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button
-              onClick={() => navigate('/new-round')}
+              onClick={() => {
+                hapticLight();
+                navigate('/new-round');
+              }}
               className="w-full py-6 text-base font-semibold rounded-2xl shadow-lg shadow-primary/20"
             >
               <Plus className="w-5 h-5 mr-2" />
@@ -321,7 +387,10 @@ export default function RoundComplete() {
           
           <motion.button
             whileTap={{ scale: 0.98 }}
-            onClick={() => navigate('/')}
+            onClick={() => {
+              hapticLight();
+              navigate('/');
+            }}
             className="w-full py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2"
           >
             <Home className="w-4 h-4" />
