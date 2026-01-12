@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Plus, Check, Loader2 } from 'lucide-react';
@@ -13,6 +13,7 @@ import { TeeSelector } from '@/components/golf/TeeSelector';
 import { useCourses } from '@/hooks/useCourses';
 import { useGolfCourseSearch, GolfCourseResult, GolfCourseDetails } from '@/hooks/useGolfCourseSearch';
 import { useCreateSupabaseRound } from '@/hooks/useCreateSupabaseRound';
+import { useProfile } from '@/hooks/useProfile';
 import { Course, HoleInfo, GameConfig, Team, generateId } from '@/types/golf';
 import { createDefaultTeams } from '@/lib/games/bestball';
 import { cn } from '@/lib/utils';
@@ -31,6 +32,7 @@ export default function NewRound() {
   const { createRound } = useCreateSupabaseRound();
   const { courses, createCourse, getDefaultHoles } = useCourses();
   const { getCourseDetails, convertToHoleInfo, getTeeInfo, isLoadingDetails } = useGolfCourseSearch();
+  const { profile } = useProfile();
   const [isCreating, setIsCreating] = useState(false);
 
   const [step, setStep] = useState<Step>('course');
@@ -48,11 +50,31 @@ export default function NewRound() {
   const [courseLocation, setCourseLocation] = useState('');
   const [holeCount, setHoleCount] = useState<9 | 18>(18);
   
-  // Players step
+  // Players step - initialize with empty slots, will be filled from profile
   const [players, setPlayers] = useState<PlayerData[]>([
     { id: '1', name: '', handicap: undefined },
     { id: '2', name: '', handicap: undefined },
   ]);
+  const [profileApplied, setProfileApplied] = useState(false);
+
+  // Auto-fill first player from profile
+  useEffect(() => {
+    if (profile && !profileApplied && profile.full_name) {
+      setPlayers(prev => {
+        const updated = [...prev];
+        // Only fill if first player is empty
+        if (!updated[0].name) {
+          updated[0] = {
+            ...updated[0],
+            name: profile.full_name || '',
+            handicap: profile.handicap ?? undefined,
+          };
+        }
+        return updated;
+      });
+      setProfileApplied(true);
+    }
+  }, [profile, profileApplied]);
   
   // Format step
   const [strokePlay, setStrokePlay] = useState(true);
