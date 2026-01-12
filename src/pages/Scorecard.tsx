@@ -1,11 +1,15 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MoreVertical, BarChart3, RotateCcw, Flag, Mic } from 'lucide-react';
+import { X, MoreVertical, BarChart3, RotateCcw, Flag } from 'lucide-react';
 import { HoleNavigator } from '@/components/golf/HoleNavigator';
 import { PlayerCard } from '@/components/golf/PlayerCard';
 import { ScoreInputSheet } from '@/components/golf/ScoreInputSheet';
+import { VoiceButton } from '@/components/golf/VoiceButton';
+import { VoiceConfirmationModal } from '@/components/golf/VoiceConfirmationModal';
 import { useRounds } from '@/hooks/useRounds';
+import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
+import { parseVoiceInput, ParseResult, ParsedScore } from '@/lib/voiceParser';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -42,6 +46,21 @@ export default function Scorecard() {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [showEndDialog, setShowEndDialog] = useState(false);
+  
+  // Voice recognition state
+  const [showVoiceModal, setShowVoiceModal] = useState(false);
+  const [parseResult, setParseResult] = useState<ParseResult | null>(null);
+  
+  const {
+    isListening,
+    isProcessing,
+    isSupported,
+    startListening,
+    stopListening,
+    transcript,
+    error: voiceError,
+    reset: resetVoice,
+  } = useVoiceRecognition();
 
   const round = getRoundById(id || '');
 
@@ -50,12 +69,7 @@ export default function Scorecard() {
     return getPlayersWithScores(round.id, round.holeInfo);
   }, [round, getPlayersWithScores]);
 
-  const scores = useMemo(() => {
-    if (!round) return [];
-    return getScoresForRound(round.id);
-  }, [round, getScoresForRound]);
-
-  // Calculate how many holes have been fully scored (all players have scores)
+  // Calculate how many holes have been fully scored
   const completedHoles = useMemo(() => {
     if (!round || playersWithScores.length === 0) return 0;
     
@@ -69,7 +83,7 @@ export default function Scorecard() {
     return completed;
   }, [round, playersWithScores]);
 
-  // Determine leading player (lowest total relative to par)
+  // Determine leading player
   const leadingPlayerId = useMemo(() => {
     if (playersWithScores.length === 0) return null;
     const playersWithHoles = playersWithScores.filter(p => p.holesPlayed > 0);
@@ -79,6 +93,29 @@ export default function Scorecard() {
       player.totalRelativeToPar < leading.totalRelativeToPar ? player : leading
     ).id;
   }, [playersWithScores]);
+
+  // Process voice transcript when it arrives
+  useEffect(() => {
+    if (transcript && round) {
+      const currentHoleInfo = round.holeInfo.find(h => h.number === currentHole);
+      const par = currentHoleInfo?.par || 4;
+      
+      const players = playersWithScores.map(p => ({ id: p.id, name: p.name }));
+      const result = parseVoiceInput(transcript, players, par);
+      
+      setParseResult(result);
+      setShowVoiceModal(true);
+      resetVoice();
+    }
+  }, [transcript, round, currentHole, playersWithScores, resetVoice]);
+
+  // Show voice errors
+  useEffect(() => {
+    if (voiceError) {
+      toast.error(voiceError);
+      resetVoice();
+    }
+  }, [voiceError, resetVoice]);
 
   if (!round) {
     return (
@@ -116,23 +153,52 @@ export default function Scorecard() {
     }
   }, [round, completeRound, navigate]);
 
-  const handleResetHole = useCallback(() => {
-    // Reset all scores for current hole
-    playersWithScores.forEach(player => {
-      const hasScore = player.scores.some(s => s.holeNumber === currentHole);
-      if (hasScore) {
-        // We'd need to add a removeScore function, for now just set to 0 which isn't ideal
-        // This is a placeholder - in production, we'd properly remove the score
-      }
-    });
-    toast.info('Hole scores reset');
-  }, [playersWithScores, currentHole]);
+  const handleVoicePress = () => {
+    if (isListening) {
+      stopListening();
+    } else if (!isSupported) {
+      toast.error('Voice not supported. Use Chrome or Safari.', {
+        description: 'Or tap players to enter scores manually.',
+      });
+    } else {
+      startListening();
+    }
+  };
 
-  const handleVoiceClick = () => {
-    toast('Voice scoring coming soon!', {
-      description: 'Say "Jack got a birdie" and we\'ll record it automatically.',
-      icon: '🎤',
+  const handleVoiceConfirm = (scores: ParsedScore[]) => {
+    scores.forEach(({ playerId, score }) => {
+      setPlayerScore(round.id, playerId, currentHole, score);
     });
+    
+    setShowVoiceModal(false);
+    setParseResult(null);
+    
+    toast.success(`${scores.length} score${scores.length > 1 ? 's' : ''} saved!`, {
+      duration: 2000,
+    });
+
+    // Check if all players now have scores for current hole
+    const allScored = playersWithScores.every(player => {
+      const hasExisting = player.scores.some(s => s.holeNumber === currentHole);
+      const wasJustScored = scores.some(s => s.playerId === player.id);
+      return hasExisting || wasJustScored;
+    });
+
+    // Auto-advance to next hole if all scored and not on last hole
+    if (allScored && currentHole < round.holes) {
+      setTimeout(() => {
+        setCurrentHole(h => h + 1);
+        toast.info(`Moving to Hole ${currentHole + 1}`, { duration: 1500 });
+      }, 500);
+    }
+  };
+
+  const handleVoiceRetry = () => {
+    setShowVoiceModal(false);
+    setParseResult(null);
+    setTimeout(() => {
+      startListening();
+    }, 300);
   };
 
   return (
@@ -165,7 +231,7 @@ export default function Scorecard() {
               </motion.button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={handleResetHole}>
+              <DropdownMenuItem onClick={() => toast.info('Reset feature coming soon')}>
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset This Hole
               </DropdownMenuItem>
@@ -192,7 +258,7 @@ export default function Scorecard() {
       />
 
       {/* Player Cards */}
-      <main className="flex-1 px-4 pb-32 overflow-auto">
+      <main className="flex-1 px-4 pb-36 overflow-auto">
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
             {playersWithScores.map((player, index) => {
@@ -217,6 +283,18 @@ export default function Scorecard() {
             })}
           </AnimatePresence>
         </div>
+        
+        {/* Voice hint */}
+        {isSupported && playersWithScores.length > 0 && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center text-xs text-muted-foreground mt-6"
+          >
+            💡 Tap the mic and say "{playersWithScores[0]?.name.split(' ')[0]} 5, {playersWithScores[1]?.name.split(' ')[0] || 'Tim'} 4"
+          </motion.p>
+        )}
       </main>
 
       {/* Bottom Bar */}
@@ -233,13 +311,12 @@ export default function Scorecard() {
           </motion.button>
 
           {/* Voice Button - Center */}
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={handleVoiceClick}
-            className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/25"
-          >
-            <Mic className="w-7 h-7" />
-          </motion.button>
+          <VoiceButton
+            isListening={isListening}
+            isProcessing={isProcessing}
+            isSupported={isSupported}
+            onPress={handleVoicePress}
+          />
 
           {/* Finish / Progress */}
           {canFinish ? (
@@ -270,6 +347,21 @@ export default function Scorecard() {
         holeNumber={currentHole}
         par={currentHoleInfo.par}
         currentScore={selectedPlayer?.scores.find(s => s.holeNumber === currentHole)?.strokes}
+      />
+
+      {/* Voice Confirmation Modal */}
+      <VoiceConfirmationModal
+        isOpen={showVoiceModal}
+        onClose={() => {
+          setShowVoiceModal(false);
+          setParseResult(null);
+        }}
+        onConfirm={handleVoiceConfirm}
+        onRetry={handleVoiceRetry}
+        parseResult={parseResult}
+        players={playersWithScores}
+        holeNumber={currentHole}
+        par={currentHoleInfo.par}
       />
 
       {/* Exit Dialog */}
