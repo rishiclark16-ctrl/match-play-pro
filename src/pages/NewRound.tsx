@@ -77,9 +77,12 @@ export default function NewRound() {
           .filter(Boolean)
           .join(', ');
         
+        // Use course_name from details, fallback to apiCourse
+        const courseName = details.course_name || apiCourse.course_name;
+        
         // Create and save course locally
         const course = createCourse(
-          details.course_name,
+          courseName,
           location || undefined,
           holes,
           details.tees?.male?.[0]?.slope_rating,
@@ -88,7 +91,7 @@ export default function NewRound() {
         
         setSelectedCourse(course);
         setHoleCount(holes.length === 9 ? 9 : 18);
-        toast.success(`Loaded ${details.course_name} with real par data!`);
+        toast.success(`Loaded ${courseName} with real par data!`);
       }
     } catch (err) {
       toast.error('Failed to load course details');
