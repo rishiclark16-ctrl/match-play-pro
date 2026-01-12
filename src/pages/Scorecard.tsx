@@ -14,11 +14,13 @@ import { SpectatorBanner } from '@/components/golf/SpectatorBanner';
 import { useRounds } from '@/hooks/useRounds';
 import { useSupabaseRound } from '@/hooks/useSupabaseRound';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
+import { useKeepAwake } from '@/hooks/useKeepAwake';
 import { parseVoiceInput, ParseResult, ParsedScore } from '@/lib/voiceParser';
 import { Press, PlayerWithScores } from '@/types/golf';
 import { calculatePlayingHandicap, getStrokesPerHole, calculateTotalNetStrokes } from '@/lib/handicapUtils';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
+import { setStatusBarDark } from '@/lib/statusBar';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +46,14 @@ export default function Scorecard() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const isSpectator = searchParams.get('spectator') === 'true';
+  
+  // Keep screen awake during active round - essential for on-course use
+  useKeepAwake(true);
+  
+  // Set dark status bar for native apps
+  useEffect(() => {
+    setStatusBarDark();
+  }, []);
   
   // Use Supabase for live sync
   const { 
