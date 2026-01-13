@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Share2, Plus, Home, Medal, Award, Loader2, Image, DollarSign, Target, TrendingDown, Flame, ChevronDown, ChevronUp, Users } from 'lucide-react';
+import { Trophy, Share2, Plus, Home, Medal, Award, Loader2, Image, DollarSign, Target, Flame, ChevronDown, ChevronUp, Users, ArrowRight } from 'lucide-react';
 import { useRounds } from '@/hooks/useRounds';
 import { useRoundSharing } from '@/hooks/useRoundSharing';
 import { formatRelativeToPar, getScoreColor, getScoreType, PlayerWithScores, Score, Player, Round, HoleInfo, GameConfig, Press } from '@/types/golf';
@@ -14,8 +14,9 @@ import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateSkins, SkinsResult } from '@/lib/games/skins';
 import { calculateNassau, NassauResult } from '@/lib/games/nassau';
-import { calculateWolfStandings, WolfStanding, WolfHoleResult } from '@/lib/games/wolf';
-import { calculateSettlement, NetSettlement, formatSettlementText, getTotalWinnings } from '@/lib/games/settlement';
+import { calculateWolfStandings, WolfStanding } from '@/lib/games/wolf';
+import { calculateSettlement, getTotalWinnings } from '@/lib/games/settlement';
+import { TechCard, TechCardContent } from '@/components/ui/tech-card';
 
 export default function RoundComplete() {
   const { id } = useParams<{ id: string }>();
@@ -26,7 +27,7 @@ export default function RoundComplete() {
   const [shareMode, setShareMode] = useState<'image' | 'text' | null>(null);
   const [sharedWithFriends, setSharedWithFriends] = useState(false);
   const [showSettlements, setShowSettlements] = useState(true);
-  const [showHighlights, setShowHighlights] = useState(true);
+  const [showHighlights, setShowHighlights] = useState(false);
   const [showGames, setShowGames] = useState(true);
   
   // State for Supabase data
@@ -223,7 +224,6 @@ export default function RoundComplete() {
   }, [playersWithScores]);
 
   const winner = sortedPlayers[0];
-  const lastPlace = sortedPlayers[sortedPlayers.length - 1];
   const hasTie = sortedPlayers.length > 1 && sortedPlayers[0]?.totalStrokes === sortedPlayers[1]?.totalStrokes;
 
   // Calculate game results
@@ -390,7 +390,7 @@ export default function RoundComplete() {
       }
     }
 
-    return highlights.slice(0, 8); // Limit to 8 highlights
+    return highlights.slice(0, 8);
   }, [round, rawScores, rawPlayers, gameResults]);
 
   // Match play calculation (if enabled and 2 players)
@@ -438,7 +438,7 @@ export default function RoundComplete() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Loading round...</p>
+          <p className="text-muted-foreground font-medium">Loading round...</p>
         </div>
       </div>
     );
@@ -448,17 +448,21 @@ export default function RoundComplete() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center px-6 space-y-4">
-          <div className="text-6xl">🏌️</div>
-          <h2 className="text-xl font-semibold">Round not found</h2>
-          <p className="text-muted-foreground">This round may have been deleted or doesn't exist</p>
-          <Button onClick={() => navigate('/')}>Go Home</Button>
+          <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mx-auto">
+            <span className="text-3xl">🏌️</span>
+          </div>
+          <h2 className="text-xl font-bold">Round not found</h2>
+          <p className="text-muted-foreground text-sm">This round may have been deleted or doesn't exist</p>
+          <Button onClick={() => navigate('/')} className="mt-4">
+            Go Home
+          </Button>
         </div>
       </div>
     );
   }
 
   const totalPar = round.holeInfo.reduce((sum, h) => sum + h.par, 0);
-  const dateStr = format(new Date(round.createdAt), 'MMMM d, yyyy');
+  const dateStr = format(new Date(round.createdAt), 'MMM d, yyyy');
 
   // Get raw scores and players for share image
   const players: Player[] = playersWithScores.map(p => ({
@@ -513,77 +517,11 @@ export default function RoundComplete() {
     }
   };
 
-  const getRankIcon = (rank: number) => {
-    if (rank === 0) return <Trophy className="w-5 h-5" />;
-    if (rank === 1) return <Medal className="w-5 h-5" />;
-    if (rank === 2) return <Award className="w-5 h-5" />;
-    return null;
-  };
-
-  const getPlayerRow = (player: PlayerWithScores, rank: number) => {
-    const isWinner = rank === 0;
-    const isLast = rank === sortedPlayers.length - 1 && sortedPlayers.length > 2;
-    const isTied = hasTie && player.totalStrokes === winner?.totalStrokes;
-    const netWinnings = getTotalWinnings(player.id, settlements);
-    
-    return (
-      <motion.div
-        key={player.id}
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.4 + rank * 0.1 }}
-        className={cn(
-          "flex items-center gap-4 p-4 rounded-2xl transition-all",
-          isWinner ? "bg-primary-light border-2 border-primary/20" : 
-          isLast ? "bg-destructive/5 border border-destructive/20" :
-          "bg-card border border-border"
-        )}
-      >
-        {/* Rank Circle */}
-        <div className={cn(
-          "w-10 h-10 rounded-full flex items-center justify-center font-bold shrink-0",
-          isWinner 
-            ? "bg-primary text-primary-foreground" 
-            : isLast
-            ? "bg-destructive/20 text-destructive"
-            : "bg-muted text-muted-foreground"
-        )}>
-          {getRankIcon(rank) || (rank + 1)}
-        </div>
-
-        {/* Name */}
-        <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-lg truncate">
-            {player.name}
-            {isLast && sortedPlayers.length > 2 && (
-              <span className="ml-2 text-xs text-destructive">📍 Last</span>
-            )}
-          </h4>
-          {player.handicap && (
-            <p className="text-xs text-muted-foreground">HCP: {player.handicap}</p>
-          )}
-          {netWinnings !== 0 && (
-            <p className={cn(
-              "text-sm font-semibold",
-              netWinnings > 0 ? "text-success" : "text-destructive"
-            )}>
-              {netWinnings > 0 ? '+' : ''}${netWinnings.toFixed(0)}
-            </p>
-          )}
-        </div>
-
-        {/* Score */}
-        <div className="text-right shrink-0">
-          <p className="text-2xl font-bold tabular-nums">{player.totalStrokes}</p>
-          <p className={cn(
-            "text-sm font-semibold",
-            getScoreColor(player.totalStrokes, totalPar)
-          )}>
-            {formatRelativeToPar(player.totalRelativeToPar)}
-          </p>
-        </div>
-      </motion.div>
-    );
+  const getRankDisplay = (rank: number) => {
+    if (rank === 0) return <Trophy className="w-4 h-4 text-gold" />;
+    if (rank === 1) return <Medal className="w-4 h-4 text-muted-foreground" />;
+    if (rank === 2) return <Award className="w-4 h-4 text-amber-600" />;
+    return <span className="text-xs font-bold text-muted-foreground">{rank + 1}</span>;
   };
 
   const CollapsibleSection = ({ 
@@ -601,25 +539,21 @@ export default function RoundComplete() {
     children: React.ReactNode;
     count?: number;
   }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="mb-4"
-    >
+    <div className="mb-3">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors"
+        className="w-full flex items-center justify-between p-3 rounded-lg bg-card border border-border hover:border-primary/20 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Icon className="w-5 h-5 text-primary" />
-          <span className="font-semibold">{title}</span>
-          {count !== undefined && (
-            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+          <Icon className="w-4 h-4 text-primary" />
+          <span className="font-semibold text-sm">{title}</span>
+          {count !== undefined && count > 0 && (
+            <span className="text-[10px] font-bold bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
               {count}
             </span>
           )}
         </div>
-        {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+        {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
       </button>
       <AnimatePresence>
         {isOpen && (
@@ -627,124 +561,140 @@ export default function RoundComplete() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
             className="overflow-hidden"
           >
-            <div className="pt-3 space-y-2">
+            <div className="pt-2 space-y-1.5">
               {children}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Technical Grid Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
+        <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-primary/3 to-transparent" />
+      </div>
+
       {/* Header Section */}
-      <header className="pt-safe pt-16 pb-6 px-4 text-center">
-        <motion.div
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
-          className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/30"
-        >
-          <Trophy className="w-10 h-10 text-primary-foreground" />
-        </motion.div>
+      <header className="relative pt-safe pt-12 pb-4 px-4">
+        {/* Corner Accents */}
+        <div className="absolute top-4 left-4 w-6 h-6 border-l-2 border-t-2 border-primary/30" />
+        <div className="absolute top-4 right-4 w-6 h-6 border-r-2 border-t-2 border-primary/20" />
         
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-2xl font-bold tracking-tight"
-        >
-          Round Complete
-        </motion.h1>
-        
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.25 }}
-          className="text-muted-foreground mt-1"
-        >
-          {round.courseName} • {round.holes} holes
-        </motion.p>
-        
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="text-sm text-muted-foreground"
-        >
-          {dateStr}
-        </motion.p>
+        <div className="text-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 300, delay: 0.1 }}
+            className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center mx-auto mb-3"
+          >
+            <Trophy className="w-7 h-7 text-primary-foreground" />
+          </motion.div>
+          
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.15 }}
+            className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-1"
+          >
+            Round Complete
+          </motion.p>
+          
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-lg font-bold tracking-tight"
+          >
+            {round.courseName}
+          </motion.h1>
+          
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.25 }}
+            className="flex items-center justify-center gap-2 mt-1 text-xs text-muted-foreground"
+          >
+            <span>{round.holes} holes</span>
+            <span>•</span>
+            <span>Par {totalPar}</span>
+            <span>•</span>
+            <span>{dateStr}</span>
+          </motion.div>
+        </div>
       </header>
 
       {/* Winner Card */}
       {winner && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ type: 'spring', delay: 0.35 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
           className="mx-4 mb-4"
         >
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-light via-background to-primary-light/50 border-2 border-primary/20 p-5 shadow-xl">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-            
-            <div className="relative text-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-2">
-                <Trophy className="w-4 h-4" />
-                {hasTie ? 'Tied' : 'Winner'}
-              </div>
-              
-              <h2 className="text-xl font-bold mb-2">
-                {hasTie 
-                  ? sortedPlayers.filter(p => p.totalStrokes === winner.totalStrokes).map(p => p.name).join(' & ')
-                  : winner.name
-                }
-              </h2>
-              
-              <div className="flex items-center justify-center gap-4">
-                <div>
-                  <span className="text-3xl font-bold tabular-nums text-primary">
-                    {winner.totalStrokes}
-                  </span>
-                  <p className="text-xs text-muted-foreground">strokes</p>
+          <TechCard variant="winner" accentBar="top">
+            <TechCardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Trophy className="w-4 h-4 text-gold" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gold">
+                      {hasTie ? 'Tied' : 'Winner'}
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-bold tracking-tight">
+                    {hasTie 
+                      ? sortedPlayers.filter(p => p.totalStrokes === winner.totalStrokes).map(p => p.name).join(' & ')
+                      : winner.name
+                    }
+                  </h2>
                 </div>
-                <div className="h-10 w-px bg-border" />
-                <div>
-                  <span className={cn(
-                    "text-xl font-bold",
-                    getScoreColor(winner.totalStrokes, totalPar)
+                
+                <div className="text-right">
+                  <div className="text-3xl font-black tabular-nums tracking-tight">
+                    {winner.totalStrokes}
+                  </div>
+                  <div className={cn(
+                    "text-sm font-bold",
+                    winner.totalRelativeToPar < 0 ? "text-success" : 
+                    winner.totalRelativeToPar > 0 ? "text-destructive" : "text-muted-foreground"
                   )}>
                     {formatRelativeToPar(winner.totalRelativeToPar)}
-                  </span>
-                  <p className="text-xs text-muted-foreground">to par</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </TechCardContent>
+          </TechCard>
         </motion.div>
       )}
 
       {/* Match Play Result */}
       {matchPlayResult && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
-          className="mx-4 mb-4 p-4 rounded-2xl bg-card border border-border"
+          transition={{ delay: 0.35 }}
+          className="mx-4 mb-4"
         >
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-            Match Play
-          </h3>
-          <p className="text-lg font-bold text-foreground">{matchPlayResult.status}</p>
+          <TechCard>
+            <TechCardContent className="p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Match Play</span>
+                <span className="font-bold text-sm">{matchPlayResult.status}</span>
+              </div>
+            </TechCardContent>
+          </TechCard>
         </motion.div>
       )}
 
       {/* Main Content */}
-      <main className="flex-1 px-4 pb-48 overflow-auto">
+      <main className="relative flex-1 px-4 pb-52 overflow-auto">
         {/* Settlements Section */}
         {settlements.length > 0 && (
           <CollapsibleSection
@@ -755,21 +705,110 @@ export default function RoundComplete() {
             count={settlements.length}
           >
             {settlements.map((s, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="flex items-center justify-between p-3 rounded-xl bg-muted/50"
+                className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50"
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{s.fromPlayerName}</span>
-                  <span className="text-muted-foreground">→</span>
-                  <span className="text-sm font-medium">{s.toPlayerName}</span>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium">{s.fromPlayerName}</span>
+                  <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                  <span className="font-medium">{s.toPlayerName}</span>
                 </div>
-                <span className="font-bold text-primary">${s.amount.toFixed(0)}</span>
-              </motion.div>
+                <span className="font-bold text-primary tabular-nums">${s.amount.toFixed(0)}</span>
+              </div>
             ))}
+          </CollapsibleSection>
+        )}
+
+        {/* Game Results */}
+        {(gameResults?.skinsResult || gameResults?.nassauResult || gameResults?.wolfStandings) && (
+          <CollapsibleSection
+            title="Games"
+            icon={Target}
+            isOpen={showGames}
+            onToggle={() => setShowGames(!showGames)}
+          >
+            {/* Skins Results */}
+            {gameResults.skinsResult && (
+              <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm">🎯</span>
+                  <span className="font-bold text-xs uppercase tracking-wider">Skins</span>
+                </div>
+                <div className="space-y-1">
+                  {gameResults.skinsResult.standings.map((s, i) => (
+                    <div key={i} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{s.playerName}</span>
+                      <span className={cn(
+                        "font-semibold tabular-nums",
+                        s.earnings > 0 ? "text-success" : s.earnings < 0 ? "text-destructive" : ""
+                      )}>
+                        {s.skins} ({s.earnings > 0 ? '+' : ''}${s.earnings.toFixed(0)})
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Nassau Results */}
+            {gameResults.nassauResult && (
+              <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm">🏌️</span>
+                  <span className="font-bold text-xs uppercase tracking-wider">Nassau</span>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Front 9</span>
+                    <span className="font-semibold">
+                      {gameResults.nassauResult.front9.winnerId 
+                        ? rawPlayers.find(p => p.id === gameResults.nassauResult!.front9.winnerId)?.name
+                        : 'Tied'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Back 9</span>
+                    <span className="font-semibold">
+                      {gameResults.nassauResult.back9.winnerId 
+                        ? rawPlayers.find(p => p.id === gameResults.nassauResult!.back9.winnerId)?.name
+                        : 'Tied'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Overall</span>
+                    <span className="font-semibold">
+                      {gameResults.nassauResult.overall.winnerId 
+                        ? rawPlayers.find(p => p.id === gameResults.nassauResult!.overall.winnerId)?.name
+                        : 'Tied'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Wolf Results */}
+            {gameResults.wolfStandings && (
+              <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm">🐺</span>
+                  <span className="font-bold text-xs uppercase tracking-wider">Wolf</span>
+                </div>
+                <div className="space-y-1">
+                  {gameResults.wolfStandings.map((s, i) => (
+                    <div key={i} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{s.playerName}</span>
+                      <span className={cn(
+                        "font-semibold tabular-nums",
+                        s.earnings > 0 ? "text-success" : s.earnings < 0 ? "text-destructive" : ""
+                      )}>
+                        {s.totalPoints}pts ({s.earnings > 0 ? '+' : ''}${s.earnings.toFixed(0)})
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CollapsibleSection>
         )}
 
@@ -783,190 +822,160 @@ export default function RoundComplete() {
             count={highlights.length}
           >
             {highlights.map((h, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
                 className={cn(
-                  "flex items-center gap-3 p-3 rounded-xl",
-                  h.type === 'great' ? "bg-success/10" :
-                  h.type === 'bad' ? "bg-destructive/10" :
-                  "bg-muted/50"
+                  "flex items-center gap-2.5 p-2.5 rounded-lg border",
+                  h.type === 'great' ? "bg-success/5 border-success/20" :
+                  h.type === 'bad' ? "bg-destructive/5 border-destructive/20" :
+                  "bg-muted/50 border-border/50"
                 )}
               >
-                <span className="text-xl">{h.icon}</span>
+                <span className="text-lg">{h.icon}</span>
                 <span className="text-sm">{h.text}</span>
-              </motion.div>
+              </div>
             ))}
           </CollapsibleSection>
         )}
 
-        {/* Game Results */}
-        {(gameResults?.skinsResult || gameResults?.nassauResult || gameResults?.wolfStandings) && (
-          <CollapsibleSection
-            title="Game Results"
-            icon={Target}
-            isOpen={showGames}
-            onToggle={() => setShowGames(!showGames)}
-          >
-            {/* Skins Results */}
-            {gameResults.skinsResult && (
-              <div className="p-3 rounded-xl bg-muted/50">
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <span className="text-lg">🎯</span> Skins
-                </h4>
-                <div className="space-y-1">
-                  {gameResults.skinsResult.standings.map((s, i) => (
-                    <div key={i} className="flex justify-between text-sm">
-                      <span>{s.playerName}</span>
-                      <span className={cn(
-                        "font-semibold",
-                        s.earnings > 0 ? "text-success" : s.earnings < 0 ? "text-destructive" : ""
-                      )}>
-                        {s.skins} skin{s.skins !== 1 ? 's' : ''} ({s.earnings > 0 ? '+' : ''}${s.earnings.toFixed(0)})
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Nassau Results */}
-            {gameResults.nassauResult && (
-              <div className="p-3 rounded-xl bg-muted/50">
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <span className="text-lg">🏌️</span> Nassau
-                </h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>Front 9</span>
-                    <span className="font-medium">
-                      {gameResults.nassauResult.front9.winnerId 
-                        ? rawPlayers.find(p => p.id === gameResults.nassauResult!.front9.winnerId)?.name
-                        : 'Tied'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Back 9</span>
-                    <span className="font-medium">
-                      {gameResults.nassauResult.back9.winnerId 
-                        ? rawPlayers.find(p => p.id === gameResults.nassauResult!.back9.winnerId)?.name
-                        : 'Tied'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Overall</span>
-                    <span className="font-medium">
-                      {gameResults.nassauResult.overall.winnerId 
-                        ? rawPlayers.find(p => p.id === gameResults.nassauResult!.overall.winnerId)?.name
-                        : 'Tied'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Wolf Results */}
-            {gameResults.wolfStandings && (
-              <div className="p-3 rounded-xl bg-muted/50">
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <span className="text-lg">🐺</span> Wolf
-                </h4>
-                <div className="space-y-1">
-                  {gameResults.wolfStandings.map((s, i) => (
-                    <div key={i} className="flex justify-between text-sm">
-                      <span>{s.playerName}</span>
-                      <span className={cn(
-                        "font-semibold",
-                        s.earnings > 0 ? "text-success" : s.earnings < 0 ? "text-destructive" : ""
-                      )}>
-                        {s.totalPoints} pts ({s.earnings > 0 ? '+' : ''}${s.earnings.toFixed(0)})
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CollapsibleSection>
-        )}
-
         {/* Final Standings */}
-        <motion.h3
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35 }}
-          className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-1 flex items-center gap-2"
-        >
-          <Users className="w-4 h-4" />
-          Final Standings
-        </motion.h3>
-        <div className="space-y-2">
-          {sortedPlayers.map((player, index) => getPlayerRow(player, index))}
+        <div className="mt-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="w-4 h-4 text-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
+              Final Standings
+            </span>
+          </div>
+          
+          <div className="space-y-2">
+            {sortedPlayers.map((player, rank) => {
+              const isWinner = rank === 0;
+              const isLast = rank === sortedPlayers.length - 1 && sortedPlayers.length > 2;
+              const netWinnings = getTotalWinnings(player.id, settlements);
+              
+              return (
+                <motion.div
+                  key={player.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 + rank * 0.05 }}
+                >
+                  <TechCard 
+                    variant={isWinner ? 'highlighted' : 'default'}
+                    className={cn(
+                      isLast && "border-destructive/30"
+                    )}
+                  >
+                    <TechCardContent className="p-3">
+                      <div className="flex items-center gap-3">
+                        {/* Rank */}
+                        <div className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                          isWinner ? "bg-primary text-primary-foreground" :
+                          isLast ? "bg-destructive/10" :
+                          "bg-muted"
+                        )}>
+                          {getRankDisplay(rank)}
+                        </div>
+
+                        {/* Name */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-sm truncate">
+                            {player.name}
+                          </h4>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {player.handicap && (
+                              <span>HCP {player.handicap}</span>
+                            )}
+                            {netWinnings !== 0 && (
+                              <span className={cn(
+                                "font-bold",
+                                netWinnings > 0 ? "text-success" : "text-destructive"
+                              )}>
+                                {netWinnings > 0 ? '+' : ''}${netWinnings.toFixed(0)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Score */}
+                        <div className="text-right shrink-0">
+                          <p className="text-xl font-black tabular-nums">{player.totalStrokes}</p>
+                          <p className={cn(
+                            "text-xs font-bold",
+                            player.totalRelativeToPar < 0 ? "text-success" : 
+                            player.totalRelativeToPar > 0 ? "text-destructive" : "text-muted-foreground"
+                          )}>
+                            {formatRelativeToPar(player.totalRelativeToPar)}
+                          </p>
+                        </div>
+                      </div>
+                    </TechCardContent>
+                  </TechCard>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </main>
 
       {/* Bottom Buttons */}
       <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-gradient-to-t from-background via-background to-transparent">
         <div className="space-y-2">
+          {/* Share Buttons */}
           <div className="flex gap-2">
-            <motion.div whileTap={{ scale: 0.98 }} className="flex-1">
-              <Button
-                variant="outline"
-                onClick={handleShareImage}
-                disabled={isSharing}
-                className="w-full py-5 text-sm font-semibold rounded-xl border-2 border-primary/30 text-primary hover:bg-primary-light"
-              >
-                {isSharing && shareMode === 'image' ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Image className="w-4 h-4 mr-2" />
-                )}
-                Image
-              </Button>
-            </motion.div>
+            <Button
+              variant="outline"
+              onClick={handleShareImage}
+              disabled={isSharing}
+              className="flex-1 h-11 text-sm font-semibold rounded-lg border-2"
+            >
+              {isSharing && shareMode === 'image' ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Image className="w-4 h-4 mr-2" />
+              )}
+              Image
+            </Button>
             
-            <motion.div whileTap={{ scale: 0.98 }} className="flex-1">
-              <Button
-                variant="outline"
-                onClick={handleShareText}
-                disabled={isSharing}
-                className="w-full py-5 text-sm font-semibold rounded-xl border border-border"
-              >
-                {isSharing && shareMode === 'text' ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Share2 className="w-4 h-4 mr-2" />
-                )}
-                Text
-              </Button>
-            </motion.div>
+            <Button
+              variant="outline"
+              onClick={handleShareText}
+              disabled={isSharing}
+              className="flex-1 h-11 text-sm font-semibold rounded-lg"
+            >
+              {isSharing && shareMode === 'text' ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Share2 className="w-4 h-4 mr-2" />
+              )}
+              Text
+            </Button>
           </div>
           
-          <motion.div whileTap={{ scale: 0.98 }}>
-            <Button
-              onClick={() => {
-                hapticLight();
-                navigate('/new-round');
-              }}
-              className="w-full py-5 text-base font-semibold rounded-xl shadow-lg shadow-primary/20"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              New Round
-            </Button>
-          </motion.div>
+          {/* New Round Button */}
+          <Button
+            onClick={() => {
+              hapticLight();
+              navigate('/new-round');
+            }}
+            className="w-full h-12 text-base font-bold rounded-lg"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            New Round
+          </Button>
           
-          <motion.button
-            whileTap={{ scale: 0.98 }}
+          {/* Home Link */}
+          <button
             onClick={() => {
               hapticLight();
               navigate('/');
             }}
-            className="w-full py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1"
           >
             <Home className="w-4 h-4" />
             Back to Home
-          </motion.button>
+          </button>
         </div>
       </div>
     </div>

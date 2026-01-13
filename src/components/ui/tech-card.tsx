@@ -13,10 +13,10 @@ interface TechCardProps extends Omit<HTMLMotionProps<"div">, "children"> {
 const TechCard = React.forwardRef<HTMLDivElement, TechCardProps>(
   ({ className, children, variant = 'default', corners = false, hover = false, accentBar = 'none', ...props }, ref) => {
     const variants = {
-      default: "bg-card border border-border shadow-sm",
+      default: "bg-card border border-border",
       elevated: "bg-card border border-border shadow-md",
-      highlighted: "bg-card border-2 border-primary/30",
-      winner: "bg-gold/5 border-2 border-gold",
+      highlighted: "bg-card border-2 border-primary/30 shadow-sm",
+      winner: "bg-gradient-to-br from-gold/5 to-gold/10 border-2 border-gold/40",
     };
 
     const accentStyles = {
