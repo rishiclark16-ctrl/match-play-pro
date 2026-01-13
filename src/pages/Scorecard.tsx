@@ -669,6 +669,9 @@ export default function Scorecard() {
         <LiveLeaderboard 
           players={playersWithScores}
           useNetScoring={round.games?.some((g: any) => g.useNet) || false}
+          isMatchPlay={round.matchPlay}
+          holeInfo={round.holeInfo}
+          scores={roundScores}
         />
       )}
 
