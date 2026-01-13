@@ -306,7 +306,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                   checked={!!bestBallGame}
                   onCheckedChange={(checked) => {
                     if (checked) {
-                      updateGame('bestball', { stakes: 0, teams: [] });
+                      updateGame('bestball', { stakes: 0, teams: [], useNet: false });
                     } else {
                       updateGame('bestball', null);
                     }
@@ -318,11 +318,20 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="pt-3 border-t border-border/50"
+                  className="space-y-3 pt-3 border-t border-border/50"
                 >
                   <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-lg flex items-center gap-2">
                     <AlertCircle className="w-4 h-4" />
                     Teams will be auto-assigned based on player order
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="bestball-net"
+                      checked={bestBallGame.useNet ?? false}
+                      onCheckedChange={(checked) => updateGame('bestball', { useNet: checked === true })}
+                    />
+                    <Label htmlFor="bestball-net" className="text-sm">Net Best Ball (use handicap strokes)</Label>
                   </div>
                 </motion.div>
               )}
