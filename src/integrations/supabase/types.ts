@@ -458,6 +458,14 @@ export type Database = {
         Args: { group_id: string; user_id: string }
         Returns: boolean
       }
+      is_round_creator: {
+        Args: { round_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_round_participant: {
+        Args: { round_id: string; user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
