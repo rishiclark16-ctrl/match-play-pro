@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Users, X, Loader2, RefreshCw, Flag } from 'lucide-react';
+import { Plus, Users, X, Loader2, RefreshCw, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RoundCard } from '@/components/golf/RoundCard';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { GeometricBackground } from '@/components/ui/geometric-background';
-import { GlassCard } from '@/components/ui/glass-card';
+import { TechCard } from '@/components/ui/tech-card';
 import { useRounds } from '@/hooks/useRounds';
 import { useJoinRound } from '@/hooks/useJoinRound';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,7 +16,7 @@ import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Round } from '@/types/golf';
-import { staggerContainer, staggerItem, popIn, pageVariants } from '@/lib/animations';
+import { staggerContainer, staggerItem, popIn } from '@/lib/animations';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -92,7 +91,7 @@ export default function Home() {
     const success = await deleteSupabaseRound(roundId);
     
     if (success) {
-      deleteLocalRound(roundId); // Also clean up local storage
+      deleteLocalRound(roundId);
       setRounds(prev => prev.filter(r => r.id !== roundId));
       hapticSuccess();
       toast.success('Round deleted');
@@ -108,7 +107,6 @@ export default function Home() {
     const round = await joinRound(joinCode.trim());
     if (round) {
       hapticSuccess();
-      // Navigate with spectator flag
       navigate(`/round/${round.id}?spectator=true`);
       setShowJoinModal(false);
       setJoinCode('');
@@ -117,148 +115,233 @@ export default function Home() {
     }
   };
 
+  const activeRounds = rounds.filter(r => r.status === 'active');
+  const completedRounds = rounds.filter(r => r.status === 'complete');
+
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
-      {/* Subtle geometric background */}
-      <GeometricBackground variant="grid" />
+      {/* Technical Grid Background */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Subtle grid */}
+        <div 
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `
+              linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
+              linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)
+            `,
+            backgroundSize: '48px 48px',
+          }}
+        />
+        
+        {/* Top gradient accent */}
+        <div 
+          className="absolute top-0 left-0 right-0 h-80"
+          style={{
+            background: 'linear-gradient(180deg, hsl(var(--primary) / 0.04) 0%, transparent 100%)',
+          }}
+        />
+        
+        {/* Corner accents */}
+        <div className="absolute top-6 left-6 w-12 h-12 border-l-2 border-t-2 border-primary/20" />
+        <div className="absolute top-6 right-6 w-12 h-12 border-r-2 border-t-2 border-primary/10" />
+        
+        {/* Data lines */}
+        <div className="absolute top-32 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      </div>
       
       {/* Header */}
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="pt-safe px-5 pt-14 pb-8 flex items-center justify-between relative z-10"
+        transition={{ duration: 0.3 }}
+        className="pt-safe px-6 pt-14 pb-6 flex items-center justify-between relative z-10"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-lg shadow-primary/20">
-            <Flag className="w-5 h-5 text-primary-foreground" />
+        <div className="flex items-center gap-4">
+          {/* Logo mark */}
+          <div className="relative">
+            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+              <span className="text-2xl font-black text-primary-foreground tracking-tighter">M</span>
+            </div>
+            {/* Corner accent on logo */}
+            <div className="absolute -top-1 -left-1 w-3 h-3 border-l-2 border-t-2 border-primary" />
           </div>
-          <h1 className="headline-lg text-gradient">MATCH</h1>
+          
+          <div>
+            <h1 className="text-2xl font-black tracking-tight text-foreground">MATCH</h1>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Golf Scorecard</p>
+          </div>
         </div>
+        
         <motion.button
-          whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => {
             hapticLight();
             navigate('/profile');
           }}
-          className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full"
+          className="relative focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-xl"
         >
-          <Avatar className="h-11 w-11 border-2 border-primary/20 shadow-lg">
-            <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || 'Profile'} />
-            <AvatarFallback className="bg-gradient-primary text-primary-foreground text-sm font-bold">
+          <Avatar className="h-12 w-12 rounded-xl border-2 border-border">
+            <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || 'Profile'} className="rounded-xl" />
+            <AvatarFallback className="rounded-xl bg-primary text-primary-foreground text-sm font-bold">
               {getInitials(profile?.full_name)}
             </AvatarFallback>
           </Avatar>
+          {/* Online indicator */}
+          <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-success border-2 border-background" />
         </motion.button>
       </motion.header>
 
+      {/* Stats Bar */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="px-6 py-3 border-y border-border bg-muted/30 relative z-10"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Active</p>
+              <p className="text-2xl font-black tabular-nums text-foreground">{activeRounds.length}</p>
+            </div>
+            <div className="w-px h-8 bg-border" />
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Completed</p>
+              <p className="text-2xl font-black tabular-nums text-muted-foreground">{completedRounds.length}</p>
+            </div>
+          </div>
+          
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={fetchRounds}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors"
+          >
+            <RefreshCw className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs font-semibold text-muted-foreground">Refresh</span>
+          </motion.button>
+        </div>
+      </motion.div>
+
       {/* Content */}
-      <main className="flex-1 px-5 pb-36 overflow-auto relative z-10">
+      <main className="flex-1 px-6 py-6 pb-40 overflow-auto relative z-10">
         {loadingRounds ? (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="flex flex-col items-center justify-center py-20 gap-4"
           >
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center border border-border">
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>
-            <p className="text-muted-foreground">Loading your rounds...</p>
+            <p className="text-sm font-medium text-muted-foreground">Loading rounds...</p>
           </motion.div>
         ) : rounds.length > 0 ? (
           <motion.div 
             variants={staggerContainer}
             initial="initial"
             animate="animate"
-            className="space-y-3"
+            className="space-y-6"
           >
-            <motion.div 
-              variants={staggerItem}
-              className="flex items-center justify-between mb-4"
-            >
-              <h2 className="label-sm">Recent Rounds</h2>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={fetchRounds}
-                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Refresh
-              </motion.button>
-            </motion.div>
-            {rounds.map((round, index) => (
-              <motion.div
-                key={round.id}
-                variants={staggerItem}
-                custom={index}
-              >
-                <RoundCard
-                  round={round}
-                  onClick={() => navigate(
-                    round.status === 'active' 
-                      ? `/round/${round.id}` 
-                      : `/round/${round.id}/complete`
-                  )}
-                  onDelete={handleDeleteRound}
-                  isDeleting={deletingRoundId === round.id}
-                />
-              </motion.div>
-            ))}
+            {/* Active Rounds Section */}
+            {activeRounds.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">Live Rounds</h2>
+                </div>
+                {activeRounds.map((round, index) => (
+                  <motion.div key={round.id} variants={staggerItem} custom={index}>
+                    <RoundCard
+                      round={round}
+                      onClick={() => navigate(`/round/${round.id}`)}
+                      onDelete={handleDeleteRound}
+                      isDeleting={deletingRoundId === round.id}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            )}
+            
+            {/* Completed Rounds Section */}
+            {completedRounds.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">History</h2>
+                {completedRounds.map((round, index) => (
+                  <motion.div key={round.id} variants={staggerItem} custom={index + activeRounds.length}>
+                    <RoundCard
+                      round={round}
+                      onClick={() => navigate(`/round/${round.id}/complete`)}
+                      onDelete={handleDeleteRound}
+                      isDeleting={deletingRoundId === round.id}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </motion.div>
         ) : (
           <motion.div 
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            className="flex flex-col items-center justify-center py-20 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center py-16 text-center"
           >
-            <motion.div 
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", delay: 0.2 }}
-              className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-6 relative"
-            >
-              <span className="text-5xl">⛳</span>
-              <div className="absolute inset-0 rounded-3xl border border-primary/10" />
-            </motion.div>
-            <h2 className="headline-md mb-2">No rounds yet</h2>
-            <p className="text-muted-foreground max-w-xs">
-              Start your first round to track scores with your group!
-            </p>
+            <TechCard corners className="p-8 max-w-xs mx-auto">
+              <div className="w-20 h-20 rounded-xl bg-muted flex items-center justify-center mx-auto mb-6 border border-border">
+                <span className="text-4xl">⛳</span>
+              </div>
+              <h2 className="text-xl font-bold mb-2">No rounds yet</h2>
+              <p className="text-sm text-muted-foreground">
+                Start your first round to track scores with your group.
+              </p>
+              <Button 
+                onClick={() => {
+                  hapticLight();
+                  navigate('/new-round');
+                }}
+                className="w-full mt-6 py-6 font-semibold rounded-xl bg-primary"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                New Round
+              </Button>
+            </TechCard>
           </motion.div>
         )}
       </main>
 
-      {/* Bottom Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 p-5 pb-safe bg-gradient-to-t from-background via-background/95 to-transparent z-20">
-        <div className="space-y-3">
-          <motion.div whileTap={{ scale: 0.98 }}>
-            <Button 
-              onClick={() => {
-                hapticLight();
-                navigate('/new-round');
-              }}
-              className="w-full py-7 text-lg font-semibold rounded-2xl bg-gradient-primary shadow-xl shadow-primary/25"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              New Round
-            </Button>
-          </motion.div>
-          <motion.div whileTap={{ scale: 0.98 }}>
-            <Button 
-              variant="outline"
-              onClick={() => {
-                hapticLight();
-                setShowJoinModal(true);
-              }}
-              className="w-full py-7 text-lg font-semibold rounded-2xl border-2 border-primary/20 text-primary hover:bg-primary-light hover:border-primary/30 transition-all"
-            >
-              <Users className="w-5 h-5 mr-2" />
-              Join Round
-            </Button>
-          </motion.div>
+      {/* Bottom Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-20">
+        {/* Gradient fade */}
+        <div className="h-8 bg-gradient-to-t from-background to-transparent" />
+        
+        <div className="bg-background border-t border-border px-6 py-4 pb-safe">
+          <div className="flex gap-3">
+            <motion.div whileTap={{ scale: 0.98 }} className="flex-1">
+              <Button 
+                onClick={() => {
+                  hapticLight();
+                  navigate('/new-round');
+                }}
+                className="w-full py-6 text-base font-bold rounded-xl bg-primary shadow-lg"
+              >
+                <Plus className="w-5 h-5 mr-2" strokeWidth={2.5} />
+                New Round
+              </Button>
+            </motion.div>
+            
+            <motion.div whileTap={{ scale: 0.98 }}>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  hapticLight();
+                  setShowJoinModal(true);
+                }}
+                className="h-full px-6 font-bold rounded-xl border-2 border-border hover:border-primary/30 hover:bg-muted"
+              >
+                <Users className="w-5 h-5" strokeWidth={2.5} />
+              </Button>
+            </motion.div>
+          </div>
         </div>
       </div>
 
@@ -270,7 +353,7 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-foreground/20 backdrop-blur-sm z-40"
               onClick={() => setShowJoinModal(false)}
             />
             <motion.div
@@ -278,55 +361,63 @@ export default function Home() {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="fixed inset-x-5 top-1/2 -translate-y-1/2 z-50"
+              className="fixed inset-x-6 top-1/2 -translate-y-1/2 z-50"
             >
-              <GlassCard variant="elevated" className="p-6 relative">
+              <TechCard variant="elevated" corners className="p-6 relative">
+                {/* Corner accents */}
+                <div className="absolute top-3 left-3 w-4 h-4 border-l-2 border-t-2 border-primary" />
+                <div className="absolute top-3 right-3 w-4 h-4 border-r-2 border-t-2 border-primary/50" />
+                
                 <motion.button
-                  whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowJoinModal(false)}
-                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+                  className="absolute top-4 right-4 w-10 h-10 rounded-lg bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </motion.button>
                 
-                <h3 className="headline-md mb-2">Join a Round</h3>
-                <p className="text-muted-foreground mb-5">
-                  Enter the 6-character code shared by the round creator.
-                </p>
+                <div className="pt-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-primary mb-1">Join</p>
+                  <h3 className="text-xl font-bold mb-1">Enter Round Code</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Enter the 6-character code to join as spectator.
+                  </p>
+                </div>
                 
                 <Input
-                  placeholder="Enter code"
+                  placeholder="XXXXXX"
                   value={joinCode}
                   onChange={(e) => {
                     setJoinCode(e.target.value.toUpperCase());
                     clearError();
                   }}
                   maxLength={6}
-                  className="py-7 text-center text-2xl font-bold tracking-[0.3em] uppercase rounded-2xl bg-muted/30 border-border/50"
+                  className="py-6 text-center text-2xl font-black tracking-[0.4em] uppercase rounded-xl bg-muted border-border font-mono"
                 />
                 
                 {joinError && (
-                  <p className="text-destructive text-sm mt-3">{joinError}</p>
+                  <p className="text-danger text-sm mt-3 font-medium">{joinError}</p>
                 )}
                 
                 <motion.div whileTap={{ scale: 0.98 }}>
                   <Button 
                     onClick={handleJoinRound}
                     disabled={joinCode.length !== 6 || joinLoading}
-                    className="w-full mt-5 py-6 text-lg font-semibold rounded-2xl bg-gradient-primary shadow-lg shadow-primary/20"
+                    className="w-full mt-5 py-6 text-base font-bold rounded-xl bg-primary"
                   >
                     {joinLoading ? (
                       <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                    ) : null}
+                    ) : (
+                      <ChevronRight className="w-5 h-5 mr-1" />
+                    )}
                     Join Round
                   </Button>
                 </motion.div>
                 
                 <p className="text-xs text-muted-foreground text-center mt-4">
-                  You'll be able to follow along and see scores in real-time
+                  Follow along and see scores in real-time
                 </p>
-              </GlassCard>
+              </TechCard>
             </motion.div>
           </>
         )}
