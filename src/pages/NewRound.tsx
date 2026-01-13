@@ -11,11 +11,13 @@ import { CourseSearch } from '@/components/golf/CourseSearch';
 import { PlayerInput } from '@/components/golf/PlayerInput';
 import { TeeSelector } from '@/components/golf/TeeSelector';
 import { QuickAddFriends } from '@/components/friends/QuickAddFriends';
+import { GroupSelector } from '@/components/groups/GroupSelector';
 import { useCourses } from '@/hooks/useCourses';
 import { useGolfCourseSearch, GolfCourseResult, GolfCourseDetails } from '@/hooks/useGolfCourseSearch';
 import { useCreateSupabaseRound } from '@/hooks/useCreateSupabaseRound';
 import { useProfile } from '@/hooks/useProfile';
 import { useFriends, Friend } from '@/hooks/useFriends';
+import { useGroups, GolfGroup } from '@/hooks/useGroups';
 import { Course, HoleInfo, GameConfig, Team, generateId } from '@/types/golf';
 import { createDefaultTeams } from '@/lib/games/bestball';
 import { cn } from '@/lib/utils';
@@ -37,6 +39,7 @@ export default function NewRound() {
   const { getCourseDetails, convertToHoleInfo, getTeeInfo, isLoadingDetails } = useGolfCourseSearch();
   const { profile } = useProfile();
   const { friends } = useFriends();
+  const { groups } = useGroups();
   const [isCreating, setIsCreating] = useState(false);
   const [addedFriendIds, setAddedFriendIds] = useState<string[]>([]);
 
@@ -226,6 +229,25 @@ export default function NewRound() {
     }
     
     setAddedFriendIds(prev => [...prev, friend.id]);
+  };
+
+  const handleSelectGroup = (group: GolfGroup) => {
+    // Replace players with group members
+    const newPlayers: PlayerData[] = group.members.slice(0, 4).map((member, index) => ({
+      id: member.id,
+      name: member.name,
+      handicap: member.handicap ?? undefined,
+      profileId: member.profileId || undefined,
+    }));
+    
+    // Ensure at least 2 player slots
+    while (newPlayers.length < 2) {
+      newPlayers.push({ id: Date.now().toString() + newPlayers.length, name: '', handicap: undefined });
+    }
+    
+    setPlayers(newPlayers);
+    setAddedFriendIds(group.members.filter(m => m.profileId).map(m => m.profileId!));
+    toast.success(`Loaded ${group.name}`);
   };
 
   const handleStartRound = async () => {
@@ -525,6 +547,13 @@ export default function NewRound() {
                 Add at least 2 players to continue
               </p>
             )}
+
+            {/* Use a Group */}
+            <GroupSelector
+              groups={groups}
+              onSelectGroup={handleSelectGroup}
+              onManageGroups={() => navigate('/groups')}
+            />
 
             {/* Quick Add Friends */}
             <QuickAddFriends
