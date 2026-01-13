@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
 import { Round, HoleInfo, GameConfig, generateJoinCode } from '@/types/golf';
 import { Json } from '@/integrations/supabase/types';
 
@@ -14,10 +15,12 @@ interface CreateRoundInput {
   slope?: number;
   rating?: number;
   games: GameConfig[];
-  players: { name: string; handicap?: number; teamId?: string }[];
+  players: { name: string; handicap?: number; teamId?: string; profileId?: string }[];
 }
 
 export function useCreateSupabaseRound() {
+  const { user } = useAuth();
+  
   const createRound = useCallback(async (input: CreateRoundInput): Promise<Round | null> => {
     const joinCode = generateJoinCode();
 
@@ -53,13 +56,14 @@ export function useCreateSupabaseRound() {
         return null;
       }
 
-      // Insert players
+      // Insert players - first player (index 0) is the creator and gets their profile_id set
       const playersToInsert = input.players.map((p, index) => ({
         round_id: roundData.id,
         name: p.name,
         handicap: p.handicap || null,
         team_id: p.teamId || null,
-        order_index: index
+        order_index: index,
+        profile_id: index === 0 ? user?.id : (p.profileId || null)
       }));
 
       const { error: playersError } = await supabase
