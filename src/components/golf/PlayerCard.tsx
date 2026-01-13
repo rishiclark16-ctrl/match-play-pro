@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Minus, Plus, Check } from 'lucide-react';
 import { PlayerWithScores, getScoreColor, formatRelativeToPar } from '@/types/golf';
@@ -14,8 +14,8 @@ interface PlayerCardProps {
   onScoreTap?: () => void;
   onQuickScore?: (score: number) => void;
   showNetScores?: boolean;
-  voiceHighlight?: boolean; // Highlight during voice listening
-  voiceSuccess?: boolean; // Show success animation after voice save
+  voiceHighlight?: boolean;
+  voiceSuccess?: boolean;
 }
 
 export function PlayerCard({ 
@@ -32,7 +32,7 @@ export function PlayerCard({
 }: PlayerCardProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   
-  // Get initials (first letter of first and last name if available)
+  // Get initials
   const nameParts = player.name.trim().split(' ');
   const initials = nameParts.length > 1 
     ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase()
@@ -46,22 +46,22 @@ export function PlayerCard({
     ? currentHoleScore - holeStrokes 
     : undefined;
 
-  // Score styling based on relative to par (use net if available)
+  // Score styling based on relative to par
   const getScoreBoxStyles = () => {
     if (currentHoleScore === undefined) {
-      return 'border-2 border-dashed border-muted-foreground/30 bg-transparent';
+      return 'border-2 border-dashed border-muted-foreground/20 bg-muted/30';
     }
     
-    // Use net score for styling if handicap is active
     const scoreToCompare = showNetScores && currentNetScore !== undefined 
       ? currentNetScore 
       : currentHoleScore;
     
     const diff = scoreToCompare - currentHolePar;
-    if (diff <= -1) return 'bg-success/10 text-success border-2 border-success/20';
-    if (diff === 0) return 'bg-muted text-foreground border-2 border-transparent';
-    if (diff === 1) return 'bg-warning/10 text-warning border-2 border-warning/20';
-    return 'bg-danger/10 text-danger border-2 border-danger/20';
+    if (diff <= -2) return 'bg-success text-success-foreground shadow-lg shadow-success/20';
+    if (diff === -1) return 'bg-success/15 text-success border border-success/30';
+    if (diff === 0) return 'bg-muted text-foreground border border-border';
+    if (diff === 1) return 'bg-warning/15 text-warning border border-warning/30';
+    return 'bg-destructive/15 text-destructive border border-destructive/30';
   };
 
   const triggerAnimation = () => {
@@ -70,8 +70,6 @@ export function PlayerCard({
   };
 
   const hasHandicap = player.handicap !== undefined && player.handicap !== null;
-  
-  // Get display score or default to par
   const displayScore = currentHoleScore ?? currentHolePar;
 
   const handleDecrement = (e: React.MouseEvent | React.TouchEvent) => {
@@ -104,21 +102,22 @@ export function PlayerCard({
     <motion.div
       animate={
         voiceSuccess 
-          ? { scale: [1, 1.03, 1], backgroundColor: ['var(--card)', 'hsl(142 76% 95%)', 'var(--card)'] }
+          ? { scale: [1, 1.02, 1] }
           : isAnimating 
-            ? { scale: [1, 1.02, 1] } 
+            ? { scale: [1, 1.01, 1] } 
             : {}
       }
-      transition={{ duration: voiceSuccess ? 0.5 : 0.3 }}
+      transition={{ duration: voiceSuccess ? 0.5 : 0.2 }}
       className={cn(
-        "bg-card rounded-xl shadow-sm p-3 flex items-center gap-3 transition-all border min-h-[72px] relative overflow-hidden",
+        "bg-card rounded-2xl p-4 flex items-center gap-4 transition-all border relative overflow-hidden",
         isLeading && player.holesPlayed > 0
-          ? "ring-2 ring-primary/30 border-primary/20 bg-primary-light/30" 
-          : "border-border/50",
-        voiceHighlight && "ring-2 ring-primary/50 border-primary/30"
+          ? "border-primary/30 bg-gradient-to-r from-primary/5 to-transparent shadow-lg shadow-primary/10" 
+          : "border-border/50 shadow-sm",
+        voiceHighlight && "ring-2 ring-primary/50 border-primary/30",
+        voiceSuccess && "bg-success/5"
       )}
     >
-      {/* Voice success checkmark overlay */}
+      {/* Voice success overlay */}
       <AnimatePresence>
         {voiceSuccess && (
           <motion.div
@@ -131,22 +130,22 @@ export function PlayerCard({
               initial={{ scale: 0 }}
               animate={{ scale: [0, 1.2, 1] }}
               transition={{ duration: 0.3, delay: 0.1 }}
-              className="w-12 h-12 rounded-full bg-success flex items-center justify-center"
+              className="w-14 h-14 rounded-full bg-success flex items-center justify-center shadow-lg shadow-success/30"
             >
-              <Check className="w-7 h-7 text-white" />
+              <Check className="w-8 h-8 text-white" />
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
       
-      {/* Avatar - Tappable for full sheet */}
+      {/* Avatar */}
       <motion.button
         whileTap={{ scale: 0.9 }}
         onClick={handleCardTap}
         className={cn(
-          "w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
+          "w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 transition-all",
           isLeading && player.holesPlayed > 0
-            ? "bg-primary text-primary-foreground" 
+            ? "bg-gradient-primary text-primary-foreground shadow-md shadow-primary/20" 
             : "bg-muted text-muted-foreground"
         )}
         aria-label={`Open score sheet for ${player.name}`}
@@ -161,29 +160,27 @@ export function PlayerCard({
             {player.name.split(' ')[0]}
           </h4>
           {hasHandicap && (
-            <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
+            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-semibold">
               {player.playingHandicap}
             </span>
           )}
         </div>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-muted-foreground mt-0.5">
           {player.holesPlayed > 0 ? (
-            <div className="flex items-center gap-1.5">
-              {/* Gross score */}
-              <span className={cn("font-medium", getScoreColor(player.totalStrokes, player.holesPlayed * currentHolePar))}>
+            <div className="flex items-center gap-2">
+              <span className={cn("font-semibold", getScoreColor(player.totalStrokes, player.holesPlayed * currentHolePar))}>
                 {formatRelativeToPar(player.totalRelativeToPar)}
               </span>
               
-              {/* Net score (if handicap) */}
               {showNetScores && hasHandicap && player.netRelativeToPar !== undefined && (
                 <>
-                  <span className="text-muted-foreground/50">→</span>
+                  <span className="text-muted-foreground/40">→</span>
                   <span className={cn(
-                    "font-medium text-xs",
+                    "text-xs font-medium",
                     player.netRelativeToPar <= -1 ? "text-success" :
                     player.netRelativeToPar === 0 ? "text-foreground" :
                     player.netRelativeToPar === 1 ? "text-warning" :
-                    "text-danger"
+                    "text-destructive"
                   )}>
                     Net {formatRelativeToPar(player.netRelativeToPar)}
                   </span>
@@ -205,8 +202,8 @@ export function PlayerCard({
             onClick={handleDecrement}
             disabled={displayScore <= 1}
             className={cn(
-              "w-10 h-10 rounded-lg flex items-center justify-center transition-all",
-              "bg-muted active:bg-muted-foreground/20",
+              "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+              "bg-muted/50 hover:bg-muted active:bg-muted-foreground/20",
               displayScore <= 1 ? "opacity-30" : "opacity-100"
             )}
             aria-label="Decrease score"
@@ -214,12 +211,12 @@ export function PlayerCard({
             <Minus className="w-4 h-4" />
           </motion.button>
 
-          {/* Score Display - Tap for full sheet */}
+          {/* Score Display */}
           <motion.button 
             whileTap={{ scale: 0.95 }}
             onClick={handleCardTap}
             className={cn(
-              "w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 transition-all relative",
+              "w-14 h-14 rounded-xl flex flex-col items-center justify-center shrink-0 transition-all relative",
               getScoreBoxStyles()
             )}
             aria-label={`Score ${currentHoleScore ?? 'not set'}. Tap for more options`}
@@ -234,7 +231,7 @@ export function PlayerCard({
                 {Array.from({ length: Math.min(holeStrokes, 2) }).map((_, i) => (
                   <div 
                     key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-primary"
+                    className="w-2 h-2 rounded-full bg-primary shadow-sm"
                   />
                 ))}
                 {holeStrokes > 2 && (
@@ -245,7 +242,7 @@ export function PlayerCard({
             
             {/* Net score below */}
             {showNetScores && holeStrokes > 0 && currentNetScore !== undefined && (
-              <span className="text-[10px] text-muted-foreground leading-none mt-0.5">
+              <span className="text-[9px] text-muted-foreground leading-none mt-0.5 font-medium">
                 net {currentNetScore}
               </span>
             )}
@@ -257,8 +254,8 @@ export function PlayerCard({
             onClick={handleIncrement}
             disabled={displayScore >= 12}
             className={cn(
-              "w-10 h-10 rounded-lg flex items-center justify-center transition-all",
-              "bg-muted active:bg-muted-foreground/20",
+              "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+              "bg-muted/50 hover:bg-muted active:bg-muted-foreground/20",
               displayScore >= 12 ? "opacity-30" : "opacity-100"
             )}
             aria-label="Increase score"
@@ -270,7 +267,7 @@ export function PlayerCard({
         /* Read-only score display for spectators */
         <div 
           className={cn(
-            "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all relative",
+            "w-14 h-14 rounded-xl flex items-center justify-center shrink-0 transition-all relative",
             getScoreBoxStyles()
           )}
         >
@@ -283,7 +280,7 @@ export function PlayerCard({
               {Array.from({ length: Math.min(holeStrokes, 2) }).map((_, i) => (
                 <div 
                   key={i}
-                  className="w-1.5 h-1.5 rounded-full bg-primary"
+                  className="w-2 h-2 rounded-full bg-primary shadow-sm"
                 />
               ))}
             </div>

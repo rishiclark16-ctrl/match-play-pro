@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
-import { Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2, ChevronRight } from 'lucide-react';
 import { Round } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -62,11 +62,11 @@ export function RoundCard({ round, onClick, onDelete, isDeleting }: RoundCardPro
 
   return (
     <>
-      <div ref={constraintsRef} className="relative overflow-hidden rounded-xl">
+      <div ref={constraintsRef} className="relative overflow-hidden rounded-2xl">
         {/* Delete background revealed on swipe */}
         {isMobile && onDelete && (
           <motion.div 
-            className="absolute inset-0 flex items-center justify-end pr-6 rounded-xl"
+            className="absolute inset-0 flex items-center justify-end pr-6 rounded-2xl"
             style={{ background }}
           >
             <motion.div
@@ -83,23 +83,24 @@ export function RoundCard({ round, onClick, onDelete, isDeleting }: RoundCardPro
           dragConstraints={{ left: SWIPE_THRESHOLD, right: 0 }}
           dragElastic={{ left: 0.1, right: 0 }}
           onDragEnd={handleDragEnd}
-          whileTap={isMobile ? undefined : { scale: 0.98 }}
+          whileHover={{ y: -2, transition: { duration: 0.2 } }}
+          whileTap={{ scale: 0.99 }}
           onClick={onClick}
-          className="card-premium p-4 cursor-pointer hover:shadow-md transition-shadow group relative bg-card"
+          className="bg-card rounded-2xl p-4 cursor-pointer border border-border/50 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-200 group relative"
         >
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground">{round.courseName}</h3>
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-foreground truncate pr-3">{round.courseName}</h3>
               <p className="text-sm text-muted-foreground mt-1">
                 {round.holes} holes • {dateStr}
               </p>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 shrink-0">
               <span className={cn(
-                "px-3 py-1 rounded-full text-xs font-medium",
+                "px-3 py-1.5 rounded-full text-xs font-semibold transition-all",
                 isActive 
-                  ? "bg-success/10 text-success" 
+                  ? "bg-success/10 text-success border border-success/20" 
                   : "bg-muted text-muted-foreground"
               )}>
                 {isActive ? 'In Progress' : 'Complete'}
@@ -112,9 +113,9 @@ export function RoundCard({ round, onClick, onDelete, isDeleting }: RoundCardPro
                   onClick={handleDeleteClick}
                   disabled={isDeleting}
                   className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center transition-all",
+                    "w-9 h-9 rounded-full flex items-center justify-center transition-all",
                     "opacity-0 group-hover:opacity-100 focus:opacity-100",
-                    "bg-danger/10 text-danger hover:bg-danger/20"
+                    "bg-destructive/10 text-destructive hover:bg-destructive/20"
                   )}
                 >
                   {isDeleting ? (
@@ -124,13 +125,15 @@ export function RoundCard({ round, onClick, onDelete, isDeleting }: RoundCardPro
                   )}
                 </motion.button>
               )}
+              
+              <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           </div>
         </motion.div>
       </div>
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Round?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -138,10 +141,10 @@ export function RoundCard({ round, onClick, onDelete, isDeleting }: RoundCardPro
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
-              className="bg-danger hover:bg-danger/90"
+              className="bg-destructive hover:bg-destructive/90 rounded-xl"
             >
               Delete
             </AlertDialogAction>

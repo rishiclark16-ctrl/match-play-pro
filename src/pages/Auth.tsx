@@ -7,9 +7,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { GeometricBackground } from '@/components/ui/geometric-background';
+import { GlassCard, GlassCardContent } from '@/components/ui/glass-card';
 import { toast } from '@/hooks/use-toast';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
+import { pageVariants, staggerItem } from '@/lib/animations';
 
 const signUpSchema = z.object({
   email: z.string().trim().email('Please enter a valid email'),
@@ -41,10 +43,10 @@ function getPasswordStrength(password: string): PasswordStrength {
   if (/[^A-Za-z0-9]/.test(password)) score++;
 
   if (score <= 1) return { score, label: 'Weak', color: 'bg-destructive' };
-  if (score <= 2) return { score, label: 'Fair', color: 'bg-orange-500' };
-  if (score <= 3) return { score, label: 'Good', color: 'bg-yellow-500' };
-  if (score <= 4) return { score, label: 'Strong', color: 'bg-primary' };
-  return { score, label: 'Excellent', color: 'bg-primary' };
+  if (score <= 2) return { score, label: 'Fair', color: 'bg-warning' };
+  if (score <= 3) return { score, label: 'Good', color: 'bg-warning' };
+  if (score <= 4) return { score, label: 'Strong', color: 'bg-success' };
+  return { score, label: 'Excellent', color: 'bg-success' };
 }
 
 export default function Auth() {
@@ -157,66 +159,101 @@ export default function Auth() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center glow-primary">
+            <Flag className="h-8 w-8 text-primary-foreground" />
+          </div>
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-6 safe-top safe-bottom">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-6 safe-top safe-bottom relative overflow-hidden">
+      {/* Geometric Background */}
+      <GeometricBackground variant="mesh" animated />
+      
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-md"
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        className="w-full max-w-md relative z-10"
       >
         {/* Branding */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-2xl mb-4">
-            <Flag className="h-8 w-8 text-primary" />
-          </div>
-          <h1 className="text-3xl font-bold text-primary tracking-tight">MATCH</h1>
-          <p className="text-muted-foreground mt-1">Premium Golf Scoring</p>
-        </div>
+        <motion.div 
+          variants={staggerItem}
+          className="text-center mb-8"
+        >
+          <motion.div 
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", damping: 15, stiffness: 200, delay: 0.2 }}
+            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-primary rounded-3xl mb-5 glow-primary"
+          >
+            <Flag className="h-10 w-10 text-primary-foreground" />
+          </motion.div>
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="headline-xl text-gradient"
+          >
+            MATCH
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-muted-foreground mt-2 text-lg"
+          >
+            Premium Golf Scoring
+          </motion.p>
+        </motion.div>
 
         {/* Auth Card */}
-        <Card className="border-border/50 shadow-xl">
-          <CardHeader className="pb-4">
-            <div className="flex gap-2 p-1 bg-muted rounded-lg">
-              <button
+        <GlassCard variant="elevated" className="overflow-hidden">
+          <div className="p-6 pb-4">
+            {/* Tab Switcher */}
+            <div className="flex gap-1 p-1 bg-muted/50 rounded-xl mb-6">
+              <motion.button
                 type="button"
                 onClick={() => { setMode('signup'); setErrors({}); }}
-                className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all ${
+                className={`flex-1 py-2.5 px-4 text-sm font-semibold rounded-lg transition-all ${
                   mode === 'signup'
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
+                whileTap={{ scale: 0.98 }}
               >
                 Sign Up
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 type="button"
                 onClick={() => { setMode('signin'); setErrors({}); }}
-                className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all ${
+                className={`flex-1 py-2.5 px-4 text-sm font-semibold rounded-lg transition-all ${
                   mode === 'signin'
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
+                whileTap={{ scale: 0.98 }}
               >
                 Sign In
-              </button>
+              </motion.button>
             </div>
-            <CardTitle className="sr-only">
-              {mode === 'signup' ? 'Create your account' : 'Sign in to your account'}
-            </CardTitle>
-            <CardDescription className="text-center pt-2">
+            
+            <p className="text-center text-muted-foreground mb-6">
               {mode === 'signup' 
                 ? 'Create an account to track your rounds' 
                 : 'Welcome back! Sign in to continue'}
-            </CardDescription>
-          </CardHeader>
+            </p>
+          </div>
 
-          <CardContent>
+          <GlassCardContent className="px-6 pb-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <AnimatePresence mode="wait">
                 {mode === 'signup' && (
@@ -228,14 +265,14 @@ export default function Auth() {
                     transition={{ duration: 0.2 }}
                   >
                     <div className="space-y-2">
-                      <Label htmlFor="fullName">Full Name</Label>
+                      <Label htmlFor="fullName" className="text-sm font-medium">Full Name</Label>
                       <Input
                         id="fullName"
                         type="text"
                         placeholder="John Smith"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className={errors.fullName ? 'border-destructive' : ''}
+                        className={`py-5 rounded-xl bg-muted/30 border-border/50 ${errors.fullName ? 'border-destructive' : ''}`}
                         disabled={isSubmitting}
                       />
                       {errors.fullName && (
@@ -247,14 +284,14 @@ export default function Auth() {
               </AnimatePresence>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={errors.email ? 'border-destructive' : ''}
+                  className={`py-5 rounded-xl bg-muted/30 border-border/50 ${errors.email ? 'border-destructive' : ''}`}
                   disabled={isSubmitting}
                   autoComplete="email"
                 />
@@ -264,7 +301,7 @@ export default function Auth() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -272,20 +309,20 @@ export default function Auth() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`pr-10 ${errors.password ? 'border-destructive' : ''}`}
+                    className={`py-5 pr-12 rounded-xl bg-muted/30 border-border/50 ${errors.password ? 'border-destructive' : ''}`}
                     disabled={isSubmitting}
                     autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     tabIndex={-1}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-5 w-5" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-5 w-5" />
                     )}
                   </button>
                 </div>
@@ -304,20 +341,20 @@ export default function Auth() {
                     className="space-y-3"
                   >
                     {/* Strength bar */}
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">Password strength</span>
-                        <span className={`font-medium ${
-                          passwordStrength.score >= 4 ? 'text-primary' : 'text-muted-foreground'
+                        <span className={`font-semibold ${
+                          passwordStrength.score >= 4 ? 'text-success' : 'text-muted-foreground'
                         }`}>
                           {passwordStrength.label}
                         </span>
                       </div>
-                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${(passwordStrength.score / 5) * 100}%` }}
-                          className={`h-full ${passwordStrength.color} transition-colors`}
+                          className={`h-full ${passwordStrength.color} transition-colors rounded-full`}
                         />
                       </div>
                     </div>
@@ -327,9 +364,9 @@ export default function Auth() {
                       {passwordRequirements.map((req) => (
                         <span
                           key={req.label}
-                          className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
+                          className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg font-medium ${
                             req.met
-                              ? 'bg-primary/10 text-primary'
+                              ? 'bg-success/10 text-success'
                               : 'bg-muted text-muted-foreground'
                           }`}
                         >
@@ -346,19 +383,21 @@ export default function Auth() {
                 )}
               </AnimatePresence>
 
-              <Button
-                type="submit"
-                className="w-full h-12 text-base font-semibold"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : mode === 'signup' ? (
-                  'Create Account'
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
+              <motion.div whileTap={{ scale: 0.98 }} className="pt-2">
+                <Button
+                  type="submit"
+                  className="w-full h-14 text-base font-semibold rounded-2xl bg-gradient-primary shadow-lg shadow-primary/20"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : mode === 'signup' ? (
+                    'Create Account'
+                  ) : (
+                    'Sign In'
+                  )}
+                </Button>
+              </motion.div>
             </form>
 
             <p className="text-center text-sm text-muted-foreground mt-6">
@@ -368,7 +407,7 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={switchMode}
-                    className="text-primary font-medium hover:underline"
+                    className="text-primary font-semibold hover:underline"
                   >
                     Sign in
                   </button>
@@ -379,15 +418,15 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={switchMode}
-                    className="text-primary font-medium hover:underline"
+                    className="text-primary font-semibold hover:underline"
                   >
                     Sign up
                   </button>
                 </>
               )}
             </p>
-          </CardContent>
-        </Card>
+          </GlassCardContent>
+        </GlassCard>
       </motion.div>
     </div>
   );
