@@ -30,7 +30,7 @@ import { Press, PlayerWithScores, GameConfig } from '@/types/golf';
 import { calculatePlayingHandicap, getStrokesPerHole, calculateTotalNetStrokes } from '@/lib/handicapUtils';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
-import { setStatusBarDark } from '@/lib/statusBar';
+import { setStatusBarDefault } from '@/lib/statusBar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
@@ -48,9 +48,9 @@ export default function Scorecard() {
   // Keep screen awake during active round
   useKeepAwake(true);
 
-  // Set dark status bar for native apps
+  // Set status bar style for native apps
   useEffect(() => {
-    setStatusBarDark();
+    setStatusBarDefault();
   }, []);
 
   // Use Supabase for live sync
