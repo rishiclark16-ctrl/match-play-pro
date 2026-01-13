@@ -11,17 +11,21 @@ export interface Profile {
   avatar_url: string | null;
   tee_preference: string | null;
   friend_code: string | null;
+  email: string | null;
+  phone: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
 
 export interface ProfileUpdate {
-  full_name?: string;
+  full_name?: string | null;
   handicap?: number | null;
   home_course_id?: string | null;
   home_course_name?: string | null;
   avatar_url?: string | null;
   tee_preference?: string | null;
+  email?: string | null;
+  phone?: string | null;
 }
 
 export function useProfile() {
@@ -59,6 +63,8 @@ export function useProfile() {
             avatar_url: null,
             tee_preference: null,
             friend_code: null,
+            email: user.email || null,
+            phone: null,
             created_at: null,
             updated_at: null,
           });
