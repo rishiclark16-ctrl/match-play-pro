@@ -243,7 +243,7 @@ export default function Profile() {
 
           {/* Handicap */}
           <TechCard hover>
-            <TechCardContent className="space-y-2">
+            <TechCardContent className="space-y-1.5">
               <Label htmlFor="handicap" className="label-sm">Handicap Index</Label>
               <Input
                 id="handicap"
@@ -252,14 +252,14 @@ export default function Profile() {
                 placeholder="e.g. 12.4"
                 value={handicap}
                 onChange={(e) => setHandicap(e.target.value)}
-                className="py-5 text-lg font-mono bg-background border-2 border-border focus:border-primary"
+                className="h-11 text-base font-mono bg-background border border-border focus:border-primary"
               />
             </TechCardContent>
           </TechCard>
 
           {/* Home Course */}
           <TechCard hover>
-            <TechCardContent className="space-y-2">
+            <TechCardContent className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <Home className="w-4 h-4 text-muted-foreground" />
                 <Label className="label-sm">Home Course</Label>
@@ -275,7 +275,7 @@ export default function Profile() {
 
           {/* Tee Preference */}
           <TechCard hover>
-            <TechCardContent className="space-y-3">
+            <TechCardContent className="space-y-2">
               <Label className="label-sm">Preferred Tees</Label>
               <div className="flex flex-wrap gap-2">
                 {TEE_OPTIONS.map((tee) => (
@@ -287,7 +287,7 @@ export default function Profile() {
                       setTeePreference(teePreference === tee.value ? null : tee.value);
                     }}
                     className={cn(
-                      'px-4 py-2.5 rounded-lg font-bold text-sm transition-all',
+                      'px-3 py-2 rounded-lg font-bold text-sm transition-all',
                       tee.color,
                       teePreference === tee.value
                         ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-105'
@@ -320,7 +320,7 @@ export default function Profile() {
 
           {/* Discoverable Email */}
           <TechCard hover>
-            <TechCardContent className="space-y-2">
+            <TechCardContent className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <AtSign className="w-4 h-4 text-muted-foreground" />
                 <Label htmlFor="discoveryEmail" className="label-sm">Discoverable Email</Label>
@@ -331,7 +331,7 @@ export default function Profile() {
                 placeholder="email@example.com"
                 value={discoveryEmail}
                 onChange={(e) => setDiscoveryEmail(e.target.value)}
-                className="py-5 text-lg bg-background border-2 border-border focus:border-primary"
+                className="h-11 text-base bg-background border border-border focus:border-primary"
               />
               <p className="text-[11px] text-muted-foreground">
                 Friends can send you requests using this email
@@ -341,7 +341,7 @@ export default function Profile() {
 
           {/* Discoverable Phone */}
           <TechCard hover>
-            <TechCardContent className="space-y-2">
+            <TechCardContent className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-muted-foreground" />
                 <Label htmlFor="discoveryPhone" className="label-sm">Discoverable Phone</Label>
@@ -352,7 +352,7 @@ export default function Profile() {
                 placeholder="(555) 123-4567"
                 value={discoveryPhone}
                 onChange={(e) => setDiscoveryPhone(e.target.value)}
-                className="py-5 text-lg bg-background border-2 border-border focus:border-primary"
+                className="h-11 text-base bg-background border border-border focus:border-primary"
               />
               <p className="text-[11px] text-muted-foreground">
                 Friends can send you requests using this number
@@ -375,23 +375,23 @@ export default function Profile() {
 
           {/* Full Name */}
           <TechCard hover>
-            <TechCardContent className="space-y-2">
+            <TechCardContent className="space-y-1.5">
               <Label htmlFor="fullName" className="label-sm">Full Name</Label>
               <Input
                 id="fullName"
                 placeholder="Your name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="py-5 text-lg bg-background border-2 border-border focus:border-primary"
+                className="h-11 text-base bg-background border border-border focus:border-primary"
               />
             </TechCardContent>
           </TechCard>
 
           {/* Email (readonly) */}
           <TechCard>
-            <TechCardContent className="space-y-2">
+            <TechCardContent className="space-y-1.5">
               <Label className="label-sm">Login Email</Label>
-              <div className="py-3 px-4 rounded-lg bg-muted text-muted-foreground font-mono text-sm">
+              <div className="py-2.5 px-3 rounded-lg bg-muted text-muted-foreground font-mono text-sm">
                 {user?.email}
               </div>
             </TechCardContent>
