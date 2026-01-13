@@ -2,8 +2,8 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, Trophy, AlertCircle, Star, Users, Crown, Dog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Round, Player, Score, Press } from '@/types/golf';
-import { calculateSkins, SkinsResult } from '@/lib/games/skins';
+import { Round, Player, Score, Press, PlayerWithScores } from '@/types/golf';
+import { calculateSkins, SkinsResult, StrokesPerHoleMap } from '@/lib/games/skins';
 import { calculateNassau, NassauResult, formatNassauStatus, canPress, createPress } from '@/lib/games/nassau';
 import { calculateStableford, StablefordResult, getStablefordPointsColor } from '@/lib/games/stableford';
 import { calculateBestBall, BestBallResult, formatBestBallStatus } from '@/lib/games/bestball';
@@ -22,7 +22,7 @@ import {
 
 interface GamesSectionProps {
   round: Round;
-  players: Player[];
+  players: PlayerWithScores[];
   scores: Score[];
   currentHole: number;
   onAddPress: (press: Press) => void;
@@ -31,6 +31,21 @@ interface GamesSectionProps {
 export function GamesSection({ round, players, scores, currentHole, onAddPress }: GamesSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [pressConfirmPlayer, setPressConfirmPlayer] = useState<Player | null>(null);
+  
+  // Build the strokesPerHole map for net scoring
+  const buildStrokesMap = useMemo((): StrokesPerHoleMap | undefined => {
+    // Check if any game uses net scoring
+    const anyGameUsesNet = round.games?.some(g => g.useNet);
+    if (!anyGameUsesNet) return undefined;
+    
+    const map = new Map<string, Map<number, number>>();
+    for (const player of players) {
+      if (player.strokesPerHole) {
+        map.set(player.id, player.strokesPerHole);
+      }
+    }
+    return map.size > 0 ? map : undefined;
+  }, [players, round.games]);
   
   const skinsGame = round.games?.find(g => g.type === 'skins');
   const nassauGame = round.games?.find(g => g.type === 'nassau');
@@ -55,26 +70,30 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
   // Calculate skins results
   const skinsResult: SkinsResult | null = useMemo(() => {
     if (!skinsGame || players.length < 2) return null;
+    const useStrokesMap = skinsGame.useNet ? buildStrokesMap : undefined;
     return calculateSkins(
       scores,
       players,
       holesPlayed,
       skinsGame.stakes,
-      skinsGame.carryover ?? true
+      skinsGame.carryover ?? true,
+      useStrokesMap
     );
-  }, [skinsGame, scores, players, holesPlayed]);
+  }, [skinsGame, scores, players, holesPlayed, buildStrokesMap]);
   
   // Calculate Nassau results
   const nassauResult: NassauResult | null = useMemo(() => {
     if (!nassauGame || players.length !== 2) return null;
+    const useStrokesMap = nassauGame.useNet ? buildStrokesMap : undefined;
     return calculateNassau(
       scores,
       players,
       nassauGame.stakes,
       round.presses || [],
-      round.holes
+      round.holes,
+      useStrokesMap
     );
-  }, [nassauGame, scores, players, round.presses, round.holes]);
+  }, [nassauGame, scores, players, round.presses, round.holes, buildStrokesMap]);
   
   // Calculate Stableford results
   const stablefordResult: StablefordResult | null = useMemo(() => {
@@ -90,14 +109,16 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
   // Calculate Best Ball results
   const bestBallResult: BestBallResult | null = useMemo(() => {
     if (!bestBallGame?.teams || bestBallGame.teams.length < 2) return null;
+    const useStrokesMap = bestBallGame.useNet ? buildStrokesMap : undefined;
     return calculateBestBall(
       scores,
       players,
       bestBallGame.teams,
       round.holeInfo,
-      holesPlayed
+      holesPlayed,
+      useStrokesMap
     );
-  }, [bestBallGame, scores, players, round.holeInfo, holesPlayed]);
+  }, [bestBallGame, scores, players, round.holeInfo, holesPlayed, buildStrokesMap]);
   
   // Calculate Wolf results
   const wolfResult: WolfResult | null = useMemo(() => {

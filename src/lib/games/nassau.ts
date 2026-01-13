@@ -1,4 +1,5 @@
 import { Player, Score, Press, Settlement } from '@/types/golf';
+import { StrokesPerHoleMap } from './skins';
 
 export interface NassauSegment {
   winnerId: string | null;
@@ -23,12 +24,21 @@ export interface NassauResult {
   };
 }
 
+// Helper to get net score for a player on a hole
+function getNetScore(score: Score, strokesPerHole?: StrokesPerHoleMap): number {
+  if (!strokesPerHole) return score.strokes;
+  const playerStrokes = strokesPerHole.get(score.playerId);
+  const holeStrokes = playerStrokes?.get(score.holeNumber) || 0;
+  return score.strokes - holeStrokes;
+}
+
 export function calculateNassau(
   scores: Score[],
   players: Player[],
   stakes: number,
   presses: Press[] = [],
-  holesInRound: 9 | 18 = 18
+  holesInRound: 9 | 18 = 18,
+  strokesPerHole?: StrokesPerHoleMap
 ): NassauResult {
   const front9: Record<string, number> = {};
   const back9: Record<string, number> = {};
@@ -43,16 +53,17 @@ export function calculateNassau(
     overall[p.id] = 0;
   });
   
-  // Calculate totals for each segment
+  // Calculate totals for each segment using net scores when applicable
   for (let hole = 1; hole <= (holesInRound === 18 ? 18 : 9); hole++) {
     const holeScores = scores.filter(s => s.holeNumber === hole);
     if (holeScores.length === players.length) {
       holeScores.forEach(s => {
-        overall[s.playerId] += s.strokes;
+        const netScore = getNetScore(s, strokesPerHole);
+        overall[s.playerId] += netScore;
         if (hole <= 9) {
-          front9[s.playerId] += s.strokes;
+          front9[s.playerId] += netScore;
         } else {
-          back9[s.playerId] += s.strokes;
+          back9[s.playerId] += netScore;
         }
       });
       
@@ -131,7 +142,7 @@ export function calculateNassau(
       });
     }
     
-    // Process presses
+    // Process presses - also use net scores
     presses.forEach(press => {
       const pressScores: Record<string, number> = { [p1.id]: 0, [p2.id]: 0 };
       let pressHolesPlayed = 0;
@@ -140,7 +151,7 @@ export function calculateNassau(
         const holeScores = scores.filter(s => s.holeNumber === hole);
         if (holeScores.length === 2) {
           holeScores.forEach(s => {
-            pressScores[s.playerId] += s.strokes;
+            pressScores[s.playerId] += getNetScore(s, strokesPerHole);
           });
           pressHolesPlayed++;
         }
@@ -250,9 +261,10 @@ export function getNassauHoleContext(
   currentHole: number,
   stakes: number,
   presses: Press[],
-  holesInRound: 9 | 18 = 18
+  holesInRound: 9 | 18 = 18,
+  strokesPerHole?: StrokesPerHoleMap
 ): NassauHoleContext {
-  const result = calculateNassau(scores, players, stakes, presses, holesInRound);
+  const result = calculateNassau(scores, players, stakes, presses, holesInRound, strokesPerHole);
   
   // Determine which segment we're in
   let segment = 'Front 9';

@@ -15,12 +15,24 @@ export interface SkinsResult {
   totalPot: number;
 }
 
+// Type for net scoring: Map<playerId, Map<holeNumber, strokes>>
+export type StrokesPerHoleMap = Map<string, Map<number, number>>;
+
+// Helper to get net score for a player on a hole
+function getNetScore(score: Score, strokesPerHole?: StrokesPerHoleMap): number {
+  if (!strokesPerHole) return score.strokes;
+  const playerStrokes = strokesPerHole.get(score.playerId);
+  const holeStrokes = playerStrokes?.get(score.holeNumber) || 0;
+  return score.strokes - holeStrokes;
+}
+
 export function calculateSkins(
   scores: Score[],
   players: Player[],
   holesPlayed: number,
   stakesPerSkin: number,
-  carryover: boolean = true
+  carryover: boolean = true,
+  strokesPerHole?: StrokesPerHoleMap
 ): SkinsResult {
   const results: SkinResult[] = [];
   let currentCarryover = 0;
@@ -36,9 +48,12 @@ export function calculateSkins(
       continue;
     }
     
-    const sorted = [...holeScores].sort((a, b) => a.strokes - b.strokes);
-    const lowest = sorted[0].strokes;
-    const winners = sorted.filter(s => s.strokes === lowest);
+    // Sort by net score when using handicaps
+    const sorted = [...holeScores].sort((a, b) => 
+      getNetScore(a, strokesPerHole) - getNetScore(b, strokesPerHole)
+    );
+    const lowestNet = getNetScore(sorted[0], strokesPerHole);
+    const winners = sorted.filter(s => getNetScore(s, strokesPerHole) === lowestNet);
     
     if (winners.length === 1) {
       // Clear winner takes the skin + any carryovers
@@ -58,7 +73,6 @@ export function calculateSkins(
   
   // Calculate pot value - each player contributes stakes per hole
   const potPerSkin = stakesPerSkin * players.length;
-  const totalSkinsWon = Object.values(playerSkins).reduce((a, b) => a + b, 0);
   const totalPot = holesPlayed * potPerSkin;
   
   // Calculate earnings (net winnings/losses)
@@ -118,7 +132,8 @@ export function getSkinsHoleContext(
   currentHole: number,
   stakesPerSkin: number,
   carryover: boolean,
-  totalHoles: number
+  totalHoles: number,
+  strokesPerHole?: StrokesPerHoleMap
 ): SkinsHoleContext {
   // Calculate carryovers up to current hole
   let carryoverCount = 0;
@@ -130,9 +145,12 @@ export function getSkinsHoleContext(
       continue; // Not all scored yet
     }
     
-    const sorted = [...holeScores].sort((a, b) => a.strokes - b.strokes);
-    const lowest = sorted[0].strokes;
-    const winners = sorted.filter(s => s.strokes === lowest);
+    // Sort by net score when using handicaps
+    const sorted = [...holeScores].sort((a, b) => 
+      getNetScore(a, strokesPerHole) - getNetScore(b, strokesPerHole)
+    );
+    const lowestNet = getNetScore(sorted[0], strokesPerHole);
+    const winners = sorted.filter(s => getNetScore(s, strokesPerHole) === lowestNet);
     
     if (winners.length === 1) {
       // Someone won, reset carryover
