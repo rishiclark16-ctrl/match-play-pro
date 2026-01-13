@@ -10,6 +10,7 @@ import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { BottomNav } from "@/components/BottomNav";
 import { Capacitor } from '@capacitor/core';
 import { setStatusBarDark } from '@/lib/statusBar';
+import { useDeepLinks } from '@/hooks/useDeepLinks';
 import NotFound from "./pages/NotFound";
 
 // Lazy load all pages for better initial load
@@ -27,7 +28,11 @@ const Stats = lazy(() => import("./pages/Stats"));
 
 const queryClient = new QueryClient();
 
-const App = () => {
+// Inner component that uses router hooks
+function AppContent() {
+  // Handle deep links from native app
+  useDeepLinks();
+
   // Initialize native status bar styling on app start
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
@@ -36,141 +41,149 @@ const App = () => {
   }, []);
 
   return (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner 
-          position="top-center"
-          toastOptions={{
-            style: {
-              background: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              color: 'hsl(var(--foreground))',
-            },
-          }}
+    <>
+      <Toaster />
+      <Sonner 
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            color: 'hsl(var(--foreground))',
+          },
+        }}
+      />
+      <Routes>
+        {/* Auth page - public */}
+        <Route 
+          path="/auth" 
+          element={
+            <Suspense fallback={<PageSkeleton variant="default" />}>
+              <Auth />
+            </Suspense>
+          } 
         />
-        <BrowserRouter>
-          <Routes>
-            {/* Auth page - public */}
-            <Route 
-              path="/auth" 
-              element={
-                <Suspense fallback={<PageSkeleton variant="default" />}>
-                  <Auth />
-                </Suspense>
-              } 
-            />
-            
-            {/* Protected routes - require authentication */}
-            <Route 
-              path="/" 
-              element={
-                <AuthGuard>
-                  <Suspense fallback={<PageSkeleton variant="default" />}>
-                    <Home />
-                  </Suspense>
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/new-round" 
-              element={
-                <AuthGuard>
-                  <Suspense fallback={<PageSkeleton variant="default" />}>
-                    <NewRound />
-                  </Suspense>
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/join" 
-              element={
-                <AuthGuard>
-                  <Suspense fallback={<PageSkeleton variant="default" />}>
-                    <JoinRound />
-                  </Suspense>
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/round/:id" 
-              element={
-                <AuthGuard>
-                  <Suspense fallback={<PageSkeleton variant="scorecard" />}>
-                    <Scorecard />
-                  </Suspense>
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/round/:id/leaderboard" 
-              element={
-                <AuthGuard>
-                  <Suspense fallback={<PageSkeleton variant="list" />}>
-                    <Leaderboard />
-                  </Suspense>
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/round/:id/complete" 
-              element={
-                <AuthGuard>
-                  <Suspense fallback={<PageSkeleton variant="default" />}>
-                    <RoundComplete />
-                  </Suspense>
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/profile" 
-              element={
-                <AuthGuard>
-                  <Suspense fallback={<PageSkeleton variant="default" />}>
-                    <Profile />
-                  </Suspense>
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/friends" 
-              element={
-                <AuthGuard>
-                  <Suspense fallback={<PageSkeleton variant="list" />}>
-                    <Friends />
-                  </Suspense>
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/groups" 
-              element={
-                <AuthGuard>
-                  <Suspense fallback={<PageSkeleton variant="list" />}>
-                    <Groups />
-                  </Suspense>
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/stats" 
-              element={
-                <AuthGuard>
-                  <Suspense fallback={<PageSkeleton variant="default" />}>
-                    <Stats />
-                  </Suspense>
-                </AuthGuard>
-              } 
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <BottomNav />
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
+        
+        {/* Protected routes - require authentication */}
+        <Route 
+          path="/" 
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <Home />
+              </Suspense>
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/new-round" 
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <NewRound />
+              </Suspense>
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/join" 
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <JoinRound />
+              </Suspense>
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/round/:id" 
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="scorecard" />}>
+                <Scorecard />
+              </Suspense>
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/round/:id/leaderboard" 
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="list" />}>
+                <Leaderboard />
+              </Suspense>
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/round/:id/complete" 
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <RoundComplete />
+              </Suspense>
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/profile" 
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <Profile />
+              </Suspense>
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/friends" 
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="list" />}>
+                <Friends />
+              </Suspense>
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/groups" 
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="list" />}>
+                <Groups />
+              </Suspense>
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/stats" 
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <Stats />
+              </Suspense>
+            </AuthGuard>
+          } 
+        />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <BottomNav />
+    </>
+  );
+}
+
+const App = () => {
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
