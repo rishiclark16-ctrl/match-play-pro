@@ -120,7 +120,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
       {/* Subtle geometric background */}
-      <GeometricBackground variant="radial" animated={false} className="opacity-40" />
+      <GeometricBackground variant="grid" />
       
       {/* Header */}
       <motion.header 

@@ -109,10 +109,10 @@ export function PlayerCard({
       }
       transition={{ duration: voiceSuccess ? 0.5 : 0.2 }}
       className={cn(
-        "bg-card rounded-2xl p-4 flex items-center gap-4 transition-all border relative overflow-hidden",
+        "bg-card rounded-xl p-4 flex items-center gap-4 transition-all border relative overflow-hidden",
         isLeading && player.holesPlayed > 0
-          ? "border-primary/30 bg-gradient-to-r from-primary/5 to-transparent shadow-lg shadow-primary/10" 
-          : "border-border/50 shadow-sm",
+          ? "border-primary/30 border-2 shadow-md" 
+          : "border-border shadow-sm",
         voiceHighlight && "ring-2 ring-primary/50 border-primary/30",
         voiceSuccess && "bg-success/5"
       )}

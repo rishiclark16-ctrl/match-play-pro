@@ -176,7 +176,7 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-6 safe-top safe-bottom relative overflow-hidden">
       {/* Geometric Background */}
-      <GeometricBackground variant="mesh" animated />
+      <GeometricBackground variant="grid" />
       
       <motion.div
         variants={pageVariants}

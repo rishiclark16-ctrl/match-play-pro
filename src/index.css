@@ -1,145 +1,148 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* MATCH Golf App Design System v2.0
-   Premium minimalism with geometric accents
-   Racing green palette with glass effects
+/* MATCH Golf App Design System v3.0
+   Precision Tech - Clean, bold, sunlight-readable
+   High contrast with geometric accents
    All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    /* Core Backgrounds */
+    /* Core Backgrounds - Pure white for outdoor readability */
     --background: 0 0% 100%;
-    --foreground: 0 0% 8%;
+    --foreground: 0 0% 5%;
     
-    /* Card - subtle off-white */
+    /* Card - Solid whites */
     --card: 0 0% 99%;
-    --card-foreground: 0 0% 8%;
+    --card-foreground: 0 0% 5%;
+    --card-elevated: 0 0% 100%;
     
-    /* Primary - Racing Green */
-    --primary: 153 70% 19%;
+    /* Primary - Deep Racing Green */
+    --primary: 153 75% 18%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 150 50% 96%;
-    --primary-glow: 153 60% 30%;
+    --primary-light: 153 40% 95%;
+    --primary-muted: 153 30% 90%;
     
     /* Secondary */
-    --secondary: 150 15% 97%;
-    --secondary-foreground: 153 70% 19%;
+    --secondary: 150 10% 96%;
+    --secondary-foreground: 153 75% 18%;
     
-    /* Muted */
-    --muted: 150 10% 94%;
-    --muted-foreground: 150 5% 45%;
+    /* Muted - Stronger for visibility */
+    --muted: 150 8% 92%;
+    --muted-foreground: 150 10% 40%;
     
     /* Accent */
-    --accent: 150 50% 96%;
-    --accent-foreground: 153 70% 19%;
+    --accent: 153 30% 94%;
+    --accent-foreground: 153 75% 18%;
     
     /* Destructive */
-    --destructive: 0 84% 60%;
+    --destructive: 0 85% 55%;
     --destructive-foreground: 0 0% 100%;
     
-    /* Success - Under par */
-    --success: 160 84% 39%;
+    /* Success - Bold green for under par */
+    --success: 152 82% 32%;
     --success-foreground: 0 0% 100%;
+    --success-muted: 152 50% 94%;
     
-    /* Warning - Bogey */
-    --warning: 38 92% 50%;
+    /* Warning - Bright amber for bogey */
+    --warning: 38 95% 48%;
     --warning-foreground: 0 0% 100%;
+    --warning-muted: 38 60% 95%;
     
-    /* Danger - Double+ */
-    --danger: 0 84% 60%;
+    /* Danger - Clear red for double+ */
+    --danger: 0 85% 52%;
     --danger-foreground: 0 0% 100%;
+    --danger-muted: 0 60% 96%;
     
     /* Gold for winners */
-    --gold: 45 93% 47%;
-    --gold-foreground: 0 0% 10%;
+    --gold: 45 95% 50%;
+    --gold-foreground: 0 0% 5%;
+    --gold-muted: 45 80% 94%;
     
-    /* Borders & Inputs */
-    --border: 150 10% 90%;
-    --input: 150 10% 90%;
-    --ring: 153 70% 19%;
+    /* Borders - More visible */
+    --border: 150 12% 88%;
+    --border-strong: 150 12% 78%;
+    --input: 150 12% 88%;
+    --ring: 153 75% 18%;
     
-    --radius: 0.75rem;
+    --radius: 0.625rem;
     
     /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
+    --popover-foreground: 0 0% 5%;
     
     /* Sidebar */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 153 70% 19%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 150 50% 96%;
-    --sidebar-accent-foreground: 153 70% 19%;
-    --sidebar-border: 150 10% 92%;
-    --sidebar-ring: 153 70% 19%;
-    
-    /* Glass effects */
-    --glass-bg: 0 0% 100% / 0.8;
-    --glass-border: 0 0% 100% / 0.2;
-    --glass-shadow: 0 0% 0% / 0.05;
+    --sidebar-background: 0 0% 99%;
+    --sidebar-foreground: 0 0% 15%;
+    --sidebar-primary: 153 75% 18%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 153 30% 95%;
+    --sidebar-accent-foreground: 153 75% 18%;
+    --sidebar-border: 150 12% 90%;
+    --sidebar-ring: 153 75% 18%;
   }
 
   .dark {
-    --background: 153 20% 4%;
-    --foreground: 0 0% 95%;
+    --background: 153 15% 5%;
+    --foreground: 0 0% 97%;
     
-    --card: 153 15% 7%;
-    --card-foreground: 0 0% 95%;
+    --card: 153 12% 8%;
+    --card-foreground: 0 0% 97%;
+    --card-elevated: 153 12% 10%;
     
-    --primary: 153 60% 40%;
+    --primary: 153 65% 42%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 153 30% 12%;
-    --primary-glow: 153 50% 50%;
+    --primary-light: 153 25% 15%;
+    --primary-muted: 153 20% 12%;
     
-    --secondary: 153 15% 12%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 153 12% 12%;
+    --secondary-foreground: 0 0% 97%;
     
-    --muted: 153 10% 15%;
-    --muted-foreground: 150 5% 60%;
+    --muted: 153 10% 18%;
+    --muted-foreground: 150 8% 55%;
     
-    --accent: 153 30% 12%;
-    --accent-foreground: 153 60% 40%;
+    --accent: 153 20% 15%;
+    --accent-foreground: 153 65% 42%;
     
-    --destructive: 0 62% 35%;
-    --destructive-foreground: 0 0% 95%;
+    --destructive: 0 70% 40%;
+    --destructive-foreground: 0 0% 100%;
     
-    --success: 160 70% 40%;
+    --success: 152 75% 38%;
     --success-foreground: 0 0% 100%;
+    --success-muted: 152 30% 12%;
     
-    --warning: 38 80% 50%;
+    --warning: 38 85% 48%;
     --warning-foreground: 0 0% 100%;
+    --warning-muted: 38 30% 12%;
     
-    --danger: 0 70% 50%;
+    --danger: 0 75% 48%;
     --danger-foreground: 0 0% 100%;
+    --danger-muted: 0 30% 12%;
     
-    --gold: 45 80% 50%;
-    --gold-foreground: 0 0% 10%;
+    --gold: 45 85% 55%;
+    --gold-foreground: 0 0% 5%;
+    --gold-muted: 45 35% 12%;
     
-    --border: 153 10% 18%;
-    --input: 153 10% 18%;
-    --ring: 153 60% 40%;
+    --border: 153 12% 18%;
+    --border-strong: 153 12% 25%;
+    --input: 153 12% 18%;
+    --ring: 153 65% 42%;
     
-    --popover: 153 15% 7%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 153 12% 8%;
+    --popover-foreground: 0 0% 97%;
     
-    --sidebar-background: 153 15% 7%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 153 60% 40%;
+    --sidebar-background: 153 12% 6%;
+    --sidebar-foreground: 0 0% 97%;
+    --sidebar-primary: 153 65% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 153 30% 12%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 153 10% 18%;
-    --sidebar-ring: 153 60% 40%;
-    
-    --glass-bg: 153 15% 7% / 0.8;
-    --glass-border: 0 0% 100% / 0.1;
-    --glass-shadow: 0 0% 0% / 0.3;
+    --sidebar-accent: 153 20% 15%;
+    --sidebar-accent-foreground: 0 0% 97%;
+    --sidebar-border: 153 12% 18%;
+    --sidebar-ring: 153 65% 42%;
   }
 }
 
@@ -155,9 +158,14 @@
     -moz-osx-font-smoothing: grayscale;
   }
   
-  /* Tabular numbers for scores */
+  /* Tabular numbers for scores - critical for alignment */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
+  }
+  
+  /* Mono numbers for data display */
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
   }
   
   /* Prevent iOS zoom on input focus */
@@ -165,7 +173,7 @@
     font-size: 16px;
   }
   
-  /* Enhanced focus states for accessibility */
+  /* Enhanced focus states */
   :focus-visible {
     outline: 2px solid hsl(var(--primary));
     outline-offset: 2px;
@@ -182,107 +190,191 @@
 }
 
 @layer components {
-  /* Premium card styling */
-  .card-premium {
-    @apply bg-card rounded-2xl shadow-sm border border-border/50 backdrop-blur-sm;
+  /* Tech Card - Clean, solid backgrounds with corner accents */
+  .tech-card {
+    @apply bg-card border border-border rounded-xl shadow-sm relative overflow-hidden;
   }
   
-  /* Glass card effect */
-  .card-glass {
-    background: hsl(var(--glass-bg));
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--glass-border));
-    box-shadow: 0 4px 24px hsl(var(--glass-shadow));
+  .tech-card-elevated {
+    @apply bg-card border border-border rounded-xl shadow-md relative overflow-hidden;
   }
   
-  /* Gradient backgrounds */
-  .bg-gradient-primary {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%);
+  /* Corner accent brackets */
+  .corner-accent {
+    @apply absolute w-4 h-4;
   }
   
-  .bg-gradient-gold {
-    background: linear-gradient(135deg, hsl(45 93% 47%) 0%, hsl(38 92% 50%) 100%);
+  .corner-accent::before,
+  .corner-accent::after {
+    content: '';
+    @apply absolute bg-primary;
   }
   
-  .bg-gradient-subtle {
-    background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.3) 100%);
+  .corner-accent-tl::before {
+    @apply top-0 left-0 w-full h-[2px];
+  }
+  .corner-accent-tl::after {
+    @apply top-0 left-0 w-[2px] h-full;
   }
   
-  .bg-gradient-radial {
-    background: radial-gradient(ellipse at top, hsl(var(--primary-light)) 0%, hsl(var(--background)) 70%);
+  .corner-accent-tr::before {
+    @apply top-0 right-0 w-full h-[2px];
+  }
+  .corner-accent-tr::after {
+    @apply top-0 right-0 w-[2px] h-full;
   }
   
-  /* Score colors */
-  .score-eagle {
-    @apply text-success;
+  .corner-accent-bl::before {
+    @apply bottom-0 left-0 w-full h-[2px];
+  }
+  .corner-accent-bl::after {
+    @apply bottom-0 left-0 w-[2px] h-full;
   }
   
-  .score-birdie {
-    @apply text-success;
+  .corner-accent-br::before {
+    @apply bottom-0 right-0 w-full h-[2px];
+  }
+  .corner-accent-br::after {
+    @apply bottom-0 right-0 w-[2px] h-full;
   }
   
-  .score-par {
-    @apply text-foreground;
+  /* Technical grid pattern */
+  .tech-grid {
+    background-image: 
+      linear-gradient(hsl(var(--border)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
   
-  .score-bogey {
-    @apply text-warning;
-  }
-  
-  .score-double {
-    @apply text-danger;
-  }
-  
-  /* Button variants */
-  .btn-primary {
-    @apply w-full py-4 px-6 bg-gradient-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/20;
-  }
-  
-  .btn-secondary {
-    @apply w-full py-4 px-6 bg-card text-primary font-semibold rounded-2xl border-2 border-primary/20 hover:border-primary/40 hover:bg-primary-light active:scale-[0.98] transition-all;
-  }
-  
-  .btn-ghost {
-    @apply py-2 px-4 text-muted-foreground font-medium hover:text-foreground hover:bg-muted rounded-xl transition-all;
-  }
-  
-  .btn-danger {
-    @apply py-4 px-6 bg-destructive text-destructive-foreground font-semibold rounded-2xl hover:bg-destructive/90 active:scale-[0.98] transition-all;
-  }
-  
-  /* Geometric decorative elements */
-  .geometric-grid {
+  .tech-grid-subtle {
     background-image: 
       linear-gradient(hsl(var(--border) / 0.5) 1px, transparent 1px),
       linear-gradient(90deg, hsl(var(--border) / 0.5) 1px, transparent 1px);
     background-size: 32px 32px;
   }
   
-  .geometric-dots {
-    background-image: radial-gradient(hsl(var(--primary) / 0.15) 1px, transparent 1px);
-    background-size: 24px 24px;
+  /* Data display strip */
+  .data-strip {
+    @apply flex items-center gap-6 px-4 py-2 border-b border-border bg-muted/30;
   }
   
-  /* Text gradient */
-  .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  /* Score colors - solid fills for outdoor visibility */
+  .score-eagle {
+    @apply bg-success text-success-foreground;
   }
   
-  /* Glow effects */
-  .glow-primary {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.3), 0 0 40px hsl(var(--primary) / 0.1);
+  .score-birdie {
+    @apply bg-success text-success-foreground;
   }
   
-  .glow-gold {
-    box-shadow: 0 0 20px hsl(var(--gold) / 0.4), 0 0 40px hsl(var(--gold) / 0.2);
+  .score-par {
+    @apply bg-muted text-foreground;
   }
   
-  .glow-success {
-    box-shadow: 0 0 15px hsl(var(--success) / 0.3);
+  .score-bogey {
+    @apply bg-warning text-warning-foreground;
+  }
+  
+  .score-double {
+    @apply bg-danger text-danger-foreground;
+  }
+  
+  /* Score text colors for inline use */
+  .score-text-eagle {
+    @apply text-success font-bold;
+  }
+  
+  .score-text-birdie {
+    @apply text-success font-semibold;
+  }
+  
+  .score-text-par {
+    @apply text-foreground;
+  }
+  
+  .score-text-bogey {
+    @apply text-warning font-semibold;
+  }
+  
+  .score-text-double {
+    @apply text-danger font-bold;
+  }
+  
+  /* Button variants - solid, high contrast */
+  .btn-primary {
+    @apply w-full py-4 px-6 bg-primary text-primary-foreground font-semibold rounded-xl 
+           hover:bg-primary/90 active:scale-[0.98] transition-all 
+           shadow-sm border border-primary;
+  }
+  
+  .btn-secondary {
+    @apply w-full py-4 px-6 bg-card text-primary font-semibold rounded-xl 
+           border-2 border-primary/30 hover:border-primary/50 hover:bg-primary-light 
+           active:scale-[0.98] transition-all;
+  }
+  
+  .btn-ghost {
+    @apply py-2 px-4 text-muted-foreground font-medium hover:text-foreground 
+           hover:bg-muted rounded-lg transition-all;
+  }
+  
+  .btn-danger {
+    @apply py-4 px-6 bg-danger text-danger-foreground font-semibold rounded-xl 
+           hover:bg-danger/90 active:scale-[0.98] transition-all;
+  }
+  
+  /* Status badges - solid pills */
+  .badge-success {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full 
+           bg-success text-success-foreground text-xs font-semibold;
+  }
+  
+  .badge-warning {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full 
+           bg-warning text-warning-foreground text-xs font-semibold;
+  }
+  
+  .badge-danger {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full 
+           bg-danger text-danger-foreground text-xs font-semibold;
+  }
+  
+  .badge-gold {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full 
+           bg-gold text-gold-foreground text-xs font-semibold;
+  }
+  
+  .badge-primary {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full 
+           bg-primary text-primary-foreground text-xs font-semibold;
+  }
+  
+  .badge-muted {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full 
+           bg-muted text-muted-foreground text-xs font-semibold;
+  }
+  
+  /* Data label - uppercase technical style */
+  .data-label {
+    @apply text-[10px] font-semibold uppercase tracking-widest text-muted-foreground;
+  }
+  
+  /* Big number display */
+  .number-display {
+    @apply text-4xl font-bold tracking-tight tabular-nums;
+  }
+  
+  .number-display-xl {
+    @apply text-5xl font-black tracking-tight tabular-nums;
+  }
+  
+  /* Divider line */
+  .divider-vertical {
+    @apply w-px h-8 bg-border;
+  }
+  
+  .divider-horizontal {
+    @apply h-px w-full bg-border;
   }
 }
 
@@ -319,9 +411,9 @@
     display: none;
   }
   
-  /* Headline styles */
+  /* Headlines - bold and clear */
   .headline-xl {
-    @apply text-4xl font-bold tracking-tight;
+    @apply text-4xl font-black tracking-tight;
   }
   
   .headline-lg {
@@ -329,15 +421,29 @@
   }
   
   .headline-md {
-    @apply text-2xl font-semibold tracking-tight;
+    @apply text-2xl font-bold tracking-tight;
   }
   
   .headline-sm {
-    @apply text-xl font-semibold;
+    @apply text-xl font-semibold tracking-tight;
   }
   
   /* Label styles */
   .label-sm {
     @apply text-xs font-semibold uppercase tracking-wider text-muted-foreground;
+  }
+  
+  /* Technical accent bar */
+  .accent-bar-top {
+    @apply before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-primary;
+  }
+  
+  .accent-bar-left {
+    @apply before:absolute before:top-0 before:bottom-0 before:left-0 before:w-1 before:bg-primary;
+  }
+  
+  /* Winner highlight */
+  .winner-highlight {
+    @apply border-2 border-gold bg-gold-muted;
   }
 }
