@@ -161,11 +161,11 @@ export default function Friends() {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-safe relative">
+    <div className="min-h-screen bg-background relative">
       <GeometricBackground />
       
       {/* Header */}
-      <header className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b-2 border-border px-4 py-3 pt-safe">
+      <header className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b-2 border-border px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3">
         <div className="flex items-center gap-3">
           <Button
             variant="outline"

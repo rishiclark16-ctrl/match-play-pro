@@ -599,7 +599,7 @@ export default function Scorecard() {
       
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background border-b border-border">
-        <div className="pt-12 pb-2 px-4 safe-top flex items-center justify-between gap-3">
+        <div className="pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-2 px-4 flex items-center justify-between gap-3">
           <motion.button whileTap={{
           scale: 0.9
         }} onClick={() => {

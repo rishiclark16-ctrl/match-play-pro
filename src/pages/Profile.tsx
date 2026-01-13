@@ -177,7 +177,7 @@ export default function Profile() {
       <GeometricBackground />
       
       {/* Header */}
-      <header className="relative z-10 pt-safe px-4 pt-12 pb-4 flex items-center gap-4">
+      <header className="relative z-10 px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-4 flex items-center gap-4">
         <button
           onClick={() => navigate(-1)}
           className="w-10 h-10 rounded-lg bg-card border border-border flex items-center justify-center hover:bg-accent transition-colors"

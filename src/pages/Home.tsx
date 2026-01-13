@@ -222,7 +222,7 @@ export default function Home() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="pt-safe px-6 pt-14 pb-6 flex items-center justify-between relative z-10"
+        className="px-6 pt-[calc(env(safe-area-inset-top)+1rem)] pb-6 flex items-center justify-between relative z-10"
       >
         <div className="flex items-center gap-4">
           {/* Logo mark */}
