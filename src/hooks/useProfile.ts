@@ -10,6 +10,7 @@ export interface Profile {
   home_course_name: string | null;
   avatar_url: string | null;
   tee_preference: string | null;
+  friend_code: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
@@ -57,6 +58,7 @@ export function useProfile() {
             home_course_name: null,
             avatar_url: null,
             tee_preference: null,
+            friend_code: null,
             created_at: null,
             updated_at: null,
           });

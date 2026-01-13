@@ -10,10 +10,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CourseSearch } from '@/components/golf/CourseSearch';
 import { PlayerInput } from '@/components/golf/PlayerInput';
 import { TeeSelector } from '@/components/golf/TeeSelector';
+import { QuickAddFriends } from '@/components/friends/QuickAddFriends';
 import { useCourses } from '@/hooks/useCourses';
 import { useGolfCourseSearch, GolfCourseResult, GolfCourseDetails } from '@/hooks/useGolfCourseSearch';
 import { useCreateSupabaseRound } from '@/hooks/useCreateSupabaseRound';
 import { useProfile } from '@/hooks/useProfile';
+import { useFriends, Friend } from '@/hooks/useFriends';
 import { Course, HoleInfo, GameConfig, Team, generateId } from '@/types/golf';
 import { createDefaultTeams } from '@/lib/games/bestball';
 import { cn } from '@/lib/utils';
@@ -25,6 +27,7 @@ interface PlayerData {
   id: string;
   name: string;
   handicap?: number;
+  profileId?: string; // Link to user profile for friends
 }
 
 export default function NewRound() {
@@ -33,7 +36,9 @@ export default function NewRound() {
   const { courses, createCourse, getDefaultHoles } = useCourses();
   const { getCourseDetails, convertToHoleInfo, getTeeInfo, isLoadingDetails } = useGolfCourseSearch();
   const { profile } = useProfile();
+  const { friends } = useFriends();
   const [isCreating, setIsCreating] = useState(false);
+  const [addedFriendIds, setAddedFriendIds] = useState<string[]>([]);
 
   const [step, setStep] = useState<Step>('course');
   const [isLoadingApiCourse, setIsLoadingApiCourse] = useState(false);
@@ -194,6 +199,33 @@ export default function NewRound() {
 
   const updatePlayer = (id: string, updates: Partial<PlayerData>) => {
     setPlayers(players.map(p => p.id === id ? { ...p, ...updates } : p));
+  };
+
+  const handleAddFriend = (friend: Friend) => {
+    // Find first empty player slot
+    const emptySlotIndex = players.findIndex(p => !p.name.trim());
+    
+    if (emptySlotIndex !== -1) {
+      // Fill existing empty slot
+      const updated = [...players];
+      updated[emptySlotIndex] = {
+        ...updated[emptySlotIndex],
+        name: friend.fullName || '',
+        handicap: friend.handicap ?? undefined,
+        profileId: friend.id,
+      };
+      setPlayers(updated);
+    } else if (players.length < 4) {
+      // Add new player
+      setPlayers([...players, {
+        id: Date.now().toString(),
+        name: friend.fullName || '',
+        handicap: friend.handicap ?? undefined,
+        profileId: friend.id,
+      }]);
+    }
+    
+    setAddedFriendIds(prev => [...prev, friend.id]);
   };
 
   const handleStartRound = async () => {
@@ -493,6 +525,15 @@ export default function NewRound() {
                 Add at least 2 players to continue
               </p>
             )}
+
+            {/* Quick Add Friends */}
+            <QuickAddFriends
+              friends={friends}
+              addedFriendIds={addedFriendIds}
+              onAddFriend={handleAddFriend}
+              onOpenFriends={() => navigate('/friends')}
+              currentPlayerCount={players.filter(p => p.name.trim()).length}
+            />
           </motion.div>
         );
 

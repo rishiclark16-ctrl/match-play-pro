@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, LogOut, Save } from 'lucide-react';
+import { ArrowLeft, Loader2, LogOut, Save, Users, Copy, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { HomeCourseSelector } from '@/components/profile/HomeCourseSelector';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile, ProfileUpdate } from '@/hooks/useProfile';
+import { useFriends } from '@/hooks/useFriends';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,8 @@ export default function Profile() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { profile, loading, updateProfile, uploadAvatar } = useProfile();
+  const { friends } = useFriends();
+  const [copied, setCopied] = useState(false);
 
   const [fullName, setFullName] = useState('');
   const [handicap, setHandicap] = useState('');
@@ -121,6 +124,20 @@ export default function Profile() {
     setHomeCourseName(null);
   };
 
+  const handleCopyFriendCode = async () => {
+    if (!profile?.friend_code) return;
+    
+    try {
+      await navigator.clipboard.writeText(profile.friend_code);
+      setCopied(true);
+      hapticLight();
+      toast.success('Friend code copied!');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Failed to copy');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -158,6 +175,27 @@ export default function Profile() {
           />
           <p className="mt-3 text-lg font-semibold">{profile?.full_name || 'Add your name'}</p>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
+          
+          {/* Friend Code & Friends Link */}
+          <div className="flex items-center gap-3 mt-4">
+            <button
+              onClick={handleCopyFriendCode}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+            >
+              <span className="font-mono tracking-wider">{profile?.friend_code || '------'}</span>
+              {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+            </button>
+            <button
+              onClick={() => {
+                hapticLight();
+                navigate('/friends');
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-muted-foreground text-sm font-medium hover:bg-muted/80 transition-colors"
+            >
+              <Users className="w-3 h-3" />
+              {friends.length} Friend{friends.length !== 1 ? 's' : ''}
+            </button>
+          </div>
         </motion.div>
 
         {/* Golf Info Section */}
