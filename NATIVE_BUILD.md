@@ -2,11 +2,19 @@
 
 Complete guide to building and publishing MATCH Golf to the Apple App Store and Google Play Store.
 
-## Prerequisites
+## Assets Included
 
-### For iOS
-- **Mac computer** (required - Apple's requirement)
-- **Xcode 15+** (free from Mac App Store)
+| Asset | Location | Purpose |
+|-------|----------|---------|
+| App Icon (1024×1024) | `src/assets/app-icon-1024.png` | Master icon for all sizes |
+| Splash Screen (1920×1920) | `src/assets/splash-screen.png` | Native app launch screen |
+| Web Favicon (512×512) | `public/favicon-512.png` | PWA and browser |
+
+See `APP_ICONS.md` for complete icon sizing guide.
+
+---
+
+## Prerequisites
 - **Apple Developer Account** ($99/year) - [developer.apple.com](https://developer.apple.com)
 - **iOS device or Simulator** for testing
 
