@@ -56,6 +56,86 @@ export type Database = {
           },
         ]
       }
+      golf_groups: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          owner_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "golf_groups_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_members: {
+        Row: {
+          created_at: string | null
+          group_id: string
+          guest_handicap: number | null
+          guest_name: string | null
+          id: string
+          order_index: number
+          profile_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          group_id: string
+          guest_handicap?: number | null
+          guest_name?: string | null
+          id?: string
+          order_index?: number
+          profile_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          group_id?: string
+          guest_handicap?: number | null
+          guest_name?: string | null
+          id?: string
+          order_index?: number
+          profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "golf_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
           created_at: string | null
@@ -362,6 +442,14 @@ export type Database = {
     Functions: {
       are_friends: {
         Args: { user1_id: string; user2_id: string }
+        Returns: boolean
+      }
+      is_group_member: {
+        Args: { group_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_group_owner: {
+        Args: { group_id: string; user_id: string }
         Returns: boolean
       }
     }
