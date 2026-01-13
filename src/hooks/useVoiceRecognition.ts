@@ -95,10 +95,15 @@ export function useVoiceRecognition(): UseVoiceRecognitionReturn {
           errorMessage = 'Microphone access denied. Please allow microphone access.';
           break;
         case 'network':
-          errorMessage = 'Network error. Please check your connection.';
+          // Network error is common in embedded iframes/preview environments
+          // The browser's speech API requires internet access to Google's servers
+          errorMessage = 'Voice requires a stable connection. Try opening in a new tab or on your phone.';
           break;
         case 'aborted':
           errorMessage = '';
+          break;
+        case 'service-not-allowed':
+          errorMessage = 'Speech service not available. Try opening in a new browser tab.';
           break;
       }
       
