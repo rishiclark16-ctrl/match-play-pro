@@ -271,7 +271,7 @@ export default function Scorecard() {
           // Feedback
           if (result.scores.length === players.length) {
             feedbackAllScored();
-            toast.success(`All ${result.scores.length} scores saved! 🎉`, { duration: 2000 });
+            toast.success(`All ${result.scores.length} scores saved! 🎉`, { duration: 5000 });
           } else {
             feedbackVoiceSuccess();
             const scoresSummary = result.scores.map(s => `${s.playerName.split(' ')[0]} ${s.score}`).join(', ');
