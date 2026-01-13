@@ -16,7 +16,7 @@ import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Round } from '@/types/golf';
-import { staggerContainer, staggerItem, popIn } from '@/lib/animations';
+import { popIn } from '@/lib/animations';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -54,6 +54,8 @@ export default function Home() {
       
       if (error) throw error;
       
+      console.log('Fetched rounds data:', data);
+      
       const transformedRounds: Round[] = (data || []).map(r => ({
         id: r.id,
         courseId: r.course_id || '',
@@ -62,7 +64,7 @@ export default function Home() {
         strokePlay: r.stroke_play ?? true,
         matchPlay: r.match_play ?? false,
         stakes: r.stakes ?? undefined,
-        status: r.status as 'active' | 'complete',
+        status: (r.status === 'active' ? 'active' : 'complete') as 'active' | 'complete',
         createdAt: new Date(r.created_at || Date.now()),
         joinCode: r.join_code,
         holeInfo: r.hole_info as any,
@@ -72,6 +74,7 @@ export default function Home() {
         presses: [],
       }));
       
+      console.log('Transformed rounds:', transformedRounds);
       setRounds(transformedRounds);
     } catch (err) {
       console.error('Error fetching rounds:', err);
@@ -237,12 +240,7 @@ export default function Home() {
             <p className="text-sm font-medium text-muted-foreground">Loading rounds...</p>
           </motion.div>
         ) : rounds.length > 0 ? (
-          <motion.div 
-            variants={staggerContainer}
-            initial="initial"
-            animate="animate"
-            className="space-y-6"
-          >
+          <div className="space-y-6">
             {/* Active Rounds Section */}
             {activeRounds.length > 0 && (
               <div className="space-y-3">
@@ -251,7 +249,12 @@ export default function Home() {
                   <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">Live Rounds</h2>
                 </div>
                 {activeRounds.map((round, index) => (
-                  <motion.div key={round.id} variants={staggerItem} custom={index}>
+                  <motion.div 
+                    key={round.id} 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.08, duration: 0.3 }}
+                  >
                     <RoundCard
                       round={round}
                       onClick={() => navigate(`/round/${round.id}`)}
@@ -268,7 +271,12 @@ export default function Home() {
               <div className="space-y-3">
                 <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">History</h2>
                 {completedRounds.map((round, index) => (
-                  <motion.div key={round.id} variants={staggerItem} custom={index + activeRounds.length}>
+                  <motion.div 
+                    key={round.id} 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: (index + activeRounds.length) * 0.08, duration: 0.3 }}
+                  >
                     <RoundCard
                       round={round}
                       onClick={() => navigate(`/round/${round.id}/complete`)}
@@ -279,7 +287,7 @@ export default function Home() {
                 ))}
               </div>
             )}
-          </motion.div>
+          </div>
         ) : (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
