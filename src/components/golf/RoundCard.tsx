@@ -1,9 +1,8 @@
 import { useState, useRef, forwardRef } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
-import { Trash2, Loader2, ChevronRight, Users, Flag } from 'lucide-react';
+import { Trash2, Loader2, ChevronRight, Flag } from 'lucide-react';
 import { Round } from '@/types/golf';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   AlertDialog,
@@ -43,7 +42,6 @@ export const RoundCard = forwardRef<HTMLDivElement, RoundCardProps>(
   const deleteIconScale = useTransform(x, [SWIPE_THRESHOLD, -50, 0], [1.2, 1, 0.8]);
   
   const isActive = round.status === 'active';
-  const dateStr = format(new Date(round.createdAt), 'MMM d, yyyy');
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -92,29 +90,16 @@ export const RoundCard = forwardRef<HTMLDivElement, RoundCardProps>(
         >
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground truncate pr-3">{round.courseName}</h3>
-              <div className="flex items-center gap-3 mt-1.5">
-                <span className="text-sm text-muted-foreground">
+              <h3 className="font-semibold text-foreground truncate pr-3 text-sm">{round.courseName}</h3>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs text-muted-foreground">
                   {round.holes} holes
                 </span>
                 
-                {playerCount !== undefined && playerCount > 0 && (
-                  <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Users className="w-3.5 h-3.5" />
-                    {playerCount}
-                  </span>
-                )}
-                
                 {isActive && currentHole !== undefined && currentHole > 0 && (
-                  <span className="flex items-center gap-1 text-sm font-medium text-primary">
-                    <Flag className="w-3.5 h-3.5" />
+                  <span className="flex items-center gap-1 text-xs font-medium text-primary">
+                    <Flag className="w-3 h-3" />
                     Hole {currentHole}
-                  </span>
-                )}
-                
-                {!isActive && (
-                  <span className="text-sm text-muted-foreground">
-                    {dateStr}
                   </span>
                 )}
               </div>
