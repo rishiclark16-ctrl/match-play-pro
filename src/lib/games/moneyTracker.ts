@@ -1,7 +1,7 @@
 import { PlayerWithScores, GameConfig, HoleInfo, Score, Press } from '@/types/golf';
 import { calculateSkins, SkinsResult } from './skins';
 import { calculateNassau, NassauResult } from './nassau';
-import { PlayerMoney } from '@/types/betting';
+import { PlayerMoney, PropBet } from '@/types/betting';
 
 interface MoneyBreakdown {
   skins: number;
@@ -30,7 +30,8 @@ export function calculateLiveMoney(
   holeInfo: HoleInfo[],
   presses: Press[],
   upToHole: number,
-  previousMoney?: Map<string, number>
+  previousMoney?: Map<string, number>,
+  propBets?: PropBet[]
 ): LiveMoneyState {
   const breakdown = new Map<string, MoneyBreakdown>();
   
@@ -204,6 +205,40 @@ export function calculateLiveMoney(
       }
     }
   });
+
+  // Calculate prop bet winnings
+  if (propBets && propBets.length > 0) {
+    const playerCount = players.length;
+    
+    // Filter prop bets up to current hole that have winners
+    const relevantPropBets = propBets.filter(pb => pb.holeNumber <= upToHole && pb.winnerId);
+    
+    relevantPropBets.forEach(bet => {
+      if (!bet.winnerId) return;
+      
+      // Winner gets stakes from each other player
+      const winnings = bet.stakes * (playerCount - 1);
+      const lossPer = bet.stakes;
+      
+      // Add winnings to winner
+      const winnerBreakdown = breakdown.get(bet.winnerId);
+      if (winnerBreakdown) {
+        winnerBreakdown.propBets += winnings;
+        winnerBreakdown.total += winnings;
+      }
+      
+      // Subtract from other players
+      players.forEach(p => {
+        if (p.id !== bet.winnerId) {
+          const playerBreakdown = breakdown.get(p.id);
+          if (playerBreakdown) {
+            playerBreakdown.propBets -= lossPer;
+            playerBreakdown.total -= lossPer;
+          }
+        }
+      });
+    });
+  }
 
   // Build player money array
   const playerMoney: PlayerMoney[] = players.map(p => {
