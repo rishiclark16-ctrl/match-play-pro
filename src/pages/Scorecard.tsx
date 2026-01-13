@@ -325,19 +325,88 @@ export default function Scorecard() {
   // State for playoff mode
   const [playoffHole, setPlayoffHole] = useState(0);
   const [showFinishOptions, setShowFinishOptions] = useState(false);
+  const [playoffScores, setPlayoffScores] = useState<Map<string, Map<number, number>>>(new Map());
+  const [playoffWinner, setPlayoffWinner] = useState<{ id: string; name: string; holeNumber: number } | null>(null);
+  const [showWinnerModal, setShowWinnerModal] = useState(false);
   
   // Auto-show finish options when hole 18 is scored
   useEffect(() => {
-    if (hole18FullyScored && !playoffHole) {
+    if (hole18FullyScored && !playoffHole && !playoffWinner) {
       setShowFinishOptions(true);
     }
-  }, [hole18FullyScored, playoffHole]);
+  }, [hole18FullyScored, playoffHole, playoffWinner]);
+  
+  // Get playoff score for a player on current playoff hole
+  const getPlayoffScore = useCallback((playerId: string, holeNum: number) => {
+    return playoffScores.get(playerId)?.get(holeNum);
+  }, [playoffScores]);
+  
+  // Check if all players have scored current playoff hole
+  const allPlayoffScored = useMemo(() => {
+    if (playoffHole === 0) return false;
+    return playersWithScores.every(player => getPlayoffScore(player.id, playoffHole) !== undefined);
+  }, [playoffHole, playersWithScores, getPlayoffScore]);
+  
+  // Check for playoff winner after all scores are in
+  useEffect(() => {
+    if (!allPlayoffScored || playoffHole === 0) return;
+    
+    // Get all scores for current playoff hole
+    const holeScores = playersWithScores.map(player => ({
+      id: player.id,
+      name: player.name,
+      score: getPlayoffScore(player.id, playoffHole) || 0
+    }));
+    
+    // Find minimum score
+    const minScore = Math.min(...holeScores.map(s => s.score));
+    const playersWithMinScore = holeScores.filter(s => s.score === minScore);
+    
+    // If only one player has the lowest score, they win
+    if (playersWithMinScore.length === 1) {
+      setPlayoffWinner({
+        id: playersWithMinScore[0].id,
+        name: playersWithMinScore[0].name,
+        holeNumber: playoffHole
+      });
+      setShowWinnerModal(true);
+      hapticSuccess();
+    }
+  }, [allPlayoffScored, playoffHole, playersWithScores, getPlayoffScore]);
   
   const handleStartPlayoff = useCallback(() => {
     setPlayoffHole(1);
+    setPlayoffScores(new Map());
+    setPlayoffWinner(null);
     setShowFinishOptions(false);
-    toast.success('Playoff Hole #1', { duration: 2000 });
+    toast.success('Playoff Hole #1 - Lowest score wins!', { duration: 3000 });
   }, []);
+  
+  const handlePlayoffScore = useCallback((playerId: string, score: number) => {
+    hapticSuccess();
+    setPlayoffScores(prev => {
+      const newScores = new Map(prev);
+      const playerScores = new Map(newScores.get(playerId) || new Map());
+      playerScores.set(playoffHole, score);
+      newScores.set(playerId, playerScores);
+      return newScores;
+    });
+    toast.success('Playoff score saved', { duration: 1500 });
+  }, [playoffHole]);
+  
+  const handleNextPlayoffHole = useCallback(() => {
+    setPlayoffHole(h => h + 1);
+    toast.info(`Playoff Hole #${playoffHole + 1} - Still tied!`, { duration: 2000 });
+  }, [playoffHole]);
+  
+  const handleFinishWithWinner = useCallback(() => {
+    if (round) {
+      setShowWinnerModal(false);
+      completeRoundSupabase();
+      completeRoundLocal(round.id);
+      navigate(`/round/${round.id}/complete`);
+    }
+  }, [round, completeRoundSupabase, completeRoundLocal, navigate]);
 
   // Handle quick score from +/- buttons
   const handleQuickScore = useCallback((playerId: string, score: number) => {
@@ -552,20 +621,53 @@ export default function Scorecard() {
         </div>
       </header>
 
-      {/* Hole Navigator */}
-      <HoleNavigator
-        currentHole={currentHole}
-        totalHoles={round.holes}
-        holeInfo={currentHoleInfo}
-        onPrevious={() => setCurrentHole(h => Math.max(1, h - 1))}
-        onNext={() => setCurrentHole(h => Math.min(round.holes, h + 1))}
-      />
+      {/* Hole Navigator - hide during playoff */}
+      {playoffHole === 0 && (
+        <HoleNavigator
+          currentHole={currentHole}
+          totalHoles={round.holes}
+          holeInfo={currentHoleInfo}
+          onPrevious={() => setCurrentHole(h => Math.max(1, h - 1))}
+          onNext={() => setCurrentHole(h => Math.min(round.holes, h + 1))}
+        />
+      )}
+
+      {/* Playoff Mode Header */}
+      {playoffHole > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-primary/10 border-b-2 border-primary px-4 py-4"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+                <Swords className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h2 className="heading-md text-primary">Playoff Hole #{playoffHole}</h2>
+                <p className="text-xs text-muted-foreground">Lowest score wins • Par {currentHoleInfo.par}</p>
+              </div>
+            </div>
+            {allPlayoffScored && !playoffWinner && (
+              <Button
+                onClick={handleNextPlayoffHole}
+                size="sm"
+                variant="outline"
+                className="border-2 border-primary text-primary"
+              >
+                Still Tied → Next Hole
+              </Button>
+            )}
+          </div>
+        </motion.div>
+      )}
 
       {/* Player Cards */}
       <main className="relative flex-1 px-3 pb-36 overflow-auto">
         <div className="space-y-2">
-          {/* Hole Summary */}
-          {(round.games?.length > 0 || playersWithScores.some(p => p.handicap !== undefined)) && (
+          {/* Hole Summary - hide during playoff */}
+          {playoffHole === 0 && (round.games?.length > 0 || playersWithScores.some(p => p.handicap !== undefined)) && (
             <HoleSummary
               round={round}
               players={playersWithScores}
@@ -575,36 +677,147 @@ export default function Scorecard() {
             />
           )}
           
-          <AnimatePresence mode="popLayout">
-            {playersWithScores.map((player, index) => {
-              const holeScore = player.scores.find(s => s.holeNumber === currentHole)?.strokes;
-              
-              return (
-                <motion.div
-                  key={player.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                >
-                  <PlayerCard
-                    player={player}
-                    currentHoleScore={holeScore}
-                    currentHolePar={currentHoleInfo.par}
-                    currentHoleNumber={currentHole}
-                    isLeading={player.id === leadingPlayerId}
-                    onScoreTap={isSpectator ? undefined : () => setSelectedPlayerId(player.id)}
-                    onQuickScore={isSpectator ? undefined : (score) => handleQuickScore(player.id, score)}
-                    showNetScores={true}
-                    voiceHighlight={isListening}
-                    voiceSuccess={voiceSuccessPlayerIds.has(player.id)}
-                  />
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+          {/* Regular scoring mode */}
+          {playoffHole === 0 && (
+            <AnimatePresence mode="popLayout">
+              {playersWithScores.map((player, index) => {
+                const holeScore = player.scores.find(s => s.holeNumber === currentHole)?.strokes;
+                
+                return (
+                  <motion.div
+                    key={player.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                  >
+                    <PlayerCard
+                      player={player}
+                      currentHoleScore={holeScore}
+                      currentHolePar={currentHoleInfo.par}
+                      currentHoleNumber={currentHole}
+                      isLeading={player.id === leadingPlayerId}
+                      onScoreTap={isSpectator ? undefined : () => setSelectedPlayerId(player.id)}
+                      onQuickScore={isSpectator ? undefined : (score) => handleQuickScore(player.id, score)}
+                      showNetScores={true}
+                      voiceHighlight={isListening}
+                      voiceSuccess={voiceSuccessPlayerIds.has(player.id)}
+                    />
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          )}
           
-          {/* Games Section */}
-          {round.games && round.games.length > 0 && (
+          {/* Playoff scoring mode */}
+          {playoffHole > 0 && (
+            <div className="space-y-3 pt-2">
+              {playersWithScores.map((player, index) => {
+                const playoffScore = getPlayoffScore(player.id, playoffHole);
+                const hasScored = playoffScore !== undefined;
+                
+                return (
+                  <motion.div
+                    key={player.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className={cn(
+                      "bg-card border-2 rounded-xl p-4 transition-all",
+                      hasScored ? "border-primary/30" : "border-border",
+                      playoffWinner?.id === player.id && "border-primary bg-primary/5"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold",
+                          hasScored ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                        )}>
+                          {player.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-bold">{player.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {player.handicap !== null && player.handicap !== undefined && `HCP ${player.handicap}`}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {hasScored ? (
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            "text-3xl font-black tabular-nums",
+                            playoffScore < currentHoleInfo.par && "text-red-600",
+                            playoffScore === currentHoleInfo.par && "text-foreground",
+                            playoffScore > currentHoleInfo.par && "text-blue-600"
+                          )}>
+                            {playoffScore}
+                          </span>
+                          <button
+                            onClick={() => handlePlayoffScore(player.id, 0)}
+                            className="text-xs text-muted-foreground hover:text-foreground"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          {[currentHoleInfo.par - 1, currentHoleInfo.par, currentHoleInfo.par + 1, currentHoleInfo.par + 2].map(score => (
+                            <motion.button
+                              key={score}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => handlePlayoffScore(player.id, score)}
+                              className={cn(
+                                "w-11 h-11 rounded-lg font-bold text-lg border-2 transition-colors",
+                                score < currentHoleInfo.par && "bg-red-100 border-red-300 text-red-700",
+                                score === currentHoleInfo.par && "bg-muted border-border text-foreground",
+                                score > currentHoleInfo.par && "bg-blue-100 border-blue-300 text-blue-700"
+                              )}
+                            >
+                              {score}
+                            </motion.button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+              
+              {/* Playoff summary */}
+              {playoffHole > 1 && (
+                <div className="bg-muted/50 rounded-xl p-4 mt-4">
+                  <h4 className="label-sm mb-2">Playoff History</h4>
+                  <div className="space-y-1">
+                    {Array.from({ length: playoffHole }).map((_, holeIdx) => {
+                      const holeNum = holeIdx + 1;
+                      const scores = playersWithScores.map(p => ({
+                        name: p.name.split(' ')[0],
+                        score: getPlayoffScore(p.id, holeNum)
+                      })).filter(s => s.score !== undefined);
+                      
+                      if (scores.length === 0) return null;
+                      
+                      return (
+                        <div key={holeNum} className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Hole {holeNum}:</span>
+                          {scores.map((s, i) => (
+                            <span key={i} className="font-mono">
+                              {s.name} {s.score}
+                              {i < scores.length - 1 && ', '}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Games Section - hide during playoff */}
+          {playoffHole === 0 && round.games && round.games.length > 0 && (
             <GamesSection
               round={round}
               players={playersWithScores}
@@ -615,8 +828,8 @@ export default function Scorecard() {
           )}
         </div>
         
-        {/* Voice hint */}
-        {!isSpectator && isSupported && playersWithScores.length > 0 && (
+        {/* Voice hint - hide during playoff */}
+        {playoffHole === 0 && !isSpectator && isSupported && playersWithScores.length > 0 && (
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -822,6 +1035,77 @@ export default function Scorecard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Playoff Winner Modal */}
+      <AnimatePresence>
+        {showWinnerModal && playoffWinner && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              className="bg-card rounded-2xl p-8 mx-4 max-w-sm w-full text-center shadow-2xl border-2 border-primary"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", damping: 10 }}
+                className="w-20 h-20 rounded-full bg-primary flex items-center justify-center mx-auto mb-4"
+              >
+                <Trophy className="w-10 h-10 text-primary-foreground" />
+              </motion.div>
+              
+              <motion.h2
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-2xl font-black mb-2"
+              >
+                🎉 PLAYOFF WINNER! 🎉
+              </motion.h2>
+              
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-3xl font-black text-primary mb-2"
+              >
+                {playoffWinner.name}
+              </motion.p>
+              
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-muted-foreground mb-6"
+              >
+                Won on playoff hole #{playoffWinner.holeNumber}
+              </motion.p>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+              >
+                <Button
+                  onClick={handleFinishWithWinner}
+                  className="w-full py-6 text-lg font-bold rounded-xl"
+                  size="lg"
+                >
+                  <Trophy className="w-5 h-5 mr-2" />
+                  Finish Round
+                </Button>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
