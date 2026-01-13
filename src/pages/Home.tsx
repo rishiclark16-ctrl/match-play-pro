@@ -264,7 +264,7 @@ export default function Home() {
 
       {/* Content */}
       <PullToRefresh onRefresh={handlePullRefresh} className="flex-1 overflow-auto relative z-10">
-        <main className="px-6 py-6 pb-40">
+        <main className="px-6 py-6 pb-24">
           {loadingRounds ? (
             <motion.div 
               initial={{ opacity: 0 }}
@@ -364,42 +364,6 @@ export default function Home() {
           )}
         </main>
       </PullToRefresh>
-
-      {/* Bottom Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-20">
-        {/* Gradient fade */}
-        <div className="h-8 bg-gradient-to-t from-background to-transparent" />
-        
-        <div className="bg-background border-t border-border px-6 py-4 pb-safe">
-          <div className="flex gap-3">
-            <motion.div whileTap={{ scale: 0.98 }} className="flex-1">
-              <Button 
-                onClick={() => {
-                  hapticLight();
-                  navigate('/new-round');
-                }}
-                className="w-full py-6 text-base font-bold rounded-xl bg-primary shadow-lg"
-              >
-                <Plus className="w-5 h-5 mr-2" strokeWidth={2.5} />
-                New Round
-              </Button>
-            </motion.div>
-            
-            <motion.div whileTap={{ scale: 0.98 }}>
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  hapticLight();
-                  setShowJoinModal(true);
-                }}
-                className="h-full px-6 font-bold rounded-xl border-2 border-border hover:border-primary/30 hover:bg-muted"
-              >
-                <Users className="w-5 h-5" strokeWidth={2.5} />
-              </Button>
-            </motion.div>
-          </div>
-        </div>
-      </div>
 
       {/* Join Modal */}
       <AnimatePresence>
