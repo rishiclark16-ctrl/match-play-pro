@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Plus } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import type { Friend } from '@/hooks/useFriends';
 import { cn } from '@/lib/utils';
 
@@ -30,24 +30,26 @@ export function QuickAddFriends({
 
   if (friends.length === 0) {
     return (
-      <div className="py-3">
-        <p className="text-xs text-muted-foreground mb-2">QUICK ADD FROM FRIENDS</p>
+      <div className="py-4">
+        <p className="label-sm mb-3">Quick Add Friends</p>
         <button
           type="button"
           onClick={onOpenFriends}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-border text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-border text-sm text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary-light transition-all w-full"
         >
-          <Plus className="h-4 w-4" />
-          Add your first friend
+          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+            <Plus className="h-4 w-4" />
+          </div>
+          <span className="font-medium">Add your first friend</span>
         </button>
       </div>
     );
   }
 
   return (
-    <div className="py-3">
-      <p className="text-xs text-muted-foreground mb-2">QUICK ADD FROM FRIENDS</p>
-      <div className="flex gap-2 overflow-x-auto pb-1">
+    <div className="py-4">
+      <p className="label-sm mb-3">Quick Add Friends</p>
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {availableFriends.slice(0, 6).map((friend) => (
           <button
             key={friend.id}
@@ -55,37 +57,39 @@ export function QuickAddFriends({
             onClick={() => canAddMore && onAddFriend(friend)}
             disabled={!canAddMore}
             className={cn(
-              "flex flex-col items-center gap-1 p-2 rounded-lg border border-border min-w-[70px] transition-colors",
+              "flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-card min-w-[80px] transition-all",
               canAddMore 
-                ? "hover:border-primary hover:bg-primary/5" 
+                ? "hover:border-primary hover:bg-primary-light active:scale-95" 
                 : "opacity-50 cursor-not-allowed"
             )}
           >
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-10 w-10 border-2 border-background">
               <AvatarImage src={friend.avatarUrl || undefined} alt={friend.fullName || ''} />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+              <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                 {getInitials(friend.fullName)}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs font-medium text-foreground truncate max-w-[60px]">
-              {friend.fullName?.split(' ')[0] || 'Friend'}
-            </span>
-            {friend.handicap !== null && (
-              <span className="text-[10px] text-muted-foreground">
-                {friend.handicap}
+            <div className="text-center">
+              <span className="text-xs font-semibold text-foreground truncate block max-w-[60px]">
+                {friend.fullName?.split(' ')[0] || 'Friend'}
               </span>
-            )}
+              {friend.handicap !== null && (
+                <span className="text-[10px] text-muted-foreground font-mono">
+                  HCP {friend.handicap}
+                </span>
+              )}
+            </div>
           </button>
         ))}
         <button
           type="button"
           onClick={onOpenFriends}
-          className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg border border-dashed border-border min-w-[70px] hover:border-primary hover:bg-primary/5 transition-colors"
+          className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border-2 border-dashed border-border min-w-[80px] hover:border-primary hover:bg-primary-light transition-all"
         >
-          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-            <Plus className="h-4 w-4 text-muted-foreground" />
+          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+            <Users className="h-5 w-5 text-muted-foreground" />
           </div>
-          <span className="text-xs text-muted-foreground">More</span>
+          <span className="text-xs font-medium text-muted-foreground">More</span>
         </button>
       </div>
     </div>
