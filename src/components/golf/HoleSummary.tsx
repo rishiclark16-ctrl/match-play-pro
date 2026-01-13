@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, Target, TrendingUp, Trophy, Users, Coins, Crown, Dog } from 'lucide-react';
 import { Round, Player, Score, PlayerWithScores, HoleInfo, WolfHoleResult } from '@/types/golf';
-import { getSkinsHoleContext } from '@/lib/games/skins';
+import { getSkinsHoleContext, StrokesPerHoleMap } from '@/lib/games/skins';
 import { getNassauHoleContext } from '@/lib/games/nassau';
 import { getBestBallHoleContext } from '@/lib/games/bestball';
 import { getWolfHoleContext } from '@/lib/games/wolf';
@@ -38,43 +38,64 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
     }).filter(p => p.strokes > 0);
   }, [players, currentHole]);
   
+  // Build the strokesPerHole map for net scoring
+  const buildStrokesMap = useMemo((): StrokesPerHoleMap | undefined => {
+    // Check if any game uses net scoring
+    const anyGameUsesNet = round.games?.some(g => g.useNet);
+    if (!anyGameUsesNet) return undefined;
+    
+    const map = new Map<string, Map<number, number>>();
+    for (const player of players) {
+      if (player.strokesPerHole) {
+        map.set(player.id, player.strokesPerHole);
+      }
+    }
+    return map.size > 0 ? map : undefined;
+  }, [players, round.games]);
+  
   // Calculate carryover for skins
   const skinsContext = useMemo(() => {
     if (!skinsGame) return null;
+    const useStrokesMap = skinsGame.useNet ? buildStrokesMap : undefined;
     return getSkinsHoleContext(
       scores,
       players,
       currentHole,
       skinsGame.stakes,
       skinsGame.carryover ?? true,
-      round.holes
+      round.holes,
+      useStrokesMap
     );
-  }, [skinsGame, scores, players, currentHole, round.holes]);
+  }, [skinsGame, scores, players, currentHole, round.holes, buildStrokesMap]);
   
   // Get Nassau context
   const nassauContext = useMemo(() => {
     if (!nassauGame || players.length !== 2) return null;
+    const useStrokesMap = nassauGame.useNet ? buildStrokesMap : undefined;
     return getNassauHoleContext(
       scores,
       players,
       currentHole,
       nassauGame.stakes,
       round.presses || [],
-      round.holes
+      round.holes,
+      useStrokesMap
     );
-  }, [nassauGame, scores, players, currentHole, round.presses, round.holes]);
+  }, [nassauGame, scores, players, currentHole, round.presses, round.holes, buildStrokesMap]);
   
   // Get Best Ball context
   const bestBallContext = useMemo(() => {
     if (!bestBallGame?.teams || bestBallGame.teams.length < 2) return null;
+    const useStrokesMap = bestBallGame.useNet ? buildStrokesMap : undefined;
     return getBestBallHoleContext(
       scores,
       players,
       bestBallGame.teams,
       round.holeInfo,
-      currentHole
+      currentHole,
+      useStrokesMap
     );
-  }, [bestBallGame, scores, players, round.holeInfo, currentHole]);
+  }, [bestBallGame, scores, players, round.holeInfo, currentHole, buildStrokesMap]);
   
   // Get Wolf context
   const wolfContext = useMemo(() => {

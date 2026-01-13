@@ -117,16 +117,26 @@ export function HoleNavigator({
               {/* Divider */}
               <div className="w-px h-12 bg-border" />
               
-              {/* Par & Yardage */}
+              {/* Par & Yardage & Handicap */}
               <div className="text-center">
                 <div className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-primary text-primary-foreground">
                   <span className="text-sm font-bold tracking-wide">PAR {holeInfo.par}</span>
                 </div>
-                {holeInfo.yardage && (
-                  <p className="text-xs font-semibold text-muted-foreground mt-1.5 tabular-nums">
-                    {holeInfo.yardage} YDS
-                  </p>
-                )}
+                <div className="flex items-center justify-center gap-2 mt-1.5">
+                  {holeInfo.yardage && (
+                    <span className="text-xs font-semibold text-muted-foreground tabular-nums">
+                      {holeInfo.yardage} YDS
+                    </span>
+                  )}
+                  {holeInfo.yardage && holeInfo.handicap && (
+                    <span className="text-muted-foreground/40">•</span>
+                  )}
+                  {holeInfo.handicap && (
+                    <span className="text-xs font-semibold text-muted-foreground tabular-nums">
+                      HDCP {holeInfo.handicap}
+                    </span>
+                  )}
+                </div>
               </div>
             </motion.div>
           </AnimatePresence>

@@ -1,4 +1,5 @@
 import { Score, Player, HoleInfo, Team, BestBallHoleResult } from '@/types/golf';
+import { StrokesPerHoleMap } from './skins';
 
 export interface BestBallStanding {
   teamId: string;
@@ -26,12 +27,21 @@ export interface BestBallResult {
   holesPlayed: number;
 }
 
+// Helper to get net score for a player on a hole
+function getNetScore(playerId: string, holeNumber: number, strokes: number, strokesPerHole?: StrokesPerHoleMap): number {
+  if (!strokesPerHole) return strokes;
+  const playerStrokes = strokesPerHole.get(playerId);
+  const holeStrokes = playerStrokes?.get(holeNumber) || 0;
+  return strokes - holeStrokes;
+}
+
 export function calculateBestBall(
   scores: Score[],
   players: Player[],
   teams: Team[],
   holeInfo: HoleInfo[],
-  holesPlayed: number
+  holesPlayed: number,
+  strokesPerHole?: StrokesPerHoleMap
 ): BestBallResult {
   const standings: BestBallStanding[] = teams.map(team => {
     const teamPlayers = players.filter(p => team.playerIds.includes(p.id));
@@ -70,21 +80,24 @@ export function calculateBestBall(
       
       if (teamScores.length === 0) return;
       
-      // Find best (lowest) score on the team
-      const bestScore = teamScores.reduce((best, current) => 
-        current.strokes < best.strokes ? current : best
-      );
+      // Find best (lowest) NET score on the team
+      const bestScore = teamScores.reduce((best, current) => {
+        const bestNet = getNetScore(best.playerId, hole, best.strokes, strokesPerHole);
+        const currentNet = getNetScore(current.playerId, hole, current.strokes, strokesPerHole);
+        return currentNet < bestNet ? current : best;
+      });
       
+      const bestNetScore = getNetScore(bestScore.playerId, hole, bestScore.strokes, strokesPerHole);
       const contributor = players.find(p => p.id === bestScore.playerId);
       const standing = standings.find(s => s.teamId === team.id);
       
       if (standing && contributor) {
-        standing.totalScore += bestScore.strokes;
+        standing.totalScore += bestNetScore;
         standing.holesPlayed += 1;
-        standing.relativeToPar += (bestScore.strokes - holePar);
+        standing.relativeToPar += (bestNetScore - holePar);
         standing.holeResults.push({
           hole,
-          bestScore: bestScore.strokes,
+          bestScore: bestNetScore,
           contributorId: contributor.id,
           contributorName: contributor.name
         });
@@ -100,7 +113,7 @@ export function calculateBestBall(
       
       holeResult.teamScores.push({
         teamId: team.id,
-        bestScore: bestScore.strokes,
+        bestScore: bestNetScore,
         contributorId: bestScore.playerId
       });
     });
@@ -141,9 +154,10 @@ export function calculateBestBallMatch(
   players: Player[],
   teams: Team[],
   holeInfo: HoleInfo[],
-  holesPlayed: number
+  holesPlayed: number,
+  strokesPerHole?: StrokesPerHoleMap
 ): BestBallMatchResult {
-  const result = calculateBestBall(scores, players, teams, holeInfo, holesPlayed);
+  const result = calculateBestBall(scores, players, teams, holeInfo, holesPlayed, strokesPerHole);
   
   let team1Wins = 0;
   let team2Wins = 0;
@@ -245,11 +259,12 @@ export function getBestBallHoleContext(
   players: Player[],
   teams: Team[],
   holeInfo: HoleInfo[],
-  currentHole: number
+  currentHole: number,
+  strokesPerHole?: StrokesPerHoleMap
 ): BestBallHoleContext {
   // Calculate up to current hole - 1 to get status going into this hole
   const holesPlayed = Math.max(0, currentHole - 1);
-  const result = calculateBestBallMatch(scores, players, teams, holeInfo, holesPlayed);
+  const result = calculateBestBallMatch(scores, players, teams, holeInfo, holesPlayed, strokesPerHole);
   
   const { status, margin, leadingTeamId } = result.matchStatus;
   const holesRemaining = holeInfo.length - currentHole + 1;
