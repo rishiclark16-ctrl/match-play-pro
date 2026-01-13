@@ -9,11 +9,15 @@ export interface ParsedScore {
   score: number;
 }
 
+export type ConfidenceLevel = 'high' | 'medium' | 'low';
+
 export interface ParseResult {
   success: boolean;
   scores: ParsedScore[];
   unrecognized: string[];
   rawTranscript: string;
+  confidence: ConfidenceLevel;
+  confidenceReason: string;
 }
 
 // Word numbers to digits
@@ -23,6 +27,30 @@ const wordToNumber: Record<string, number> = {
   'eleven': 11, 'twelve': 12,
   'won': 1, 'to': 2, 'too': 2, 'for': 4, 'fore': 4,
   'tree': 3, 'free': 3,
+};
+
+// Common phonetic variations for names
+const phoneticVariations: Record<string, string[]> = {
+  'michael': ['mike', 'mikey', 'mick'],
+  'william': ['will', 'bill', 'billy', 'willy'],
+  'robert': ['rob', 'bob', 'bobby', 'robby'],
+  'richard': ['rick', 'dick', 'rich', 'ricky'],
+  'jonathan': ['jon', 'john', 'johnny'],
+  'james': ['jim', 'jimmy', 'jamie'],
+  'timothy': ['tim', 'timmy'],
+  'anthony': ['tony', 'ant'],
+  'nicholas': ['nick', 'nicky'],
+  'christopher': ['chris', 'kris'],
+  'matthew': ['matt', 'matty'],
+  'daniel': ['dan', 'danny'],
+  'andrew': ['andy', 'drew'],
+  'steven': ['steve'],
+  'david': ['dave', 'davey'],
+  'thomas': ['tom', 'tommy'],
+  'patrick': ['pat', 'paddy'],
+  'edward': ['ed', 'eddie', 'ted'],
+  'alexander': ['alex'],
+  'benjamin': ['ben', 'benny'],
 };
 
 // Golf terms to relative par
@@ -71,9 +99,55 @@ function findPlayerMatch(text: string, players: Player[]): Player | null {
     ) {
       return player;
     }
+    
+    // Check phonetic variations / nicknames
+    const allVariants = [firstName];
+    Object.entries(phoneticVariations).forEach(([full, nicks]) => {
+      if (firstName === full) allVariants.push(...nicks);
+      nicks.forEach(nick => {
+        if (firstName === nick) allVariants.push(full, ...nicks.filter(n => n !== nick));
+      });
+    });
+    
+    for (const variant of allVariants) {
+      const regex = new RegExp(`\\b${variant}\\b`, 'i');
+      if (regex.test(normalizedText)) {
+        return player;
+      }
+    }
   }
   
   return null;
+}
+
+function calculateConfidence(
+  scores: ParsedScore[],
+  players: Player[],
+  unrecognized: string[]
+): { level: ConfidenceLevel; reason: string } {
+  if (scores.length === 0) {
+    return { level: 'low', reason: 'No scores parsed' };
+  }
+  
+  const coverage = scores.length / players.length;
+  
+  // High confidence: all players have scores
+  if (coverage === 1 && unrecognized.length === 0) {
+    return { level: 'high', reason: 'All players matched' };
+  }
+  
+  // High confidence: 75%+ players matched with no unrecognized
+  if (coverage >= 0.75 && unrecognized.length === 0) {
+    return { level: 'high', reason: `${scores.length} of ${players.length} players matched` };
+  }
+  
+  // Medium confidence: some players matched
+  if (coverage >= 0.5) {
+    return { level: 'medium', reason: `${scores.length} of ${players.length} players matched` };
+  }
+  
+  // Low confidence: less than half matched or has unrecognized content
+  return { level: 'low', reason: unrecognized.length > 0 ? 'Some content unrecognized' : 'Few players matched' };
 }
 
 function extractScore(text: string, par: number): number | null {
@@ -156,7 +230,7 @@ export function parseVoiceInput(
         });
         processedPlayerIds.add(player.id);
       });
-      return { success: true, scores, unrecognized, rawTranscript: transcript };
+      return { success: true, scores, unrecognized, rawTranscript: transcript, confidence: 'high', confidenceReason: 'All players scored same' };
     }
   }
   
@@ -229,10 +303,15 @@ export function parseVoiceInput(
     }
   }
   
+  const filteredUnrecognized = unrecognized.filter(u => u.length > 2);
+  const { level, reason } = calculateConfidence(scores, players, filteredUnrecognized);
+  
   return {
     success: scores.length > 0,
     scores,
-    unrecognized: unrecognized.filter(u => u.length > 2),
+    unrecognized: filteredUnrecognized,
     rawTranscript: transcript,
+    confidence: level,
+    confidenceReason: reason,
   };
 }

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MoreVertical, BarChart3, RotateCcw, Flag, Share2 } from 'lucide-react';
@@ -18,6 +18,15 @@ import { useSupabaseRound } from '@/hooks/useSupabaseRound';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
 import { useKeepAwake } from '@/hooks/useKeepAwake';
 import { parseVoiceInput, ParseResult, ParsedScore } from '@/lib/voiceParser';
+import { parseVoiceCommands, hasScoreContent, VoiceCommand } from '@/lib/voiceCommands';
+import { 
+  feedbackListeningStart, 
+  feedbackListeningStop, 
+  feedbackVoiceSuccess, 
+  feedbackVoiceError,
+  feedbackAllScored,
+  feedbackNextHole 
+} from '@/lib/voiceFeedback';
 import { Press, PlayerWithScores, GameConfig } from '@/types/golf';
 import { calculatePlayingHandicap, getStrokesPerHole, calculateTotalNetStrokes } from '@/lib/handicapUtils';
 import { toast } from 'sonner';
@@ -89,6 +98,8 @@ export default function Scorecard() {
   // Voice recognition state
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
+  const [voiceSuccessPlayerIds, setVoiceSuccessPlayerIds] = useState<Set<string>>(new Set());
+  const previousIsListening = useRef(false);
   
   const {
     isListening,
@@ -100,6 +111,16 @@ export default function Scorecard() {
     error: voiceError,
     reset: resetVoice,
   } = useVoiceRecognition();
+  
+  // Track listening state changes for audio feedback
+  useEffect(() => {
+    if (isListening && !previousIsListening.current) {
+      feedbackListeningStart();
+    } else if (!isListening && previousIsListening.current && isProcessing) {
+      feedbackListeningStop();
+    }
+    previousIsListening.current = isListening;
+  }, [isListening, isProcessing]);
 
   // Use Supabase round if available, otherwise fall back to local
   const localRound = getRoundById(id || '');
@@ -199,13 +220,101 @@ export default function Scorecard() {
       const par = currentHoleInfo?.par || 4;
       
       const players = playersWithScores.map(p => ({ id: p.id, name: p.name }));
-      const result = parseVoiceInput(transcript, players, par);
       
-      setParseResult(result);
-      setShowVoiceModal(true);
-      resetVoice();
+      // Parse voice commands first
+      const commands = parseVoiceCommands(transcript, players, round.games || []);
+      
+      // Handle navigation commands
+      const navCommand = commands.find(c => c.type === 'next_hole' || c.type === 'previous_hole');
+      if (navCommand) {
+        if (navCommand.type === 'next_hole' && navCommand.holeNumber) {
+          setCurrentHole(Math.min(round.holes, Math.max(1, navCommand.holeNumber)));
+          feedbackNextHole();
+          toast.info(`Hole ${navCommand.holeNumber}`, { duration: 1500 });
+          resetVoice();
+          return;
+        } else if (navCommand.type === 'next_hole') {
+          if (currentHole < round.holes) {
+            setCurrentHole(h => h + 1);
+            feedbackNextHole();
+            toast.info(`Hole ${currentHole + 1}`, { duration: 1500 });
+          }
+          resetVoice();
+          return;
+        } else if (navCommand.type === 'previous_hole') {
+          if (currentHole > 1) {
+            setCurrentHole(h => h - 1);
+            feedbackNextHole();
+            toast.info(`Hole ${currentHole - 1}`, { duration: 1500 });
+          }
+          resetVoice();
+          return;
+        }
+      }
+      
+      // Parse scores if transcript has score content
+      if (hasScoreContent(transcript)) {
+        const result = parseVoiceInput(transcript, players, par);
+        
+        // HIGH CONFIDENCE: Auto-save without confirmation
+        if (result.confidence === 'high' && result.scores.length > 0) {
+          // Save all scores immediately
+          result.scores.forEach(({ playerId, score }) => {
+            saveScoreToSupabase(playerId, currentHole, score);
+            setPlayerScore(round.id, playerId, currentHole, score);
+          });
+          
+          // Show success animations on player cards
+          setVoiceSuccessPlayerIds(new Set(result.scores.map(s => s.playerId)));
+          setTimeout(() => setVoiceSuccessPlayerIds(new Set()), 1500);
+          
+          // Feedback
+          if (result.scores.length === players.length) {
+            feedbackAllScored();
+            toast.success(`All ${result.scores.length} scores saved! 🎉`, { duration: 2000 });
+          } else {
+            feedbackVoiceSuccess();
+            const scoresSummary = result.scores.map(s => `${s.playerName.split(' ')[0]} ${s.score}`).join(', ');
+            toast.success(scoresSummary, { duration: 2500 });
+          }
+          
+          // Auto-advance if all players now scored
+          const allScored = playersWithScores.every(player => {
+            const hasExisting = player.scores.some(s => s.holeNumber === currentHole);
+            const wasJustScored = result.scores.some(s => s.playerId === player.id);
+            return hasExisting || wasJustScored;
+          });
+          
+          if (allScored && currentHole < round.holes) {
+            setTimeout(() => {
+              setCurrentHole(h => h + 1);
+              feedbackNextHole();
+              toast.info(`Hole ${currentHole + 1}`, { duration: 1500 });
+            }, 1000);
+          }
+          
+          resetVoice();
+        } else if (result.scores.length > 0) {
+          // MEDIUM/LOW CONFIDENCE: Show confirmation modal
+          setParseResult(result);
+          setShowVoiceModal(true);
+          resetVoice();
+        } else {
+          // No scores parsed at all
+          feedbackVoiceError();
+          setParseResult(result);
+          setShowVoiceModal(true);
+          resetVoice();
+        }
+      } else {
+        // No score content found
+        feedbackVoiceError();
+        setParseResult({ success: false, scores: [], unrecognized: [transcript], rawTranscript: transcript, confidence: 'low', confidenceReason: 'No score content detected' });
+        setShowVoiceModal(true);
+        resetVoice();
+      }
     }
-  }, [transcript, round, currentHole, playersWithScores, resetVoice]);
+  }, [transcript, round, currentHole, playersWithScores, resetVoice, saveScoreToSupabase, setPlayerScore]);
 
   // Show voice errors
   useEffect(() => {
@@ -480,6 +589,8 @@ export default function Scorecard() {
                     onScoreTap={isSpectator ? undefined : () => setSelectedPlayerId(player.id)}
                     onQuickScore={isSpectator ? undefined : (score) => handleQuickScore(player.id, score)}
                     showNetScores={true}
+                    voiceHighlight={isListening}
+                    voiceSuccess={voiceSuccessPlayerIds.has(player.id)}
                   />
                 </motion.div>
               );
