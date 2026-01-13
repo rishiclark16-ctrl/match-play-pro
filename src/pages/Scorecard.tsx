@@ -919,10 +919,7 @@ export default function Scorecard() {
             <span className="font-semibold text-xs">Board</span>
           </motion.button>
 
-          {/* Spacer where prop bets button used to be */}
-          <div className="w-10" />
-
-          {/* Voice Button - only for scorekeepers */}
+          {/* Voice Button - centered, only for scorekeepers */}
           {canEditScores ? <VoiceButton isListening={isListening} isProcessing={isProcessing} isSupported={isSupported} onPress={handleVoicePress} /> : <div className="w-14" />}
 
           {/* Finish / Progress / Playoff */}
