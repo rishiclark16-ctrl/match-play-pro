@@ -101,7 +101,7 @@ export function useCreateSupabaseRound() {
       console.error('Error in createRound:', err);
       return null;
     }
-  }, []);
+  }, [user?.id]);
 
   return { createRound };
 }
