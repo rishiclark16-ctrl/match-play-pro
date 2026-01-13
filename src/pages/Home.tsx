@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { RoundCard } from '@/components/golf/RoundCard';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { TechCard } from '@/components/ui/tech-card';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { useRounds } from '@/hooks/useRounds';
 import { useJoinRound } from '@/hooks/useJoinRound';
 import { useAuth } from '@/hooks/useAuth';
@@ -118,6 +119,12 @@ export default function Home() {
     }
   };
 
+  const handlePullRefresh = async () => {
+    hapticLight();
+    await fetchRounds();
+    hapticSuccess();
+  };
+
   const activeRounds = rounds.filter(r => r.status === 'active');
   const completedRounds = rounds.filter(r => r.status === 'complete');
 
@@ -227,95 +234,97 @@ export default function Home() {
       </motion.div>
 
       {/* Content */}
-      <main className="flex-1 px-6 py-6 pb-40 overflow-auto relative z-10">
-        {loadingRounds ? (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-20 gap-4"
-          >
-            <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center border border-border">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground">Loading rounds...</p>
-          </motion.div>
-        ) : rounds.length > 0 ? (
-          <div className="space-y-6">
-            {/* Active Rounds Section */}
-            {activeRounds.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                  <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">Live Rounds</h2>
+      <PullToRefresh onRefresh={handlePullRefresh} className="flex-1 overflow-auto relative z-10">
+        <main className="px-6 py-6 pb-40">
+          {loadingRounds ? (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-20 gap-4"
+            >
+              <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center border border-border">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">Loading rounds...</p>
+            </motion.div>
+          ) : rounds.length > 0 ? (
+            <div className="space-y-6">
+              {/* Active Rounds Section */}
+              {activeRounds.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">Live Rounds</h2>
+                  </div>
+                  {activeRounds.map((round, index) => (
+                    <motion.div 
+                      key={round.id} 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.08, duration: 0.3 }}
+                    >
+                      <RoundCard
+                        round={round}
+                        onClick={() => navigate(`/round/${round.id}`)}
+                        onDelete={handleDeleteRound}
+                        isDeleting={deletingRoundId === round.id}
+                      />
+                    </motion.div>
+                  ))}
                 </div>
-                {activeRounds.map((round, index) => (
-                  <motion.div 
-                    key={round.id} 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.08, duration: 0.3 }}
-                  >
-                    <RoundCard
-                      round={round}
-                      onClick={() => navigate(`/round/${round.id}`)}
-                      onDelete={handleDeleteRound}
-                      isDeleting={deletingRoundId === round.id}
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            )}
-            
-            {/* Completed Rounds Section */}
-            {completedRounds.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">History</h2>
-                {completedRounds.map((round, index) => (
-                  <motion.div 
-                    key={round.id} 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: (index + activeRounds.length) * 0.08, duration: 0.3 }}
-                  >
-                    <RoundCard
-                      round={round}
-                      onClick={() => navigate(`/round/${round.id}/complete`)}
-                      onDelete={handleDeleteRound}
-                      isDeleting={deletingRoundId === round.id}
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-16 text-center"
-          >
-            <TechCard corners className="p-8 max-w-xs mx-auto">
-              <div className="w-20 h-20 rounded-xl bg-muted flex items-center justify-center mx-auto mb-6 border border-border">
-                <span className="text-4xl">⛳</span>
-              </div>
-              <h2 className="text-xl font-bold mb-2">No rounds yet</h2>
-              <p className="text-sm text-muted-foreground">
-                Start your first round to track scores with your group.
-              </p>
-              <Button 
-                onClick={() => {
-                  hapticLight();
-                  navigate('/new-round');
-                }}
-                className="w-full mt-6 py-6 font-semibold rounded-xl bg-primary"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                New Round
-              </Button>
-            </TechCard>
-          </motion.div>
-        )}
-      </main>
+              )}
+              
+              {/* Completed Rounds Section */}
+              {completedRounds.length > 0 && (
+                <div className="space-y-3">
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">History</h2>
+                  {completedRounds.map((round, index) => (
+                    <motion.div 
+                      key={round.id} 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: (index + activeRounds.length) * 0.08, duration: 0.3 }}
+                    >
+                      <RoundCard
+                        round={round}
+                        onClick={() => navigate(`/round/${round.id}/complete`)}
+                        onDelete={handleDeleteRound}
+                        isDeleting={deletingRoundId === round.id}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center py-16 text-center"
+            >
+              <TechCard corners className="p-8 max-w-xs mx-auto">
+                <div className="w-20 h-20 rounded-xl bg-muted flex items-center justify-center mx-auto mb-6 border border-border">
+                  <span className="text-4xl">⛳</span>
+                </div>
+                <h2 className="text-xl font-bold mb-2">No rounds yet</h2>
+                <p className="text-sm text-muted-foreground">
+                  Start your first round to track scores with your group.
+                </p>
+                <Button 
+                  onClick={() => {
+                    hapticLight();
+                    navigate('/new-round');
+                  }}
+                  className="w-full mt-6 py-6 font-semibold rounded-xl bg-primary"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  New Round
+                </Button>
+              </TechCard>
+            </motion.div>
+          )}
+        </main>
+      </PullToRefresh>
 
       {/* Bottom Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-20">
