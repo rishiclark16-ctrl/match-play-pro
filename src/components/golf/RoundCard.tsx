@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, forwardRef } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { Trash2, Loader2, ChevronRight, Users, Flag } from 'lucide-react';
 import { Round } from '@/types/golf';
@@ -27,7 +27,8 @@ interface RoundCardProps {
 
 const SWIPE_THRESHOLD = -100;
 
-export function RoundCard({ round, onClick, onDelete, isDeleting, playerCount, currentHole }: RoundCardProps) {
+export const RoundCard = forwardRef<HTMLDivElement, RoundCardProps>(
+  function RoundCard({ round, onClick, onDelete, isDeleting, playerCount, currentHole }, ref) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isMobile = useIsMobile();
   const constraintsRef = useRef(null);
@@ -176,4 +177,4 @@ export function RoundCard({ round, onClick, onDelete, isDeleting, playerCount, c
       </AlertDialog>
     </>
   );
-}
+});

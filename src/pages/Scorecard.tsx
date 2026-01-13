@@ -846,7 +846,14 @@ export default function Scorecard() {
                             {playoffScore}
                           </span>
                           <button
-                            onClick={() => handlePlayoffScore(player.id, 0)}
+                            onClick={() => {
+                              // Clear the playoff score to allow re-entry
+                              setPlayoffScores(prev => {
+                                const updated = { ...prev };
+                                delete updated[player.id];
+                                return updated;
+                              });
+                            }}
                             className="text-xs text-muted-foreground hover:text-foreground"
                           >
                             Edit
