@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthGuard } from "@/components/AuthGuard";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { BottomNav } from "@/components/BottomNav";
+import { OfflineProvider } from "@/contexts/OfflineContext";
 import { Capacitor } from '@capacitor/core';
 import { setStatusBarDark } from '@/lib/statusBar';
 import { useDeepLinks } from '@/hooks/useDeepLinks';
@@ -178,9 +179,11 @@ const App = () => {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
+          <OfflineProvider>
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </OfflineProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </ErrorBoundary>

@@ -9,12 +9,14 @@ import { SpectatorRoundCard } from '@/components/golf/SpectatorRoundCard';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { TechCard } from '@/components/ui/tech-card';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
+import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { useRounds } from '@/hooks/useRounds';
 import { useJoinRound } from '@/hooks/useJoinRound';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useDeleteRound } from '@/hooks/useDeleteRound';
 import { useSpectatorRounds } from '@/hooks/useSpectatorRounds';
+import { useOffline } from '@/contexts/OfflineContext';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,6 +31,7 @@ export default function Home() {
   const { joinRound, loading: joinLoading, error: joinError, clearError } = useJoinRound();
   const { deleteRound: deleteSupabaseRound, loading: deleteLoading } = useDeleteRound();
   const { spectatorRounds, spectatorStats, leaveSpectating, fetchSpectatorRounds } = useSpectatorRounds();
+  const { isOnline, isSyncing, pendingCount, syncNow } = useOffline();
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [deletingRoundId, setDeletingRoundId] = useState<string | null>(null);
@@ -235,6 +238,14 @@ export default function Home() {
             <h1 className="text-2xl font-black tracking-tight text-foreground">MATCH</h1>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Golf Scorecard</p>
           </div>
+          
+          {/* Offline Indicator */}
+          <OfflineIndicator
+            isOnline={isOnline}
+            isSyncing={isSyncing}
+            pendingCount={pendingCount}
+            onSyncClick={syncNow}
+          />
         </div>
         
         <motion.button
