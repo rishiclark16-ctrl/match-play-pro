@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MoreVertical, BarChart3, RotateCcw, Flag, Share2 } from 'lucide-react';
+import { X, MoreVertical, BarChart3, RotateCcw, Flag, Share2, Trophy, Swords } from 'lucide-react';
 import { HoleNavigator } from '@/components/golf/HoleNavigator';
 import { PlayerCard } from '@/components/golf/PlayerCard';
 import { ScoreInputSheet } from '@/components/golf/ScoreInputSheet';
@@ -312,7 +312,32 @@ export default function Scorecard() {
   
   const allHolesScored = round && playersWithScores.length > 0 && playersWithScores.every(p => p.holesPlayed === round.holes);
   const isLastHole = round ? currentHole === round.holes : false;
-  const canFinish = isLastHole && allHolesScored;
+  const canFinish = allHolesScored;
+  
+  // Check if hole 18 specifically is fully scored (for showing finish/playoff options)
+  const hole18FullyScored = useMemo(() => {
+    if (!round || playersWithScores.length === 0) return false;
+    return playersWithScores.every(player => 
+      player.scores.some(s => s.holeNumber === round.holes)
+    );
+  }, [round, playersWithScores]);
+  
+  // State for playoff mode
+  const [playoffHole, setPlayoffHole] = useState(0);
+  const [showFinishOptions, setShowFinishOptions] = useState(false);
+  
+  // Auto-show finish options when hole 18 is scored
+  useEffect(() => {
+    if (hole18FullyScored && !playoffHole) {
+      setShowFinishOptions(true);
+    }
+  }, [hole18FullyScored, playoffHole]);
+  
+  const handleStartPlayoff = useCallback(() => {
+    setPlayoffHole(1);
+    setShowFinishOptions(false);
+    toast.success('Playoff Hole #1', { duration: 2000 });
+  }, []);
 
   // Handle quick score from +/- buttons
   const handleQuickScore = useCallback((playerId: string, score: number) => {
@@ -603,8 +628,63 @@ export default function Scorecard() {
         )}
       </main>
 
+      {/* Finish/Playoff Options Overlay */}
+      <AnimatePresence>
+        {showFinishOptions && !isSpectator && (
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background to-transparent pt-12 pb-safe"
+          >
+            <div className="px-4 space-y-3">
+              <div className="text-center mb-4">
+                <h3 className="heading-md">Round Complete! 🎉</h3>
+                <p className="text-sm text-muted-foreground">All 18 holes scored</p>
+              </div>
+              
+              <motion.div whileTap={{ scale: 0.98 }}>
+                <Button
+                  onClick={() => {
+                    setShowFinishOptions(false);
+                    handleFinishRound();
+                  }}
+                  className="w-full py-6 text-lg font-bold rounded-xl"
+                  size="lg"
+                >
+                  <Trophy className="w-5 h-5 mr-2" />
+                  Finish Round
+                </Button>
+              </motion.div>
+              
+              <motion.div whileTap={{ scale: 0.98 }}>
+                <Button
+                  variant="outline"
+                  onClick={handleStartPlayoff}
+                  className="w-full py-6 text-lg font-bold rounded-xl border-2"
+                  size="lg"
+                >
+                  <Swords className="w-5 h-5 mr-2" />
+                  Playoff Hole #1
+                </Button>
+              </motion.div>
+              
+              <button
+                onClick={() => setShowFinishOptions(false)}
+                className="w-full py-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Continue Scoring
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border safe-bottom">
+      <div className={cn(
+        "fixed bottom-0 left-0 right-0 bg-background border-t border-border safe-bottom transition-opacity",
+        showFinishOptions && "opacity-0 pointer-events-none"
+      )}>
         <div className="px-3 py-3 flex items-center justify-between gap-2">
           {/* Leaderboard Button */}
           <motion.button
@@ -628,13 +708,37 @@ export default function Scorecard() {
             <div className="w-14" />
           )}
 
-          {/* Finish / Progress */}
-          {canFinish && !isSpectator ? (
+          {/* Finish / Progress / Playoff */}
+          {playoffHole > 0 ? (
+            <div className="flex items-center gap-2">
+              <div className="px-3 py-2.5 rounded-lg bg-primary/10 border-2 border-primary">
+                <span className="font-bold text-xs text-primary">Playoff #{playoffHole}</span>
+              </div>
+              <Button 
+                onClick={handleFinishRound} 
+                size="sm"
+                className="px-3 py-2 h-auto rounded-lg font-bold text-xs"
+              >
+                <Trophy className="w-3 h-3 mr-1" />
+                End
+              </Button>
+            </div>
+          ) : canFinish && !isSpectator ? (
             <Button 
-              onClick={handleFinishRound} 
+              onClick={() => setShowFinishOptions(true)} 
               className="px-4 py-2.5 h-auto rounded-lg font-bold text-xs"
             >
+              <Trophy className="w-3 h-3 mr-1" />
               Finish
+            </Button>
+          ) : hole18FullyScored && !isSpectator ? (
+            <Button 
+              onClick={() => setShowFinishOptions(true)} 
+              variant="outline"
+              className="px-4 py-2.5 h-auto rounded-lg font-bold text-xs border-2 border-primary text-primary"
+            >
+              <Flag className="w-3 h-3 mr-1" />
+              Done?
             </Button>
           ) : (
             <div className="px-3 py-2.5 rounded-lg bg-card border border-border">
