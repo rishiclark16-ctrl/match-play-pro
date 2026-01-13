@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.60c7b8f386684357ad06906250207efe',
+  appId: 'dev.matchgolf.app',
   appName: 'MATCH Golf',
   webDir: 'dist',
   plugins: {
@@ -10,7 +10,29 @@ const config: CapacitorConfig = {
       style: 'DARK',
       backgroundColor: '#0A2F23'
     },
-    KeepAwake: {}
+    SplashScreen: {
+      launchShowDuration: 2000,
+      launchAutoHide: true,
+      launchFadeOutDuration: 500,
+      backgroundColor: '#0A2F23',
+      androidSplashResourceName: 'splash',
+      androidScaleType: 'CENTER_CROP',
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true
+    },
+    KeepAwake: {},
+    Keyboard: {
+      resize: 'body',
+      resizeOnFullScreen: true
+    }
+  },
+  ios: {
+    contentInset: 'automatic',
+    backgroundColor: '#0A2F23'
+  },
+  android: {
+    backgroundColor: '#0A2F23'
   }
 };
 
