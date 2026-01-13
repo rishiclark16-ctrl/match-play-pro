@@ -77,7 +77,7 @@ export function PropBetSheet({
         createdAt: new Date(data.created_at),
       };
 
-      onPropBetAdded(newPropBet);
+      // Don't call onPropBetAdded - realtime subscription handles it
       hapticSuccess();
       toast.success(`${getPropBetLabel(selectedType)} added!`);
       
@@ -105,11 +105,7 @@ export function PropBetSheet({
 
       if (error) throw error;
 
-      const propBet = propBets.find(pb => pb.id === propBetId);
-      if (propBet) {
-        onPropBetUpdated({ ...propBet, winnerId });
-      }
-
+      // Don't call onPropBetUpdated - realtime subscription handles it
       const winner = players.find(p => p.id === winnerId);
       hapticSuccess();
       toast.success(`${winner?.name.split(' ')[0]} wins!`);
