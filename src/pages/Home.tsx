@@ -43,6 +43,7 @@ export default function Home() {
   // Fetch rounds from Supabase
   const [rounds, setRounds] = useState<Round[]>([]);
   const [loadingRounds, setLoadingRounds] = useState(true);
+  const [roundStats, setRoundStats] = useState<Map<string, { playerCount: number; currentHole: number }>>(new Map());
   
   const fetchRounds = useCallback(async () => {
     setLoadingRounds(true);
@@ -54,8 +55,6 @@ export default function Home() {
         .limit(20);
       
       if (error) throw error;
-      
-      console.log('Fetched rounds data:', data);
       
       const transformedRounds: Round[] = (data || []).map(r => ({
         id: r.id,
@@ -75,8 +74,38 @@ export default function Home() {
         presses: [],
       }));
       
-      console.log('Transformed rounds:', transformedRounds);
       setRounds(transformedRounds);
+      
+      // Fetch player counts and current holes for each round
+      if (data && data.length > 0) {
+        const roundIds = data.map(r => r.id);
+        
+        // Fetch players for all rounds
+        const { data: playersData } = await supabase
+          .from('players')
+          .select('round_id')
+          .in('round_id', roundIds);
+        
+        // Fetch scores to determine current hole (max hole with scores)
+        const { data: scoresData } = await supabase
+          .from('scores')
+          .select('round_id, hole_number')
+          .in('round_id', roundIds);
+        
+        const statsMap = new Map<string, { playerCount: number; currentHole: number }>();
+        
+        roundIds.forEach(roundId => {
+          const playerCount = playersData?.filter(p => p.round_id === roundId).length || 0;
+          const roundScores = scoresData?.filter(s => s.round_id === roundId) || [];
+          const currentHole = roundScores.length > 0 
+            ? Math.max(...roundScores.map(s => s.hole_number))
+            : 0;
+          
+          statsMap.set(roundId, { playerCount, currentHole });
+        });
+        
+        setRoundStats(statsMap);
+      }
     } catch (err) {
       console.error('Error fetching rounds:', err);
     } finally {
@@ -256,21 +285,26 @@ export default function Home() {
                     <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
                     <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">Live Rounds</h2>
                   </div>
-                  {activeRounds.map((round, index) => (
-                    <motion.div 
-                      key={round.id} 
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.08, duration: 0.3 }}
-                    >
-                      <RoundCard
-                        round={round}
-                        onClick={() => navigate(`/round/${round.id}`)}
-                        onDelete={handleDeleteRound}
-                        isDeleting={deletingRoundId === round.id}
-                      />
-                    </motion.div>
-                  ))}
+                  {activeRounds.map((round, index) => {
+                    const stats = roundStats.get(round.id);
+                    return (
+                      <motion.div 
+                        key={round.id} 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.08, duration: 0.3 }}
+                      >
+                        <RoundCard
+                          round={round}
+                          onClick={() => navigate(`/round/${round.id}`)}
+                          onDelete={handleDeleteRound}
+                          isDeleting={deletingRoundId === round.id}
+                          playerCount={stats?.playerCount}
+                          currentHole={stats?.currentHole}
+                        />
+                      </motion.div>
+                    );
+                  })}
                 </div>
               )}
               
@@ -278,21 +312,26 @@ export default function Home() {
               {completedRounds.length > 0 && (
                 <div className="space-y-3">
                   <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">History</h2>
-                  {completedRounds.map((round, index) => (
-                    <motion.div 
-                      key={round.id} 
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: (index + activeRounds.length) * 0.08, duration: 0.3 }}
-                    >
-                      <RoundCard
-                        round={round}
-                        onClick={() => navigate(`/round/${round.id}/complete`)}
-                        onDelete={handleDeleteRound}
-                        isDeleting={deletingRoundId === round.id}
-                      />
-                    </motion.div>
-                  ))}
+                  {completedRounds.map((round, index) => {
+                    const stats = roundStats.get(round.id);
+                    return (
+                      <motion.div 
+                        key={round.id} 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: (index + activeRounds.length) * 0.08, duration: 0.3 }}
+                      >
+                        <RoundCard
+                          round={round}
+                          onClick={() => navigate(`/round/${round.id}/complete`)}
+                          onDelete={handleDeleteRound}
+                          isDeleting={deletingRoundId === round.id}
+                          playerCount={stats?.playerCount}
+                          currentHole={stats?.currentHole}
+                        />
+                      </motion.div>
+                    );
+                  })}
                 </div>
               )}
             </div>
