@@ -159,11 +159,18 @@
     @apply border-border;
   }
 
+  /* Ensure consistent background color for iOS overscroll */
+  html {
+    background-color: hsl(var(--background));
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Prevent iOS rubber-band showing wrong color */
+    overscroll-behavior-y: none;
   }
   
   /* Tabular numbers for scores - critical for alignment */
