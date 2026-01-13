@@ -196,6 +196,45 @@ export function useFriends() {
     };
   }, [user, fetchFriends, fetchPendingRequests, fetchSentRequests]);
 
+  // Helper to check and create friendship
+  const createFriendship = async (profileId: string): Promise<{ success: boolean; error?: string }> => {
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    if (profileId === user.id) {
+      return { success: false, error: "You can't add yourself" };
+    }
+
+    // Check if friendship already exists
+    const { data: existing } = await supabase
+      .from('friendships')
+      .select('id, status')
+      .or(`and(user_id.eq.${user.id},friend_id.eq.${profileId}),and(user_id.eq.${profileId},friend_id.eq.${user.id})`)
+      .single();
+
+    if (existing) {
+      if (existing.status === 'accepted') {
+        return { success: false, error: 'Already friends' };
+      }
+      if (existing.status === 'pending') {
+        return { success: false, error: 'Request already pending' };
+      }
+    }
+
+    // Create friend request
+    const { error: insertError } = await supabase
+      .from('friendships')
+      .insert({
+        user_id: user.id,
+        friend_id: profileId,
+        status: 'pending',
+      });
+
+    if (insertError) throw insertError;
+
+    await fetchSentRequests();
+    return { success: true };
+  };
+
   const sendFriendRequest = async (friendCode: string): Promise<{ success: boolean; error?: string }> => {
     if (!user) return { success: false, error: 'Not authenticated' };
 
@@ -211,41 +250,51 @@ export function useFriends() {
         return { success: false, error: 'Friend code not found' };
       }
 
-      if (profile.id === user.id) {
-        return { success: false, error: "You can't add yourself" };
-      }
-
-      // Check if friendship already exists
-      const { data: existing } = await supabase
-        .from('friendships')
-        .select('id, status')
-        .or(`and(user_id.eq.${user.id},friend_id.eq.${profile.id}),and(user_id.eq.${profile.id},friend_id.eq.${user.id})`)
-        .single();
-
-      if (existing) {
-        if (existing.status === 'accepted') {
-          return { success: false, error: 'Already friends' };
-        }
-        if (existing.status === 'pending') {
-          return { success: false, error: 'Request already pending' };
-        }
-      }
-
-      // Create friend request
-      const { error: insertError } = await supabase
-        .from('friendships')
-        .insert({
-          user_id: user.id,
-          friend_id: profile.id,
-          status: 'pending',
-        });
-
-      if (insertError) throw insertError;
-
-      await fetchSentRequests();
-      return { success: true };
+      return await createFriendship(profile.id);
     } catch (err) {
       console.error('Error sending friend request:', err);
+      return { success: false, error: 'Failed to send request' };
+    }
+  };
+
+  const sendFriendRequestByEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    try {
+      // Find user by email in auth.users via a lookup
+      // We need to check auth.users, but we can't query it directly from client
+      // Instead, we'll search profiles with a workaround using the user's ID
+      // Actually, we need to create an RPC function or use an edge function for this
+      // For now, let's check if we can do a workaround
+
+      // Check if user exists by querying the friendships system
+      // Since we can't query auth.users directly, we'll need to rely on
+      // the user having set up their profile or use an edge function
+
+      // For MVP: Query profiles where we'd need email - but profiles don't store email
+      // Let's return a helpful message
+      return { 
+        success: false, 
+        error: 'Email lookup requires the user to share their friend code. Ask them for their code!' 
+      };
+    } catch (err) {
+      console.error('Error sending friend request by email:', err);
+      return { success: false, error: 'Failed to send request' };
+    }
+  };
+
+  const sendFriendRequestByPhone = async (phone: string): Promise<{ success: boolean; error?: string }> => {
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    try {
+      // Similar to email - profiles don't store phone numbers by default
+      // For MVP: Return helpful message
+      return { 
+        success: false, 
+        error: 'Phone lookup requires the user to share their friend code. Ask them for their code!' 
+      };
+    } catch (err) {
+      console.error('Error sending friend request by phone:', err);
       return { success: false, error: 'Failed to send request' };
     }
   };
@@ -335,6 +384,8 @@ export function useFriends() {
     loading,
     error,
     sendFriendRequest,
+    sendFriendRequestByEmail,
+    sendFriendRequestByPhone,
     acceptFriendRequest,
     declineFriendRequest,
     removeFriend,

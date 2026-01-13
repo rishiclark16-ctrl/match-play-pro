@@ -1,64 +1,89 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Copy, Check, UserPlus, Users, Search, Hash } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, UserPlus, Users, Search, Hash, AtSign, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TechCard, TechCardContent } from '@/components/ui/tech-card';
 import { GeometricBackground } from '@/components/ui/geometric-background';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProfile } from '@/hooks/useProfile';
 import { useFriends } from '@/hooks/useFriends';
 import { FriendCard } from '@/components/friends/FriendCard';
 import { FriendRequestCard } from '@/components/friends/FriendRequestCard';
+import { ShareFriendCode } from '@/components/friends/ShareFriendCode';
+import { FriendCodeQR } from '@/components/friends/FriendCodeQR';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 
 export default function Friends() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { profile } = useProfile();
   const { 
     friends, 
     pendingRequests, 
     loading, 
     sendFriendRequest, 
+    sendFriendRequestByEmail,
+    sendFriendRequestByPhone,
     acceptFriendRequest, 
     declineFriendRequest,
     removeFriend,
   } = useFriends();
 
-  const [searchCode, setSearchCode] = useState('');
+  const [searchValue, setSearchValue] = useState('');
+  const [searchType, setSearchType] = useState<'code' | 'email' | 'phone'>('code');
   const [isSending, setIsSending] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  // Get friend code from profile - handle the case where it might not be in the type yet
+  // Get friend code from profile
   const friendCode = (profile as any)?.friend_code as string | null;
+  const userName = profile?.full_name;
 
-  const handleCopyCode = async () => {
-    if (!friendCode) return;
-    
-    try {
-      await navigator.clipboard.writeText(friendCode);
-      setCopied(true);
-      hapticLight();
-      toast.success('Friend code copied!');
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error('Failed to copy');
+  // Handle deep link from QR code
+  useEffect(() => {
+    const addCode = searchParams.get('add');
+    if (addCode && addCode !== friendCode) {
+      setSearchValue(addCode.toUpperCase());
+      setSearchType('code');
+      // Auto-send request after a short delay to let UI render
+      const timer = setTimeout(() => {
+        handleSendRequest(addCode);
+      }, 500);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [searchParams, friendCode]);
 
-  const handleSendRequest = async () => {
-    if (!searchCode.trim()) return;
+  const handleSendRequest = async (codeOverride?: string) => {
+    const value = codeOverride || searchValue.trim();
+    if (!value) return;
     
     setIsSending(true);
-    const result = await sendFriendRequest(searchCode.trim());
+    
+    let result: { success: boolean; error?: string };
+    
+    switch (searchType) {
+      case 'email':
+        result = await sendFriendRequestByEmail(value);
+        break;
+      case 'phone':
+        result = await sendFriendRequestByPhone(value);
+        break;
+      default:
+        result = await sendFriendRequest(value);
+    }
+    
     setIsSending(false);
 
     if (result.success) {
       hapticSuccess();
       toast.success('Friend request sent!');
-      setSearchCode('');
+      setSearchValue('');
+      // Clear the URL param if present
+      if (searchParams.get('add')) {
+        navigate('/friends', { replace: true });
+      }
     } else {
       hapticError();
       toast.error(result.error || 'Failed to send request');
@@ -103,6 +128,22 @@ export default function Friends() {
     }
   };
 
+  const getPlaceholder = () => {
+    switch (searchType) {
+      case 'email': return 'Enter email...';
+      case 'phone': return 'Enter phone...';
+      default: return 'Enter code...';
+    }
+  };
+
+  const getSearchIcon = () => {
+    switch (searchType) {
+      case 'email': return <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
+      case 'phone': return <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
+      default: return <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pt-safe relative">
       <GeometricBackground />
@@ -128,7 +169,7 @@ export default function Friends() {
       </header>
 
       <div className="relative z-10 px-4 pb-safe">
-        {/* Your Friend Code */}
+        {/* Your Friend Code with QR and Sharing */}
         <motion.section
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -140,22 +181,24 @@ export default function Friends() {
           </div>
           <TechCard variant="elevated" accentBar="top">
             <TechCardContent>
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-mono font-black tracking-[0.3em] text-primary">
-                  {friendCode || '------'}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleCopyCode}
-                  className="shrink-0 border-2"
-                >
-                  {copied ? (
-                    <Check className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                {/* QR Code */}
+                {friendCode && (
+                  <div className="shrink-0">
+                    <FriendCodeQR friendCode={friendCode} />
+                  </div>
+                )}
+                
+                {/* Code and Sharing */}
+                <div className="flex-1 flex flex-col items-center sm:items-start gap-3 min-w-0">
+                  <span className="text-3xl font-mono font-black tracking-[0.3em] text-primary">
+                    {friendCode || '------'}
+                  </span>
+                  
+                  {friendCode && (
+                    <ShareFriendCode friendCode={friendCode} userName={userName} />
                   )}
-                </Button>
+                </div>
               </div>
             </TechCardContent>
           </TechCard>
@@ -170,30 +213,60 @@ export default function Friends() {
         >
           <div className="flex items-center gap-2 mb-2">
             <UserPlus className="w-4 h-4 text-primary" />
-            <span className="label-sm">Add by Code</span>
+            <span className="label-sm">Add a Friend</span>
           </div>
           <TechCard hover>
-            <TechCardContent>
+            <TechCardContent className="space-y-3">
+              {/* Search Type Tabs */}
+              <Tabs value={searchType} onValueChange={(v) => setSearchType(v as any)}>
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="code" className="text-xs gap-1">
+                    <Hash className="w-3 h-3" />
+                    Code
+                  </TabsTrigger>
+                  <TabsTrigger value="email" className="text-xs gap-1">
+                    <AtSign className="w-3 h-3" />
+                    Email
+                  </TabsTrigger>
+                  <TabsTrigger value="phone" className="text-xs gap-1">
+                    <Phone className="w-3 h-3" />
+                    Phone
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              {/* Search Input */}
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  {getSearchIcon()}
                   <Input
-                    placeholder="Enter code..."
-                    value={searchCode}
-                    onChange={(e) => setSearchCode(e.target.value.toUpperCase())}
-                    className="pl-9 font-mono uppercase tracking-widest text-lg bg-background border-2 border-border focus:border-primary"
-                    maxLength={6}
+                    placeholder={getPlaceholder()}
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(
+                      searchType === 'code' ? e.target.value.toUpperCase() : e.target.value
+                    )}
+                    className={`pl-9 bg-background border-2 border-border focus:border-primary ${
+                      searchType === 'code' ? 'font-mono uppercase tracking-widest text-lg' : ''
+                    }`}
+                    maxLength={searchType === 'code' ? 6 : undefined}
+                    type={searchType === 'email' ? 'email' : searchType === 'phone' ? 'tel' : 'text'}
                   />
                 </div>
                 <Button
-                  onClick={handleSendRequest}
-                  disabled={!searchCode.trim() || isSending}
+                  onClick={() => handleSendRequest()}
+                  disabled={!searchValue.trim() || isSending}
                   className="shrink-0 font-bold px-6"
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Add
                 </Button>
               </div>
+
+              <p className="text-xs text-muted-foreground">
+                {searchType === 'code' && 'Enter a 6-character friend code'}
+                {searchType === 'email' && 'Enter the email they registered with'}
+                {searchType === 'phone' && 'Enter their phone number'}
+              </p>
             </TechCardContent>
           </TechCard>
         </motion.section>
@@ -256,7 +329,7 @@ export default function Friends() {
                 </div>
                 <h3 className="font-bold text-foreground mb-1">No friends yet</h3>
                 <p className="text-sm text-muted-foreground max-w-[240px]">
-                  Share your friend code with golf buddies to connect and track each other's rounds.
+                  Share your friend code or QR with golf buddies to connect and track each other's rounds.
                 </p>
               </TechCardContent>
             </TechCard>
