@@ -199,6 +199,11 @@
     @apply bg-card border border-border rounded-xl shadow-md relative overflow-hidden;
   }
   
+  /* Card Premium - Alias for consistency */
+  .card-premium {
+    @apply bg-card border border-border rounded-xl shadow-sm;
+  }
+  
   /* Corner accent brackets */
   .corner-accent {
     @apply absolute w-4 h-4;
