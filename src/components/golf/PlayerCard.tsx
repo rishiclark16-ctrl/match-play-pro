@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Minus, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Minus, Plus, Check } from 'lucide-react';
 import { PlayerWithScores, getScoreColor, formatRelativeToPar } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
@@ -14,6 +14,8 @@ interface PlayerCardProps {
   onScoreTap?: () => void;
   onQuickScore?: (score: number) => void;
   showNetScores?: boolean;
+  voiceHighlight?: boolean; // Highlight during voice listening
+  voiceSuccess?: boolean; // Show success animation after voice save
 }
 
 export function PlayerCard({ 
@@ -25,6 +27,8 @@ export function PlayerCard({
   onScoreTap,
   onQuickScore,
   showNetScores = true,
+  voiceHighlight = false,
+  voiceSuccess = false,
 }: PlayerCardProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   
@@ -98,15 +102,43 @@ export function PlayerCard({
 
   return (
     <motion.div
-      animate={isAnimating ? { scale: [1, 1.02, 1] } : {}}
-      transition={{ duration: 0.3 }}
+      animate={
+        voiceSuccess 
+          ? { scale: [1, 1.03, 1], backgroundColor: ['var(--card)', 'hsl(142 76% 95%)', 'var(--card)'] }
+          : isAnimating 
+            ? { scale: [1, 1.02, 1] } 
+            : {}
+      }
+      transition={{ duration: voiceSuccess ? 0.5 : 0.3 }}
       className={cn(
-        "bg-card rounded-xl shadow-sm p-3 flex items-center gap-3 transition-all border min-h-[72px]",
+        "bg-card rounded-xl shadow-sm p-3 flex items-center gap-3 transition-all border min-h-[72px] relative overflow-hidden",
         isLeading && player.holesPlayed > 0
           ? "ring-2 ring-primary/30 border-primary/20 bg-primary-light/30" 
-          : "border-border/50"
+          : "border-border/50",
+        voiceHighlight && "ring-2 ring-primary/50 border-primary/30"
       )}
     >
+      {/* Voice success checkmark overlay */}
+      <AnimatePresence>
+        {voiceSuccess && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center bg-success/10 z-10 pointer-events-none"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: [0, 1.2, 1] }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="w-12 h-12 rounded-full bg-success flex items-center justify-center"
+            >
+              <Check className="w-7 h-7 text-white" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       {/* Avatar - Tappable for full sheet */}
       <motion.button
         whileTap={{ scale: 0.9 }}

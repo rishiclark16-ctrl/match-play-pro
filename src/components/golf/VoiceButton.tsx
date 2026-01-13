@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Mic, MicOff, Loader2 } from 'lucide-react';
+import { Mic, MicOff, Loader2, Volume2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface VoiceButtonProps {
@@ -38,11 +38,11 @@ export function VoiceButton({
           <motion.div
             className="absolute inset-0 rounded-full bg-primary"
             animate={{
-              scale: [1, 1.6, 1.6],
-              opacity: [0.4, 0.1, 0],
+              scale: [1, 1.8, 1.8],
+              opacity: [0.5, 0.1, 0],
             }}
             transition={{
-              duration: 1.5,
+              duration: 1.2,
               repeat: Infinity,
               ease: "easeOut",
             }}
@@ -50,14 +50,27 @@ export function VoiceButton({
           <motion.div
             className="absolute inset-0 rounded-full bg-primary"
             animate={{
-              scale: [1, 1.4, 1.4],
+              scale: [1, 1.5, 1.5],
+              opacity: [0.4, 0.1, 0],
+            }}
+            transition={{
+              duration: 1.2,
+              repeat: Infinity,
+              ease: "easeOut",
+              delay: 0.2,
+            }}
+          />
+          <motion.div
+            className="absolute inset-0 rounded-full bg-primary"
+            animate={{
+              scale: [1, 1.3, 1.3],
               opacity: [0.3, 0.1, 0],
             }}
             transition={{
-              duration: 1.5,
+              duration: 1.2,
               repeat: Infinity,
               ease: "easeOut",
-              delay: 0.3,
+              delay: 0.4,
             }}
           />
         </>
@@ -65,14 +78,16 @@ export function VoiceButton({
       
       {/* Main button */}
       <motion.button
-        whileTap={{ scale: isActive ? 1 : 0.95 }}
+        whileTap={{ scale: isActive ? 1 : 0.92 }}
+        animate={isListening ? { scale: [1, 1.05, 1] } : {}}
+        transition={isListening ? { duration: 0.5, repeat: Infinity } : {}}
         onClick={handlePress}
         disabled={disabled || !isSupported}
         className={cn(
           "relative w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all",
           !isSupported && "bg-muted cursor-not-allowed",
-          isSupported && !isActive && "bg-primary shadow-primary/25",
-          isListening && "bg-primary/90",
+          isSupported && !isActive && "bg-primary shadow-primary/30 shadow-xl",
+          isListening && "bg-primary shadow-primary/40 shadow-2xl",
           isProcessing && "bg-primary/80",
           disabled && "opacity-50 cursor-not-allowed"
         )}
@@ -81,10 +96,10 @@ export function VoiceButton({
           <Loader2 className="w-7 h-7 text-primary-foreground animate-spin" />
         ) : isListening ? (
           <motion.div
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 0.5, repeat: Infinity }}
+            animate={{ scale: [1, 1.15, 1] }}
+            transition={{ duration: 0.4, repeat: Infinity }}
           >
-            <Mic className="w-7 h-7 text-primary-foreground" />
+            <Volume2 className="w-7 h-7 text-primary-foreground" />
           </motion.div>
         ) : !isSupported ? (
           <MicOff className="w-7 h-7 text-muted-foreground" />
@@ -98,9 +113,20 @@ export function VoiceButton({
         <motion.p
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-medium text-primary whitespace-nowrap"
+          className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-semibold text-primary whitespace-nowrap"
         >
           Listening...
+        </motion.p>
+      )}
+      
+      {/* Processing indicator */}
+      {isProcessing && (
+        <motion.p
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-medium text-muted-foreground whitespace-nowrap"
+        >
+          Processing...
         </motion.p>
       )}
     </div>
