@@ -11,7 +11,7 @@ interface UseScorekeeperResult {
   removeScorekeeper: (profileId: string) => Promise<void>;
 }
 
-export function useScorekeeper(roundId: string | undefined, players: { id: string; profile_id?: string | null; order_index?: number }[]): UseScorekeeperResult {
+export function useScorekeeper(roundId: string | undefined, players: { id: string; profileId?: string | null; orderIndex?: number }[]): UseScorekeeperResult {
   const { user } = useAuth();
   const [scorekeeperIds, setScorekeeperIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,11 +70,11 @@ export function useScorekeeper(roundId: string | undefined, players: { id: strin
     };
   }, [roundId]);
 
-  // Check if current user is the round creator (order_index = 0)
+  // Check if current user is the round creator (orderIndex = 0)
   const isCreator = useMemo(() => {
     if (!user?.id || players.length === 0) return false;
-    const creatorPlayer = players.find(p => p.order_index === 0);
-    return creatorPlayer?.profile_id === user.id;
+    const creatorPlayer = players.find(p => p.orderIndex === 0);
+    return creatorPlayer?.profileId === user.id;
   }, [user?.id, players]);
 
   // Check if current user is a scorekeeper
