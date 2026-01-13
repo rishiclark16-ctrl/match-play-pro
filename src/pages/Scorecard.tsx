@@ -9,6 +9,7 @@ import { VoiceButton } from '@/components/golf/VoiceButton';
 import { VoiceConfirmationModal } from '@/components/golf/VoiceConfirmationModal';
 import { GamesSection } from '@/components/golf/GamesSection';
 import { HoleSummary } from '@/components/golf/HoleSummary';
+import { LiveLeaderboard } from '@/components/golf/LiveLeaderboard';
 import { GameSettingsSheet } from '@/components/golf/GameSettingsSheet';
 import { ShareJoinCodeModal } from '@/components/golf/ShareJoinCodeModal';
 import { ConnectionStatus } from '@/components/golf/ConnectionStatus';
@@ -661,6 +662,14 @@ export default function Scorecard() {
             )}
           </div>
         </motion.div>
+      )}
+
+      {/* Live Leaderboard - hide during playoff */}
+      {playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && (
+        <LiveLeaderboard 
+          players={playersWithScores}
+          useNetScoring={round.games?.some((g: any) => g.useNet) || false}
+        />
       )}
 
       {/* Player Cards */}
