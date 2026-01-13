@@ -428,6 +428,15 @@
     min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
   
+  /* Combined safe area + content padding utilities */
+  .pt-safe-content {
+    padding-top: calc(env(safe-area-inset-top) + 1rem);
+  }
+  
+  .pt-safe-content-sm {
+    padding-top: calc(env(safe-area-inset-top) + 0.75rem);
+  }
+  
   /* Margin variants for safe areas */
   .mb-safe {
     margin-bottom: env(safe-area-inset-bottom);

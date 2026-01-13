@@ -216,11 +216,11 @@ export default function Stats() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-background pt-safe pb-24 relative">
+    <div className="min-h-screen bg-background pb-24 relative">
       <GeometricBackground />
       
       {/* Header */}
-      <header className="relative z-10 px-6 pt-14 pb-6">
+      <header className="relative z-10 px-6 pt-[calc(env(safe-area-inset-top)+1rem)] pb-6">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
