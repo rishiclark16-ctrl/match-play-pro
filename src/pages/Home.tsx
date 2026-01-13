@@ -31,7 +31,7 @@ export default function Home() {
   const { joinRound, loading: joinLoading, error: joinError, clearError } = useJoinRound();
   const { deleteRound: deleteSupabaseRound, loading: deleteLoading } = useDeleteRound();
   const { spectatorRounds, spectatorStats, leaveSpectating, fetchSpectatorRounds } = useSpectatorRounds();
-  const { isOnline, isSyncing, pendingCount, syncNow } = useOffline();
+  const { isOnline, isSyncing, pendingCount, backgroundSyncSupported, syncNow } = useOffline();
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [deletingRoundId, setDeletingRoundId] = useState<string | null>(null);
@@ -244,6 +244,7 @@ export default function Home() {
             isOnline={isOnline}
             isSyncing={isSyncing}
             pendingCount={pendingCount}
+            backgroundSyncSupported={backgroundSyncSupported}
             onSyncClick={syncNow}
           />
         </div>
