@@ -188,40 +188,40 @@ export default function Profile() {
       </header>
 
       {/* Content */}
-      <main className="relative z-10 flex-1 px-4 pb-32 overflow-auto">
+      <main className="relative z-10 flex-1 px-4 pb-32 overflow-auto space-y-6">
         {/* Avatar Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center py-6"
+          className="flex flex-col items-center pt-2"
         >
-          <TechCard variant="elevated" className="p-6 flex flex-col items-center">
+          <TechCard variant="elevated" className="p-5 flex flex-col items-center w-full">
             <AvatarUpload
               avatarUrl={profile?.avatar_url || null}
               fullName={profile?.full_name || null}
               onUpload={handleAvatarUpload}
               size="lg"
             />
-            <p className="mt-4 heading-md">{profile?.full_name || 'Add your name'}</p>
+            <p className="mt-3 heading-md">{profile?.full_name || 'Add your name'}</p>
             <p className="text-sm text-muted-foreground font-mono">{user?.email}</p>
             
             {/* Friend Code & Friends Link */}
-            <div className="flex items-center gap-3 mt-4">
+            <div className="flex items-center gap-2 mt-3">
               <button
                 onClick={handleCopyFriendCode}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
               >
-                <span className="font-mono tracking-widest">{profile?.friend_code || '------'}</span>
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span className="font-mono tracking-widest text-xs">{profile?.friend_code || '------'}</span>
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
               <button
                 onClick={() => {
                   hapticLight();
                   navigate('/friends');
                 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-semibold hover:bg-accent/80 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-semibold hover:bg-accent/80 transition-colors"
               >
-                <Users className="w-4 h-4" />
+                <Users className="w-3.5 h-3.5" />
                 <span className="number-display">{friends.length}</span>
                 <span>Friend{friends.length !== 1 ? 's' : ''}</span>
               </button>
@@ -234,9 +234,9 @@ export default function Profile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="space-y-4 mb-6"
+          className="space-y-3"
         >
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2">
             <Flag className="w-4 h-4 text-primary" />
             <span className="label-sm">Golf Info</span>
           </div>
@@ -307,14 +307,14 @@ export default function Profile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="space-y-4 mb-6"
+          className="space-y-3"
         >
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-primary" />
             <span className="label-sm">Friend Discovery</span>
           </div>
           
-          <p className="text-xs text-muted-foreground -mt-2 mb-3">
+          <p className="text-xs text-muted-foreground">
             Let friends find you by email or phone number
           </p>
 
@@ -366,9 +366,9 @@ export default function Profile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="space-y-4 mb-8"
+          className="space-y-3"
         >
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-primary" />
             <span className="label-sm">Account</span>
           </div>
