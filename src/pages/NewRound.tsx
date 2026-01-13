@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Plus, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Plus, Check, Loader2, Flag, Users, Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { TechCard, TechCardContent } from '@/components/ui/tech-card';
 import { CourseSearch } from '@/components/golf/CourseSearch';
 import { PlayerInput } from '@/components/golf/PlayerInput';
 import { TeeSelector } from '@/components/golf/TeeSelector';
@@ -29,7 +30,7 @@ interface PlayerData {
   id: string;
   name: string;
   handicap?: number;
-  profileId?: string; // Link to user profile for friends
+  profileId?: string;
 }
 
 export default function NewRound() {
@@ -46,31 +47,26 @@ export default function NewRound() {
   const [step, setStep] = useState<Step>('course');
   const [isLoadingApiCourse, setIsLoadingApiCourse] = useState(false);
   
-  // Tee selection state
   const [showTeeSelector, setShowTeeSelector] = useState(false);
   const [pendingCourseDetails, setPendingCourseDetails] = useState<GolfCourseDetails | null>(null);
   const [pendingApiCourse, setPendingApiCourse] = useState<GolfCourseResult | null>(null);
   
-  // Course step
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [courseName, setCourseName] = useState('');
   const [courseLocation, setCourseLocation] = useState('');
   const [holeCount, setHoleCount] = useState<9 | 18>(18);
   
-  // Players step - initialize with empty slots, will be filled from profile
   const [players, setPlayers] = useState<PlayerData[]>([
     { id: '1', name: '', handicap: undefined },
     { id: '2', name: '', handicap: undefined },
   ]);
   const [profileApplied, setProfileApplied] = useState(false);
 
-  // Auto-fill first player from profile
   useEffect(() => {
     if (profile && !profileApplied && profile.full_name) {
       setPlayers(prev => {
         const updated = [...prev];
-        // Only fill if first player is empty
         if (!updated[0].name) {
           updated[0] = {
             ...updated[0],
@@ -84,12 +80,10 @@ export default function NewRound() {
     }
   }, [profile, profileApplied]);
   
-  // Format step
   const [strokePlay, setStrokePlay] = useState(true);
   const [matchPlay, setMatchPlay] = useState(false);
   const [stakes, setStakes] = useState<string>('');
   
-  // Betting games
   const [skinsEnabled, setSkinsEnabled] = useState(false);
   const [skinsStakes, setSkinsStakes] = useState('2');
   const [skinsCarryover, setSkinsCarryover] = useState(true);
@@ -97,15 +91,12 @@ export default function NewRound() {
   const [nassauStakes, setNassauStakes] = useState('5');
   const [nassauAutoPress, setNassauAutoPress] = useState(false);
   
-  // Stableford
   const [stablefordEnabled, setStablefordEnabled] = useState(false);
   const [stablefordModified, setStablefordModified] = useState(false);
   
-  // Best Ball
   const [bestBallEnabled, setBestBallEnabled] = useState(false);
   const [bestBallTeams, setBestBallTeams] = useState<Team[]>([]);
   
-  // Wolf
   const [wolfEnabled, setWolfEnabled] = useState(false);
   const [wolfStakes, setWolfStakes] = useState('2');
   const [wolfCarryover, setWolfCarryover] = useState(true);
@@ -132,16 +123,13 @@ export default function NewRound() {
     try {
       const details = await getCourseDetails(apiCourse.id);
       if (details) {
-        // Check if course has tee options
         const hasTees = (details.tees?.male?.length || 0) + (details.tees?.female?.length || 0) > 0;
         
         if (hasTees) {
-          // Show tee selector
           setPendingCourseDetails(details);
           setPendingApiCourse(apiCourse);
           setShowTeeSelector(true);
         } else {
-          // No tees available, use defaults
           finalizeCourseSelection(details, apiCourse);
         }
       }
@@ -205,11 +193,9 @@ export default function NewRound() {
   };
 
   const handleAddFriend = (friend: Friend) => {
-    // Find first empty player slot
     const emptySlotIndex = players.findIndex(p => !p.name.trim());
     
     if (emptySlotIndex !== -1) {
-      // Fill existing empty slot
       const updated = [...players];
       updated[emptySlotIndex] = {
         ...updated[emptySlotIndex],
@@ -219,7 +205,6 @@ export default function NewRound() {
       };
       setPlayers(updated);
     } else if (players.length < 4) {
-      // Add new player
       setPlayers([...players, {
         id: Date.now().toString(),
         name: friend.fullName || '',
@@ -232,7 +217,6 @@ export default function NewRound() {
   };
 
   const handleSelectGroup = (group: GolfGroup) => {
-    // Replace players with group members
     const newPlayers: PlayerData[] = group.members.slice(0, 4).map((member, index) => ({
       id: member.id,
       name: member.name,
@@ -240,7 +224,6 @@ export default function NewRound() {
       profileId: member.profileId || undefined,
     }));
     
-    // Ensure at least 2 player slots
     while (newPlayers.length < 2) {
       newPlayers.push({ id: Date.now().toString() + newPlayers.length, name: '', handicap: undefined });
     }
@@ -257,8 +240,6 @@ export default function NewRound() {
     
     try {
       const holeInfo: HoleInfo[] = selectedCourse.holes.slice(0, holeCount);
-      
-      // Build games array
       const games: GameConfig[] = [];
       
       if (skinsEnabled) {
@@ -289,7 +270,6 @@ export default function NewRound() {
       }
       
       if (bestBallEnabled && players.filter(p => p.name.trim()).length >= 2) {
-        // Generate teams based on players
         const validPlayers = players.filter(p => p.name.trim());
         const teams = bestBallTeams.length > 0 ? bestBallTeams : createDefaultTeams(
           validPlayers.map((p, i) => ({ id: p.id, roundId: '', name: p.name, orderIndex: i }))
@@ -320,7 +300,6 @@ export default function NewRound() {
         });
       }
       
-      // Create round in Supabase
       const round = await createRound({
         courseId: selectedCourse.id,
         courseName: selectedCourse.name,
@@ -368,10 +347,12 @@ export default function NewRound() {
             {!showCourseForm ? (
               <>
                 {isLoadingApiCourse && (
-                  <div className="flex items-center justify-center py-8 gap-3">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                    <span className="text-muted-foreground">Loading course details...</span>
-                  </div>
+                  <TechCard>
+                    <TechCardContent className="py-8 flex items-center justify-center gap-3">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                      <span className="text-muted-foreground font-medium">Loading course details...</span>
+                    </TechCardContent>
+                  </TechCard>
                 )}
                 
                 {!isLoadingApiCourse && (
@@ -384,53 +365,52 @@ export default function NewRound() {
                 )}
                 
                 {selectedCourse && (
-                  <div className="card-premium p-4 border-2 border-primary">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Check className="w-5 h-5 text-primary" />
-                        <div>
-                          <span className="font-medium">{selectedCourse.name}</span>
-                          {selectedCourse.location && (
-                            <p className="text-sm text-muted-foreground">{selectedCourse.location}</p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Rating & Slope */}
-                      {(selectedCourse.rating || selectedCourse.slope) && (
-                        <div className="text-right">
-                          <div className="flex items-center gap-2 text-sm">
-                            {selectedCourse.rating && (
-                              <div className="px-2 py-1 rounded bg-primary/10 text-primary font-medium">
-                                {selectedCourse.rating.toFixed(1)}
-                              </div>
-                            )}
-                            {selectedCourse.slope && (
-                              <div className="px-2 py-1 rounded bg-muted text-muted-foreground font-medium">
-                                {selectedCourse.slope}
-                              </div>
+                  <TechCard variant="highlighted" corners>
+                    <TechCardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+                            <Check className="w-5 h-5 text-primary-foreground" />
+                          </div>
+                          <div>
+                            <p className="font-semibold">{selectedCourse.name}</p>
+                            {selectedCourse.location && (
+                              <p className="text-sm text-muted-foreground">{selectedCourse.location}</p>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Rating / Slope
-                          </p>
                         </div>
-                      )}
-                    </div>
-                    
-                    {/* Par info */}
-                    <div className="mt-2 pt-2 border-t border-border/50 flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>{selectedCourse.holes.length} holes</span>
-                      <span>Par {selectedCourse.holes.reduce((sum, h) => sum + h.par, 0)}</span>
-                    </div>
-                  </div>
+                        
+                        {(selectedCourse.rating || selectedCourse.slope) && (
+                          <div className="text-right">
+                            <div className="flex items-center gap-2">
+                              {selectedCourse.rating && (
+                                <span className="px-2 py-1 bg-primary/10 text-primary text-sm font-mono font-semibold rounded">
+                                  {selectedCourse.rating.toFixed(1)}
+                                </span>
+                              )}
+                              {selectedCourse.slope && (
+                                <span className="px-2 py-1 bg-muted text-muted-foreground text-sm font-mono font-semibold rounded">
+                                  {selectedCourse.slope}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wide">Rating / Slope</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="mt-3 pt-3 border-t border-border flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="font-medium">{selectedCourse.holes.length} holes</span>
+                        <span className="w-1 h-1 rounded-full bg-border" />
+                        <span className="font-medium">Par {selectedCourse.holes.reduce((sum, h) => sum + h.par, 0)}</span>
+                      </div>
+                    </TechCardContent>
+                  </TechCard>
                 )}
 
                 {/* Hole Count */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                    Number of Holes
-                  </Label>
+                  <p className="label-sm">Number of Holes</p>
                   <div className="grid grid-cols-2 gap-3">
                     {[9, 18].map((count) => (
                       <motion.button
@@ -438,10 +418,10 @@ export default function NewRound() {
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setHoleCount(count as 9 | 18)}
                         className={cn(
-                          "py-4 rounded-xl font-semibold text-lg transition-all",
+                          "py-4 rounded-xl font-bold text-lg transition-all border-2",
                           holeCount === count
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card border border-border text-foreground"
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-card text-foreground border-border hover:border-primary/50"
                         )}
                       >
                         {count} Holes
@@ -451,55 +431,59 @@ export default function NewRound() {
                 </div>
               </>
             ) : (
-              <div className="space-y-4">
-                <Input
-                  placeholder="Course name"
-                  value={courseName}
-                  onChange={(e) => setCourseName(e.target.value)}
-                  className="py-6"
-                />
-                <Input
-                  placeholder="Location (optional)"
-                  value={courseLocation}
-                  onChange={(e) => setCourseLocation(e.target.value)}
-                  className="py-6"
-                />
-                
-                <div className="grid grid-cols-2 gap-3">
-                  {[9, 18].map((count) => (
-                    <motion.button
-                      key={count}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setHoleCount(count as 9 | 18)}
-                      className={cn(
-                        "py-4 rounded-xl font-semibold transition-all",
-                        holeCount === count
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-card border border-border text-foreground"
-                      )}
-                    >
-                      {count} Holes
-                    </motion.button>
-                  ))}
-                </div>
+              <TechCard>
+                <TechCardContent className="p-5 space-y-4">
+                  <p className="font-semibold text-lg">Add New Course</p>
+                  
+                  <Input
+                    placeholder="Course name"
+                    value={courseName}
+                    onChange={(e) => setCourseName(e.target.value)}
+                    className="py-6 text-base"
+                  />
+                  <Input
+                    placeholder="Location (optional)"
+                    value={courseLocation}
+                    onChange={(e) => setCourseLocation(e.target.value)}
+                    className="py-6 text-base"
+                  />
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    {[9, 18].map((count) => (
+                      <motion.button
+                        key={count}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setHoleCount(count as 9 | 18)}
+                        className={cn(
+                          "py-3 rounded-xl font-semibold transition-all border-2",
+                          holeCount === count
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-card text-foreground border-border"
+                        )}
+                      >
+                        {count} Holes
+                      </motion.button>
+                    ))}
+                  </div>
 
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowCourseForm(false)}
-                    className="flex-1 py-6"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleCreateCourse}
-                    disabled={!courseName.trim()}
-                    className="flex-1 py-6"
-                  >
-                    Save Course
-                  </Button>
-                </div>
-              </div>
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowCourseForm(false)}
+                      className="flex-1 py-6"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleCreateCourse}
+                      disabled={!courseName.trim()}
+                      className="flex-1 py-6"
+                    >
+                      Save Course
+                    </Button>
+                  </div>
+                </TechCardContent>
+              </TechCard>
             )}
           </motion.div>
         );
@@ -531,11 +515,7 @@ export default function NewRound() {
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 onClick={addPlayer}
-                className={cn(
-                  "w-full py-4 px-6 rounded-xl border-2 border-dashed border-primary/30",
-                  "text-primary font-medium flex items-center justify-center gap-2",
-                  "hover:bg-primary-light transition-colors"
-                )}
+                className="w-full py-4 px-6 rounded-xl border-2 border-dashed border-primary/30 text-primary font-semibold flex items-center justify-center gap-2 hover:bg-primary-light hover:border-primary/50 transition-all"
               >
                 <Plus className="w-5 h-5" />
                 Add Player ({4 - players.length} remaining)
@@ -543,19 +523,17 @@ export default function NewRound() {
             )}
 
             {players.filter(p => p.name.trim()).length < 2 && (
-              <p className="text-sm text-muted-foreground text-center">
+              <p className="text-sm text-muted-foreground text-center py-2">
                 Add at least 2 players to continue
               </p>
             )}
 
-            {/* Use a Group */}
             <GroupSelector
               groups={groups}
               onSelectGroup={handleSelectGroup}
               onManageGroups={() => navigate('/groups')}
             />
 
-            {/* Quick Add Friends */}
             <QuickAddFriends
               friends={friends}
               addedFriendIds={addedFriendIds}
@@ -576,331 +554,292 @@ export default function NewRound() {
           >
             {/* Scoring Section */}
             <div className="space-y-3">
-              <Label className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Scoring
-              </Label>
+              <p className="label-sm">Scoring Format</p>
               
               {/* Stroke Play */}
-              <div className={cn(
-                "card-premium p-4 flex items-center justify-between",
-                strokePlay && "ring-2 ring-primary/20"
-              )}>
-                <div className="flex-1">
-                  <h4 className="font-medium">Stroke Play</h4>
-                  <p className="text-sm text-muted-foreground">Traditional scoring, lowest total wins</p>
-                </div>
-                <Switch
-                  checked={strokePlay}
-                  onCheckedChange={setStrokePlay}
-                />
-              </div>
+              <TechCard variant={strokePlay ? "highlighted" : "default"}>
+                <TechCardContent className="p-4 flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="font-semibold">Stroke Play</p>
+                    <p className="text-sm text-muted-foreground">Traditional scoring, lowest total wins</p>
+                  </div>
+                  <Switch checked={strokePlay} onCheckedChange={setStrokePlay} />
+                </TechCardContent>
+              </TechCard>
 
               {/* Match Play */}
-              <div className={cn(
-                "card-premium p-4",
-                matchPlay && "ring-2 ring-primary/20"
-              )}>
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h4 className="font-medium">Match Play</h4>
-                    <p className="text-sm text-muted-foreground">Hole-by-hole competition</p>
-                  </div>
-                  <Switch
-                    checked={matchPlay}
-                    onCheckedChange={setMatchPlay}
-                  />
-                </div>
-                
-                {/* Match Play Stakes */}
-                {matchPlay && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-3 pt-3 border-t border-border/50"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">$</span>
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        value={stakes}
-                        onChange={(e) => setStakes(e.target.value)}
-                        className="w-20 text-center"
-                        min={0}
-                      />
-                      <span className="text-sm text-muted-foreground">per match</span>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-            </div>
-
-            {/* Side Games Section */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Side Games
-              </Label>
-              
-              {/* Skins */}
-              <div className={cn(
-                "card-premium p-4 transition-all",
-                skinsEnabled && "ring-2 ring-primary/20"
-              )}>
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      {skinsEnabled && <Check className="w-4 h-4 text-primary" />}
-                      <h4 className="font-medium">Skins</h4>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Win the hole outright to claim</p>
-                  </div>
-                  <Switch
-                    checked={skinsEnabled}
-                    onCheckedChange={setSkinsEnabled}
-                  />
-                </div>
-                
-                {skinsEnabled && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-3 pt-3 border-t border-border/50 space-y-3"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">$</span>
-                      <Input
-                        type="number"
-                        placeholder="2"
-                        value={skinsStakes}
-                        onChange={(e) => setSkinsStakes(e.target.value)}
-                        className="w-20 text-center"
-                        min={1}
-                      />
-                      <span className="text-sm text-muted-foreground">per hole</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        id="carryover"
-                        checked={skinsCarryover}
-                        onCheckedChange={(checked) => setSkinsCarryover(checked === true)}
-                      />
-                      <label htmlFor="carryover" className="text-sm">
-                        Carryovers (ties roll over)
-                      </label>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-              
-              {/* Nassau */}
-              <div className={cn(
-                "card-premium p-4 transition-all",
-                nassauEnabled && "ring-2 ring-primary/20"
-              )}>
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      {nassauEnabled && <Check className="w-4 h-4 text-primary" />}
-                      <h4 className="font-medium">Nassau</h4>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Front 9 + Back 9 + Overall</p>
-                  </div>
-                  <Switch
-                    checked={nassauEnabled}
-                    onCheckedChange={setNassauEnabled}
-                  />
-                </div>
-                
-                {nassauEnabled && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-3 pt-3 border-t border-border/50 space-y-3"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">$</span>
-                      <Input
-                        type="number"
-                        placeholder="5"
-                        value={nassauStakes}
-                        onChange={(e) => setNassauStakes(e.target.value)}
-                        className="w-20 text-center"
-                        min={1}
-                      />
-                      <span className="text-sm text-muted-foreground">per bet</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        id="autopress"
-                        checked={nassauAutoPress}
-                        onCheckedChange={(checked) => setNassauAutoPress(checked === true)}
-                      />
-                      <label htmlFor="autopress" className="text-sm">
-                        Auto-press when 2 down
-                      </label>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-              
-              {/* Stableford */}
-              <div className={cn(
-                "card-premium p-4 transition-all",
-                stablefordEnabled && "ring-2 ring-primary/20"
-              )}>
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      {stablefordEnabled && <Check className="w-4 h-4 text-primary" />}
-                      <h4 className="font-medium">Stableford</h4>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Points-based scoring (higher is better)</p>
-                  </div>
-                  <Switch
-                    checked={stablefordEnabled}
-                    onCheckedChange={setStablefordEnabled}
-                  />
-                </div>
-                
-                {stablefordEnabled && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-3 pt-3 border-t border-border/50 space-y-3"
-                  >
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <p>🦅 Eagle: 4 pts • 🐦 Birdie: 3 pts • Par: 2 pts</p>
-                      <p>Bogey: 1 pt • Double+: 0 pts</p>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        id="modifiedStableford"
-                        checked={stablefordModified}
-                        onCheckedChange={(checked) => setStablefordModified(checked === true)}
-                      />
-                      <label htmlFor="modifiedStableford" className="text-sm">
-                        Modified (aggressive scoring with negatives)
-                      </label>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-              
-              {/* Best Ball */}
-              {players.filter(p => p.name.trim()).length >= 2 && (
-                <div className={cn(
-                  "card-premium p-4 transition-all",
-                  bestBallEnabled && "ring-2 ring-primary/20"
-                )}>
+              <TechCard variant={matchPlay ? "highlighted" : "default"}>
+                <TechCardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        {bestBallEnabled && <Check className="w-4 h-4 text-primary" />}
-                        <h4 className="font-medium">Best Ball</h4>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {players.filter(p => p.name.trim()).length === 4 
-                          ? "2v2 team format - best score counts"
-                          : "Team format - best score counts"}
-                      </p>
+                      <p className="font-semibold">Match Play</p>
+                      <p className="text-sm text-muted-foreground">Hole-by-hole competition</p>
                     </div>
-                    <Switch
-                      checked={bestBallEnabled}
-                      onCheckedChange={setBestBallEnabled}
-                    />
+                    <Switch checked={matchPlay} onCheckedChange={setMatchPlay} />
                   </div>
                   
-                  {bestBallEnabled && players.filter(p => p.name.trim()).length === 4 && (
+                  {matchPlay && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="mt-3 pt-3 border-t border-border/50 space-y-2"
+                      className="mt-3 pt-3 border-t border-border"
                     >
-                      <p className="text-xs text-muted-foreground mb-2">Teams will be auto-assigned:</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="p-2 rounded-lg bg-success/10 border border-success/20">
-                          <p className="text-xs font-medium text-success">Team 1</p>
-                          <p className="text-sm truncate">
-                            {players.filter(p => p.name.trim())[0]?.name.split(' ')[0]} & {players.filter(p => p.name.trim())[1]?.name.split(' ')[0]}
-                          </p>
-                        </div>
-                        <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                          <p className="text-xs font-medium text-primary">Team 2</p>
-                          <p className="text-sm truncate">
-                            {players.filter(p => p.name.trim())[2]?.name.split(' ')[0]} & {players.filter(p => p.name.trim())[3]?.name.split(' ')[0]}
-                          </p>
-                        </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-muted-foreground">$</span>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={stakes}
+                          onChange={(e) => setStakes(e.target.value)}
+                          className="w-24 text-center font-mono"
+                          min={0}
+                        />
+                        <span className="text-sm text-muted-foreground">per match</span>
                       </div>
                     </motion.div>
                   )}
-                </div>
-              )}
+                </TechCardContent>
+              </TechCard>
+            </div>
+
+            {/* Side Games */}
+            <div className="space-y-3">
+              <p className="label-sm">Side Games</p>
               
-              {/* Wolf - only for 4 players */}
-              {players.filter(p => p.name.trim()).length === 4 && (
-                <div className={cn(
-                  "card-premium p-4 transition-all",
-                  wolfEnabled && "ring-2 ring-warning/30"
-                )}>
+              {/* Skins */}
+              <TechCard variant={skinsEnabled ? "highlighted" : "default"}>
+                <TechCardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        {wolfEnabled && <Check className="w-4 h-4 text-warning" />}
-                        <h4 className="font-medium">Wolf</h4>
+                    <div className="flex items-center gap-3">
+                      {skinsEnabled && <Check className="w-4 h-4 text-primary" />}
+                      <div>
+                        <p className="font-semibold">Skins</p>
+                        <p className="text-sm text-muted-foreground">Win the hole outright to claim</p>
                       </div>
-                      <p className="text-sm text-muted-foreground">Rotating captain picks partner or goes alone</p>
                     </div>
-                    <Switch
-                      checked={wolfEnabled}
-                      onCheckedChange={setWolfEnabled}
-                    />
+                    <Switch checked={skinsEnabled} onCheckedChange={setSkinsEnabled} />
                   </div>
                   
-                  {wolfEnabled && (
+                  {skinsEnabled && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-3 pt-3 border-t border-border/50 space-y-3"
+                      className="mt-3 pt-3 border-t border-border space-y-3"
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">$</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-muted-foreground">$</span>
                         <Input
                           type="number"
                           placeholder="2"
-                          value={wolfStakes}
-                          onChange={(e) => setWolfStakes(e.target.value)}
-                          className="w-20 text-center"
+                          value={skinsStakes}
+                          onChange={(e) => setSkinsStakes(e.target.value)}
+                          className="w-24 text-center font-mono"
                           min={1}
                         />
-                        <span className="text-sm text-muted-foreground">per point</span>
+                        <span className="text-sm text-muted-foreground">per hole</span>
                       </div>
                       
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         <Checkbox
-                          id="wolfcarryover"
-                          checked={wolfCarryover}
-                          onCheckedChange={(checked) => setWolfCarryover(checked === true)}
+                          id="carryover"
+                          checked={skinsCarryover}
+                          onCheckedChange={(checked) => setSkinsCarryover(checked === true)}
                         />
-                        <label htmlFor="wolfcarryover" className="text-sm">
-                          Carryovers (pushes roll over)
+                        <label htmlFor="carryover" className="text-sm font-medium">
+                          Carryovers (ties roll over)
                         </label>
-                      </div>
-                      
-                      <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-lg">
-                        🐺 Lone Wolf: 3x • ⚡ Blind Wolf: 6x
                       </div>
                     </motion.div>
                   )}
-                </div>
+                </TechCardContent>
+              </TechCard>
+              
+              {/* Nassau */}
+              <TechCard variant={nassauEnabled ? "highlighted" : "default"}>
+                <TechCardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {nassauEnabled && <Check className="w-4 h-4 text-primary" />}
+                      <div>
+                        <p className="font-semibold">Nassau</p>
+                        <p className="text-sm text-muted-foreground">Front 9 + Back 9 + Overall</p>
+                      </div>
+                    </div>
+                    <Switch checked={nassauEnabled} onCheckedChange={setNassauEnabled} />
+                  </div>
+                  
+                  {nassauEnabled && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="mt-3 pt-3 border-t border-border space-y-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-muted-foreground">$</span>
+                        <Input
+                          type="number"
+                          placeholder="5"
+                          value={nassauStakes}
+                          onChange={(e) => setNassauStakes(e.target.value)}
+                          className="w-24 text-center font-mono"
+                          min={1}
+                        />
+                        <span className="text-sm text-muted-foreground">per bet</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          id="autopress"
+                          checked={nassauAutoPress}
+                          onCheckedChange={(checked) => setNassauAutoPress(checked === true)}
+                        />
+                        <label htmlFor="autopress" className="text-sm font-medium">
+                          Auto-press when 2 down
+                        </label>
+                      </div>
+                    </motion.div>
+                  )}
+                </TechCardContent>
+              </TechCard>
+              
+              {/* Stableford */}
+              <TechCard variant={stablefordEnabled ? "highlighted" : "default"}>
+                <TechCardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {stablefordEnabled && <Check className="w-4 h-4 text-primary" />}
+                      <div>
+                        <p className="font-semibold">Stableford</p>
+                        <p className="text-sm text-muted-foreground">Points-based scoring</p>
+                      </div>
+                    </div>
+                    <Switch checked={stablefordEnabled} onCheckedChange={setStablefordEnabled} />
+                  </div>
+                  
+                  {stablefordEnabled && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="mt-3 pt-3 border-t border-border space-y-3"
+                    >
+                      <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg font-mono">
+                        🦅 Eagle: 4 • 🐦 Birdie: 3 • Par: 2 • Bogey: 1 • 2+: 0
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          id="modifiedStableford"
+                          checked={stablefordModified}
+                          onCheckedChange={(checked) => setStablefordModified(checked === true)}
+                        />
+                        <label htmlFor="modifiedStableford" className="text-sm font-medium">
+                          Modified (aggressive with negatives)
+                        </label>
+                      </div>
+                    </motion.div>
+                  )}
+                </TechCardContent>
+              </TechCard>
+              
+              {/* Best Ball */}
+              {players.filter(p => p.name.trim()).length >= 2 && (
+                <TechCard variant={bestBallEnabled ? "highlighted" : "default"}>
+                  <TechCardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {bestBallEnabled && <Check className="w-4 h-4 text-primary" />}
+                        <div>
+                          <p className="font-semibold">Best Ball</p>
+                          <p className="text-sm text-muted-foreground">
+                            {players.filter(p => p.name.trim()).length === 4 
+                              ? "2v2 team format"
+                              : "Team format - best score counts"}
+                          </p>
+                        </div>
+                      </div>
+                      <Switch checked={bestBallEnabled} onCheckedChange={setBestBallEnabled} />
+                    </div>
+                    
+                    {bestBallEnabled && players.filter(p => p.name.trim()).length === 4 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="mt-3 pt-3 border-t border-border"
+                      >
+                        <p className="text-xs text-muted-foreground mb-2">Teams auto-assigned:</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="p-3 rounded-lg bg-success/10 border border-success/30">
+                            <p className="text-[10px] font-semibold text-success uppercase tracking-wide">Team 1</p>
+                            <p className="text-sm font-medium truncate">
+                              {players.filter(p => p.name.trim())[0]?.name.split(' ')[0]} & {players.filter(p => p.name.trim())[1]?.name.split(' ')[0]}
+                            </p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-primary/10 border border-primary/30">
+                            <p className="text-[10px] font-semibold text-primary uppercase tracking-wide">Team 2</p>
+                            <p className="text-sm font-medium truncate">
+                              {players.filter(p => p.name.trim())[2]?.name.split(' ')[0]} & {players.filter(p => p.name.trim())[3]?.name.split(' ')[0]}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </TechCardContent>
+                </TechCard>
+              )}
+              
+              {/* Wolf */}
+              {players.filter(p => p.name.trim()).length === 4 && (
+                <TechCard variant={wolfEnabled ? "highlighted" : "default"}>
+                  <TechCardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {wolfEnabled && <Check className="w-4 h-4 text-warning" />}
+                        <div>
+                          <p className="font-semibold">Wolf</p>
+                          <p className="text-sm text-muted-foreground">Rotating captain picks partner</p>
+                        </div>
+                      </div>
+                      <Switch checked={wolfEnabled} onCheckedChange={setWolfEnabled} />
+                    </div>
+                    
+                    {wolfEnabled && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="mt-3 pt-3 border-t border-border space-y-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-muted-foreground">$</span>
+                          <Input
+                            type="number"
+                            placeholder="2"
+                            value={wolfStakes}
+                            onChange={(e) => setWolfStakes(e.target.value)}
+                            className="w-24 text-center font-mono"
+                            min={1}
+                          />
+                          <span className="text-sm text-muted-foreground">per point</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            id="wolfcarryover"
+                            checked={wolfCarryover}
+                            onCheckedChange={(checked) => setWolfCarryover(checked === true)}
+                          />
+                          <label htmlFor="wolfcarryover" className="text-sm font-medium">
+                            Carryovers (pushes roll over)
+                          </label>
+                        </div>
+                        
+                        <div className="text-xs text-muted-foreground bg-warning/10 p-3 rounded-lg border border-warning/20 font-mono">
+                          🐺 Lone Wolf: 3x • ⚡ Blind Wolf: 6x
+                        </div>
+                      </motion.div>
+                    )}
+                  </TechCardContent>
+                </TechCard>
               )}
             </div>
           </motion.div>
@@ -910,54 +849,69 @@ export default function NewRound() {
 
   const steps: Step[] = ['course', 'players', 'format'];
   const currentStepIndex = steps.indexOf(step);
-  const stepTitles = { course: 'Course Setup', players: 'Add Players', format: 'Game Format' };
+  const stepConfig = {
+    course: { title: 'Course Setup', icon: Flag },
+    players: { title: 'Add Players', icon: Users },
+    format: { title: 'Game Format', icon: Gamepad2 }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Technical Grid Background */}
+      <div className="fixed inset-0 tech-grid-subtle opacity-40 pointer-events-none" />
+      
       {/* Header */}
-      <header className="pt-safe px-4 pt-12 pb-4 flex items-center gap-4">
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => currentStepIndex > 0 ? setStep(steps[currentStepIndex - 1]) : navigate('/')}
-          className="w-10 h-10 rounded-full bg-muted flex items-center justify-center"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </motion.button>
-        <h1 className="text-xl font-semibold">{stepTitles[step]}</h1>
-      </header>
-
-      {/* Progress */}
-      <div className="px-4 pb-6">
-        <div className="flex gap-2">
+      <header className="relative z-10 pt-safe px-4 pt-12 pb-4">
+        <div className="flex items-center gap-4">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => currentStepIndex > 0 ? setStep(steps[currentStepIndex - 1]) : navigate('/')}
+            className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center shadow-sm"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </motion.button>
+          
+          <div className="flex-1">
+            <h1 className="headline-sm">{stepConfig[step].title}</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Step {currentStepIndex + 1} of {steps.length}
+            </p>
+          </div>
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="flex gap-2 mt-4">
           {steps.map((s, i) => (
             <div
               key={s}
               className={cn(
-                "h-1 flex-1 rounded-full transition-colors",
-                i <= currentStepIndex ? "bg-primary" : "bg-muted"
+                "h-1.5 flex-1 rounded-full transition-all",
+                i <= currentStepIndex 
+                  ? "bg-primary" 
+                  : "bg-border"
               )}
             />
           ))}
         </div>
-      </div>
+      </header>
 
       {/* Content */}
-      <main className="flex-1 px-4 pb-32 overflow-auto">
+      <main className="relative z-10 flex-1 px-4 pb-32 overflow-auto">
         <AnimatePresence mode="wait">
           {renderStep()}
         </AnimatePresence>
       </main>
 
       {/* Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-gradient-to-t from-background via-background to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 z-20 p-4 pb-safe bg-gradient-to-t from-background via-background to-transparent">
         {step !== 'format' ? (
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button
               onClick={() => setStep(steps[currentStepIndex + 1])}
               disabled={step === 'course' ? !canProceedCourse : !canProceedPlayers}
-              className="w-full py-6 text-lg font-semibold rounded-xl"
+              className="w-full py-6 text-lg font-bold rounded-xl"
             >
-              Next
+              Next Step
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </motion.div>
@@ -966,7 +920,7 @@ export default function NewRound() {
             <Button
               onClick={handleStartRound}
               disabled={(!strokePlay && !matchPlay) || isCreating}
-              className="w-full py-6 text-lg font-semibold rounded-xl"
+              className="w-full py-6 text-lg font-bold rounded-xl"
             >
               {isCreating ? (
                 <>
