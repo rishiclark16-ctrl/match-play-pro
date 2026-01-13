@@ -189,8 +189,13 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
                 {skinsGame && skinsResult && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-sm">
+                      <h4 className="font-medium text-sm flex items-center gap-2">
                         SKINS (${skinsGame.stakes}/hole)
+                        {skinsGame.useNet && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/20 text-primary uppercase tracking-wide">
+                            Net
+                          </span>
+                        )}
                       </h4>
                       {skinsResult.carryover > 0 && (
                         <span className="text-xs text-warning px-2 py-0.5 bg-warning/10 rounded-full">
@@ -233,7 +238,14 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
                 {/* Nassau Section */}
                 {nassauGame && nassauResult && (
                   <div className="space-y-2">
-                    <h4 className="font-medium text-sm">NASSAU (${nassauGame.stakes})</h4>
+                    <h4 className="font-medium text-sm flex items-center gap-2">
+                      NASSAU (${nassauGame.stakes})
+                      {nassauGame.useNet && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/20 text-primary uppercase tracking-wide">
+                          Net
+                        </span>
+                      )}
+                    </h4>
                     
                     <div className="space-y-1 text-sm">
                       <div className="flex items-center justify-between">
@@ -326,6 +338,11 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
                       <h4 className="font-medium text-sm flex items-center gap-2">
                         <Star className="w-4 h-4 text-primary" />
                         STABLEFORD {stablefordResult.modified && '(Modified)'}
+                        {stablefordGame.useNet && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/20 text-primary uppercase tracking-wide">
+                            Net
+                          </span>
+                        )}
                       </h4>
                       <span className="text-xs text-muted-foreground">
                         {stablefordResult.holesScored} holes
@@ -368,6 +385,11 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
                       <h4 className="font-medium text-sm flex items-center gap-2">
                         <Users className="w-4 h-4 text-primary" />
                         BEST BALL
+                        {bestBallGame.useNet && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/20 text-primary uppercase tracking-wide">
+                            Net
+                          </span>
+                        )}
                       </h4>
                       <span className="text-xs text-muted-foreground">
                         Thru {bestBallResult.holesPlayed}
@@ -427,6 +449,11 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
                       <h4 className="font-medium text-sm flex items-center gap-2">
                         <Crown className="w-4 h-4 text-warning" />
                         WOLF (${wolfGame.stakes}/pt)
+                        {wolfGame.useNet && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-warning/20 text-warning uppercase tracking-wide">
+                            Net
+                          </span>
+                        )}
                       </h4>
                       <span className="text-xs text-muted-foreground">
                         Thru {wolfResult.holesPlayed}
