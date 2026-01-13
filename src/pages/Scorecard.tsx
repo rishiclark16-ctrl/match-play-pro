@@ -96,6 +96,11 @@ export default function Scorecard() {
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   
+  // Auto-advance timer state
+  const [allScoredTimestamp, setAllScoredTimestamp] = useState<number | null>(null);
+  const [autoAdvanceCountdown, setAutoAdvanceCountdown] = useState<number | null>(null);
+  const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Voice recognition state
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
@@ -266,19 +271,7 @@ export default function Scorecard() {
             toast.success(scoresSummary, { duration: 5000 });
           }
           
-          const allScored = playersWithScores.every(player => {
-            const hasExisting = player.scores.some(s => s.holeNumber === currentHole);
-            const wasJustScored = result.scores.some(s => s.playerId === player.id);
-            return hasExisting || wasJustScored;
-          });
-          
-          if (allScored && currentHole < round.holes) {
-            setTimeout(() => {
-              setCurrentHole(h => h + 1);
-              feedbackNextHole();
-              toast.info(`Hole ${currentHole + 1}`, { duration: 1500 });
-            }, 1000);
-          }
+          // Voice scoring will also use the 20s timer via allCurrentHoleScored effect
           
           resetVoice();
         } else if (result.scores.length > 0) {
@@ -409,27 +402,83 @@ export default function Scorecard() {
     }
   }, [round, completeRoundSupabase, completeRoundLocal, navigate]);
 
-  // Handle quick score from +/- buttons
+  // Check if all players have scored current hole
+  const allCurrentHoleScored = useMemo(() => {
+    if (!round || playersWithScores.length === 0) return false;
+    return playersWithScores.every(player => 
+      player.scores.some(s => s.holeNumber === currentHole)
+    );
+  }, [round, playersWithScores, currentHole]);
+
+  // Manual advance to next hole
+  const handleAdvanceToNextHole = useCallback(() => {
+    if (!round || currentHole >= round.holes) return;
+    
+    // Clear any pending timer
+    if (autoAdvanceTimerRef.current) {
+      clearInterval(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = null;
+    }
+    setAutoAdvanceCountdown(null);
+    setAllScoredTimestamp(null);
+    
+    setCurrentHole(h => h + 1);
+    hapticSuccess();
+    toast.info(`Hole ${currentHole + 1}`, { duration: 1500 });
+  }, [round, currentHole]);
+
+  // Auto-advance countdown effect
+  useEffect(() => {
+    // Clear timer when hole changes or conditions change
+    if (!allCurrentHoleScored || !round || currentHole >= round.holes) {
+      if (autoAdvanceTimerRef.current) {
+        clearInterval(autoAdvanceTimerRef.current);
+        autoAdvanceTimerRef.current = null;
+      }
+      setAutoAdvanceCountdown(null);
+      setAllScoredTimestamp(null);
+      return;
+    }
+
+    // Start countdown when all players scored
+    if (allCurrentHoleScored && allScoredTimestamp === null) {
+      setAllScoredTimestamp(Date.now());
+      setAutoAdvanceCountdown(20);
+      
+      autoAdvanceTimerRef.current = setInterval(() => {
+        setAutoAdvanceCountdown(prev => {
+          if (prev === null || prev <= 1) {
+            // Auto-advance
+            if (autoAdvanceTimerRef.current) {
+              clearInterval(autoAdvanceTimerRef.current);
+              autoAdvanceTimerRef.current = null;
+            }
+            setCurrentHole(h => h + 1);
+            setAllScoredTimestamp(null);
+            hapticSuccess();
+            toast.info(`Hole ${currentHole + 1}`, { duration: 1500 });
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (autoAdvanceTimerRef.current) {
+        clearInterval(autoAdvanceTimerRef.current);
+        autoAdvanceTimerRef.current = null;
+      }
+    };
+  }, [allCurrentHoleScored, round, currentHole, allScoredTimestamp]);
+
+  // Handle quick score from +/- buttons (no auto-advance - use button instead)
   const handleQuickScore = useCallback((playerId: string, score: number) => {
     if (!round) return;
     hapticSuccess();
     saveScoreToSupabase(playerId, currentHole, score);
     setPlayerScore(round.id, playerId, currentHole, score);
-    
-    setTimeout(() => {
-      const allScored = playersWithScores.every(player => {
-        if (player.id === playerId) return true;
-        return player.scores.some(s => s.holeNumber === currentHole);
-      });
-
-      if (allScored && currentHole < round.holes) {
-        setTimeout(() => {
-          setCurrentHole(h => h + 1);
-          toast.info(`Hole ${currentHole + 1}`, { duration: 1500 });
-        }, 800);
-      }
-    }, 100);
-  }, [round, currentHole, saveScoreToSupabase, setPlayerScore, playersWithScores]);
+  }, [round, currentHole, saveScoreToSupabase, setPlayerScore]);
 
   const handleScoreSelect = useCallback((score: number) => {
     if (selectedPlayerId && round) {
@@ -437,20 +486,8 @@ export default function Scorecard() {
       saveScoreToSupabase(selectedPlayerId, currentHole, score);
       setPlayerScore(round.id, selectedPlayerId, currentHole, score);
       toast.success('Score saved', { duration: 1500 });
-      
-      const allScored = playersWithScores.every(player => {
-        if (player.id === selectedPlayerId) return true;
-        return player.scores.some(s => s.holeNumber === currentHole);
-      });
-
-      if (allScored && currentHole < round.holes) {
-        setTimeout(() => {
-          setCurrentHole(h => h + 1);
-          toast.info(`Hole ${currentHole + 1}`, { duration: 1500 });
-        }, 800);
-      }
     }
-  }, [selectedPlayerId, round, currentHole, saveScoreToSupabase, setPlayerScore, playersWithScores]);
+  }, [selectedPlayerId, round, currentHole, saveScoreToSupabase, setPlayerScore]);
 
   const handleFinishRound = useCallback(() => {
     if (round) {
@@ -691,33 +728,76 @@ export default function Scorecard() {
           
           {/* Regular scoring mode */}
           {playoffHole === 0 && (
-            <AnimatePresence mode="popLayout">
-              {playersWithScores.map((player, index) => {
-                const holeScore = player.scores.find(s => s.holeNumber === currentHole)?.strokes;
-                
-                return (
+            <>
+              <AnimatePresence mode="popLayout">
+                {playersWithScores.map((player, index) => {
+                  const holeScore = player.scores.find(s => s.holeNumber === currentHole)?.strokes;
+                  
+                  return (
+                    <motion.div
+                      key={player.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                    >
+                      <PlayerCard
+                        player={player}
+                        currentHoleScore={holeScore}
+                        currentHolePar={currentHoleInfo.par}
+                        currentHoleNumber={currentHole}
+                        isLeading={player.id === leadingPlayerId}
+                        onScoreTap={isSpectator ? undefined : () => setSelectedPlayerId(player.id)}
+                        onQuickScore={isSpectator ? undefined : (score) => handleQuickScore(player.id, score)}
+                        showNetScores={true}
+                        voiceHighlight={isListening}
+                        voiceSuccess={voiceSuccessPlayerIds.has(player.id)}
+                      />
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+              
+              {/* Next Hole Button - appears when all scored */}
+              <AnimatePresence>
+                {allCurrentHoleScored && currentHole < (round?.holes || 18) && !isSpectator && (
                   <motion.div
-                    key={player.id}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mt-4"
                   >
-                    <PlayerCard
-                      player={player}
-                      currentHoleScore={holeScore}
-                      currentHolePar={currentHoleInfo.par}
-                      currentHoleNumber={currentHole}
-                      isLeading={player.id === leadingPlayerId}
-                      onScoreTap={isSpectator ? undefined : () => setSelectedPlayerId(player.id)}
-                      onQuickScore={isSpectator ? undefined : (score) => handleQuickScore(player.id, score)}
-                      showNetScores={true}
-                      voiceHighlight={isListening}
-                      voiceSuccess={voiceSuccessPlayerIds.has(player.id)}
-                    />
+                    <Button
+                      onClick={handleAdvanceToNextHole}
+                      className="w-full py-6 text-lg font-bold rounded-xl relative overflow-hidden"
+                      size="lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Flag className="w-5 h-5" />
+                        <span>Next Hole</span>
+                        {autoAdvanceCountdown !== null && (
+                          <span className="text-sm font-normal opacity-80">
+                            ({autoAdvanceCountdown}s)
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Countdown progress bar */}
+                      {autoAdvanceCountdown !== null && (
+                        <motion.div
+                          className="absolute bottom-0 left-0 h-1 bg-primary-foreground/30"
+                          initial={{ width: '100%' }}
+                          animate={{ width: `${(autoAdvanceCountdown / 20) * 100}%` }}
+                          transition={{ duration: 1, ease: 'linear' }}
+                        />
+                      )}
+                    </Button>
+                    <p className="text-xs text-center text-muted-foreground mt-2">
+                      Tap to continue or wait for auto-advance
+                    </p>
                   </motion.div>
-                );
-              })}
-            </AnimatePresence>
+                )}
+              </AnimatePresence>
+            </>
           )}
           
           {/* Playoff scoring mode */}
