@@ -31,7 +31,11 @@ interface DbPlayer {
   handicap: number | null;
   team_id: string | null;
   order_index: number;
+  profile_id: string | null;
   created_at: string;
+  profiles?: {
+    avatar_url: string | null;
+  } | null;
 }
 
 interface DbScore {
@@ -83,6 +87,8 @@ function transformPlayer(db: any): Player {
     name: db.name,
     handicap: db.handicap ?? undefined,
     orderIndex: db.order_index,
+    profileId: db.profile_id ?? undefined,
+    avatarUrl: db.profiles?.avatar_url ?? undefined,
   };
 }
 
@@ -141,10 +147,10 @@ export function useSupabaseRound(roundId: string | null) {
           return;
         }
 
-        // Fetch players
+        // Fetch players with profile avatar
         const { data: playersData, error: playersError } = await supabase
           .from('players')
-          .select('*')
+          .select('*, profiles:profile_id(avatar_url)')
           .eq('round_id', roundId)
           .order('order_index');
 
