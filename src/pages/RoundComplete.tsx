@@ -207,7 +207,7 @@ export default function RoundComplete() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header Section */}
-      <header className="pt-16 pb-8 px-6 safe-top text-center">
+      <header className="pt-safe pt-16 pb-8 px-4 text-center">
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
@@ -336,7 +336,7 @@ export default function RoundComplete() {
       </main>
 
       {/* Bottom Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent safe-bottom">
+      <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-gradient-to-t from-background via-background to-transparent">
         <div className="space-y-3">
           {/* Share Image Button */}
           <motion.div whileTap={{ scale: 0.98 }}>

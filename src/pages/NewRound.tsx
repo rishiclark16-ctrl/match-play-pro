@@ -845,7 +845,7 @@ export default function NewRound() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="pt-12 pb-4 px-6 safe-top flex items-center gap-4">
+      <header className="pt-safe px-4 pt-12 pb-4 flex items-center gap-4">
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => currentStepIndex > 0 ? setStep(steps[currentStepIndex - 1]) : navigate('/')}
@@ -857,7 +857,7 @@ export default function NewRound() {
       </header>
 
       {/* Progress */}
-      <div className="px-6 pb-6">
+      <div className="px-4 pb-6">
         <div className="flex gap-2">
           {steps.map((s, i) => (
             <div
@@ -872,14 +872,14 @@ export default function NewRound() {
       </div>
 
       {/* Content */}
-      <main className="flex-1 px-6 pb-32 overflow-auto">
+      <main className="flex-1 px-4 pb-32 overflow-auto">
         <AnimatePresence mode="wait">
           {renderStep()}
         </AnimatePresence>
       </main>
 
       {/* Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent safe-bottom">
+      <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-gradient-to-t from-background via-background to-transparent">
         {step !== 'format' ? (
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button
