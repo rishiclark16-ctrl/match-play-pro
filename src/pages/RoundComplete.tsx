@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Trophy, Share2, Plus, Home, Medal, Award, Loader2, Image } from 'lucide-react';
 import { useRounds } from '@/hooks/useRounds';
+import { useRoundSharing } from '@/hooks/useRoundSharing';
 import { formatRelativeToPar, getScoreColor, PlayerWithScores, Score, Player } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -10,22 +11,53 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { shareResults, shareText } from '@/lib/shareResults';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function RoundComplete() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getRoundById, getPlayersWithScores, completeRound, getScoresForRound } = useRounds();
+  const { shareRoundWithFriends } = useRoundSharing();
   const [isSharing, setIsSharing] = useState(false);
   const [shareMode, setShareMode] = useState<'image' | 'text' | null>(null);
+  const [sharedWithFriends, setSharedWithFriends] = useState(false);
 
   const round = getRoundById(id || '');
 
-  // Ensure round is marked complete
-  useMemo(() => {
+  // Ensure round is marked complete and share with friends
+  useEffect(() => {
     if (round && round.status !== 'complete') {
       completeRound(round.id);
     }
   }, [round, completeRound]);
+
+  // Auto-share with friends who were in the round
+  useEffect(() => {
+    const autoShare = async () => {
+      if (!round || sharedWithFriends) return;
+      
+      // Get players with profile_ids from the database
+      const { data: dbPlayers } = await supabase
+        .from('players')
+        .select('profile_id')
+        .eq('round_id', round.id)
+        .not('profile_id', 'is', null);
+      
+      if (dbPlayers && dbPlayers.length > 0) {
+        const profileIds = dbPlayers
+          .map(p => p.profile_id)
+          .filter((id): id is string => id !== null);
+        
+        const sharedCount = await shareRoundWithFriends(round.id, profileIds);
+        if (sharedCount > 0) {
+          toast.success(`Shared with ${sharedCount} friend${sharedCount > 1 ? 's' : ''}`);
+        }
+      }
+      setSharedWithFriends(true);
+    };
+    
+    autoShare();
+  }, [round, sharedWithFriends, shareRoundWithFriends]);
 
   const playersWithScores = useMemo(() => {
     if (!round) return [];

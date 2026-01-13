@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      friendships: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          friend_id: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          friend_id: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          friend_id?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friendships_friend_id_fkey"
+            columns: ["friend_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friendships_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
           created_at: string | null
@@ -21,6 +63,7 @@ export type Database = {
           id: string
           name: string
           order_index: number
+          profile_id: string | null
           round_id: string | null
           team_id: string | null
         }
@@ -30,6 +73,7 @@ export type Database = {
           id?: string
           name: string
           order_index: number
+          profile_id?: string | null
           round_id?: string | null
           team_id?: string | null
         }
@@ -39,10 +83,18 @@ export type Database = {
           id?: string
           name?: string
           order_index?: number
+          profile_id?: string | null
           round_id?: string | null
           team_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "players_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "players_round_id_fkey"
             columns: ["round_id"]
@@ -111,6 +163,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string | null
+          friend_code: string | null
           full_name: string | null
           handicap: number | null
           home_course_id: string | null
@@ -122,6 +175,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
+          friend_code?: string | null
           full_name?: string | null
           handicap?: number | null
           home_course_id?: string | null
@@ -133,6 +187,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string | null
+          friend_code?: string | null
           full_name?: string | null
           handicap?: number | null
           home_course_id?: string | null
@@ -142,6 +197,55 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      round_shares: {
+        Row: {
+          created_at: string | null
+          id: string
+          round_id: string
+          seen_at: string | null
+          shared_by_id: string
+          shared_with_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          round_id: string
+          seen_at?: string | null
+          shared_by_id: string
+          shared_with_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          round_id?: string
+          seen_at?: string | null
+          shared_by_id?: string
+          shared_with_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_shares_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_shares_shared_by_id_fkey"
+            columns: ["shared_by_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_shares_shared_with_id_fkey"
+            columns: ["shared_with_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rounds: {
         Row: {
@@ -256,7 +360,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      are_friends: {
+        Args: { user1_id: string; user2_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
