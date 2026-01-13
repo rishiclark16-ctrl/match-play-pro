@@ -32,45 +32,32 @@ export function VoiceButton({
 
   return (
     <div className="relative">
-      {/* Pulsing rings when listening */}
+      {/* Solid pulsing rings when listening */}
       {isListening && (
         <>
           <motion.div
-            className="absolute inset-0 rounded-full bg-primary"
+            className="absolute inset-0 rounded-full border-2 border-primary"
             animate={{
-              scale: [1, 1.8, 1.8],
-              opacity: [0.5, 0.1, 0],
+              scale: [1, 1.6],
+              opacity: [0.6, 0],
             }}
             transition={{
-              duration: 1.2,
+              duration: 1,
               repeat: Infinity,
               ease: "easeOut",
             }}
           />
           <motion.div
-            className="absolute inset-0 rounded-full bg-primary"
+            className="absolute inset-0 rounded-full border-2 border-primary"
             animate={{
-              scale: [1, 1.5, 1.5],
-              opacity: [0.4, 0.1, 0],
+              scale: [1, 1.4],
+              opacity: [0.5, 0],
             }}
             transition={{
-              duration: 1.2,
+              duration: 1,
               repeat: Infinity,
               ease: "easeOut",
-              delay: 0.2,
-            }}
-          />
-          <motion.div
-            className="absolute inset-0 rounded-full bg-primary"
-            animate={{
-              scale: [1, 1.3, 1.3],
-              opacity: [0.3, 0.1, 0],
-            }}
-            transition={{
-              duration: 1.2,
-              repeat: Infinity,
-              ease: "easeOut",
-              delay: 0.4,
+              delay: 0.3,
             }}
           />
         </>
@@ -78,17 +65,17 @@ export function VoiceButton({
       
       {/* Main button */}
       <motion.button
-        whileTap={{ scale: isActive ? 1 : 0.92 }}
-        animate={isListening ? { scale: [1, 1.05, 1] } : {}}
-        transition={isListening ? { duration: 0.5, repeat: Infinity } : {}}
+        whileTap={{ scale: isActive ? 1 : 0.94 }}
+        animate={isListening ? { scale: [1, 1.03, 1] } : {}}
+        transition={isListening ? { duration: 0.6, repeat: Infinity } : {}}
         onClick={handlePress}
         disabled={disabled || !isSupported}
         className={cn(
-          "relative w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all",
-          !isSupported && "bg-muted cursor-not-allowed",
-          isSupported && !isActive && "bg-primary shadow-primary/30 shadow-xl",
-          isListening && "bg-primary shadow-primary/40 shadow-2xl",
-          isProcessing && "bg-primary/80",
+          "relative w-16 h-16 rounded-full flex items-center justify-center transition-all border-2",
+          !isSupported && "bg-muted border-border cursor-not-allowed",
+          isSupported && !isActive && "bg-primary border-primary shadow-md",
+          isListening && "bg-primary border-primary shadow-lg",
+          isProcessing && "bg-primary/80 border-primary/80",
           disabled && "opacity-50 cursor-not-allowed"
         )}
       >
@@ -96,8 +83,8 @@ export function VoiceButton({
           <Loader2 className="w-7 h-7 text-primary-foreground animate-spin" />
         ) : isListening ? (
           <motion.div
-            animate={{ scale: [1, 1.15, 1] }}
-            transition={{ duration: 0.4, repeat: Infinity }}
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 0.5, repeat: Infinity }}
           >
             <Volume2 className="w-7 h-7 text-primary-foreground" />
           </motion.div>
@@ -111,18 +98,18 @@ export function VoiceButton({
       {/* Listening indicator text */}
       {isListening && (
         <motion.p
-          initial={{ opacity: 0, y: 5 }}
+          initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-semibold text-primary whitespace-nowrap"
+          className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-bold text-primary whitespace-nowrap uppercase tracking-wide"
         >
-          Listening...
+          Listening
         </motion.p>
       )}
       
       {/* Processing indicator */}
       {isProcessing && (
         <motion.p
-          initial={{ opacity: 0, y: 5 }}
+          initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-medium text-muted-foreground whitespace-nowrap"
         >

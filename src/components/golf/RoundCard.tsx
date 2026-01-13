@@ -83,10 +83,9 @@ export function RoundCard({ round, onClick, onDelete, isDeleting }: RoundCardPro
           dragConstraints={{ left: SWIPE_THRESHOLD, right: 0 }}
           dragElastic={{ left: 0.1, right: 0 }}
           onDragEnd={handleDragEnd}
-          whileHover={{ y: -2, transition: { duration: 0.2 } }}
           whileTap={{ scale: 0.99 }}
           onClick={onClick}
-          className="bg-card rounded-2xl p-4 cursor-pointer border border-border/50 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-200 group relative"
+          className="bg-card rounded-xl p-4 cursor-pointer border border-border shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-200 group relative"
         >
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
