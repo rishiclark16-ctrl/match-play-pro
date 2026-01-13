@@ -452,6 +452,42 @@ export type Database = {
           },
         ]
       }
+      round_spectators: {
+        Row: {
+          id: string
+          joined_at: string | null
+          profile_id: string
+          round_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string | null
+          profile_id: string
+          round_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string | null
+          profile_id?: string
+          round_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_spectators_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_spectators_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rounds: {
         Row: {
           course_id: string | null
@@ -465,6 +501,7 @@ export type Database = {
           match_play: boolean | null
           modified_stableford: boolean | null
           rating: number | null
+          scorekeeper_ids: string[] | null
           slope: number | null
           stableford: boolean | null
           stakes: number | null
@@ -485,6 +522,7 @@ export type Database = {
           match_play?: boolean | null
           modified_stableford?: boolean | null
           rating?: number | null
+          scorekeeper_ids?: string[] | null
           slope?: number | null
           stableford?: boolean | null
           stakes?: number | null
@@ -505,6 +543,7 @@ export type Database = {
           match_play?: boolean | null
           modified_stableford?: boolean | null
           rating?: number | null
+          scorekeeper_ids?: string[] | null
           slope?: number | null
           stableford?: boolean | null
           stakes?: number | null
@@ -582,6 +621,10 @@ export type Database = {
         Returns: boolean
       }
       is_round_participant: {
+        Args: { round_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_scorekeeper: {
         Args: { round_id: string; user_id: string }
         Returns: boolean
       }

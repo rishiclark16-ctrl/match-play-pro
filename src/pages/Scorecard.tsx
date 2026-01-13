@@ -16,11 +16,13 @@ import { ConnectionStatus } from '@/components/golf/ConnectionStatus';
 import { SpectatorBanner } from '@/components/golf/SpectatorBanner';
 import { MoneyTracker } from '@/components/golf/MoneyTracker';
 import { PropBetSheet } from '@/components/golf/PropBetSheet';
+import { ManageScorekeepersSheet } from '@/components/golf/ManageScorekeepersSheet';
 import { useRounds } from '@/hooks/useRounds';
 import { useSupabaseRound } from '@/hooks/useSupabaseRound';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
 import { useKeepAwake } from '@/hooks/useKeepAwake';
 import { usePropBets } from '@/hooks/usePropBets';
+import { useScorekeeper } from '@/hooks/useScorekeeper';
 import { parseVoiceInput, ParseResult, ParsedScore } from '@/lib/voiceParser';
 import { parseVoiceCommands, hasScoreContent } from '@/lib/voiceCommands';
 import { feedbackListeningStart, feedbackListeningStop, feedbackVoiceSuccess, feedbackVoiceError, feedbackAllScored, feedbackNextHole } from '@/lib/voiceFeedback';
@@ -71,6 +73,18 @@ export default function Scorecard() {
     updatePropBet,
     getPropBetsForHole
   } = usePropBets(id);
+
+  // Scorekeeper permissions hook
+  const {
+    isScorekeeper,
+    isCreator,
+    scorekeeperIds,
+    addScorekeeper,
+    removeScorekeeper
+  } = useScorekeeper(id, supabasePlayers);
+
+  // Can this user edit scores? Must be scorekeeper and not spectator
+  const canEditScores = isScorekeeper && !isSpectator;
 
   // Fallback to local storage
   const {
@@ -580,8 +594,8 @@ export default function Scorecard() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.015)_1px,transparent_1px)] bg-[size:24px_24px]" />
       </div>
 
-      {/* Spectator Banner */}
-      {isSpectator && <SpectatorBanner />}
+      {/* Spectator/View-Only Banner */}
+      {(isSpectator || !isScorekeeper) && <SpectatorBanner isSpectator={isSpectator} isScorekeeper={isScorekeeper} />}
       
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background border-b border-border">
@@ -603,7 +617,24 @@ export default function Scorecard() {
           </div>
           
           <div className="flex items-center gap-2 shrink-0">
-            {!isSpectator && <GameSettingsSheet round={round} onUpdateGames={handleUpdateGames} playerCount={playersWithScores.length} />}
+            {/* Scorekeeper management - only for creator */}
+            {isCreator && !isSpectator && (
+              <ManageScorekeepersSheet
+                players={playersWithScores.map(p => ({ 
+                  id: p.id, 
+                  name: p.name, 
+                  profile_id: (p as any).profile_id,
+                  order_index: (p as any).order_index 
+                }))}
+                scorekeeperIds={scorekeeperIds}
+                isCreator={isCreator}
+                onAddScorekeeper={addScorekeeper}
+                onRemoveScorekeeper={removeScorekeeper}
+              />
+            )}
+            
+            {/* Game settings - only for scorekeepers */}
+            {canEditScores && <GameSettingsSheet round={round} onUpdateGames={handleUpdateGames} playerCount={playersWithScores.length} />}
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -695,7 +726,7 @@ export default function Scorecard() {
               }} transition={{
                 delay: index * 0.03
               }}>
-                      <PlayerCard player={player} currentHoleScore={holeScore} currentHolePar={currentHoleInfo.par} currentHoleNumber={currentHole} isLeading={player.id === leadingPlayerId} onScoreTap={isSpectator ? undefined : () => setSelectedPlayerId(player.id)} onQuickScore={isSpectator ? undefined : score => handleQuickScore(player.id, score)} showNetScores={true} voiceHighlight={isListening} voiceSuccess={voiceSuccessPlayerIds.has(player.id)} />
+                      <PlayerCard player={player} currentHoleScore={holeScore} currentHolePar={currentHoleInfo.par} currentHoleNumber={currentHole} isLeading={player.id === leadingPlayerId} onScoreTap={canEditScores ? () => setSelectedPlayerId(player.id) : undefined} onQuickScore={canEditScores ? score => handleQuickScore(player.id, score) : undefined} showNetScores={true} voiceHighlight={isListening} voiceSuccess={voiceSuccessPlayerIds.has(player.id)} />
                     </motion.div>;
             })}
               </AnimatePresence>
@@ -901,8 +932,8 @@ export default function Scorecard() {
             />
           )}
 
-          {/* Voice Button */}
-          {!isSpectator ? <VoiceButton isListening={isListening} isProcessing={isProcessing} isSupported={isSupported} onPress={handleVoicePress} /> : <div className="w-14" />}
+          {/* Voice Button - only for scorekeepers */}
+          {canEditScores ? <VoiceButton isListening={isListening} isProcessing={isProcessing} isSupported={isSupported} onPress={handleVoicePress} /> : <div className="w-14" />}
 
           {/* Finish / Progress / Playoff */}
           {playoffHole > 0 ? <div className="flex items-center gap-2">
@@ -937,7 +968,7 @@ export default function Scorecard() {
     }} onConfirm={handleVoiceConfirm} onRetry={handleVoiceRetry} parseResult={parseResult} players={playersWithScores} holeNumber={currentHole} par={currentHoleInfo.par} />
 
       {/* Share Join Code Modal */}
-      <ShareJoinCodeModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} joinCode={round.joinCode} courseName={round.courseName} />
+      <ShareJoinCodeModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} joinCode={round.joinCode} courseName={round.courseName} roundId={round.id} />
 
       {/* Exit Dialog */}
       <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>

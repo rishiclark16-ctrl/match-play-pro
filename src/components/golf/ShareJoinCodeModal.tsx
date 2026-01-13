@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Share2, Check } from 'lucide-react';
+import { X, Copy, Share2, Check, Eye, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -9,10 +10,12 @@ interface ShareJoinCodeModalProps {
   onClose: () => void;
   joinCode: string;
   courseName: string;
+  roundId?: string;
 }
 
-export function ShareJoinCodeModal({ isOpen, onClose, joinCode, courseName }: ShareJoinCodeModalProps) {
+export function ShareJoinCodeModal({ isOpen, onClose, joinCode, courseName, roundId }: ShareJoinCodeModalProps) {
   const [copied, setCopied] = useState(false);
+  const navigate = useNavigate();
 
   const handleCopyCode = async () => {
     try {
@@ -25,8 +28,8 @@ export function ShareJoinCodeModal({ isOpen, onClose, joinCode, courseName }: Sh
     }
   };
 
-  const handleShareLink = async () => {
-    const shareText = `Join my golf round on MATCH!\n\n📍 ${courseName}\n🔑 Code: ${joinCode}\n\nOpen the MATCH app and enter this code to follow along live.`;
+  const handleShareAsPlayer = async () => {
+    const shareText = `Join my golf round on MATCH!\n\n📍 ${courseName}\n🔑 Code: ${joinCode}\n\nOpen the MATCH app and enter this code to join as a player.`;
     
     try {
       if (navigator.share) {
@@ -34,6 +37,28 @@ export function ShareJoinCodeModal({ isOpen, onClose, joinCode, courseName }: Sh
       } else {
         await navigator.clipboard.writeText(shareText);
         toast.success('Share message copied!');
+      }
+    } catch (err) {
+      // User cancelled share
+    }
+  };
+
+  const handleShareAsSpectator = async () => {
+    const spectatorUrl = roundId 
+      ? `${window.location.origin}/round/${roundId}?spectator=true`
+      : `Join code: ${joinCode}`;
+    
+    const shareText = `Watch my golf round live on MATCH! 🏌️‍♂️\n\n📍 ${courseName}\n👁️ Watch Live: ${spectatorUrl}\n\nFollow along in real-time!`;
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({ 
+          text: shareText,
+          url: roundId ? `${window.location.origin}/round/${roundId}?spectator=true` : undefined
+        });
+      } else {
+        await navigator.clipboard.writeText(shareText);
+        toast.success('Spectator link copied!');
       }
     } catch (err) {
       // User cancelled share
@@ -67,7 +92,7 @@ export function ShareJoinCodeModal({ isOpen, onClose, joinCode, courseName }: Sh
             <div className="text-center">
               <h3 className="text-xl font-bold mb-2">Share this round</h3>
               <p className="text-muted-foreground text-sm mb-6">
-                Friends can join with this code to follow along live
+                Invite players or let friends watch live
               </p>
               
               {/* Large join code display */}
@@ -87,23 +112,40 @@ export function ShareJoinCodeModal({ isOpen, onClose, joinCode, courseName }: Sh
                   )}
                 </div>
               </motion.div>
-              
-              <div className="grid grid-cols-2 gap-3">
+
+              {/* Share options */}
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={handleCopyCode}
+                    className="py-5 rounded-xl font-semibold"
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy Code
+                  </Button>
+                  <Button
+                    onClick={handleShareAsPlayer}
+                    className="py-5 rounded-xl font-semibold"
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Invite Player
+                  </Button>
+                </div>
+                
+                {/* Spectator share option */}
                 <Button
-                  variant="outline"
-                  onClick={handleCopyCode}
-                  className="py-6 rounded-xl font-semibold"
+                  variant="secondary"
+                  onClick={handleShareAsSpectator}
+                  className="w-full py-5 rounded-xl font-semibold"
                 >
-                  <Copy className="w-4 h-4 mr-2" />
-                  Copy Code
+                  <Eye className="w-4 h-4 mr-2" />
+                  Share Watch Link
                 </Button>
-                <Button
-                  onClick={handleShareLink}
-                  className="py-6 rounded-xl font-semibold"
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share
-                </Button>
+                
+                <p className="text-xs text-muted-foreground pt-2">
+                  👁️ Spectators can follow live but can't edit scores
+                </p>
               </div>
             </div>
           </motion.div>
