@@ -694,15 +694,16 @@ export default function Scorecard() {
       {/* Live Leaderboard - hide during playoff */}
       {playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && <LiveLeaderboard players={playersWithScores} useNetScoring={round.games?.some((g: any) => g.useNet) || false} isMatchPlay={round.matchPlay} holeInfo={round.holeInfo} scores={roundScores} />}
 
-      {/* Live Money Tracker - show when games configured */}
-      {playoffHole === 0 && round.games && round.games.length > 0 && (
+      {/* Live Money Tracker - show when games configured or prop bets have winners */}
+      {playoffHole === 0 && (round.games?.length > 0 || propBets.some(pb => pb.winnerId)) && (
         <MoneyTracker
           players={playersWithScores}
           scores={roundScores}
-          games={round.games}
+          games={round.games || []}
           holeInfo={round.holeInfo}
           presses={[]}
           currentHole={currentHole}
+          propBets={propBets}
         />
       )}
 

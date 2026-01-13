@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, TrendingDown, Minus, DollarSign, Flame, Sparkles } from 'lucide-react';
 import { PlayerWithScores, GameConfig, HoleInfo, Score, Press } from '@/types/golf';
+import { PropBet } from '@/types/betting';
 import { calculateLiveMoney, formatMoney, getMoneyColor } from '@/lib/games/moneyTracker';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +13,7 @@ interface MoneyTrackerProps {
   holeInfo: HoleInfo[];
   presses: Press[];
   currentHole: number;
+  propBets?: PropBet[];
 }
 
 export function MoneyTracker({
@@ -21,24 +23,29 @@ export function MoneyTracker({
   holeInfo,
   presses,
   currentHole,
+  propBets,
 }: MoneyTrackerProps) {
   // Calculate money state for current hole
   const currentMoney = useMemo(() => {
-    if (games.length === 0) return null;
+    // Show money tracker if there are games OR prop bets with winners
+    const hasGames = games.length > 0;
+    const hasPropBetWinners = propBets && propBets.some(pb => pb.winnerId);
+    
+    if (!hasGames && !hasPropBetWinners) return null;
     
     // Get previous hole's money state for comparison
     const previousMoney = currentHole > 1 
       ? new Map(
-          calculateLiveMoney(players, scores, games, holeInfo, presses, currentHole - 1)
+          calculateLiveMoney(players, scores, games, holeInfo, presses, currentHole - 1, undefined, propBets)
             .players.map(p => [p.playerId, p.currentBalance])
         )
       : undefined;
     
-    return calculateLiveMoney(players, scores, games, holeInfo, presses, currentHole, previousMoney);
-  }, [players, scores, games, holeInfo, presses, currentHole]);
+    return calculateLiveMoney(players, scores, games, holeInfo, presses, currentHole, previousMoney, propBets);
+  }, [players, scores, games, holeInfo, presses, currentHole, propBets]);
 
-  // Don't render if no games configured
-  if (!currentMoney || games.length === 0) {
+  // Don't render if no money data
+  if (!currentMoney) {
     return null;
   }
 
