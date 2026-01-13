@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Share2, Check, Eye, Users } from 'lucide-react';
+import { X, Copy, Share2, Check, Eye, Users, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface ShareJoinCodeModalProps {
   isOpen: boolean;
@@ -15,7 +16,12 @@ interface ShareJoinCodeModalProps {
 
 export function ShareJoinCodeModal({ isOpen, onClose, joinCode, courseName, roundId }: ShareJoinCodeModalProps) {
   const [copied, setCopied] = useState(false);
+  const [showQR, setShowQR] = useState(false);
   const navigate = useNavigate();
+  
+  const spectatorUrl = roundId 
+    ? `${window.location.origin}/join?code=${joinCode}`
+    : joinCode;
 
   const handleCopyCode = async () => {
     try {
@@ -95,23 +101,65 @@ export function ShareJoinCodeModal({ isOpen, onClose, joinCode, courseName, roun
                 Invite players or let friends watch live
               </p>
               
-              {/* Large join code display */}
+              {/* Large join code display or QR Code */}
               <motion.div 
                 whileTap={{ scale: 0.98 }}
-                onClick={handleCopyCode}
-                className="relative bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-6 mb-6 cursor-pointer border-2 border-primary/20 hover:border-primary/40 transition-colors"
+                onClick={() => !showQR && handleCopyCode()}
+                className="relative bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-6 mb-4 cursor-pointer border-2 border-primary/20 hover:border-primary/40 transition-colors"
               >
-                <p className="text-4xl font-bold tracking-[0.3em] text-primary font-mono">
-                  {joinCode}
-                </p>
+                <AnimatePresence mode="wait">
+                  {showQR ? (
+                    <motion.div
+                      key="qr"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      className="flex flex-col items-center"
+                    >
+                      <div className="bg-white p-3 rounded-xl">
+                        <QRCodeSVG 
+                          value={spectatorUrl} 
+                          size={160}
+                          level="M"
+                          includeMargin={false}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-3">
+                        Scan to watch live
+                      </p>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="code"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                    >
+                      <p className="text-4xl font-bold tracking-[0.3em] text-primary font-mono">
+                        {joinCode}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 <div className="absolute top-2 right-2">
-                  {copied ? (
+                  {!showQR && (copied ? (
                     <Check className="w-5 h-5 text-success" />
                   ) : (
                     <Copy className="w-5 h-5 text-muted-foreground" />
-                  )}
+                  ))}
                 </div>
               </motion.div>
+              
+              {/* Toggle QR/Code */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowQR(!showQR)}
+                className="mb-4"
+              >
+                <QrCode className="w-4 h-4 mr-2" />
+                {showQR ? 'Show Code' : 'Show QR Code'}
+              </Button>
 
               {/* Share options */}
               <div className="space-y-3">

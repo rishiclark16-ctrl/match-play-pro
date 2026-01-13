@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, Loader2, ArrowLeft } from 'lucide-react';
+import { Eye, Loader2, ArrowLeft, ScanLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TechCard } from '@/components/ui/tech-card';
+import { QRCodeScanner } from '@/components/friends/QRCodeScanner';
 import { useJoinRound } from '@/hooks/useJoinRound';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +21,7 @@ export default function JoinRound() {
   const codeFromUrl = searchParams.get('code') || '';
   const [joinCode, setJoinCode] = useState(codeFromUrl.toUpperCase());
   const [joining, setJoining] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   // Auto-join if code is in URL
   useEffect(() => {
@@ -113,16 +115,27 @@ export default function JoinRound() {
 
           {/* Code Input */}
           <div className="space-y-4">
-            <Input
-              placeholder="XXXXXX"
-              value={joinCode}
-              onChange={(e) => {
-                setJoinCode(e.target.value.toUpperCase());
-                clearError();
-              }}
-              maxLength={6}
-              className="py-6 text-center text-2xl font-black tracking-[0.4em] uppercase rounded-xl bg-muted border-border font-mono"
-            />
+            <div className="relative">
+              <Input
+                placeholder="XXXXXX"
+                value={joinCode}
+                onChange={(e) => {
+                  setJoinCode(e.target.value.toUpperCase());
+                  clearError();
+                }}
+                maxLength={6}
+                className="py-6 text-center text-2xl font-black tracking-[0.4em] uppercase rounded-xl bg-muted border-border font-mono pr-14"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowScanner(true)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-lg bg-primary/10 hover:bg-primary/20"
+              >
+                <ScanLine className="w-5 h-5 text-primary" />
+              </Button>
+            </div>
             
             {error && (
               <p className="text-danger text-sm font-medium text-center">{error}</p>
@@ -155,6 +168,17 @@ export default function JoinRound() {
           </div>
         </TechCard>
       </main>
+
+      {/* QR Scanner */}
+      <QRCodeScanner
+        open={showScanner}
+        onClose={() => setShowScanner(false)}
+        onScan={(code) => {
+          setJoinCode(code.toUpperCase());
+          setShowScanner(false);
+          hapticSuccess();
+        }}
+      />
     </div>
   );
 }
