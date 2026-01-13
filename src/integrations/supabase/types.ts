@@ -14,6 +14,61 @@ export type Database = {
   }
   public: {
     Tables: {
+      bet_settlements: {
+        Row: {
+          amount: number
+          created_at: string | null
+          from_player_id: string
+          id: string
+          paid_at: string | null
+          round_id: string
+          status: string
+          to_player_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          from_player_id: string
+          id?: string
+          paid_at?: string | null
+          round_id: string
+          status?: string
+          to_player_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          from_player_id?: string
+          id?: string
+          paid_at?: string | null
+          round_id?: string
+          status?: string
+          to_player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bet_settlements_from_player_id_fkey"
+            columns: ["from_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bet_settlements_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bet_settlements_to_player_id_fkey"
+            columns: ["to_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       friendships: {
         Row: {
           accepted_at: string | null
@@ -250,9 +305,11 @@ export type Database = {
           home_course_id: string | null
           home_course_name: string | null
           id: string
+          paypal_email: string | null
           phone: string | null
           tee_preference: string | null
           updated_at: string | null
+          venmo_username: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -264,9 +321,11 @@ export type Database = {
           home_course_id?: string | null
           home_course_name?: string | null
           id: string
+          paypal_email?: string | null
           phone?: string | null
           tee_preference?: string | null
           updated_at?: string | null
+          venmo_username?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -278,11 +337,71 @@ export type Database = {
           home_course_id?: string | null
           home_course_name?: string | null
           id?: string
+          paypal_email?: string | null
           phone?: string | null
           tee_preference?: string | null
           updated_at?: string | null
+          venmo_username?: string | null
         }
         Relationships: []
+      }
+      prop_bets: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          hole_number: number
+          id: string
+          round_id: string
+          stakes: number
+          type: string
+          winner_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          hole_number: number
+          id?: string
+          round_id: string
+          stakes?: number
+          type: string
+          winner_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          hole_number?: number
+          id?: string
+          round_id?: string
+          stakes?: number
+          type?: string
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prop_bets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prop_bets_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prop_bets_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       round_shares: {
         Row: {
