@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthGuard } from "@/components/AuthGuard";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { BottomNav } from "@/components/BottomNav";
 import { Capacitor } from '@capacitor/core';
 import { setStatusBarDark } from '@/lib/statusBar';
 import NotFound from "./pages/NotFound";
@@ -21,6 +22,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Friends = lazy(() => import("./pages/Friends"));
 const Groups = lazy(() => import("./pages/Groups"));
+const Stats = lazy(() => import("./pages/Stats"));
 
 const queryClient = new QueryClient();
 
@@ -140,9 +142,20 @@ const App = () => {
                 </AuthGuard>
               } 
             />
+            <Route 
+              path="/stats" 
+              element={
+                <AuthGuard>
+                  <Suspense fallback={<PageSkeleton variant="default" />}>
+                    <Stats />
+                  </Suspense>
+                </AuthGuard>
+              } 
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <BottomNav />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

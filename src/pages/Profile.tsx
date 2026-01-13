@@ -165,7 +165,7 @@ export default function Profile() {
       </header>
 
       {/* Content */}
-      <main className="relative z-10 flex-1 px-4 pb-32 overflow-auto">
+      <main className="relative z-10 flex-1 px-4 pb-48 overflow-auto">
         {/* Avatar Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
