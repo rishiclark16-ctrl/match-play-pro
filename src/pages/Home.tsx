@@ -117,7 +117,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="pt-12 pb-6 px-6 safe-top flex items-center justify-between">
+      <header className="pt-safe px-4 pt-12 pb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold text-primary tracking-tight">MATCH</h1>
         <button
           onClick={() => {
@@ -136,7 +136,7 @@ export default function Home() {
       </header>
 
       {/* Content */}
-      <main className="flex-1 px-6 pb-32 overflow-auto">
+      <main className="flex-1 px-4 pb-32 overflow-auto">
         {loadingRounds ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -181,7 +181,7 @@ export default function Home() {
       </main>
 
       {/* Bottom Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent safe-bottom">
+      <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-gradient-to-t from-background via-background to-transparent">
         <div className="space-y-3">
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button 

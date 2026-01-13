@@ -132,7 +132,7 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="pt-12 pb-4 px-6 safe-top flex items-center gap-4">
+      <header className="pt-safe px-4 pt-12 pb-4 flex items-center gap-4">
         <button
           onClick={() => navigate(-1)}
           className="w-10 h-10 rounded-full bg-card flex items-center justify-center"
@@ -143,7 +143,7 @@ export default function Profile() {
       </header>
 
       {/* Content */}
-      <main className="flex-1 px-6 pb-32 overflow-auto">
+      <main className="flex-1 px-4 pb-32 overflow-auto">
         {/* Avatar Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -257,7 +257,7 @@ export default function Profile() {
       </main>
 
       {/* Bottom Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent safe-bottom">
+      <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-gradient-to-t from-background via-background to-transparent">
         <div className="space-y-3">
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button
