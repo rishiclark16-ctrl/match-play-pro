@@ -601,7 +601,7 @@ export default function Scorecard() {
       
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background border-b border-border">
-        <div className="pt-12 pb-2 px-3 safe-top flex items-center justify-between gap-2">
+        <div className="pt-12 pb-2 px-4 safe-top flex items-center justify-between gap-3">
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => {
@@ -615,24 +615,13 @@ export default function Scorecard() {
           </motion.button>
           
           <div className="text-center flex-1 min-w-0">
-            <div className="flex items-center justify-center gap-1.5">
-              <h1 className="text-sm font-bold truncate">{round.courseName}</h1>
-              <ConnectionStatus isOnline={isOnline} />
-            </div>
-            <p className="text-[10px] text-muted-foreground font-medium">
-              <span className="font-mono tracking-wider">{round.joinCode}</span>
+            <h1 className="text-sm font-bold truncate">{round.courseName}</h1>
+            <p className="text-[10px] text-muted-foreground font-mono tracking-wider">
+              {round.joinCode}
             </p>
           </div>
           
-          <div className="flex items-center gap-1.5 shrink-0">
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setShowShareModal(true)}
-              className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary"
-            >
-              <Share2 className="w-4 h-4" />
-            </motion.button>
-            
+          <div className="flex items-center gap-2 shrink-0">
             {!isSpectator && (
               <GameSettingsSheet
                 round={round}
