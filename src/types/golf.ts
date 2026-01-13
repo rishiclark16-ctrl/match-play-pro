@@ -118,6 +118,8 @@ export interface Player {
   name: string;
   handicap?: number;
   orderIndex: number;
+  profileId?: string;
+  avatarUrl?: string;
 }
 
 export interface Score {

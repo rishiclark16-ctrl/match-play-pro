@@ -199,7 +199,7 @@ export function LiveLeaderboard({
                     "font-bold text-lg",
                     matchPlayStatus.leaderId === player1.id 
                       ? "bg-primary text-primary-foreground" 
-                      : "bg-muted text-muted-foreground"
+                      : "bg-ink text-ink-foreground"
                   )}>
                     {getInitials(player1.name)}
                   </AvatarFallback>
@@ -262,7 +262,7 @@ export function LiveLeaderboard({
                     "font-bold text-lg",
                     matchPlayStatus.leaderId === player2.id 
                       ? "bg-primary text-primary-foreground" 
-                      : "bg-muted text-muted-foreground"
+                      : "bg-ink text-ink-foreground"
                   )}>
                     {getInitials(player2.name)}
                   </AvatarFallback>
@@ -324,7 +324,7 @@ export function LiveLeaderboard({
                       style={{ zIndex: 3 - i }}
                     >
                       <AvatarImage src={(p as any).avatarUrl} />
-                      <AvatarFallback className="bg-primary/20 text-primary font-bold text-sm">
+                      <AvatarFallback className="bg-ink text-ink-foreground font-bold text-sm">
                         {getInitials(p.name)}
                       </AvatarFallback>
                     </Avatar>
@@ -333,7 +333,7 @@ export function LiveLeaderboard({
               ) : (
                 <Avatar className="w-12 h-12 border-2 border-primary ring-2 ring-primary/30">
                   <AvatarImage src={(leader as any).avatarUrl} />
-                  <AvatarFallback className="bg-primary text-primary-foreground font-bold text-lg">
+                  <AvatarFallback className="bg-ink text-ink-foreground font-bold text-lg">
                     {getInitials(leader.name)}
                   </AvatarFallback>
                 </Avatar>

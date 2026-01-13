@@ -4,6 +4,7 @@ import { Minus, Plus, Check } from 'lucide-react';
 import { PlayerWithScores, getScoreColor, formatRelativeToPar } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface PlayerCardProps {
   player: PlayerWithScores;
@@ -139,17 +140,22 @@ export function PlayerCard({
       </AnimatePresence>
       
       {/* Avatar */}
-      <motion.button
+      <motion.div
         whileTap={{ scale: 0.9 }}
         onClick={handleCardTap}
-        className={cn(
-          "w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 transition-all bg-ink text-ink-foreground shadow-sm",
-          isLeading && player.holesPlayed > 0 && "ring-2 ring-primary/50 shadow-md shadow-primary/15"
-        )}
+        className="shrink-0 cursor-pointer"
         aria-label={`Open score sheet for ${player.name}`}
       >
-        {initials}
-      </motion.button>
+        <Avatar className={cn(
+          "w-12 h-12 rounded-xl transition-all",
+          isLeading && player.holesPlayed > 0 && "ring-2 ring-primary/50 shadow-md shadow-primary/15"
+        )}>
+          <AvatarImage src={(player as any).avatarUrl} className="rounded-xl object-cover" />
+          <AvatarFallback className="bg-ink text-ink-foreground text-sm font-bold rounded-xl">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+      </motion.div>
 
       {/* Name & Running Total */}
       <div className="flex-1 min-w-0" onClick={handleCardTap}>
