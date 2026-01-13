@@ -919,18 +919,8 @@ export default function Scorecard() {
             <span className="font-semibold text-xs">Board</span>
           </motion.button>
 
-          {/* Prop Bets Button - hide during playoff and for spectators */}
-          {!isSpectator && playoffHole === 0 && (
-            <PropBetSheet
-              roundId={id || ''}
-              players={playersWithScores}
-              currentHole={currentHole}
-              holeInfo={round.holeInfo}
-              propBets={propBets}
-              onPropBetAdded={addPropBet}
-              onPropBetUpdated={updatePropBet}
-            />
-          )}
+          {/* Spacer where prop bets button used to be */}
+          <div className="w-10" />
 
           {/* Voice Button - only for scorekeepers */}
           {canEditScores ? <VoiceButton isListening={isListening} isProcessing={isProcessing} isSupported={isSupported} onPress={handleVoicePress} /> : <div className="w-14" />}
@@ -950,11 +940,23 @@ export default function Scorecard() {
             </Button> : hole18FullyScored && !isSpectator ? <Button onClick={() => setShowFinishOptions(true)} variant="outline" className="px-4 py-2.5 h-auto rounded-lg font-bold text-xs border-2 border-primary text-primary">
               <Flag className="w-3 h-3 mr-1" />
               Done?
-            </Button> : <div className="px-3 py-2.5 rounded-lg bg-card border border-border">
-              <span className="font-bold tabular-nums text-xs">
-                {completedHoles}/{round.holes}
-              </span>
-            </div>}
+            </Button> : !isSpectator && playoffHole === 0 ? (
+              <PropBetSheet
+                roundId={id || ''}
+                players={playersWithScores}
+                currentHole={currentHole}
+                holeInfo={round.holeInfo}
+                propBets={propBets}
+                onPropBetAdded={addPropBet}
+                onPropBetUpdated={updatePropBet}
+              />
+            ) : (
+              <div className="px-3 py-2.5 rounded-lg bg-card border border-border">
+                <span className="font-bold tabular-nums text-xs">
+                  {completedHoles}/{round.holes}
+                </span>
+              </div>
+            )}
         </div>
       </div>
 
