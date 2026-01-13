@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, UserPlus, Users, Search, Hash, AtSign, Phone, ScanLine } from 'lucide-react';
+import { ArrowLeft, UserPlus, Users, Search, Hash, AtSign, Phone, ScanLine, Contact } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import { FriendRequestCard } from '@/components/friends/FriendRequestCard';
 import { ShareFriendCode } from '@/components/friends/ShareFriendCode';
 import { FriendCodeQR } from '@/components/friends/FriendCodeQR';
 import { QRCodeScanner } from '@/components/friends/QRCodeScanner';
+import { ContactSyncSheet } from '@/components/friends/ContactSyncSheet';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 
@@ -37,6 +38,7 @@ export default function Friends() {
   const [searchType, setSearchType] = useState<'code' | 'email' | 'phone'>('code');
   const [isSending, setIsSending] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [contactSyncOpen, setContactSyncOpen] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   // Get friend code from profile
@@ -230,15 +232,26 @@ export default function Friends() {
               <UserPlus className="w-4 h-4 text-primary" />
               <span className="label-sm">Add a Friend</span>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setScannerOpen(true)}
-              className="gap-1.5 border-2 h-8"
-            >
-              <ScanLine className="h-4 w-4" />
-              Scan QR
-            </Button>
+            <div className="flex gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setContactSyncOpen(true)}
+                className="gap-1.5 border-2 h-8"
+              >
+                <Contact className="h-4 w-4" />
+                Contacts
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setScannerOpen(true)}
+                className="gap-1.5 border-2 h-8"
+              >
+                <ScanLine className="h-4 w-4" />
+                Scan
+              </Button>
+            </div>
           </div>
           <TechCard hover>
             <TechCardContent className="space-y-3">
@@ -384,6 +397,12 @@ export default function Friends() {
         open={scannerOpen}
         onClose={() => setScannerOpen(false)}
         onScan={handleQRScan}
+      />
+
+      {/* Contact Sync Sheet */}
+      <ContactSyncSheet
+        open={contactSyncOpen}
+        onClose={() => setContactSyncOpen(false)}
       />
     </div>
   );
