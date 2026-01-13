@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Users, X, Loader2, RefreshCw, ChevronRight } from 'lucide-react';
+import { Plus, Users, X, Loader2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RoundCard } from '@/components/golf/RoundCard';
@@ -250,15 +250,6 @@ export default function Home() {
               <p className="text-2xl font-black tabular-nums text-muted-foreground">{completedRounds.length}</p>
             </div>
           </div>
-          
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={fetchRounds}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors"
-          >
-            <RefreshCw className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs font-semibold text-muted-foreground">Refresh</span>
-          </motion.button>
         </div>
       </motion.div>
 
