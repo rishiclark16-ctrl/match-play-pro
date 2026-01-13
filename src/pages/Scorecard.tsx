@@ -275,7 +275,7 @@ export default function Scorecard() {
           } else {
             feedbackVoiceSuccess();
             const scoresSummary = result.scores.map(s => `${s.playerName.split(' ')[0]} ${s.score}`).join(', ');
-            toast.success(scoresSummary, { duration: 2500 });
+            toast.success(scoresSummary, { duration: 5000 });
           }
           
           // Auto-advance if all players now scored
