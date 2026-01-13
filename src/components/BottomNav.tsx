@@ -30,7 +30,7 @@ export function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background">
       {/* Gradient fade above nav */}
       <div className="h-6 bg-gradient-to-t from-background to-transparent pointer-events-none" />
       
