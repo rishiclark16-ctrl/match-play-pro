@@ -14,10 +14,13 @@ import { GameSettingsSheet } from '@/components/golf/GameSettingsSheet';
 import { ShareJoinCodeModal } from '@/components/golf/ShareJoinCodeModal';
 import { ConnectionStatus } from '@/components/golf/ConnectionStatus';
 import { SpectatorBanner } from '@/components/golf/SpectatorBanner';
+import { MoneyTracker } from '@/components/golf/MoneyTracker';
+import { PropBetSheet } from '@/components/golf/PropBetSheet';
 import { useRounds } from '@/hooks/useRounds';
 import { useSupabaseRound } from '@/hooks/useSupabaseRound';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
 import { useKeepAwake } from '@/hooks/useKeepAwake';
+import { usePropBets } from '@/hooks/usePropBets';
 import { parseVoiceInput, ParseResult, ParsedScore } from '@/lib/voiceParser';
 import { parseVoiceCommands, hasScoreContent } from '@/lib/voiceCommands';
 import { feedbackListeningStart, feedbackListeningStop, feedbackVoiceSuccess, feedbackVoiceError, feedbackAllScored, feedbackNextHole } from '@/lib/voiceFeedback';
@@ -60,6 +63,14 @@ export default function Scorecard() {
     updateGames: updateGamesSupabase,
     loading: supabaseLoading
   } = useSupabaseRound(id || null);
+
+  // Prop bets hook for side bets
+  const {
+    propBets,
+    addPropBet,
+    updatePropBet,
+    getPropBetsForHole
+  } = usePropBets(id);
 
   // Fallback to local storage
   const {
@@ -652,6 +663,18 @@ export default function Scorecard() {
       {/* Live Leaderboard - hide during playoff */}
       {playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && <LiveLeaderboard players={playersWithScores} useNetScoring={round.games?.some((g: any) => g.useNet) || false} isMatchPlay={round.matchPlay} holeInfo={round.holeInfo} scores={roundScores} />}
 
+      {/* Live Money Tracker - show when games configured */}
+      {playoffHole === 0 && round.games && round.games.length > 0 && (
+        <MoneyTracker
+          players={playersWithScores}
+          scores={roundScores}
+          games={round.games}
+          holeInfo={round.holeInfo}
+          presses={[]}
+          currentHole={currentHole}
+        />
+      )}
+
       {/* Player Cards */}
       <main className="relative flex-1 px-3 pb-36 overflow-auto">
         <div className="space-y-2">
@@ -864,6 +887,19 @@ export default function Scorecard() {
             <BarChart3 className="w-4 h-4 text-muted-foreground" />
             <span className="font-semibold text-xs">Board</span>
           </motion.button>
+
+          {/* Prop Bets Button - hide during playoff and for spectators */}
+          {!isSpectator && playoffHole === 0 && (
+            <PropBetSheet
+              roundId={id || ''}
+              players={playersWithScores}
+              currentHole={currentHole}
+              holeInfo={round.holeInfo}
+              propBets={propBets}
+              onPropBetAdded={addPropBet}
+              onPropBetUpdated={updatePropBet}
+            />
+          )}
 
           {/* Voice Button */}
           {!isSpectator ? <VoiceButton isListening={isListening} isProcessing={isProcessing} isSupported={isSupported} onPress={handleVoicePress} /> : <div className="w-14" />}
