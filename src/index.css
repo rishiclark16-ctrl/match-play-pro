@@ -15,6 +15,10 @@
     /* Core Backgrounds - Pure white for outdoor readability */
     --background: 0 0% 100%;
     --foreground: 0 0% 5%;
+
+    /* Always-dark surfaces (do not flip in dark mode) */
+    --ink: 0 0% 8%;
+    --ink-foreground: 0 0% 100%;
     
     /* Card - Solid whites */
     --card: 0 0% 99%;
@@ -89,6 +93,10 @@
   .dark {
     --background: 153 15% 5%;
     --foreground: 0 0% 97%;
+
+    /* Always-dark surfaces (do not flip in dark mode) */
+    --ink: 0 0% 8%;
+    --ink-foreground: 0 0% 100%;
     
     --card: 153 12% 8%;
     --card-foreground: 0 0% 97%;

@@ -142,11 +142,9 @@ export function PlayerCard({
       <motion.button
         whileTap={{ scale: 0.9 }}
         onClick={handleCardTap}
-      className={cn(
-          "w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 transition-all",
-          isLeading && player.holesPlayed > 0
-            ? "bg-gradient-primary text-primary-foreground shadow-md shadow-primary/20" 
-            : "bg-foreground text-background"
+        className={cn(
+          "w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 transition-all bg-ink text-ink-foreground shadow-sm",
+          isLeading && player.holesPlayed > 0 && "ring-2 ring-primary/50 shadow-md shadow-primary/15"
         )}
         aria-label={`Open score sheet for ${player.name}`}
       >

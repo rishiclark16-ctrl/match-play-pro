@@ -399,7 +399,7 @@ export function LiveLeaderboard({
                     </span>
                     <Avatar className="w-6 h-6 border border-border">
                       <AvatarImage src={(player as any).avatarUrl} />
-                      <AvatarFallback className="bg-muted text-muted-foreground text-[10px] font-bold">
+                      <AvatarFallback className="bg-ink text-ink-foreground text-[10px] font-bold">
                         {getInitials(player.name)}
                       </AvatarFallback>
                     </Avatar>
@@ -427,7 +427,7 @@ export function LiveLeaderboard({
               <div className="flex items-center gap-2">
                 <Avatar className="w-6 h-6 border border-border">
                   <AvatarImage src={(sortedPlayers[1] as any).avatarUrl} />
-                  <AvatarFallback className="bg-muted text-muted-foreground text-[10px] font-bold">
+                  <AvatarFallback className="bg-ink text-ink-foreground text-[10px] font-bold">
                     {getInitials(sortedPlayers[1].name)}
                   </AvatarFallback>
                 </Avatar>
