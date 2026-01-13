@@ -261,22 +261,23 @@ export function useFriends() {
     if (!user) return { success: false, error: 'Not authenticated' };
 
     try {
-      // Find user by email in auth.users via a lookup
-      // We need to check auth.users, but we can't query it directly from client
-      // Instead, we'll search profiles with a workaround using the user's ID
-      // Actually, we need to create an RPC function or use an edge function for this
-      // For now, let's check if we can do a workaround
+      // Normalize email to lowercase
+      const normalizedEmail = email.toLowerCase().trim();
+      
+      // Find user by email in profiles
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
 
-      // Check if user exists by querying the friendships system
-      // Since we can't query auth.users directly, we'll need to rely on
-      // the user having set up their profile or use an edge function
+      if (profileError) throw profileError;
+      
+      if (!profile) {
+        return { success: false, error: 'No user found with that email' };
+      }
 
-      // For MVP: Query profiles where we'd need email - but profiles don't store email
-      // Let's return a helpful message
-      return { 
-        success: false, 
-        error: 'Email lookup requires the user to share their friend code. Ask them for their code!' 
-      };
+      return await createFriendship(profile.id);
     } catch (err) {
       console.error('Error sending friend request by email:', err);
       return { success: false, error: 'Failed to send request' };
@@ -287,12 +288,30 @@ export function useFriends() {
     if (!user) return { success: false, error: 'Not authenticated' };
 
     try {
-      // Similar to email - profiles don't store phone numbers by default
-      // For MVP: Return helpful message
-      return { 
-        success: false, 
-        error: 'Phone lookup requires the user to share their friend code. Ask them for their code!' 
-      };
+      // Normalize phone - remove common formatting characters
+      const normalizedPhone = phone.replace(/[\s\-\(\)\+]/g, '').trim();
+      
+      // Find user by phone in profiles (try both with and without formatting)
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone')
+        .not('phone', 'is', null);
+
+      if (profileError) throw profileError;
+      
+      // Find matching phone (normalize stored phones too)
+      const matchingProfile = profiles?.find(p => {
+        const storedPhone = p.phone?.replace(/[\s\-\(\)\+]/g, '') || '';
+        return storedPhone === normalizedPhone || 
+               storedPhone.endsWith(normalizedPhone) || 
+               normalizedPhone.endsWith(storedPhone);
+      });
+      
+      if (!matchingProfile) {
+        return { success: false, error: 'No user found with that phone number' };
+      }
+
+      return await createFriendship(matchingProfile.id);
     } catch (err) {
       console.error('Error sending friend request by phone:', err);
       return { success: false, error: 'Failed to send request' };

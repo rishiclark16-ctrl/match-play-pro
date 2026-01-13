@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home } from 'lucide-react';
+import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,8 @@ export default function Profile() {
   const [teePreference, setTeePreference] = useState<string | null>(null);
   const [homeCourseId, setHomeCourseId] = useState<string | null>(null);
   const [homeCourseName, setHomeCourseName] = useState<string | null>(null);
+  const [discoveryEmail, setDiscoveryEmail] = useState('');
+  const [discoveryPhone, setDiscoveryPhone] = useState('');
   const [isSigningOut, setIsSigningOut] = useState(false);
   
   // Track if initial load is complete to prevent auto-save on mount
@@ -50,6 +52,8 @@ export default function Profile() {
       setTeePreference(profile.tee_preference);
       setHomeCourseId(profile.home_course_id);
       setHomeCourseName(profile.home_course_name);
+      setDiscoveryEmail(profile.email || '');
+      setDiscoveryPhone(profile.phone || '');
       // Mark as initialized after a short delay to prevent immediate auto-save
       setTimeout(() => {
         isInitialized.current = true;
@@ -77,7 +81,9 @@ export default function Profile() {
       fullName !== (profile.full_name || '') ||
       handicap !== (profile.handicap?.toString() || '') ||
       teePreference !== profile.tee_preference ||
-      homeCourseId !== profile.home_course_id;
+      homeCourseId !== profile.home_course_id ||
+      discoveryEmail !== (profile.email || '') ||
+      discoveryPhone !== (profile.phone || '');
 
     if (!hasChanges) return;
 
@@ -94,6 +100,8 @@ export default function Profile() {
         tee_preference: teePreference,
         home_course_id: homeCourseId,
         home_course_name: homeCourseName,
+        email: discoveryEmail.trim().toLowerCase() || null,
+        phone: discoveryPhone.trim() || null,
       };
       autoSave(updates);
     }, 800);
@@ -103,7 +111,7 @@ export default function Profile() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [fullName, handicap, teePreference, homeCourseId, homeCourseName, profile, autoSave]);
+  }, [fullName, handicap, teePreference, homeCourseId, homeCourseName, discoveryEmail, discoveryPhone, profile, autoSave]);
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -294,6 +302,65 @@ export default function Profile() {
           </TechCard>
         </motion.section>
 
+        {/* Friend Discovery Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="space-y-4 mb-6"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="w-4 h-4 text-primary" />
+            <span className="label-sm">Friend Discovery</span>
+          </div>
+          
+          <p className="text-xs text-muted-foreground -mt-2 mb-3">
+            Let friends find you by email or phone number
+          </p>
+
+          {/* Discoverable Email */}
+          <TechCard hover>
+            <TechCardContent className="space-y-2">
+              <div className="flex items-center gap-2">
+                <AtSign className="w-4 h-4 text-muted-foreground" />
+                <Label htmlFor="discoveryEmail" className="label-sm">Discoverable Email</Label>
+              </div>
+              <Input
+                id="discoveryEmail"
+                type="email"
+                placeholder="email@example.com"
+                value={discoveryEmail}
+                onChange={(e) => setDiscoveryEmail(e.target.value)}
+                className="py-5 text-lg bg-background border-2 border-border focus:border-primary"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Friends can send you requests using this email
+              </p>
+            </TechCardContent>
+          </TechCard>
+
+          {/* Discoverable Phone */}
+          <TechCard hover>
+            <TechCardContent className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-muted-foreground" />
+                <Label htmlFor="discoveryPhone" className="label-sm">Discoverable Phone</Label>
+              </div>
+              <Input
+                id="discoveryPhone"
+                type="tel"
+                placeholder="(555) 123-4567"
+                value={discoveryPhone}
+                onChange={(e) => setDiscoveryPhone(e.target.value)}
+                className="py-5 text-lg bg-background border-2 border-border focus:border-primary"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Friends can send you requests using this number
+              </p>
+            </TechCardContent>
+          </TechCard>
+        </motion.section>
+
         {/* Account Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -323,7 +390,7 @@ export default function Profile() {
           {/* Email (readonly) */}
           <TechCard>
             <TechCardContent className="space-y-2">
-              <Label className="label-sm">Email</Label>
+              <Label className="label-sm">Login Email</Label>
               <div className="py-3 px-4 rounded-lg bg-muted text-muted-foreground font-mono text-sm">
                 {user?.email}
               </div>
