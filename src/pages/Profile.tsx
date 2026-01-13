@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, LogOut, Save, Users, Copy, Check, User, Flag, Home } from 'lucide-react';
+import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,9 +36,11 @@ export default function Profile() {
   const [teePreference, setTeePreference] = useState<string | null>(null);
   const [homeCourseId, setHomeCourseId] = useState<string | null>(null);
   const [homeCourseName, setHomeCourseName] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  
+  // Track if initial load is complete to prevent auto-save on mount
+  const isInitialized = useRef(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize form with profile data
   useEffect(() => {
@@ -48,47 +50,60 @@ export default function Profile() {
       setTeePreference(profile.tee_preference);
       setHomeCourseId(profile.home_course_id);
       setHomeCourseName(profile.home_course_name);
+      // Mark as initialized after a short delay to prevent immediate auto-save
+      setTimeout(() => {
+        isInitialized.current = true;
+      }, 100);
     }
   }, [profile]);
 
-  // Track changes
+  // Auto-save function with debounce
+  const autoSave = useCallback(async (updates: ProfileUpdate) => {
+    const success = await updateProfile(updates);
+    if (success) {
+      hapticSuccess();
+    } else {
+      hapticError();
+      toast.error('Failed to save');
+    }
+  }, [updateProfile]);
+
+  // Auto-save when values change (debounced)
   useEffect(() => {
-    if (!profile) return;
-    
-    const changed =
+    if (!isInitialized.current || !profile) return;
+
+    // Check if anything actually changed
+    const hasChanges =
       fullName !== (profile.full_name || '') ||
       handicap !== (profile.handicap?.toString() || '') ||
       teePreference !== profile.tee_preference ||
       homeCourseId !== profile.home_course_id;
-    
-    setHasChanges(changed);
-  }, [fullName, handicap, teePreference, homeCourseId, profile]);
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    hapticLight();
+    if (!hasChanges) return;
 
-    const updates: ProfileUpdate = {
-      full_name: fullName.trim() || null,
-      handicap: handicap ? parseFloat(handicap) : null,
-      tee_preference: teePreference,
-      home_course_id: homeCourseId,
-      home_course_name: homeCourseName,
-    };
-
-    const success = await updateProfile(updates);
-
-    if (success) {
-      hapticSuccess();
-      toast.success('Profile saved');
-      setHasChanges(false);
-    } else {
-      hapticError();
-      toast.error('Failed to save profile');
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
 
-    setIsSaving(false);
-  };
+    // Debounce save by 800ms
+    saveTimeoutRef.current = setTimeout(() => {
+      const updates: ProfileUpdate = {
+        full_name: fullName.trim() || null,
+        handicap: handicap ? parseFloat(handicap) : null,
+        tee_preference: teePreference,
+        home_course_id: homeCourseId,
+        home_course_name: homeCourseName,
+      };
+      autoSave(updates);
+    }, 800);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [fullName, handicap, teePreference, homeCourseId, homeCourseName, profile, autoSave]);
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -165,7 +180,7 @@ export default function Profile() {
       </header>
 
       {/* Content */}
-      <main className="relative z-10 flex-1 px-4 pb-48 overflow-auto">
+      <main className="relative z-10 flex-1 px-4 pb-32 overflow-auto">
         {/* Avatar Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -317,23 +332,9 @@ export default function Profile() {
         </motion.section>
       </main>
 
-      {/* Bottom Buttons */}
+      {/* Bottom Button */}
       <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-gradient-to-t from-background via-background to-transparent z-20">
-        <div className="space-y-3 max-w-lg mx-auto">
-          <motion.div whileTap={{ scale: 0.98 }}>
-            <Button
-              onClick={handleSave}
-              disabled={!hasChanges || isSaving}
-              className="w-full py-6 text-lg font-bold rounded-xl"
-            >
-              {isSaving ? (
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              ) : (
-                <Save className="w-5 h-5 mr-2" />
-              )}
-              Save Changes
-            </Button>
-          </motion.div>
+        <div className="max-w-lg mx-auto">
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button
               variant="outline"
