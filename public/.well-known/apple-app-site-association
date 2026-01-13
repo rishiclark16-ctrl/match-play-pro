@@ -1,0 +1,20 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAM_ID.dev.matchgolf.app",
+        "paths": [
+          "/round/*",
+          "/join/*",
+          "/join"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TEAM_ID.dev.matchgolf.app"
+    ]
+  }
+}
