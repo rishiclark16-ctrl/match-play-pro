@@ -6,14 +6,29 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 
 /**
  * Set dark status bar style (light text on dark background)
- * Used for the main app UI with racing green theme
+ * Used for dark/immersive screens
  */
 export async function setStatusBarDark(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   
   try {
     await StatusBar.setStyle({ style: Style.Dark });
-    await StatusBar.setBackgroundColor({ color: '#0A2F23' }); // Racing green
+    await StatusBar.setBackgroundColor({ color: '#FFFFFF' }); // White background
+  } catch (error) {
+    console.warn('[StatusBar] Not available:', error);
+  }
+}
+
+/**
+ * Set default status bar style for the app
+ * Light style (dark text) with white background - matches our white theme
+ */
+export async function setStatusBarDefault(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  
+  try {
+    await StatusBar.setStyle({ style: Style.Light });
+    await StatusBar.setBackgroundColor({ color: '#FFFFFF' });
   } catch (error) {
     console.warn('[StatusBar] Not available:', error);
   }

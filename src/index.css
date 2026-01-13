@@ -499,6 +499,11 @@
     @apply before:absolute before:top-0 before:bottom-0 before:left-0 before:w-1 before:bg-primary;
   }
   
+  /* Bottom nav spacing - accounts for nav height + safe area */
+  .pb-nav {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 5rem);
+  }
+  
   /* Winner highlight */
   .winner-highlight {
     @apply border-2 border-gold bg-gold-muted;
