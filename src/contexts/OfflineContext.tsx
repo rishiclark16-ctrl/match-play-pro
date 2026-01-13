@@ -5,6 +5,7 @@ interface OfflineContextType {
   isOnline: boolean;
   isSyncing: boolean;
   pendingCount: number;
+  backgroundSyncSupported: boolean;
   syncNow: () => Promise<void>;
   saveScoreOffline: (roundId: string, playerId: string, holeNumber: number, strokes: number) => Promise<void>;
 }

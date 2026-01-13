@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'favicon-512.png', 'splash.png'],
+      includeAssets: ['favicon.ico', 'favicon-512.png', 'splash.png', 'sw-custom.js'],
       manifest: {
         name: 'MATCH Golf',
         short_name: 'MATCH',
@@ -37,6 +37,8 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Import custom service worker for background sync
+        importScripts: ['/sw-custom.js'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
