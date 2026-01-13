@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, UserPlus, Users, Search, Hash, AtSign, Phone } from 'lucide-react';
+import { ArrowLeft, UserPlus, Users, Search, Hash, AtSign, Phone, ScanLine } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { FriendCard } from '@/components/friends/FriendCard';
 import { FriendRequestCard } from '@/components/friends/FriendRequestCard';
 import { ShareFriendCode } from '@/components/friends/ShareFriendCode';
 import { FriendCodeQR } from '@/components/friends/FriendCodeQR';
+import { QRCodeScanner } from '@/components/friends/QRCodeScanner';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 
@@ -35,6 +36,7 @@ export default function Friends() {
   const [searchValue, setSearchValue] = useState('');
   const [searchType, setSearchType] = useState<'code' | 'email' | 'phone'>('code');
   const [isSending, setIsSending] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   // Get friend code from profile
@@ -144,6 +146,18 @@ export default function Friends() {
     }
   };
 
+  const handleQRScan = (code: string) => {
+    setScannerOpen(false);
+    hapticSuccess();
+    // Set search type to code and trigger request
+    setSearchType('code');
+    setSearchValue(code.toUpperCase());
+    // Auto-send request
+    setTimeout(() => {
+      handleSendRequest(code);
+    }, 100);
+  };
+
   return (
     <div className="min-h-screen bg-background pt-safe relative">
       <GeometricBackground />
@@ -211,9 +225,20 @@ export default function Friends() {
           transition={{ delay: 0.05 }}
           className="mt-6"
         >
-          <div className="flex items-center gap-2 mb-2">
-            <UserPlus className="w-4 h-4 text-primary" />
-            <span className="label-sm">Add a Friend</span>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <UserPlus className="w-4 h-4 text-primary" />
+              <span className="label-sm">Add a Friend</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setScannerOpen(true)}
+              className="gap-1.5 border-2 h-8"
+            >
+              <ScanLine className="h-4 w-4" />
+              Scan QR
+            </Button>
           </div>
           <TechCard hover>
             <TechCardContent className="space-y-3">
@@ -353,6 +378,13 @@ export default function Friends() {
           )}
         </motion.section>
       </div>
+
+      {/* QR Code Scanner Modal */}
+      <QRCodeScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={handleQRScan}
+      />
     </div>
   );
 }
