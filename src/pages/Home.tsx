@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Users, X, Loader2, ChevronRight } from 'lucide-react';
+import { Plus, Users, X, Loader2, ChevronRight, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RoundCard } from '@/components/golf/RoundCard';
+import { SpectatorRoundCard } from '@/components/golf/SpectatorRoundCard';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { TechCard } from '@/components/ui/tech-card';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
@@ -13,6 +14,7 @@ import { useJoinRound } from '@/hooks/useJoinRound';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useDeleteRound } from '@/hooks/useDeleteRound';
+import { useSpectatorRounds } from '@/hooks/useSpectatorRounds';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +28,7 @@ export default function Home() {
   const { profile } = useProfile();
   const { joinRound, loading: joinLoading, error: joinError, clearError } = useJoinRound();
   const { deleteRound: deleteSupabaseRound, loading: deleteLoading } = useDeleteRound();
+  const { spectatorRounds, spectatorStats, leaveSpectating, fetchSpectatorRounds } = useSpectatorRounds();
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [deletingRoundId, setDeletingRoundId] = useState<string | null>(null);
@@ -138,7 +141,20 @@ export default function Home() {
 
   const handleJoinRound = async () => {
     const round = await joinRound(joinCode.trim());
-    if (round) {
+    if (round && user) {
+      // Add user as spectator
+      try {
+        await supabase
+          .from('round_spectators')
+          .upsert({
+            round_id: round.id,
+            profile_id: user.id,
+          }, {
+            onConflict: 'round_id,profile_id'
+          });
+      } catch (err) {
+        console.error('Error adding spectator:', err);
+      }
       hapticSuccess();
       navigate(`/round/${round.id}?spectator=true`);
       setShowJoinModal(false);
@@ -150,8 +166,17 @@ export default function Home() {
 
   const handlePullRefresh = async () => {
     hapticLight();
-    await fetchRounds();
+    await Promise.all([fetchRounds(), fetchSpectatorRounds()]);
     hapticSuccess();
+  };
+
+  const handleLeaveSpectating = async (roundId: string) => {
+    hapticLight();
+    const success = await leaveSpectating(roundId);
+    if (success) {
+      hapticSuccess();
+      toast.success('Stopped watching round');
+    }
   };
 
   const activeRounds = rounds.filter(r => r.status === 'active');
@@ -246,10 +271,26 @@ export default function Home() {
             </div>
             <div className="w-px h-8 bg-border" />
             <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Watching</p>
+              <p className="text-2xl font-black tabular-nums text-primary">{spectatorRounds.length}</p>
+            </div>
+            <div className="w-px h-8 bg-border" />
+            <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Completed</p>
               <p className="text-2xl font-black tabular-nums text-muted-foreground">{completedRounds.length}</p>
             </div>
           </div>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              hapticLight();
+              setShowJoinModal(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-semibold"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>Watch</span>
+          </motion.button>
         </div>
       </motion.div>
 
@@ -267,8 +308,33 @@ export default function Home() {
               </div>
               <p className="text-sm font-medium text-muted-foreground">Loading rounds...</p>
             </motion.div>
-          ) : rounds.length > 0 ? (
+          ) : (rounds.length > 0 || spectatorRounds.length > 0) ? (
             <div className="space-y-6">
+              {/* Spectating Rounds Section */}
+              {spectatorRounds.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Eye className="w-4 h-4 text-primary" />
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-primary">Watching Live</h2>
+                  </div>
+                  {spectatorRounds.map((round, index) => (
+                    <motion.div 
+                      key={round.id} 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.08, duration: 0.3 }}
+                    >
+                      <SpectatorRoundCard
+                        round={round}
+                        onClick={() => navigate(`/round/${round.id}?spectator=true`)}
+                        onLeave={() => handleLeaveSpectating(round.id)}
+                        currentHole={spectatorStats.get(round.id)?.currentHole}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
               {/* Active Rounds Section */}
               {activeRounds.length > 0 && (
                 <div className="space-y-3">
@@ -283,7 +349,7 @@ export default function Home() {
                         key={round.id} 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.08, duration: 0.3 }}
+                        transition={{ delay: (index + spectatorRounds.length) * 0.08, duration: 0.3 }}
                       >
                         <RoundCard
                           round={round}
@@ -310,7 +376,7 @@ export default function Home() {
                         key={round.id} 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: (index + activeRounds.length) * 0.08, duration: 0.3 }}
+                        transition={{ delay: (index + activeRounds.length + spectatorRounds.length) * 0.08, duration: 0.3 }}
                       >
                         <RoundCard
                           round={round}

@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 // Lazy load all pages for better initial load
 const Home = lazy(() => import("./pages/Home"));
 const NewRound = lazy(() => import("./pages/NewRound"));
+const JoinRound = lazy(() => import("./pages/JoinRound"));
 const Scorecard = lazy(() => import("./pages/Scorecard"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const RoundComplete = lazy(() => import("./pages/RoundComplete"));
@@ -78,6 +79,16 @@ const App = () => {
                 <AuthGuard>
                   <Suspense fallback={<PageSkeleton variant="default" />}>
                     <NewRound />
+                  </Suspense>
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/join" 
+              element={
+                <AuthGuard>
+                  <Suspense fallback={<PageSkeleton variant="default" />}>
+                    <JoinRound />
                   </Suspense>
                 </AuthGuard>
               } 

@@ -45,7 +45,7 @@ export function ShareJoinCodeModal({ isOpen, onClose, joinCode, courseName, roun
 
   const handleShareAsSpectator = async () => {
     const spectatorUrl = roundId 
-      ? `${window.location.origin}/round/${roundId}?spectator=true`
+      ? `${window.location.origin}/join?code=${joinCode}`
       : `Join code: ${joinCode}`;
     
     const shareText = `Watch my golf round live on MATCH! 🏌️‍♂️\n\n📍 ${courseName}\n👁️ Watch Live: ${spectatorUrl}\n\nFollow along in real-time!`;
@@ -54,7 +54,7 @@ export function ShareJoinCodeModal({ isOpen, onClose, joinCode, courseName, roun
       if (navigator.share) {
         await navigator.share({ 
           text: shareText,
-          url: roundId ? `${window.location.origin}/round/${roundId}?spectator=true` : undefined
+          url: roundId ? `${window.location.origin}/join?code=${joinCode}` : undefined
         });
       } else {
         await navigator.clipboard.writeText(shareText);
