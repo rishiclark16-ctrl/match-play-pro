@@ -242,7 +242,7 @@ export default function Stats() {
       </header>
 
       {/* Scrollable Content */}
-      <main className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-6 pb-nav space-y-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain relative z-10 px-6 pb-nav space-y-4" style={{ WebkitOverflowScrolling: 'touch' }}>
         {/* Hero Stats */}
         <div className="grid grid-cols-2 gap-3">
           <motion.div
