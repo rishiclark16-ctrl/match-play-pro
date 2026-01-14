@@ -574,15 +574,18 @@ export default function RoundComplete() {
   );
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       {/* Technical Grid Background */}
-      <div className="fixed inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
         <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-primary/3 to-transparent" />
       </div>
 
-      {/* Header Section */}
-      <header className="relative pt-safe pt-12 pb-4 px-4">
+      {/* Fixed Header Section */}
+      <header 
+        className="flex-shrink-0 relative z-10 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-4 px-4"
+        style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+      >
         {/* Corner Accents */}
         <div className="absolute top-4 left-4 w-6 h-6 border-l-2 border-t-2 border-primary/30" />
         <div className="absolute top-4 right-4 w-6 h-6 border-r-2 border-t-2 border-primary/20" />
@@ -630,8 +633,10 @@ export default function RoundComplete() {
         </div>
       </header>
 
-      {/* Winner Card */}
-      {winner && (
+      {/* Scrollable Content */}
+      <main className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-52" style={{ WebkitOverflowScrolling: 'touch' }}>
+        {/* Winner Card */}
+        {winner && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -693,8 +698,7 @@ export default function RoundComplete() {
         </motion.div>
       )}
 
-      {/* Main Content */}
-      <main className="relative flex-1 px-4 pb-52 overflow-auto">
+        {/* Settlements Section */}
         {/* Settlements Section */}
         {settlements.length > 0 && (
           <CollapsibleSection

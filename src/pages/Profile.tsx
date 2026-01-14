@@ -173,11 +173,14 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col relative">
+    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       <GeometricBackground />
       
-      {/* Header */}
-      <header className="relative z-10 px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-4 flex items-center gap-4">
+      {/* Fixed Header */}
+      <header 
+        className="flex-shrink-0 relative z-10 px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-4 flex items-center gap-4"
+        style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+      >
         <button
           onClick={() => navigate(-1)}
           className="w-10 h-10 rounded-lg bg-card border border-border flex items-center justify-center hover:bg-accent transition-colors"
@@ -187,8 +190,8 @@ export default function Profile() {
         <h1 className="heading-lg flex-1">Profile</h1>
       </header>
 
-      {/* Content */}
-      <main className="relative z-10 flex-1 px-4 pb-32 overflow-auto space-y-6">
+      {/* Scrollable Content */}
+      <main className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-32 space-y-6" style={{ WebkitOverflowScrolling: 'touch' }}>
         {/* Avatar Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

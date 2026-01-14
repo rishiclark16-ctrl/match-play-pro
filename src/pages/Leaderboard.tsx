@@ -315,12 +315,15 @@ export default function Leaderboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       {/* Technical Grid Background */}
-      <div className="fixed inset-0 tech-grid-subtle opacity-40 pointer-events-none" />
+      <div className="absolute inset-0 tech-grid-subtle opacity-40 pointer-events-none" />
       
-      {/* Header */}
-      <header className="relative z-10 pt-12 pb-4 px-4 safe-top border-b border-border bg-background/80 backdrop-blur-sm">
+      {/* Fixed Header */}
+      <header 
+        className="flex-shrink-0 relative z-10 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-4 px-4 border-b border-border bg-background/80 backdrop-blur-sm"
+        style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+      >
         <div className="flex items-center gap-4">
           <motion.button
             whileTap={{ scale: 0.9 }}
@@ -378,8 +381,8 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {/* Content */}
-      <main className="relative z-10 flex-1 px-4 pb-6 overflow-auto">
+      {/* Scrollable Content */}
+      <main className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-nav" style={{ WebkitOverflowScrolling: 'touch' }}>
         {/* Loading state */}
         {supabaseLoading && playersWithScores.length === 0 ? (
           <div className="space-y-3">
