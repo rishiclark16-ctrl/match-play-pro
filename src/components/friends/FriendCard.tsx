@@ -48,9 +48,9 @@ export function FriendCard({ friend, onRemove, isRemoving }: FriendCardProps) {
           size="icon"
           onClick={() => onRemove(friend.friendshipId)}
           disabled={isRemoving}
-          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
         >
-          <UserMinus className="h-4 w-4" />
+          <UserMinus className="h-5 w-5" />
         </Button>
       </TechCardContent>
     </TechCard>
