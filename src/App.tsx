@@ -10,7 +10,7 @@ import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { BottomNav } from "@/components/BottomNav";
 import { OfflineProvider } from "@/contexts/OfflineContext";
 import { Capacitor } from '@capacitor/core';
-import { setStatusBarDark } from '@/lib/statusBar';
+import { setStatusBarDefault } from '@/lib/statusBar';
 import { useDeepLinks } from '@/hooks/useDeepLinks';
 import NotFound from "./pages/NotFound";
 
@@ -37,7 +37,7 @@ function AppContent() {
   // Initialize native status bar styling on app start
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      setStatusBarDark();
+      setStatusBarDefault();
     }
   }, []);
 

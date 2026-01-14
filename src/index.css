@@ -162,6 +162,7 @@
   /* Ensure consistent background color for iOS overscroll */
   html {
     background-color: hsl(var(--background));
+    overscroll-behavior: none;
   }
 
   body {
@@ -170,7 +171,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     /* Prevent iOS rubber-band showing wrong color */
-    overscroll-behavior-y: none;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
   }
   
   /* Tabular numbers for scores - critical for alignment */

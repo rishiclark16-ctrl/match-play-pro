@@ -1,5 +1,5 @@
-import { useState, useRef, ReactNode } from 'react';
-import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
+import { useState, useRef, ReactNode, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -13,16 +13,43 @@ const PULL_THRESHOLD = 80;
 
 export function PullToRefresh({ onRefresh, children, className }: PullToRefreshProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const y = useMotionValue(0);
-  
-  const pullProgress = useTransform(y, [0, PULL_THRESHOLD], [0, 1]);
-  const indicatorOpacity = useTransform(y, [0, 40, PULL_THRESHOLD], [0, 0.5, 1]);
-  const indicatorScale = useTransform(y, [0, PULL_THRESHOLD], [0.5, 1]);
-  const indicatorRotation = useTransform(y, [0, PULL_THRESHOLD * 2], [0, 360]);
+  const startY = useRef(0);
+  const isPulling = useRef(false);
 
-  const handleDragEnd = async (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.y >= PULL_THRESHOLD && !isRefreshing) {
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (containerRef.current && containerRef.current.scrollTop <= 0) {
+      startY.current = e.touches[0].clientY;
+      isPulling.current = true;
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isPulling.current || !containerRef.current) return;
+    
+    // Only allow pull when at the top
+    if (containerRef.current.scrollTop > 0) {
+      isPulling.current = false;
+      setPullDistance(0);
+      return;
+    }
+
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - startY.current;
+    
+    if (diff > 0) {
+      // Apply resistance to the pull
+      const resistance = 0.5;
+      setPullDistance(Math.min(diff * resistance, PULL_THRESHOLD * 1.5));
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(async () => {
+    if (!isPulling.current) return;
+    isPulling.current = false;
+
+    if (pullDistance >= PULL_THRESHOLD && !isRefreshing) {
       setIsRefreshing(true);
       try {
         await onRefresh();
@@ -30,21 +57,31 @@ export function PullToRefresh({ onRefresh, children, className }: PullToRefreshP
         setIsRefreshing(false);
       }
     }
-  };
+    
+    setPullDistance(0);
+  }, [pullDistance, isRefreshing, onRefresh]);
 
-  const canPull = () => {
-    if (!containerRef.current) return false;
-    return containerRef.current.scrollTop <= 0;
-  };
+  const indicatorProgress = Math.min(pullDistance / PULL_THRESHOLD, 1);
+  const indicatorRotation = indicatorProgress * 180;
 
   return (
-    <div ref={containerRef} className={cn("relative overflow-hidden", className)}>
+    <div 
+      ref={containerRef}
+      className={cn("relative overflow-auto overscroll-contain", className)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{ 
+        WebkitOverflowScrolling: 'touch',
+        touchAction: 'pan-y',
+      }}
+    >
       {/* Pull indicator */}
       <motion.div 
         className="absolute left-0 right-0 top-0 flex items-center justify-center pointer-events-none z-10"
         style={{ 
-          opacity: indicatorOpacity,
-          y: useTransform(y, [0, PULL_THRESHOLD], [-40, 20])
+          opacity: indicatorProgress,
+          transform: `translateY(${pullDistance > 0 ? pullDistance - 40 : -40}px)`,
         }}
       >
         <motion.div
@@ -52,7 +89,9 @@ export function PullToRefresh({ onRefresh, children, className }: PullToRefreshP
             "w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center",
             isRefreshing && "bg-primary/20"
           )}
-          style={{ scale: indicatorScale }}
+          style={{ 
+            scale: 0.5 + indicatorProgress * 0.5,
+          }}
         >
           <motion.div
             style={{ rotate: isRefreshing ? undefined : indicatorRotation }}
@@ -64,27 +103,14 @@ export function PullToRefresh({ onRefresh, children, className }: PullToRefreshP
       </motion.div>
 
       {/* Content */}
-      <motion.div
-        drag="y"
-        dragConstraints={{ top: 0, bottom: 0 }}
-        dragElastic={{ top: 0.5, bottom: 0 }}
-        onDrag={(_, info) => {
-          if (canPull() && info.offset.y > 0) {
-            y.set(info.offset.y);
-          }
+      <div
+        style={{ 
+          transform: pullDistance > 0 || isRefreshing ? `translateY(${isRefreshing ? 60 : pullDistance}px)` : undefined,
+          transition: !isPulling.current ? 'transform 0.3s ease-out' : undefined,
         }}
-        onDragEnd={(e, info) => {
-          if (canPull() && info.offset.y > 0) {
-            handleDragEnd(e, info);
-          }
-          y.set(0);
-        }}
-        style={{ y: isRefreshing ? 60 : 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="min-h-full"
       >
         {children}
-      </motion.div>
+      </div>
     </div>
   );
 }
