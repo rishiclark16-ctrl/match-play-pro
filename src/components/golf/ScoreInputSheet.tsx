@@ -63,18 +63,18 @@ export function ScoreInputSheet({
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 400 }}
             className="fixed bottom-0 left-0 right-0 bg-background rounded-t-2xl z-50 border-t border-border"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            style={{ paddingBottom: 'max(4px, env(safe-area-inset-bottom))' }}
           >
             {/* Drag Handle */}
-            <div className="flex justify-center pt-3 pb-1">
+            <div className="flex justify-center pt-2 pb-1">
               <div className="w-10 h-1 bg-muted-foreground/20 rounded-full" />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-4 pb-3">
+            <div className="flex items-center justify-between px-3 pb-2">
               <div>
-                <h3 className="text-lg font-bold text-foreground">{playerName}</h3>
-                <p className="text-xs text-muted-foreground font-medium">
+                <h3 className="text-base font-bold text-foreground">{playerName}</h3>
+                <p className="text-[10px] text-muted-foreground font-medium">
                   Hole {holeNumber} • Par {par}
                 </p>
               </div>
@@ -84,7 +84,7 @@ export function ScoreInputSheet({
                   hapticLight();
                   onClose();
                 }}
-                className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center"
+                className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center"
                 aria-label="Close score input"
               >
                 <X className="w-4 h-4" />
@@ -92,7 +92,7 @@ export function ScoreInputSheet({
             </div>
 
             {/* Score Grid */}
-            <div className="grid grid-cols-4 gap-2 px-3 pb-4">
+            <div className="grid grid-cols-4 gap-1.5 px-2 pb-2">
               {scores.map((score) => {
                 const isSelected = currentScore === score;
                 const label = getScoreLabel(score, par);
@@ -104,18 +104,18 @@ export function ScoreInputSheet({
                     whileTap={{ scale: 0.92 }}
                     onClick={() => handleSelectScore(score)}
                     className={cn(
-                      "flex flex-col items-center justify-center py-3 rounded-xl border-2 transition-all min-h-[64px]",
+                      "flex flex-col items-center justify-center py-2 rounded-xl border-2 transition-all min-h-[52px]",
                       getScoreButtonBg(score, isSelected)
                     )}
                   >
                     <span className={cn(
-                      "text-xl font-bold tabular-nums leading-none",
+                      "text-lg font-bold tabular-nums leading-none",
                       colorClass
                     )}>
                       {score}
                     </span>
                     <span className={cn(
-                      "text-[9px] font-bold mt-1 uppercase tracking-wide",
+                      "text-[8px] font-bold mt-0.5 uppercase tracking-wide",
                       colorClass
                     )}>
                       {label}
