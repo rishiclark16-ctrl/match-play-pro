@@ -31,20 +31,16 @@ export function BottomNav() {
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 z-50 bg-background"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border"
       style={{ 
-        position: 'fixed',
+        paddingBottom: 'env(safe-area-inset-bottom)',
         WebkitTransform: 'translateZ(0)',
         transform: 'translateZ(0)',
         WebkitTapHighlightColor: 'transparent',
         touchAction: 'manipulation',
       }}
     >
-      {/* Subtle gradient fade above nav */}
-      <div className="h-2 bg-gradient-to-t from-background to-transparent pointer-events-none" />
-      
-      <div className="bg-background border-t border-border pb-safe">
-        <div className="flex items-center justify-around h-16 px-2">
+      <div className="flex items-center justify-around h-16 px-2">
           {navItems.map((item) => {
             const active = isActive(item.to);
             
@@ -94,8 +90,7 @@ export function BottomNav() {
                 </span>
               </Link>
             );
-          })}
-        </div>
+        })}
       </div>
     </nav>
   );

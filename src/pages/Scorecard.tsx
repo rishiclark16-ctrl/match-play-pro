@@ -700,7 +700,7 @@ export default function Scorecard() {
         </motion.div>}
 
       {/* Scrollable Content Area */}
-      <main className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-3 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <main className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-3 pb-32" style={{ WebkitOverflowScrolling: 'touch' }}>
         {/* Live Leaderboard - hide during playoff */}
         {playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && <LiveLeaderboard players={playersWithScores} useNetScoring={round.games?.some((g: any) => g.useNet) || false} isMatchPlay={round.matchPlay} holeInfo={round.holeInfo} scores={roundScores} />}
 
