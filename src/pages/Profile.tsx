@@ -182,6 +182,17 @@ export default function Profile() {
         <ArrowLeft className="w-5 h-5" />
       </button>
       <h1 className="heading-lg flex-1">Profile</h1>
+      <button
+        onClick={handleSignOut}
+        disabled={isSigningOut}
+        className="w-11 h-11 rounded-lg bg-card border border-border flex items-center justify-center hover:bg-accent transition-colors"
+      >
+        {isSigningOut ? (
+          <Loader2 className="w-5 h-5 animate-spin" />
+        ) : (
+          <LogOut className="w-5 h-5" />
+        )}
+      </button>
     </div>
   );
 
@@ -190,7 +201,7 @@ export default function Profile() {
       header={headerContent}
       background={<GeometricBackground />}
       hideBottomNav
-      mainClassName="px-4 pb-32 space-y-6"
+      mainClassName="px-4 pb-nav space-y-6"
     >
         {/* Avatar Section */}
         <motion.div
@@ -400,27 +411,6 @@ export default function Profile() {
             </TechCardContent>
           </TechCard>
         </motion.section>
-
-      {/* Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent z-20">
-        <div className="max-w-lg mx-auto">
-          <motion.div whileTap={{ scale: 0.98 }}>
-            <Button
-              variant="outline"
-              onClick={handleSignOut}
-              disabled={isSigningOut}
-              className="w-full py-6 text-lg font-bold rounded-xl border-2 border-destructive text-destructive hover:bg-destructive/10"
-            >
-              {isSigningOut ? (
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              ) : (
-                <LogOut className="w-5 h-5 mr-2" />
-              )}
-              Sign Out
-            </Button>
-          </motion.div>
-        </div>
-      </div>
     </AppLayout>
   );
 }
