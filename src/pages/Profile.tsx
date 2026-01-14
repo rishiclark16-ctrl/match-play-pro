@@ -9,6 +9,7 @@ import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { HomeCourseSelector } from '@/components/profile/HomeCourseSelector';
 import { TechCard, TechCardContent } from '@/components/ui/tech-card';
 import { GeometricBackground } from '@/components/ui/geometric-background';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile, ProfileUpdate } from '@/hooks/useProfile';
 import { useFriends } from '@/hooks/useFriends';
@@ -172,26 +173,25 @@ export default function Profile() {
     );
   }
 
-  return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
-      <GeometricBackground />
-      
-      {/* Fixed Header */}
-      <header 
-        className="flex-shrink-0 relative z-10 px-4 pb-2 flex items-center gap-4"
-        style={{ paddingTop: 'env(safe-area-inset-top)', WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+  const headerContent = (
+    <div className="flex items-center gap-4 px-4 pb-2">
+      <button
+        onClick={() => navigate(-1)}
+        className="w-11 h-11 rounded-lg bg-card border border-border flex items-center justify-center hover:bg-accent transition-colors"
       >
-        <button
-          onClick={() => navigate(-1)}
-          className="w-11 h-11 rounded-lg bg-card border border-border flex items-center justify-center hover:bg-accent transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="heading-lg flex-1">Profile</h1>
-      </header>
+        <ArrowLeft className="w-5 h-5" />
+      </button>
+      <h1 className="heading-lg flex-1">Profile</h1>
+    </div>
+  );
 
-      {/* Scrollable Content */}
-      <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-32 space-y-6" style={{ WebkitOverflowScrolling: 'touch' }}>
+  return (
+    <AppLayout
+      header={headerContent}
+      background={<GeometricBackground />}
+      hideBottomNav
+      mainClassName="px-4 pb-32 space-y-6"
+    >
         {/* Avatar Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -400,7 +400,6 @@ export default function Profile() {
             </TechCardContent>
           </TechCard>
         </motion.section>
-      </main>
 
       {/* Bottom Button */}
       <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-gradient-to-t from-background via-background to-transparent z-20">
@@ -422,6 +421,6 @@ export default function Profile() {
           </motion.div>
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 }

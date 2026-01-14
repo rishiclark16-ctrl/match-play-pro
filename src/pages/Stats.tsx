@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { TechCard, TechCardContent } from '@/components/ui/tech-card';
 import { GeometricBackground } from '@/components/ui/geometric-background';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -215,34 +216,30 @@ export default function Stats() {
     ? Math.round((stats.holesWon / stats.holesPlayed) * 100) 
     : 0;
 
-  return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
-      <GeometricBackground />
-      
-      {/* Fixed Header */}
-      <header 
-        className="flex-shrink-0 relative z-10 px-6 pb-2"
-        style={{ paddingTop: 'env(safe-area-inset-top)', WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3"
-        >
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
-            <BarChart3 className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black tracking-tight text-foreground">Stats</h1>
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {stats?.roundsPlayed || 0} Rounds Tracked
-            </p>
-          </div>
-        </motion.div>
-      </header>
+  const headerContent = (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-center gap-3 px-6 pb-2"
+    >
+      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+        <BarChart3 className="w-6 h-6 text-primary" />
+      </div>
+      <div>
+        <h1 className="text-2xl font-black tracking-tight text-foreground">Stats</h1>
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          {stats?.roundsPlayed || 0} Rounds Tracked
+        </p>
+      </div>
+    </motion.div>
+  );
 
-      {/* Scrollable Content */}
-      <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain relative z-10 px-6 pb-nav space-y-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+  return (
+    <AppLayout
+      header={headerContent}
+      background={<GeometricBackground />}
+      mainClassName="px-6 space-y-4"
+    >
         {/* Hero Stats */}
         <div className="grid grid-cols-2 gap-3">
           <motion.div
@@ -415,9 +412,8 @@ export default function Stats() {
                 </p>
               </TechCardContent>
             </TechCard>
-          </motion.div>
-        )}
-      </main>
-    </div>
+        </motion.div>
+      )}
+    </AppLayout>
   );
 }

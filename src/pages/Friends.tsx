@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TechCard, TechCardContent } from '@/components/ui/tech-card';
 import { GeometricBackground } from '@/components/ui/geometric-background';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProfile } from '@/hooks/useProfile';
 import { useFriends } from '@/hooks/useFriends';
@@ -160,35 +161,33 @@ export default function Friends() {
     }, 100);
   };
 
-  return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
-      <GeometricBackground />
-      
-      {/* Fixed Header */}
-      <header 
-        className="flex-shrink-0 z-20 bg-background/95 backdrop-blur-sm border-b-2 border-border px-4 pb-2"
-        style={{ paddingTop: 'env(safe-area-inset-top)', WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
-      >
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="shrink-0 border-2"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="heading-lg">Friends</h1>
-            <p className="text-xs text-muted-foreground font-mono">
-              <span className="number-display">{friends.length}</span> connection{friends.length !== 1 ? 's' : ''}
-            </p>
-          </div>
+  const headerContent = (
+    <div className="bg-background/95 backdrop-blur-sm border-b-2 border-border px-4 pb-2">
+      <div className="flex items-center gap-3">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => navigate(-1)}
+          className="shrink-0 border-2 w-11 h-11"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h1 className="heading-lg">Friends</h1>
+          <p className="text-xs text-muted-foreground font-mono">
+            <span className="number-display">{friends.length}</span> connection{friends.length !== 1 ? 's' : ''}
+          </p>
         </div>
-      </header>
+      </div>
+    </div>
+  );
 
-      {/* Scrollable Content */}
-      <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain relative z-10 px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+  return (
+    <AppLayout
+      header={headerContent}
+      background={<GeometricBackground />}
+      mainClassName="px-4"
+    >
         {/* Your Friend Code with QR and Sharing */}
         <motion.section
           initial={{ opacity: 0, y: 10 }}
@@ -347,7 +346,7 @@ export default function Friends() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="mt-6 pb-nav"
+          className="mt-6 pb-4"
         >
           <div className="flex items-center gap-2 mb-2">
             <Users className="w-4 h-4 text-primary" />
@@ -394,7 +393,6 @@ export default function Friends() {
             </div>
           )}
         </motion.section>
-      </div>
 
       {/* QR Code Scanner Modal */}
       <QRCodeScanner
@@ -408,6 +406,6 @@ export default function Friends() {
         open={contactSyncOpen}
         onClose={() => setContactSyncOpen(false)}
       />
-    </div>
+    </AppLayout>
   );
 }
