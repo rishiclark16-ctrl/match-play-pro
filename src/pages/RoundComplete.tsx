@@ -923,7 +923,7 @@ export default function RoundComplete() {
       </main>
 
       {/* Bottom Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-gradient-to-t from-background via-background to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 p-4 pb-4 bg-gradient-to-t from-background via-background to-transparent">
         <div className="space-y-2">
           {/* Share Buttons */}
           <div className="flex gap-2">

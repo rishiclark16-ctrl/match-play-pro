@@ -881,7 +881,7 @@ export default function Scorecard() {
       }} exit={{
         opacity: 0,
         y: 100
-      }} className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background to-transparent pt-12 pb-safe">
+      }} className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background to-transparent pt-12 pb-4">
             <div className="px-4 space-y-3">
               <div className="text-center mb-4">
                 <h3 className="heading-md">Round Complete! 🎉</h3>
@@ -922,11 +922,6 @@ export default function Scorecard() {
           "fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border transition-opacity",
           showFinishOptions && "opacity-0 pointer-events-none"
         )}
-        style={{ 
-          paddingBottom: 'env(safe-area-inset-bottom)',
-          WebkitTransform: 'translateZ(0)', 
-          transform: 'translateZ(0)' 
-        }}
       >
         <div className="px-3 py-3 flex items-center justify-between gap-2">
           {/* Leaderboard Button */}

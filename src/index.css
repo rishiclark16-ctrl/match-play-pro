@@ -438,7 +438,7 @@
   }
   
   .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: 0;
   }
   
   .pt-safe {
@@ -513,9 +513,9 @@
     @apply before:absolute before:top-0 before:bottom-0 before:left-0 before:w-1 before:bg-primary;
   }
   
-  /* Bottom nav spacing - accounts for nav height (48px) + safe area */
+  /* Bottom nav spacing - accounts for nav height (48px) */
   .pb-nav {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 48px);
+    padding-bottom: 48px;
   }
   
   /* Winner highlight */
