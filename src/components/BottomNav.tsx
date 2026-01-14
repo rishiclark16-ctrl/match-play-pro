@@ -30,7 +30,13 @@ export function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background">
+    <nav 
+      className="fixed bottom-0 left-0 right-0 z-50 bg-background"
+      style={{ 
+        WebkitTapHighlightColor: 'transparent',
+        touchAction: 'manipulation',
+      }}
+    >
       {/* Gradient fade above nav */}
       <div className="h-6 bg-gradient-to-t from-background to-transparent pointer-events-none" />
       
@@ -45,14 +51,12 @@ export function BottomNav() {
                   key={item.to}
                   to={item.to}
                   onClick={() => hapticLight()}
-                  className="flex flex-col items-center justify-center -mt-6"
+                  className="flex flex-col items-center justify-center -mt-6 touch-manipulation"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <motion.div
-                    whileTap={{ scale: 0.9 }}
-                    className="w-14 h-14 rounded-full bg-primary shadow-lg shadow-primary/30 flex items-center justify-center"
-                  >
+                  <div className="w-14 h-14 rounded-full bg-primary shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform">
                     <Plus className="w-7 h-7 text-primary-foreground" strokeWidth={2.5} />
-                  </motion.div>
+                  </div>
                 </Link>
               );
             }
@@ -62,12 +66,12 @@ export function BottomNav() {
                 key={item.to}
                 to={item.to}
                 onClick={() => hapticLight()}
-                className="flex flex-col items-center justify-center gap-1 px-3 py-2 min-w-[60px]"
+                className="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[56px] touch-manipulation"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
-                <motion.div
-                  whileTap={{ scale: 0.9 }}
+                <div
                   className={cn(
-                    "relative p-2 rounded-xl transition-colors",
+                    "relative p-2 rounded-xl transition-colors active:scale-90 transition-transform",
                     active ? "bg-primary/10" : ""
                   )}
                 >
@@ -78,7 +82,7 @@ export function BottomNav() {
                     )} 
                     strokeWidth={active ? 2.5 : 2}
                   />
-                </motion.div>
+                </div>
                 <span className={cn(
                   "text-[10px] font-semibold uppercase tracking-widest transition-colors",
                   active ? "text-primary" : "text-muted-foreground"

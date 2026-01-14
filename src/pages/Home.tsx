@@ -186,7 +186,7 @@ export default function Home() {
   const completedRounds = rounds.filter(r => r.status === 'complete');
 
   return (
-    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col relative" style={{ touchAction: 'pan-y' }}>
       {/* Technical Grid Background */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Subtle grid */}
@@ -307,8 +307,8 @@ export default function Home() {
       </motion.div>
 
       {/* Content */}
-      <PullToRefresh onRefresh={handlePullRefresh} className="flex-1 overflow-auto relative z-10">
-        <main className="px-6 py-6 pb-24">
+      <PullToRefresh onRefresh={handlePullRefresh} className="flex-1 relative z-10">
+        <main className="px-6 py-6 pb-nav">
           {loadingRounds ? (
             <motion.div 
               initial={{ opacity: 0 }}
