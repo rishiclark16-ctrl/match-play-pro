@@ -196,6 +196,7 @@ export type Database = {
           created_at: string | null
           handicap: number | null
           id: string
+          manual_strokes: number | null
           name: string
           order_index: number
           profile_id: string | null
@@ -206,6 +207,7 @@ export type Database = {
           created_at?: string | null
           handicap?: number | null
           id?: string
+          manual_strokes?: number | null
           name: string
           order_index: number
           profile_id?: string | null
@@ -216,6 +218,7 @@ export type Database = {
           created_at?: string | null
           handicap?: number | null
           id?: string
+          manual_strokes?: number | null
           name?: string
           order_index?: number
           profile_id?: string | null
@@ -495,6 +498,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           games: Json | null
+          handicap_mode: string | null
           hole_info: Json
           holes: number
           id: string
@@ -517,6 +521,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           games?: Json | null
+          handicap_mode?: string | null
           hole_info: Json
           holes?: number
           id?: string
@@ -539,6 +544,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           games?: Json | null
+          handicap_mode?: string | null
           hole_info?: Json
           holes?: number
           id?: string

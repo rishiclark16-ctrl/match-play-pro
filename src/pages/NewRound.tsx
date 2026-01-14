@@ -30,6 +30,7 @@ interface PlayerData {
   id: string;
   name: string;
   handicap?: number;
+  manualStrokes?: number;
   profileId?: string;
 }
 
@@ -58,9 +59,10 @@ export default function NewRound() {
   const [holeCount, setHoleCount] = useState<9 | 18>(18);
   
   const [players, setPlayers] = useState<PlayerData[]>([
-    { id: '1', name: '', handicap: undefined },
-    { id: '2', name: '', handicap: undefined },
+    { id: '1', name: '', handicap: undefined, manualStrokes: 0 },
+    { id: '2', name: '', handicap: undefined, manualStrokes: 0 },
   ]);
+  const [handicapMode, setHandicapMode] = useState<'auto' | 'manual'>('auto');
   const [profileApplied, setProfileApplied] = useState(false);
 
   useEffect(() => {
@@ -180,7 +182,7 @@ export default function NewRound() {
 
   const addPlayer = () => {
     if (players.length < 4) {
-      setPlayers([...players, { id: Date.now().toString(), name: '', handicap: undefined }]);
+      setPlayers([...players, { id: Date.now().toString(), name: '', handicap: undefined, manualStrokes: 0 }]);
     }
   };
 
@@ -201,6 +203,7 @@ export default function NewRound() {
         ...updated[emptySlotIndex],
         name: friend.fullName || '',
         handicap: friend.handicap ?? undefined,
+        manualStrokes: 0,
         profileId: friend.id,
       };
       setPlayers(updated);
@@ -209,6 +212,7 @@ export default function NewRound() {
         id: Date.now().toString(),
         name: friend.fullName || '',
         handicap: friend.handicap ?? undefined,
+        manualStrokes: 0,
         profileId: friend.id,
       }]);
     }
@@ -221,11 +225,12 @@ export default function NewRound() {
       id: member.id,
       name: member.name,
       handicap: member.handicap ?? undefined,
+      manualStrokes: 0,
       profileId: member.profileId || undefined,
     }));
     
     while (newPlayers.length < 2) {
-      newPlayers.push({ id: Date.now().toString() + newPlayers.length, name: '', handicap: undefined });
+      newPlayers.push({ id: Date.now().toString() + newPlayers.length, name: '', handicap: undefined, manualStrokes: 0 });
     }
     
     setPlayers(newPlayers);
@@ -310,12 +315,14 @@ export default function NewRound() {
         stakes: stakes ? Number(stakes) : undefined,
         slope: selectedCourse.slope,
         rating: selectedCourse.rating,
+        handicapMode,
         games,
         players: players
           .filter(p => p.name.trim())
           .map(p => ({ 
             name: p.name.trim(), 
             handicap: p.handicap,
+            manualStrokes: p.manualStrokes ?? 0,
             teamId: bestBallTeams.find(t => t.playerIds.includes(p.id))?.id
           })),
       });
@@ -504,15 +511,56 @@ export default function NewRound() {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
+            {/* Handicap Mode Toggle */}
+            <TechCard>
+              <TechCardContent className="p-4">
+                <p className="text-sm font-semibold text-muted-foreground mb-3">Handicap Mode</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setHandicapMode('auto')}
+                    className={cn(
+                      "py-3 px-4 rounded-xl font-medium text-sm transition-all border-2",
+                      handicapMode === 'auto'
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-card text-foreground border-border hover:border-primary/50"
+                    )}
+                  >
+                    Use Handicap Index
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setHandicapMode('manual')}
+                    className={cn(
+                      "py-3 px-4 rounded-xl font-medium text-sm transition-all border-2",
+                      handicapMode === 'manual'
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-card text-foreground border-border hover:border-primary/50"
+                    )}
+                  >
+                    Manual Strokes
+                  </motion.button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {handicapMode === 'auto' 
+                    ? 'Strokes calculated automatically from handicap indexes and course slope.'
+                    : 'Manually enter the strokes each player receives.'}
+                </p>
+              </TechCardContent>
+            </TechCard>
+
             <AnimatePresence>
               {players.map((player, index) => (
                 <PlayerInput
                   key={player.id}
                   name={player.name}
                   handicap={player.handicap}
+                  manualStrokes={player.manualStrokes}
                   index={index}
+                  handicapMode={handicapMode}
                   onNameChange={(name) => updatePlayer(player.id, { name })}
                   onHandicapChange={(handicap) => updatePlayer(player.id, { handicap })}
+                  onManualStrokesChange={(manualStrokes) => updatePlayer(player.id, { manualStrokes })}
                   onRemove={() => removePlayer(player.id)}
                   canRemove={players.length > 2}
                 />
@@ -534,6 +582,29 @@ export default function NewRound() {
               <p className="text-sm text-muted-foreground text-center py-2">
                 Add at least 2 players to continue
               </p>
+            )}
+
+            {/* Strokes Summary for Manual Mode */}
+            {handicapMode === 'manual' && players.filter(p => p.name.trim()).length >= 2 && (
+              <TechCard variant="highlighted">
+                <TechCardContent className="p-4">
+                  <p className="text-sm font-semibold mb-2">Strokes Summary</p>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    {(() => {
+                      const validPlayers = players.filter(p => p.name.trim());
+                      const minStrokes = Math.min(...validPlayers.map(p => p.manualStrokes ?? 0));
+                      return validPlayers.map((p, i) => {
+                        const strokes = (p.manualStrokes ?? 0) - minStrokes;
+                        const receiver = validPlayers.find(vp => vp.manualStrokes === minStrokes);
+                        if (strokes === 0) {
+                          return <p key={p.id}><span className="font-medium text-foreground">{p.name || `Player ${i+1}`}</span> gives strokes</p>;
+                        }
+                        return <p key={p.id}><span className="font-medium text-foreground">{p.name || `Player ${i+1}`}</span> gets {strokes} stroke{strokes !== 1 ? 's' : ''}</p>;
+                      });
+                    })()}
+                  </div>
+                </TechCardContent>
+              </TechCard>
             )}
 
             <GroupSelector
