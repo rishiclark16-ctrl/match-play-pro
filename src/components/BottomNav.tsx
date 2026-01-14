@@ -31,7 +31,7 @@ export function BottomNav() {
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]"
       style={{ 
         WebkitTransform: 'translateZ(0)',
         transform: 'translateZ(0)',
