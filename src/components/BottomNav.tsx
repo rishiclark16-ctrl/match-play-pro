@@ -40,8 +40,8 @@ export function BottomNav() {
         touchAction: 'manipulation',
       }}
     >
-      {/* Gradient fade above nav */}
-      <div className="h-6 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+      {/* Subtle gradient fade above nav */}
+      <div className="h-2 bg-gradient-to-t from-background to-transparent pointer-events-none" />
       
       <div className="bg-background border-t border-border pb-safe">
         <div className="flex items-center justify-around h-16 px-2">
