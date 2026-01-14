@@ -66,7 +66,7 @@ export default function JoinRound() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       {/* Technical Grid Background */}
       <div className="absolute inset-0 pointer-events-none">
         <div 
@@ -88,7 +88,10 @@ export default function JoinRound() {
       </div>
 
       {/* Header */}
-      <header className="pt-safe px-6 pt-14 pb-6 relative z-10">
+      <header 
+        className="flex-shrink-0 pt-safe px-6 pt-14 pb-6 relative z-10"
+        style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+      >
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/')}
@@ -100,7 +103,10 @@ export default function JoinRound() {
       </header>
 
       {/* Content */}
-      <main className="flex-1 px-6 flex items-center justify-center relative z-10">
+      <main 
+        className="flex-1 overflow-y-auto overscroll-y-contain px-6 flex items-center justify-center relative z-10"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         <TechCard variant="elevated" corners className="p-8 max-w-sm w-full">
           {/* Header */}
           <div className="text-center mb-8">

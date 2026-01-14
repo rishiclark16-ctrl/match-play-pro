@@ -170,7 +170,7 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-8 safe-top safe-bottom relative overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden bg-background px-6 py-8 safe-top safe-bottom relative">
       {/* Technical Grid Background */}
       <div className="absolute inset-0 pointer-events-none">
         <div 
@@ -194,12 +194,17 @@ export default function Auth() {
         <div className="absolute bottom-8 right-8 w-16 h-16 border-r-2 border-b-2 border-primary/5" />
       </div>
       
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-sm relative z-10"
+      {/* Scrollable Content */}
+      <div 
+        className="flex-1 overflow-y-auto overscroll-y-contain flex flex-col items-center justify-center relative z-10"
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-sm"
+        >
         {/* Branding */}
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
@@ -439,6 +444,7 @@ export default function Auth() {
           </TechCardContent>
         </TechCard>
       </motion.div>
+      </div>
     </div>
   );
 }
