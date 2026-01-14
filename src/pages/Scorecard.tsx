@@ -27,7 +27,7 @@ import { parseVoiceInput, ParseResult, ParsedScore } from '@/lib/voiceParser';
 import { parseVoiceCommands, hasScoreContent } from '@/lib/voiceCommands';
 import { feedbackListeningStart, feedbackListeningStop, feedbackVoiceSuccess, feedbackVoiceError, feedbackAllScored, feedbackNextHole } from '@/lib/voiceFeedback';
 import { Press, PlayerWithScores, GameConfig } from '@/types/golf';
-import { calculatePlayingHandicap, getStrokesPerHole, calculateTotalNetStrokes } from '@/lib/handicapUtils';
+import { calculatePlayingHandicap, getStrokesPerHole, calculateTotalNetStrokes, getManualStrokesPerHole } from '@/lib/handicapUtils';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { setStatusBarDefault } from '@/lib/statusBar';
@@ -156,11 +156,27 @@ export default function Scorecard() {
         const hole = round.holeInfo.find(h => h.number === s.holeNumber);
         return sum + (s.strokes - (hole?.par || 4));
       }, 0);
+      
       let playingHandicap: number | undefined;
       let strokesPerHole: Map<number, number> | undefined;
       let totalNetStrokes: number | undefined;
       let netRelativeToPar: number | undefined;
-      if (player.handicap !== undefined && player.handicap !== null) {
+      
+      // Check handicap mode - 'manual' uses player.manualStrokes, 'auto' uses handicap index
+      const isManualMode = round.handicapMode === 'manual';
+      
+      if (isManualMode) {
+        // Manual mode: use manually entered strokes
+        playingHandicap = player.manualStrokes ?? 0;
+        strokesPerHole = getManualStrokesPerHole(playingHandicap, round.holeInfo);
+        totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
+        const totalPar = playerScores.reduce((sum, s) => {
+          const hole = round.holeInfo.find(h => h.number === s.holeNumber);
+          return sum + (hole?.par || 4);
+        }, 0);
+        netRelativeToPar = totalNetStrokes - totalPar;
+      } else if (player.handicap !== undefined && player.handicap !== null) {
+        // Auto mode: calculate from handicap index and course slope
         playingHandicap = calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes);
         strokesPerHole = getStrokesPerHole(playingHandicap, round.holeInfo);
         totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
@@ -170,6 +186,7 @@ export default function Scorecard() {
         }, 0);
         netRelativeToPar = totalNetStrokes - totalPar;
       }
+      
       return {
         ...player,
         scores: playerScores,
@@ -179,7 +196,8 @@ export default function Scorecard() {
         playingHandicap,
         strokesPerHole,
         totalNetStrokes,
-        netRelativeToPar
+        netRelativeToPar,
+        manualStrokes: player.manualStrokes,
       };
     });
   }, [round, supabasePlayers, supabaseLoading, supabaseRound, roundScores, getPlayersWithScores]);

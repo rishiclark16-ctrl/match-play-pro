@@ -32,6 +32,7 @@ interface DbPlayer {
   team_id: string | null;
   order_index: number;
   profile_id: string | null;
+  manual_strokes: number | null;
   created_at: string;
   profiles?: {
     avatar_url: string | null;
@@ -71,6 +72,7 @@ function transformRound(db: any): Round {
     stakes: db.stakes ?? undefined,
     slope: db.slope ?? undefined,
     rating: db.rating ?? undefined,
+    handicapMode: (db.handicap_mode as 'auto' | 'manual') ?? 'auto',
     status: db.status as 'active' | 'complete',
     games: (db.games as GameConfig[]) || [],
     holeInfo: (db.hole_info as HoleInfo[]) || [],
@@ -89,6 +91,7 @@ function transformPlayer(db: any): Player {
     orderIndex: db.order_index,
     profileId: db.profile_id ?? undefined,
     avatarUrl: db.profiles?.avatar_url ?? undefined,
+    manualStrokes: db.manual_strokes ?? undefined,
   };
 }
 

@@ -110,3 +110,14 @@ export function getStrokesDescription(playingHandicap: number): string {
   if (playingHandicap === 1) return '1 stroke';
   return `${playingHandicap} strokes`;
 }
+
+/**
+ * Get strokes per hole for manual mode
+ * Same distribution logic as auto mode, but uses manually entered strokes directly
+ */
+export function getManualStrokesPerHole(
+  manualStrokes: number,
+  holeInfo: HoleInfo[]
+): Map<number, number> {
+  return getStrokesPerHole(manualStrokes, holeInfo);
+}

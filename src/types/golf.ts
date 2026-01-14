@@ -107,6 +107,8 @@ export interface Round {
   // Course rating info for handicap calculations
   slope?: number;
   rating?: number;
+  // Handicap mode: 'auto' uses handicap indexes, 'manual' uses manually entered strokes
+  handicapMode?: 'auto' | 'manual';
   // Betting games
   games: GameConfig[];
   presses: Press[];
@@ -120,6 +122,8 @@ export interface Player {
   orderIndex: number;
   profileId?: string;
   avatarUrl?: string;
+  // Manual strokes received (for manual handicap mode)
+  manualStrokes?: number;
 }
 
 export interface Score {
@@ -140,6 +144,8 @@ export interface PlayerWithScores extends Player {
   totalNetStrokes?: number;
   netRelativeToPar?: number;
   strokesPerHole?: Map<number, number>;
+  // Manual strokes received (for manual handicap mode)
+  manualStrokes?: number;
 }
 
 export type ScoreType = 'ace' | 'albatross' | 'eagle' | 'birdie' | 'par' | 'bogey' | 'double' | 'triple' | 'worse';

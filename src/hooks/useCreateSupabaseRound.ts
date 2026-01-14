@@ -13,8 +13,9 @@ interface CreateRoundInput {
   stakes?: number;
   slope?: number;
   rating?: number;
+  handicapMode?: 'auto' | 'manual';
   games: GameConfig[];
-  players: { name: string; handicap?: number; teamId?: string; profileId?: string }[];
+  players: { name: string; handicap?: number; manualStrokes?: number; teamId?: string; profileId?: string }[];
 }
 
 export interface CreateRoundError {
@@ -73,6 +74,7 @@ export function useCreateSupabaseRound() {
           stakes: input.stakes || null,
           slope: input.slope || null,
           rating: input.rating || null,
+          handicap_mode: input.handicapMode || 'auto',
           games: input.games as unknown as Json,
           teams: input.games.find(g => g.type === 'bestball')?.teams as unknown as Json || null,
           hole_info: input.holeInfo as unknown as Json,
@@ -100,6 +102,7 @@ export function useCreateSupabaseRound() {
         round_id: roundId,
         name: p.name,
         handicap: p.handicap || null,
+        manual_strokes: p.manualStrokes ?? 0,
         team_id: p.teamId || null,
         order_index: index,
         profile_id: index === 0 ? userId : (p.profileId || null)
@@ -138,6 +141,7 @@ export function useCreateSupabaseRound() {
         stakes: input.stakes,
         slope: input.slope,
         rating: input.rating,
+        handicapMode: input.handicapMode || 'auto',
         status: 'active',
         games: input.games,
         holeInfo: input.holeInfo,

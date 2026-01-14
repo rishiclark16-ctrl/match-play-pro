@@ -6,9 +6,12 @@ import { TechCard, TechCardContent } from '@/components/ui/tech-card';
 interface PlayerInputProps {
   name: string;
   handicap?: number;
+  manualStrokes?: number;
   index: number;
+  handicapMode: 'auto' | 'manual';
   onNameChange: (name: string) => void;
   onHandicapChange: (handicap?: number) => void;
+  onManualStrokesChange?: (strokes?: number) => void;
   onRemove: () => void;
   canRemove: boolean;
 }
@@ -16,9 +19,12 @@ interface PlayerInputProps {
 export function PlayerInput({
   name,
   handicap,
+  manualStrokes,
   index,
+  handicapMode,
   onNameChange,
   onHandicapChange,
+  onManualStrokesChange,
   onRemove,
   canRemove,
 }: PlayerInputProps) {
@@ -47,15 +53,31 @@ export function PlayerInput({
                   className="pl-10 py-5"
                 />
               </div>
-              <Input
-                type="number"
-                placeholder="Handicap (optional)"
-                value={handicap ?? ''}
-                onChange={(e) => onHandicapChange(e.target.value ? Number(e.target.value) : undefined)}
-                className="py-5 font-mono"
-                min={0}
-                max={54}
-              />
+              
+              {handicapMode === 'auto' ? (
+                <Input
+                  type="number"
+                  placeholder="Handicap (optional)"
+                  value={handicap ?? ''}
+                  onChange={(e) => onHandicapChange(e.target.value ? Number(e.target.value) : undefined)}
+                  className="py-5 font-mono"
+                  min={0}
+                  max={54}
+                />
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={manualStrokes ?? 0}
+                    onChange={(e) => onManualStrokesChange?.(e.target.value ? Number(e.target.value) : 0)}
+                    className="py-5 font-mono w-20 text-center"
+                    min={0}
+                    max={36}
+                  />
+                  <span className="text-sm text-muted-foreground">strokes received</span>
+                </div>
+              )}
             </div>
 
             {/* Remove Button */}
