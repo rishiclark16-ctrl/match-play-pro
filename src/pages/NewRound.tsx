@@ -324,7 +324,7 @@ export default function NewRound() {
         toast.success(`Round created! Join code: ${round.joinCode}`);
         navigate(`/round/${round.id}`);
       } else {
-        toast.error('Failed to create round. Please try again.');
+        toast.error('Failed to create round. Please ensure you are logged in and try again.');
       }
     } catch (err) {
       console.error('Error creating round:', err);

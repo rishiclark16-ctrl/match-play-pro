@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
 import { Round, HoleInfo, GameConfig, generateJoinCode } from '@/types/golf';
 import { Json } from '@/integrations/supabase/types';
 
@@ -19,9 +18,16 @@ interface CreateRoundInput {
 }
 
 export function useCreateSupabaseRound() {
-  const { user } = useAuth();
-  
   const createRound = useCallback(async (input: CreateRoundInput): Promise<Round | null> => {
+    // Get current session directly to ensure we have the latest auth state
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user?.id) {
+      console.error('No authenticated user found - cannot create round');
+      return null;
+    }
+    
+    const userId = session.user.id;
     const joinCode = generateJoinCode();
 
     try {
@@ -32,7 +38,7 @@ export function useCreateSupabaseRound() {
       const { data: roundData, error: roundError } = await supabase
         .from('rounds')
         .insert({
-          created_by: user?.id,
+          created_by: userId,
           join_code: joinCode,
           course_name: input.courseName,
           course_id: input.courseId || null,
@@ -64,7 +70,7 @@ export function useCreateSupabaseRound() {
         handicap: p.handicap || null,
         team_id: p.teamId || null,
         order_index: index,
-        profile_id: index === 0 ? user?.id : (p.profileId || null)
+        profile_id: index === 0 ? userId : (p.profileId || null)
       }));
 
       const { error: playersError } = await supabase
@@ -102,7 +108,7 @@ export function useCreateSupabaseRound() {
       console.error('Error in createRound:', err);
       return null;
     }
-  }, [user?.id]);
+  }, []);
 
   return { createRound };
 }
