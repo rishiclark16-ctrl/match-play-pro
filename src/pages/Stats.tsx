@@ -220,7 +220,10 @@ export default function Stats() {
       <GeometricBackground />
       
       {/* Fixed Header */}
-      <header className="flex-shrink-0 relative z-10 px-6 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4">
+      <header 
+        className="flex-shrink-0 relative z-10 px-6 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4"
+        style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+      >
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

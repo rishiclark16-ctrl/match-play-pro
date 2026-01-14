@@ -159,8 +159,16 @@
     @apply border-border;
   }
 
-  /* Ensure consistent background color for iOS overscroll */
-  html {
+  /* Lock viewport for iOS native apps - prevents body scrolling */
+  html, body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-color: hsl(var(--background));
     overscroll-behavior: none;
   }
@@ -170,9 +178,13 @@
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Prevent iOS rubber-band showing wrong color */
-    overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
   }
   
   /* Tabular numbers for scores - critical for alignment */
