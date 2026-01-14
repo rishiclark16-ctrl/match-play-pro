@@ -186,7 +186,7 @@ export default function Friends() {
     <AppLayout
       header={headerContent}
       background={<GeometricBackground />}
-      mainClassName="px-4 pb-8"
+      mainClassName="px-4 pb-nav"
     >
         {/* Your Friend Code with QR and Sharing */}
         <motion.section

@@ -74,7 +74,7 @@ export default function Groups() {
       </header>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-20" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-nav" style={{ WebkitOverflowScrolling: 'touch' }}>
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
