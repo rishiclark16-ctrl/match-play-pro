@@ -40,7 +40,7 @@ export function BottomNav() {
         touchAction: 'manipulation',
       }}
     >
-      <div className="flex items-center justify-around h-14 px-2">
+      <div className="flex items-center justify-around h-12 px-2">
           {navItems.map((item) => {
             const active = isActive(item.to);
             
@@ -50,11 +50,11 @@ export function BottomNav() {
                   key={item.to}
                   to={item.to}
                   onClick={() => hapticLight()}
-                  className="flex flex-col items-center justify-center -mt-6 touch-manipulation"
+                  className="flex flex-col items-center justify-center -mt-5 touch-manipulation"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <div className="w-14 h-14 rounded-full bg-primary shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform">
-                    <Plus className="w-7 h-7 text-primary-foreground" strokeWidth={2.5} />
+                  <div className="w-12 h-12 rounded-full bg-primary shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform">
+                    <Plus className="w-6 h-6 text-primary-foreground" strokeWidth={2.5} />
                   </div>
                 </Link>
               );
@@ -65,12 +65,12 @@ export function BottomNav() {
                 key={item.to}
                 to={item.to}
                 onClick={() => hapticLight()}
-                className="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[56px] touch-manipulation"
+                className="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] touch-manipulation"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 <div
                   className={cn(
-                    "relative p-2 rounded-xl transition-colors active:scale-90 transition-transform",
+                    "relative p-1.5 rounded-lg transition-colors active:scale-90 transition-transform",
                     active ? "bg-primary/10" : ""
                   )}
                 >
@@ -83,7 +83,7 @@ export function BottomNav() {
                   />
                 </div>
                 <span className={cn(
-                  "text-[10px] font-semibold uppercase tracking-widest transition-colors",
+                  "text-[9px] font-semibold uppercase tracking-wide transition-colors",
                   active ? "text-primary" : "text-muted-foreground"
                 )}>
                   {item.label}
