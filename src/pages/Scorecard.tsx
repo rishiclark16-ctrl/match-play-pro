@@ -639,15 +639,16 @@ export default function Scorecard() {
             {/* Game settings - only for scorekeepers */}
             {canEditScores && <GameSettingsSheet round={round} onUpdateGames={handleUpdateGames} playerCount={playersWithScores.length} />}
             
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <motion.button whileTap={{
-                scale: 0.9
-              }} className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
+                <button 
+                  className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center active:scale-90 transition-transform touch-manipulation"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                >
                   <MoreVertical className="w-4 h-4" />
-                </motion.button>
+                </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-48 z-50">
                 <DropdownMenuItem onClick={() => setShowShareModal(true)}>
                   <Share2 className="w-4 h-4 mr-2" />
                   Share Round
@@ -667,17 +668,21 @@ export default function Scorecard() {
         </div>
       </header>
 
-      {/* Hole Navigator - hide during playoff */}
-      {playoffHole === 0 && <HoleNavigator currentHole={currentHole} totalHoles={round.holes} holeInfo={currentHoleInfo} onPrevious={() => setCurrentHole(h => Math.max(1, h - 1))} onNext={() => setCurrentHole(h => Math.min(round.holes, h + 1))} />}
+      {/* Hole Navigator - Fixed, hide during playoff */}
+      {playoffHole === 0 && (
+        <div className="flex-shrink-0" style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}>
+          <HoleNavigator currentHole={currentHole} totalHoles={round.holes} holeInfo={currentHoleInfo} onPrevious={() => setCurrentHole(h => Math.max(1, h - 1))} onNext={() => setCurrentHole(h => Math.min(round.holes, h + 1))} />
+        </div>
+      )}
 
-      {/* Playoff Mode Header */}
+      {/* Playoff Mode Header - Fixed */}
       {playoffHole > 0 && <motion.div initial={{
       opacity: 0,
       y: -20
     }} animate={{
       opacity: 1,
       y: 0
-    }} className="bg-primary/10 border-b-2 border-primary px-4 py-4">
+    }} className="flex-shrink-0 bg-primary/10 border-b-2 border-primary px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
@@ -694,24 +699,23 @@ export default function Scorecard() {
           </div>
         </motion.div>}
 
-      {/* Live Leaderboard - hide during playoff */}
-      {playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && <LiveLeaderboard players={playersWithScores} useNetScoring={round.games?.some((g: any) => g.useNet) || false} isMatchPlay={round.matchPlay} holeInfo={round.holeInfo} scores={roundScores} />}
+      {/* Scrollable Content Area */}
+      <main className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-3 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+        {/* Live Leaderboard - hide during playoff */}
+        {playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && <LiveLeaderboard players={playersWithScores} useNetScoring={round.games?.some((g: any) => g.useNet) || false} isMatchPlay={round.matchPlay} holeInfo={round.holeInfo} scores={roundScores} />}
 
-      {/* Live Money Tracker - show when games configured or prop bets have winners */}
-      {playoffHole === 0 && (round.games?.length > 0 || propBets.some(pb => pb.winnerId)) && (
-        <MoneyTracker
-          players={playersWithScores}
-          scores={roundScores}
-          games={round.games || []}
-          holeInfo={round.holeInfo}
-          presses={[]}
-          currentHole={currentHole}
-          propBets={propBets}
-        />
-      )}
-
-      {/* Scrollable Player Cards */}
-      <main className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-3 pb-36" style={{ WebkitOverflowScrolling: 'touch' }}>
+        {/* Live Money Tracker - show when games configured or prop bets have winners */}
+        {playoffHole === 0 && (round.games?.length > 0 || propBets.some(pb => pb.winnerId)) && (
+          <MoneyTracker
+            players={playersWithScores}
+            scores={roundScores}
+            games={round.games || []}
+            holeInfo={round.holeInfo}
+            presses={[]}
+            currentHole={currentHole}
+            propBets={propBets}
+          />
+        )}
         <div className="space-y-2">
           {/* Hole Summary - hide during playoff */}
           {playoffHole === 0 && (round.games?.length > 0 || playersWithScores.some(p => p.handicap !== undefined)) && <HoleSummary round={round} players={playersWithScores} scores={roundScores} currentHole={currentHole} currentHoleInfo={currentHoleInfo} />}
@@ -913,7 +917,17 @@ export default function Scorecard() {
       </AnimatePresence>
 
       {/* Bottom Bar */}
-      <div className={cn("fixed bottom-0 left-0 right-0 bg-background border-t border-border safe-bottom transition-opacity", showFinishOptions && "opacity-0 pointer-events-none")}>
+      <div 
+        className={cn(
+          "fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border transition-opacity",
+          showFinishOptions && "opacity-0 pointer-events-none"
+        )}
+        style={{ 
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          WebkitTransform: 'translateZ(0)', 
+          transform: 'translateZ(0)' 
+        }}
+      >
         <div className="px-3 py-3 flex items-center justify-between gap-2">
           {/* Leaderboard Button */}
           <motion.button whileTap={{
