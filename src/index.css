@@ -513,9 +513,9 @@
     @apply before:absolute before:top-0 before:bottom-0 before:left-0 before:w-1 before:bg-primary;
   }
   
-  /* Bottom nav spacing - matches nav height (48px) exactly */
+  /* Bottom nav spacing - nav height (48px) + safe area for iPhone home indicator */
   .pb-nav {
-    padding-bottom: 48px;
+    padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
   }
   
   /* Winner highlight */
