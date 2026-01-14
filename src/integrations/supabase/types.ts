@@ -493,6 +493,7 @@ export type Database = {
           course_id: string | null
           course_name: string
           created_at: string | null
+          created_by: string | null
           games: Json | null
           hole_info: Json
           holes: number
@@ -514,6 +515,7 @@ export type Database = {
           course_id?: string | null
           course_name: string
           created_at?: string | null
+          created_by?: string | null
           games?: Json | null
           hole_info: Json
           holes?: number
@@ -535,6 +537,7 @@ export type Database = {
           course_id?: string | null
           course_name?: string
           created_at?: string | null
+          created_by?: string | null
           games?: Json | null
           hole_info?: Json
           holes?: number
@@ -606,6 +609,10 @@ export type Database = {
     Functions: {
       are_friends: {
         Args: { user1_id: string; user2_id: string }
+        Returns: boolean
+      }
+      has_round_access: {
+        Args: { round_id: string; user_id: string }
         Returns: boolean
       }
       is_group_member: {
