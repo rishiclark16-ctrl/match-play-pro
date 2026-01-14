@@ -451,11 +451,11 @@
   
   /* Combined safe area + content padding utilities */
   .pt-safe-content {
-    padding-top: calc(env(safe-area-inset-top) + 1rem);
+    padding-top: calc(env(safe-area-inset-top) + 0.5rem);
   }
   
   .pt-safe-content-sm {
-    padding-top: calc(env(safe-area-inset-top) + 0.75rem);
+    padding-top: calc(env(safe-area-inset-top) + 0.25rem);
   }
   
   /* Margin variants for safe areas */

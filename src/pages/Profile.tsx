@@ -178,7 +178,7 @@ export default function Profile() {
       
       {/* Fixed Header */}
       <header 
-        className="flex-shrink-0 relative z-10 px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-4 flex items-center gap-4"
+        className="flex-shrink-0 relative z-10 px-4 pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-2 flex items-center gap-4"
         style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
       >
         <button
