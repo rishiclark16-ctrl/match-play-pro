@@ -50,16 +50,9 @@ export function AppLayout({
       {/* Background layer */}
       {background}
 
-      {/* Fixed Header with safe area */}
+      {/* Fixed Header */}
       {header && (
-        <header
-          className="flex-shrink-0 relative z-10"
-          style={{
-            paddingTop: 'env(safe-area-inset-top)',
-            WebkitTransform: 'translateZ(0)',
-            transform: 'translateZ(0)',
-          }}
-        >
+        <header className="flex-shrink-0 relative z-10">
           {header}
         </header>
       )}

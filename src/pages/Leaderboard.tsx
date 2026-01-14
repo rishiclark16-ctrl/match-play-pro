@@ -321,8 +321,7 @@ export default function Leaderboard() {
       
       {/* Fixed Header */}
       <header 
-        className="flex-shrink-0 relative z-10 pb-2 px-4 border-b border-border bg-background/80 backdrop-blur-sm"
-        style={{ paddingTop: 'env(safe-area-inset-top)', WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+        className="flex-shrink-0 relative z-10 pb-2 pt-2 px-4 border-b border-border bg-background/80 backdrop-blur-sm"
       >
         <div className="flex items-center gap-4">
           <motion.button
