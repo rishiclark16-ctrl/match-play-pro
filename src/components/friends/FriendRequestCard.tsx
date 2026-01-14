@@ -44,24 +44,23 @@ export function FriendRequestCard({ request, onAccept, onDecline, isProcessing }
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <Button
             variant="default"
             size="icon"
             onClick={() => onAccept(request.id)}
             disabled={isProcessing}
-            className="h-9 w-9"
           >
-            <Check className="h-4 w-4" />
+            <Check className="h-5 w-5" />
           </Button>
           <Button
             variant="outline"
             size="icon"
             onClick={() => onDecline(request.id)}
             disabled={isProcessing}
-            className="h-9 w-9 border-2 text-destructive hover:bg-destructive/10"
+            className="border-2 text-destructive hover:bg-destructive/10"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
       </TechCardContent>

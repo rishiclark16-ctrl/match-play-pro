@@ -76,11 +76,12 @@ export function HoleNavigator({
         onClick={handlePrevious}
         disabled={!canGoPrevious}
         className={cn(
-          "w-12 h-12 rounded-lg flex items-center justify-center transition-colors border",
+          "w-12 h-12 min-w-[48px] min-h-[48px] rounded-lg flex items-center justify-center transition-colors border touch-manipulation cursor-pointer select-none",
           canGoPrevious 
             ? "bg-card border-border text-foreground hover:bg-muted active:bg-muted" 
             : "opacity-0 pointer-events-none border-transparent"
         )}
+        style={{ WebkitTapHighlightColor: 'transparent' }}
         aria-label="Previous hole"
       >
         <ChevronLeft className="w-6 h-6" strokeWidth={2.5} />
@@ -149,11 +150,12 @@ export function HoleNavigator({
         onClick={handleNext}
         disabled={!canGoNext}
         className={cn(
-          "w-12 h-12 rounded-lg flex items-center justify-center transition-colors border",
+          "w-12 h-12 min-w-[48px] min-h-[48px] rounded-lg flex items-center justify-center transition-colors border touch-manipulation cursor-pointer select-none",
           canGoNext 
             ? "bg-card border-border text-foreground hover:bg-muted active:bg-muted" 
             : "opacity-0 pointer-events-none border-transparent"
         )}
+        style={{ WebkitTapHighlightColor: 'transparent' }}
         aria-label="Next hole"
       >
         <ChevronRight className="w-6 h-6" strokeWidth={2.5} />

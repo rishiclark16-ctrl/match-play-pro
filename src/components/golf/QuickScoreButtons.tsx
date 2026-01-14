@@ -85,10 +85,11 @@ export function QuickScoreButtons({
         onClick={handleDecrement}
         disabled={disabled || displayScore <= 1}
         className={cn(
-          "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
+          "w-12 h-12 min-w-[48px] min-h-[48px] rounded-xl flex items-center justify-center transition-all touch-manipulation cursor-pointer select-none",
           "bg-muted/80 active:bg-muted",
           disabled || displayScore <= 1 ? "opacity-30" : "opacity-100"
         )}
+        style={{ WebkitTapHighlightColor: 'transparent' }}
         aria-label="Decrease score"
       >
         <Minus className="w-5 h-5" />
@@ -112,10 +113,11 @@ export function QuickScoreButtons({
         onClick={handleIncrement}
         disabled={disabled || displayScore >= 12}
         className={cn(
-          "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
+          "w-12 h-12 min-w-[48px] min-h-[48px] rounded-xl flex items-center justify-center transition-all touch-manipulation cursor-pointer select-none",
           "bg-muted/80 active:bg-muted",
           disabled || displayScore >= 12 ? "opacity-30" : "opacity-100"
         )}
+        style={{ WebkitTapHighlightColor: 'transparent' }}
         aria-label="Increase score"
       >
         <Plus className="w-5 h-5" />

@@ -522,4 +522,19 @@
   .winner-highlight {
     @apply border-2 border-gold bg-gold-muted;
   }
+
+  /* Touch optimizations for mobile */
+  .touch-target {
+    @apply min-w-[44px] min-h-[44px] touch-manipulation cursor-pointer select-none;
+  }
+
+  /* Disable tap highlight globally on interactive elements */
+  button, a, [role="button"], input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Ensure all interactive elements have proper touch response */
+  button:active, a:active, [role="button"]:active {
+    transform: scale(0.98);
+  }
 }

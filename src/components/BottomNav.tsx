@@ -49,11 +49,11 @@ export function BottomNav() {
                   key={item.to}
                   to={item.to}
                   onClick={() => hapticLight()}
-                  className="flex flex-col items-center justify-center -mt-5 touch-manipulation"
+                  className="flex flex-col items-center justify-center -mt-5 touch-manipulation cursor-pointer select-none"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <div className="w-12 h-12 rounded-full bg-primary shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform">
-                    <Plus className="w-6 h-6 text-primary-foreground" strokeWidth={2.5} />
+                  <div className="w-14 h-14 min-w-[56px] min-h-[56px] rounded-full bg-primary shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform">
+                    <Plus className="w-7 h-7 text-primary-foreground" strokeWidth={2.5} />
                   </div>
                 </Link>
               );
@@ -64,12 +64,12 @@ export function BottomNav() {
                 key={item.to}
                 to={item.to}
                 onClick={() => hapticLight()}
-                className="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] touch-manipulation"
+                className="flex flex-col items-center justify-center min-w-[56px] min-h-[48px] px-2 py-1 touch-manipulation cursor-pointer select-none active:scale-95 transition-transform"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 <div
                   className={cn(
-                    "relative p-1.5 rounded-lg transition-colors active:scale-90 transition-transform",
+                    "relative p-2 rounded-lg transition-colors",
                     active ? "bg-primary/10" : ""
                   )}
                 >

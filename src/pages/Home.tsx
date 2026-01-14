@@ -256,7 +256,8 @@ export default function Home() {
             hapticLight();
             navigate('/profile');
           }}
-          className="relative focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-xl"
+          className="relative focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-xl touch-manipulation cursor-pointer select-none min-w-[48px] min-h-[48px]"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <Avatar className="h-12 w-12 rounded-xl border-2 border-border">
             <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || 'Profile'} className="rounded-xl" />
@@ -299,9 +300,10 @@ export default function Home() {
               hapticLight();
               setShowJoinModal(true);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-semibold"
+            className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-semibold touch-manipulation cursor-pointer select-none active:bg-primary/20"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            <Eye className="w-3.5 h-3.5" />
+            <Eye className="w-4 h-4" />
             <span>Watch</span>
           </motion.button>
         </div>

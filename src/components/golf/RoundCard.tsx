@@ -82,14 +82,15 @@ export const RoundCard = forwardRef<HTMLDivElement, RoundCardProps>(
                   onClick={handleDeleteClick}
                   disabled={isDeleting}
                   className={cn(
-                    "w-11 h-11 rounded-full flex items-center justify-center transition-all",
-                    "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                    "w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all touch-manipulation cursor-pointer select-none",
+                    "bg-destructive/10 text-destructive hover:bg-destructive/20 active:bg-destructive/30"
                   )}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                   {isDeleting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-5 h-5" />
                   )}
                 </motion.button>
               )}
