@@ -32,6 +32,7 @@ export function useCreateSupabaseRound() {
       const { data: roundData, error: roundError } = await supabase
         .from('rounds')
         .insert({
+          created_by: user?.id,
           join_code: joinCode,
           course_name: input.courseName,
           course_id: input.courseId || null,
