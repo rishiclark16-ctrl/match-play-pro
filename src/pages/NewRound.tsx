@@ -899,14 +899,17 @@ export default function NewRound() {
       </header>
 
       {/* Scrollable Content */}
-      <main className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-32" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-32" style={{ WebkitOverflowScrolling: 'touch' }}>
         <AnimatePresence mode="wait">
           {renderStep()}
         </AnimatePresence>
       </main>
 
       {/* Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 p-4 pb-safe bg-gradient-to-t from-background via-background to-transparent">
+      <div 
+        className="fixed bottom-0 left-0 right-0 z-20 p-4 bg-gradient-to-t from-background via-background to-transparent"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
+      >
         {step !== 'format' ? (
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button
