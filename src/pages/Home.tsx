@@ -223,8 +223,7 @@ export default function Home() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex-shrink-0 px-6 pb-3 flex items-center justify-between relative z-10"
-        style={{ paddingTop: 'env(safe-area-inset-top)', WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+        className="flex-shrink-0 px-6 pb-3 pt-3 flex items-center justify-between relative z-10"
       >
         <div className="flex items-center gap-4">
           {/* Logo mark */}
