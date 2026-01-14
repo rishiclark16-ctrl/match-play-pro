@@ -39,9 +39,12 @@ export default function Groups() {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-safe">
-      {/* Header */}
-      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-3 pt-safe">
+    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
+      {/* Fixed Header */}
+      <header 
+        className="flex-shrink-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3"
+        style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+      >
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -71,7 +74,8 @@ export default function Groups() {
         </div>
       </header>
 
-      <div className="px-4 pb-safe">
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-nav" style={{ WebkitOverflowScrolling: 'touch' }}>
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />

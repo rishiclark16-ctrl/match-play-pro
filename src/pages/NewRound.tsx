@@ -856,12 +856,15 @@ export default function NewRound() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       {/* Technical Grid Background */}
-      <div className="fixed inset-0 tech-grid-subtle opacity-40 pointer-events-none" />
+      <div className="absolute inset-0 tech-grid-subtle opacity-40 pointer-events-none" />
       
-      {/* Header */}
-      <header className="relative z-10 pt-safe px-4 pt-12 pb-4">
+      {/* Fixed Header */}
+      <header 
+        className="flex-shrink-0 relative z-10 px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-4"
+        style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+      >
         <div className="flex items-center gap-4">
           <motion.button
             whileTap={{ scale: 0.9 }}
@@ -895,8 +898,8 @@ export default function NewRound() {
         </div>
       </header>
 
-      {/* Content */}
-      <main className="relative z-10 flex-1 px-4 pb-32 overflow-auto">
+      {/* Scrollable Content */}
+      <main className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-32" style={{ WebkitOverflowScrolling: 'touch' }}>
         <AnimatePresence mode="wait">
           {renderStep()}
         </AnimatePresence>

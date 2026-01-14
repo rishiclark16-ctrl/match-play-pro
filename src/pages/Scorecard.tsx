@@ -588,17 +588,20 @@ export default function Scorecard() {
         </div>
       </div>;
   }
-  return <div className="min-h-screen bg-background flex flex-col">
+  return <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       {/* Technical Grid Background */}
-      <div className="fixed inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.015)_1px,transparent_1px)] bg-[size:24px_24px]" />
       </div>
 
       {/* Spectator/View-Only Banner */}
       {(isSpectator || !isScorekeeper) && <SpectatorBanner isSpectator={isSpectator} isScorekeeper={isScorekeeper} />}
       
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-background border-b border-border">
+      {/* Fixed Header */}
+      <header 
+        className="flex-shrink-0 z-30 bg-background border-b border-border"
+        style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+      >
         <div className="pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-2 px-4 flex items-center justify-between gap-3">
           <motion.button whileTap={{
           scale: 0.9
@@ -707,8 +710,8 @@ export default function Scorecard() {
         />
       )}
 
-      {/* Player Cards */}
-      <main className="relative flex-1 px-3 pb-36 overflow-auto">
+      {/* Scrollable Player Cards */}
+      <main className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-3 pb-36" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="space-y-2">
           {/* Hole Summary - hide during playoff */}
           {playoffHole === 0 && (round.games?.length > 0 || playersWithScores.some(p => p.handicap !== undefined)) && <HoleSummary round={round} players={playersWithScores} scores={roundScores} currentHole={currentHole} currentHoleInfo={currentHoleInfo} />}
