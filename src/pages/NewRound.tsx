@@ -862,8 +862,7 @@ export default function NewRound() {
       
       {/* Fixed Header */}
       <header 
-        className="flex-shrink-0 relative z-10 px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-4"
-        style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+        className="flex-shrink-0 relative z-10 px-4 pt-3 pb-4"
       >
         <div className="flex items-center gap-4">
           <motion.button
