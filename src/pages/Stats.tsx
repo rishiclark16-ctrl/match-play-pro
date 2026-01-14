@@ -238,7 +238,7 @@ export default function Stats() {
     <AppLayout
       header={headerContent}
       background={<GeometricBackground />}
-      mainClassName="px-6 space-y-4"
+      mainClassName="px-6 pb-8 space-y-4"
     >
         {/* Hero Stats */}
         <div className="grid grid-cols-2 gap-3">
