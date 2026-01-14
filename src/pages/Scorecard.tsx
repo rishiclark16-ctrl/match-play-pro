@@ -602,7 +602,7 @@ export default function Scorecard() {
         className="flex-shrink-0 z-30 bg-background border-b border-border"
         style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
       >
-        <div className="pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-2 px-4 flex items-center justify-between gap-3">
+        <div className="pt-2 pb-2 px-4 flex items-center justify-between gap-3">
           <motion.button whileTap={{
           scale: 0.9
         }} onClick={() => {

@@ -89,8 +89,7 @@ export default function JoinRound() {
 
       {/* Header */}
       <header 
-        className="flex-shrink-0 pt-safe px-6 pt-14 pb-6 relative z-10"
-        style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+        className="flex-shrink-0 px-6 pt-6 pb-6 relative z-10"
       >
         <motion.button
           whileTap={{ scale: 0.95 }}

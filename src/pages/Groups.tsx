@@ -42,8 +42,7 @@ export default function Groups() {
     <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       {/* Fixed Header */}
       <header 
-        className="flex-shrink-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3"
-        style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+        className="flex-shrink-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 pt-3 pb-3"
       >
         <div className="flex items-center gap-3">
           <Button

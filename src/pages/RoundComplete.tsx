@@ -583,8 +583,7 @@ export default function RoundComplete() {
 
       {/* Fixed Header Section */}
       <header 
-        className="flex-shrink-0 relative z-10 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-4 px-4"
-        style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+        className="flex-shrink-0 relative z-10 pt-3 pb-4 px-4"
       >
         {/* Corner Accents */}
         <div className="absolute top-4 left-4 w-6 h-6 border-l-2 border-t-2 border-primary/30" />
