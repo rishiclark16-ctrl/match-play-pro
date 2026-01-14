@@ -321,8 +321,8 @@ export default function Leaderboard() {
       
       {/* Fixed Header */}
       <header 
-        className="flex-shrink-0 relative z-10 pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-2 px-4 border-b border-border bg-background/80 backdrop-blur-sm"
-        style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
+        className="flex-shrink-0 relative z-10 pb-2 px-4 border-b border-border bg-background/80 backdrop-blur-sm"
+        style={{ paddingTop: 'env(safe-area-inset-top)', WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
       >
         <div className="flex items-center gap-4">
           <motion.button
@@ -331,7 +331,7 @@ export default function Leaderboard() {
               hapticLight();
               navigate(`/round/${round.id}`);
             }}
-            className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center shadow-sm"
+            className="w-11 h-11 rounded-xl bg-card border border-border flex items-center justify-center shadow-sm"
             aria-label="Back to scorecard"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -348,7 +348,7 @@ export default function Leaderboard() {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={handleRefresh}
-            className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center shadow-sm"
+            className="w-11 h-11 rounded-xl bg-card border border-border flex items-center justify-center shadow-sm"
             aria-label="Refresh"
           >
             <RefreshCw className={cn("w-5 h-5", isRefreshing && "animate-spin text-primary")} />

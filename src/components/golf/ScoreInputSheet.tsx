@@ -63,15 +63,15 @@ export function ScoreInputSheet({
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 400 }}
             className="fixed bottom-0 left-0 right-0 bg-background rounded-t-2xl z-50 border-t border-border"
-            style={{ paddingBottom: 'max(4px, env(safe-area-inset-bottom))' }}
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             {/* Drag Handle */}
-            <div className="flex justify-center pt-2 pb-1">
+            <div className="flex justify-center pt-1.5 pb-0.5">
               <div className="w-10 h-1 bg-muted-foreground/20 rounded-full" />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-3 pb-2">
+            <div className="flex items-center justify-between px-3 pb-1">
               <div>
                 <h3 className="text-base font-bold text-foreground">{playerName}</h3>
                 <p className="text-[10px] text-muted-foreground font-medium">
@@ -84,15 +84,15 @@ export function ScoreInputSheet({
                   hapticLight();
                   onClose();
                 }}
-                className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center"
+                className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center"
                 aria-label="Close score input"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </motion.button>
             </div>
 
             {/* Score Grid */}
-            <div className="grid grid-cols-4 gap-1.5 px-2 pb-2">
+            <div className="grid grid-cols-4 gap-1.5 px-2 pb-1">
               {scores.map((score) => {
                 const isSelected = currentScore === score;
                 const label = getScoreLabel(score, par);
