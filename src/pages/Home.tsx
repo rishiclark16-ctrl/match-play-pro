@@ -10,6 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { TechCard } from '@/components/ui/tech-card';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { useRounds } from '@/hooks/useRounds';
 import { useJoinRound } from '@/hooks/useJoinRound';
 import { useAuth } from '@/hooks/useAuth';
