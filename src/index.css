@@ -513,9 +513,9 @@
     @apply before:absolute before:top-0 before:bottom-0 before:left-0 before:w-1 before:bg-primary;
   }
   
-  /* Bottom nav spacing - accounts for nav height (56px) + safe area */
+  /* Bottom nav spacing - accounts for nav height (48px) + safe area */
   .pb-nav {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 56px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 48px);
   }
   
   /* Winner highlight */
