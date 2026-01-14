@@ -321,7 +321,7 @@ export default function Leaderboard() {
       
       {/* Fixed Header */}
       <header 
-        className="flex-shrink-0 relative z-10 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-4 px-4 border-b border-border bg-background/80 backdrop-blur-sm"
+        className="flex-shrink-0 relative z-10 pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-2 px-4 border-b border-border bg-background/80 backdrop-blur-sm"
         style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
       >
         <div className="flex items-center gap-4">

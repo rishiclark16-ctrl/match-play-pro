@@ -221,7 +221,7 @@ export default function Stats() {
       
       {/* Fixed Header */}
       <header 
-        className="flex-shrink-0 relative z-10 px-6 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4"
+        className="flex-shrink-0 relative z-10 px-6 pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-3"
         style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
       >
         <motion.div

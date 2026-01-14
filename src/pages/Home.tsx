@@ -222,7 +222,7 @@ export default function Home() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex-shrink-0 px-6 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 flex items-center justify-between relative z-10"
+        className="flex-shrink-0 px-6 pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-3 flex items-center justify-between relative z-10"
         style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
       >
         <div className="flex items-center gap-4">
