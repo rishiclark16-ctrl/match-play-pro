@@ -451,11 +451,11 @@
   
   /* Combined safe area + content padding utilities */
   .pt-safe-content {
-    padding-top: calc(env(safe-area-inset-top) + 0.5rem);
+    padding-top: env(safe-area-inset-top);
   }
   
   .pt-safe-content-sm {
-    padding-top: calc(env(safe-area-inset-top) + 0.25rem);
+    padding-top: env(safe-area-inset-top);
   }
   
   /* Margin variants for safe areas */
@@ -513,9 +513,9 @@
     @apply before:absolute before:top-0 before:bottom-0 before:left-0 before:w-1 before:bg-primary;
   }
   
-  /* Bottom nav spacing - accounts for nav height + safe area */
+  /* Bottom nav spacing - accounts for nav height (56px) + safe area */
   .pb-nav {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 5rem);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 56px);
   }
   
   /* Winner highlight */
