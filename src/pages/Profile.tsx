@@ -402,7 +402,7 @@ export default function Profile() {
         </motion.section>
 
       {/* Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-gradient-to-t from-background via-background to-transparent z-20" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent z-20">
         <div className="max-w-lg mx-auto">
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button
