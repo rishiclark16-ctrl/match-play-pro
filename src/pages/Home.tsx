@@ -310,7 +310,7 @@ export default function Home() {
       {/* Scrollable Content Area */}
       <div className="flex-1 min-h-0 overflow-hidden relative z-10">
         <PullToRefresh onRefresh={handlePullRefresh} className="h-full min-h-0">
-          <main className="px-6 py-4 pb-nav">
+          <main className="px-6 py-4 pb-20">
           {loadingRounds ? (
             <motion.div 
               initial={{ opacity: 0 }}

@@ -346,7 +346,7 @@ export default function Friends() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="mt-6 pb-4"
+          className="mt-6 pb-8"
         >
           <div className="flex items-center gap-2 mb-2">
             <Users className="w-4 h-4 text-primary" />
