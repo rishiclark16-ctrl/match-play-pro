@@ -300,7 +300,7 @@ export default function NewRound() {
         });
       }
       
-      const round = await createRound({
+      const result = await createRound({
         courseId: selectedCourse.id,
         courseName: selectedCourse.name,
         holes: holeCount,
@@ -320,11 +320,19 @@ export default function NewRound() {
           })),
       });
 
-      if (round) {
-        toast.success(`Round created! Join code: ${round.joinCode}`);
-        navigate(`/round/${round.id}`);
+      if (result.round) {
+        toast.success(`Round created! Join code: ${result.round.joinCode}`);
+        navigate(`/round/${result.round.id}`);
+      } else if (result.error) {
+        console.error('Round creation error:', result.error);
+        toast.error(result.error.message);
+        
+        // Redirect to auth if session expired
+        if (result.error.isAuthError) {
+          navigate('/auth');
+        }
       } else {
-        toast.error('Failed to create round. Please ensure you are logged in and try again.');
+        toast.error('Failed to create round. Please try again.');
       }
     } catch (err) {
       console.error('Error creating round:', err);
