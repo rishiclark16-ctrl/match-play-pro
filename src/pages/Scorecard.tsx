@@ -642,10 +642,11 @@ export default function Scorecard() {
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <button 
-                  className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center active:scale-90 transition-transform touch-manipulation"
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg bg-muted flex items-center justify-center active:scale-95 transition-transform touch-manipulation cursor-pointer"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <MoreVertical className="w-4 h-4" />
+                  <MoreVertical className="w-5 h-5" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 z-50">
