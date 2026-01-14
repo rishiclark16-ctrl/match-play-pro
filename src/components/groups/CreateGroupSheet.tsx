@@ -327,7 +327,7 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
         </div>
 
         {/* Save Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 pb-safe bg-background border-t border-border">
+        <div className="absolute bottom-0 left-0 right-0 p-4 pb-4 bg-background border-t border-border">
           <Button
             onClick={handleSave}
             disabled={isSaving || !name.trim() || members.length < 2}
