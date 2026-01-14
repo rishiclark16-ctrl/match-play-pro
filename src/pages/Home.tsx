@@ -49,59 +49,92 @@ export default function Home() {
   
   // Fetch rounds from Supabase
   const [rounds, setRounds] = useState<Round[]>([]);
+  const [sharedRounds, setSharedRounds] = useState<Round[]>([]);
   const [loadingRounds, setLoadingRounds] = useState(true);
   const [roundStats, setRoundStats] = useState<Map<string, { playerCount: number; currentHole: number }>>(new Map());
   
+  const transformRoundData = (r: any): Round => ({
+    id: r.id,
+    courseId: r.course_id || '',
+    courseName: r.course_name,
+    holes: r.holes as 9 | 18,
+    strokePlay: r.stroke_play ?? true,
+    matchPlay: r.match_play ?? false,
+    stakes: r.stakes ?? undefined,
+    status: (r.status === 'active' ? 'active' : 'complete') as 'active' | 'complete',
+    createdAt: new Date(r.created_at || Date.now()),
+    joinCode: r.join_code,
+    holeInfo: r.hole_info as any,
+    slope: r.slope ?? undefined,
+    rating: r.rating ?? undefined,
+    games: (r.games as any) || [],
+    presses: [],
+  });
+  
   const fetchRounds = useCallback(async () => {
+    if (!user) return;
+    
     setLoadingRounds(true);
     try {
-      const { data, error } = await supabase
+      // Fetch my rounds (where I'm the creator)
+      const { data: myRoundsData, error: myRoundsError } = await supabase
         .from('rounds')
         .select('*')
+        .eq('created_by', user.id)
         .order('created_at', { ascending: false })
         .limit(20);
       
-      if (error) throw error;
+      if (myRoundsError) throw myRoundsError;
       
-      const transformedRounds: Round[] = (data || []).map(r => ({
-        id: r.id,
-        courseId: r.course_id || '',
-        courseName: r.course_name,
-        holes: r.holes as 9 | 18,
-        strokePlay: r.stroke_play ?? true,
-        matchPlay: r.match_play ?? false,
-        stakes: r.stakes ?? undefined,
-        status: (r.status === 'active' ? 'active' : 'complete') as 'active' | 'complete',
-        createdAt: new Date(r.created_at || Date.now()),
-        joinCode: r.join_code,
-        holeInfo: r.hole_info as any,
-        slope: r.slope ?? undefined,
-        rating: r.rating ?? undefined,
-        games: (r.games as any) || [],
-        presses: [],
-      }));
+      // Fetch rounds I'm a player in but didn't create
+      const { data: playerData, error: playerError } = await supabase
+        .from('players')
+        .select('round_id')
+        .eq('profile_id', user.id);
       
-      setRounds(transformedRounds);
+      if (playerError) throw playerError;
       
-      // Fetch player counts and current holes for each round
-      if (data && data.length > 0) {
-        const roundIds = data.map(r => r.id);
+      const playerRoundIds = playerData?.map(p => p.round_id).filter(Boolean) || [];
+      const myRoundIds = myRoundsData?.map(r => r.id) || [];
+      const sharedRoundIds = playerRoundIds.filter(id => !myRoundIds.includes(id));
+      
+      let sharedRoundsData: any[] = [];
+      if (sharedRoundIds.length > 0) {
+        const { data, error } = await supabase
+          .from('rounds')
+          .select('*')
+          .in('id', sharedRoundIds)
+          .order('created_at', { ascending: false });
         
+        if (!error && data) {
+          sharedRoundsData = data;
+        }
+      }
+      
+      const transformedMyRounds = (myRoundsData || []).map(transformRoundData);
+      const transformedSharedRounds = sharedRoundsData.map(transformRoundData);
+      
+      setRounds(transformedMyRounds);
+      setSharedRounds(transformedSharedRounds);
+      
+      // Fetch player counts and current holes for all rounds
+      const allRoundIds = [...myRoundIds, ...sharedRoundIds];
+      if (allRoundIds.length > 0) {
         // Fetch players for all rounds
         const { data: playersData } = await supabase
           .from('players')
           .select('round_id')
-          .in('round_id', roundIds);
+          .in('round_id', allRoundIds);
         
         // Fetch scores to determine current hole (max hole with scores)
         const { data: scoresData } = await supabase
           .from('scores')
           .select('round_id, hole_number')
-          .in('round_id', roundIds);
+          .in('round_id', allRoundIds);
         
         const statsMap = new Map<string, { playerCount: number; currentHole: number }>();
         
-        roundIds.forEach(roundId => {
+        allRoundIds.forEach(roundId => {
           const playerCount = playersData?.filter(p => p.round_id === roundId).length || 0;
           const roundScores = scoresData?.filter(s => s.round_id === roundId) || [];
           const currentHole = roundScores.length > 0 
@@ -118,7 +151,7 @@ export default function Home() {
     } finally {
       setLoadingRounds(false);
     }
-  }, []);
+  }, [user]);
   
   useEffect(() => {
     fetchRounds();
@@ -185,6 +218,8 @@ export default function Home() {
 
   const activeRounds = rounds.filter(r => r.status === 'active');
   const completedRounds = rounds.filter(r => r.status === 'complete');
+  const activeSharedRounds = sharedRounds.filter(r => r.status === 'active');
+  const completedSharedRounds = sharedRounds.filter(r => r.status === 'complete');
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background relative">
@@ -278,20 +313,20 @@ export default function Home() {
         className="flex-shrink-0 px-6 py-3 border-y border-border bg-muted/30 relative z-10"
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Active</p>
               <p className="text-2xl font-black tabular-nums text-foreground">{activeRounds.length}</p>
             </div>
             <div className="w-px h-8 bg-border" />
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Watching</p>
-              <p className="text-2xl font-black tabular-nums text-primary">{spectatorRounds.length}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Shared</p>
+              <p className="text-2xl font-black tabular-nums text-accent-foreground">{sharedRounds.length}</p>
             </div>
             <div className="w-px h-8 bg-border" />
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Completed</p>
-              <p className="text-2xl font-black tabular-nums text-muted-foreground">{completedRounds.length}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Watching</p>
+              <p className="text-2xl font-black tabular-nums text-primary">{spectatorRounds.length}</p>
             </div>
           </div>
           <motion.button
@@ -324,7 +359,7 @@ export default function Home() {
               </div>
               <p className="text-sm font-medium text-muted-foreground">Loading rounds...</p>
             </motion.div>
-          ) : (rounds.length > 0 || spectatorRounds.length > 0) ? (
+          ) : (rounds.length > 0 || sharedRounds.length > 0 || spectatorRounds.length > 0) ? (
             <div className="space-y-6">
               {/* Spectating Rounds Section */}
               {spectatorRounds.length > 0 && (
@@ -356,7 +391,7 @@ export default function Home() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                    <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">Live Rounds</h2>
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">My Live Rounds</h2>
                   </div>
                   {activeRounds.map((round, index) => {
                     const stats = roundStats.get(round.id);
@@ -380,11 +415,39 @@ export default function Home() {
                   })}
                 </div>
               )}
+
+              {/* Shared With Me Section - Active */}
+              {activeSharedRounds.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-accent-foreground" />
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-accent-foreground">Shared With Me</h2>
+                  </div>
+                  {activeSharedRounds.map((round, index) => {
+                    const stats = roundStats.get(round.id);
+                    return (
+                      <motion.div 
+                        key={round.id} 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: (index + spectatorRounds.length + activeRounds.length) * 0.08, duration: 0.3 }}
+                      >
+                        <RoundCard
+                          round={round}
+                          onClick={() => navigate(`/round/${round.id}`)}
+                          playerCount={stats?.playerCount}
+                          currentHole={stats?.currentHole}
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
               
               {/* Completed Rounds Section */}
               {completedRounds.length > 0 && (
                 <div className="space-y-3">
-                  <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">History</h2>
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">My History</h2>
                   {completedRounds.map((round, index) => {
                     const stats = roundStats.get(round.id);
                     return (
@@ -392,13 +455,38 @@ export default function Home() {
                         key={round.id} 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: (index + activeRounds.length + spectatorRounds.length) * 0.08, duration: 0.3 }}
+                        transition={{ delay: (index + activeRounds.length + activeSharedRounds.length + spectatorRounds.length) * 0.08, duration: 0.3 }}
                       >
                         <RoundCard
                           round={round}
                           onClick={() => navigate(`/round/${round.id}/complete`)}
                           onDelete={handleDeleteRound}
                           isDeleting={deletingRoundId === round.id}
+                          playerCount={stats?.playerCount}
+                          currentHole={stats?.currentHole}
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Shared Completed Rounds Section */}
+              {completedSharedRounds.length > 0 && (
+                <div className="space-y-3">
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Shared History</h2>
+                  {completedSharedRounds.map((round, index) => {
+                    const stats = roundStats.get(round.id);
+                    return (
+                      <motion.div 
+                        key={round.id} 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: (index + activeRounds.length + activeSharedRounds.length + completedRounds.length + spectatorRounds.length) * 0.08, duration: 0.3 }}
+                      >
+                        <RoundCard
+                          round={round}
+                          onClick={() => navigate(`/round/${round.id}/complete`)}
                           playerCount={stats?.playerCount}
                           currentHole={stats?.currentHole}
                         />
