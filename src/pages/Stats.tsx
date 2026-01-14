@@ -216,11 +216,11 @@ export default function Stats() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-background pb-24 relative">
+    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       <GeometricBackground />
       
-      {/* Header */}
-      <header className="relative z-10 px-6 pt-[calc(env(safe-area-inset-top)+1rem)] pb-6">
+      {/* Fixed Header */}
+      <header className="flex-shrink-0 relative z-10 px-6 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -238,7 +238,8 @@ export default function Stats() {
         </motion.div>
       </header>
 
-      <main className="relative z-10 px-6 space-y-4">
+      {/* Scrollable Content */}
+      <main className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-6 pb-nav space-y-4" style={{ WebkitOverflowScrolling: 'touch' }}>
         {/* Hero Stats */}
         <div className="grid grid-cols-2 gap-3">
           <motion.div

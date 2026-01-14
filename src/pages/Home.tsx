@@ -186,7 +186,7 @@ export default function Home() {
   const completedRounds = rounds.filter(r => r.status === 'complete');
 
   return (
-    <div className="min-h-screen bg-background flex flex-col relative" style={{ touchAction: 'pan-y' }}>
+    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       {/* Technical Grid Background */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Subtle grid */}
@@ -217,12 +217,12 @@ export default function Home() {
         <div className="absolute top-32 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
       </div>
       
-      {/* Header */}
-      <motion.header 
+      {/* Fixed Header */}
+      <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="px-6 pt-[calc(env(safe-area-inset-top)+1rem)] pb-6 flex items-center justify-between relative z-10"
+        className="flex-shrink-0 px-6 pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 flex items-center justify-between relative z-10"
       >
         <div className="flex items-center gap-4">
           {/* Logo mark */}
@@ -273,7 +273,7 @@ export default function Home() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
-        className="px-6 py-3 border-y border-border bg-muted/30 relative z-10"
+        className="flex-shrink-0 px-6 py-3 border-y border-border bg-muted/30 relative z-10"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
@@ -306,9 +306,9 @@ export default function Home() {
         </div>
       </motion.div>
 
-      {/* Content */}
-      <PullToRefresh onRefresh={handlePullRefresh} className="flex-1 relative z-10">
-        <main className="px-6 py-6 pb-nav">
+      {/* Scrollable Content Area */}
+      <PullToRefresh onRefresh={handlePullRefresh} className="flex-1 overflow-hidden relative z-10">
+        <main className="px-6 py-4 pb-nav">
           {loadingRounds ? (
             <motion.div 
               initial={{ opacity: 0 }}

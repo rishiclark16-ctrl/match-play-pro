@@ -161,11 +161,11 @@ export default function Friends() {
   };
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       <GeometricBackground />
       
-      {/* Header */}
-      <header className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b-2 border-border px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3">
+      {/* Fixed Header */}
+      <header className="flex-shrink-0 z-20 bg-background/95 backdrop-blur-sm border-b-2 border-border px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3">
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
@@ -184,7 +184,8 @@ export default function Friends() {
         </div>
       </header>
 
-      <div className="relative z-10 px-4 pb-safe">
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
         {/* Your Friend Code with QR and Sharing */}
         <motion.section
           initial={{ opacity: 0, y: 10 }}
@@ -343,7 +344,7 @@ export default function Friends() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="mt-6 pb-24"
+          className="mt-6 pb-nav"
         >
           <div className="flex items-center gap-2 mb-2">
             <Users className="w-4 h-4 text-primary" />
