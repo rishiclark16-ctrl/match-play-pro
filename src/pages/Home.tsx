@@ -308,8 +308,9 @@ export default function Home() {
       </motion.div>
 
       {/* Scrollable Content Area */}
-      <PullToRefresh onRefresh={handlePullRefresh} className="flex-1 overflow-hidden relative z-10">
-        <main className="px-6 py-4 pb-nav">
+      <div className="flex-1 overflow-hidden relative z-10">
+        <PullToRefresh onRefresh={handlePullRefresh} className="h-full">
+          <main className="px-6 py-4 pb-nav">
           {loadingRounds ? (
             <motion.div 
               initial={{ opacity: 0 }}
@@ -433,7 +434,8 @@ export default function Home() {
             </motion.div>
           )}
         </main>
-      </PullToRefresh>
+        </PullToRefresh>
+      </div>
 
       {/* Join Modal */}
       <AnimatePresence>
