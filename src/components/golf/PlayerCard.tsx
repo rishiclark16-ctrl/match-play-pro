@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Minus, Plus, Check } from 'lucide-react';
+import { Minus, Plus, Check, Crown } from 'lucide-react';
 import { PlayerWithScores, getScoreColor, formatRelativeToPar } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
@@ -112,12 +112,20 @@ export function PlayerCard({
       className={cn(
         "bg-card rounded-xl p-4 flex items-center gap-4 transition-all border relative overflow-hidden",
         isLeading && player.holesPlayed > 0
-          ? "border-primary/30 border-2 shadow-md" 
+          ? "border-primary border-2 shadow-lg shadow-primary/10 bg-primary/[0.02]"
           : "border-border shadow-sm",
         voiceHighlight && "ring-2 ring-primary/50 border-primary/30",
         voiceSuccess && "bg-success/5"
       )}
     >
+      {/* Leading player indicator */}
+      {isLeading && player.holesPlayed > 0 && (
+        <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-2 py-0.5 rounded-bl-lg flex items-center gap-1">
+          <Crown className="w-3 h-3" />
+          <span className="text-[10px] font-bold uppercase tracking-wide">Leader</span>
+        </div>
+      )}
+
       {/* Voice success overlay */}
       <AnimatePresence>
         {voiceSuccess && (

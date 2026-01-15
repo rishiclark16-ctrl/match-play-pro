@@ -415,8 +415,8 @@ export default function Scorecard() {
           </motion.button>
 
           <div className="text-center flex-1 min-w-0">
-            <h1 className="text-sm font-bold truncate">{round.courseName}</h1>
-            <p className="text-[10px] text-muted-foreground font-mono tracking-wider">
+            <h1 className="text-base font-bold truncate">{round.courseName}</h1>
+            <p className="text-xs text-muted-foreground/80 font-mono tracking-widest uppercase">
               {round.joinCode}
             </p>
           </div>
@@ -511,7 +511,7 @@ export default function Scorecard() {
 
       {/* Scrollable Content Area */}
       <main
-        className="flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain relative z-10 px-3 pb-32"
+        className="flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain relative z-10 px-4 pb-32"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {/* Live Leaderboard - hide during playoff */}
@@ -538,7 +538,7 @@ export default function Scorecard() {
           />
         )}
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           {/* Hole Summary - hide during playoff */}
           {playoffHole === 0 &&
             (round.games?.length > 0 || playersWithScores.some(p => p.handicap !== undefined)) && (
@@ -592,25 +592,28 @@ export default function Scorecard() {
                   >
                     <Button
                       onClick={advanceToNextHole}
-                      className="w-full py-6 text-lg font-bold rounded-xl relative overflow-hidden"
+                      className="w-full py-6 text-lg font-bold rounded-xl relative overflow-hidden shadow-lg"
                       size="lg"
                     >
                       <div className="flex items-center gap-3">
                         <Flag className="w-5 h-5" />
                         <span>Next Hole</span>
+                        {autoAdvanceCountdown !== null && (
+                          <span className="text-sm font-mono opacity-80">({autoAdvanceCountdown}s)</span>
+                        )}
                       </div>
 
                       {/* Countdown progress bar */}
                       {autoAdvanceCountdown !== null && (
                         <motion.div
-                          className="absolute bottom-0 left-0 h-1 bg-primary-foreground/30"
+                          className="absolute bottom-0 left-0 h-1.5 bg-primary-foreground/50"
                           initial={{ width: '100%' }}
                           animate={{ width: `${(autoAdvanceCountdown / 20) * 100}%` }}
                           transition={{ duration: 1, ease: 'linear' }}
                         />
                       )}
                     </Button>
-                    <p className="text-xs text-center text-muted-foreground mt-2">
+                    <p className="text-sm text-center text-muted-foreground/70 mt-2">
                       Tap to continue or wait for auto-advance
                     </p>
                   </motion.div>
@@ -637,7 +640,7 @@ export default function Scorecard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="text-center text-[10px] text-muted-foreground mt-4 font-medium"
+            className="text-center text-xs text-muted-foreground/70 mt-6 font-medium"
           >
             💡 Tap mic: "{playersWithScores[0]?.name.split(' ')[0]} 5,{' '}
             {playersWithScores[1]?.name.split(' ')[0] || 'Tim'} 4"
