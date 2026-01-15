@@ -1,4 +1,4 @@
-import { HoleInfo } from '@/types/golf';
+import { HoleInfo, Player } from '@/types/golf';
 
 /**
  * Calculate Course Handicap from player's Handicap Index and course Slope Rating
@@ -120,4 +120,131 @@ export function getManualStrokesPerHole(
   holeInfo: HoleInfo[]
 ): Map<number, number> {
   return getStrokesPerHole(manualStrokes, holeInfo);
+}
+
+// ============================================================================
+// MATCH PLAY DIFFERENTIAL HANDICAP FUNCTIONS
+// ============================================================================
+
+export interface MatchPlayHandicapInfo {
+  lowerPlayerId: string;
+  higherPlayerId: string;
+  lowerPlayerName: string;
+  higherPlayerName: string;
+  strokesGiven: number;
+  lowerCourseHandicap: number;
+  higherCourseHandicap: number;
+}
+
+/**
+ * Calculate strokes given between two players for match play
+ * The lower handicap player gives strokes to the higher handicap player
+ * based on the DIFFERENCE in their course handicaps.
+ * 
+ * Example: Jack (course hcp 9) vs Tim (course hcp 13)
+ * Jack gives Tim 4 strokes (13 - 9 = 4)
+ * Those strokes go on hole handicaps 1, 2, 3, 4 (hardest 4 holes)
+ */
+export function calculateMatchPlayStrokes(
+  player1: { id: string; name: string; handicap?: number; manualStrokes?: number },
+  player2: { id: string; name: string; handicap?: number; manualStrokes?: number },
+  slopeRating: number = 113,
+  holes: 9 | 18 = 18,
+  handicapMode: 'auto' | 'manual' = 'auto'
+): MatchPlayHandicapInfo {
+  let p1CourseHcp: number;
+  let p2CourseHcp: number;
+
+  if (handicapMode === 'manual') {
+    // In manual mode, use the manualStrokes directly as the "course handicap"
+    p1CourseHcp = player1.manualStrokes ?? 0;
+    p2CourseHcp = player2.manualStrokes ?? 0;
+  } else {
+    // In auto mode, calculate course handicap from handicap index
+    p1CourseHcp = player1.handicap !== undefined 
+      ? calculatePlayingHandicap(player1.handicap, slopeRating, holes) 
+      : 0;
+    p2CourseHcp = player2.handicap !== undefined 
+      ? calculatePlayingHandicap(player2.handicap, slopeRating, holes) 
+      : 0;
+  }
+
+  // Determine who gives and who receives strokes
+  if (p1CourseHcp <= p2CourseHcp) {
+    return {
+      lowerPlayerId: player1.id,
+      higherPlayerId: player2.id,
+      lowerPlayerName: player1.name,
+      higherPlayerName: player2.name,
+      strokesGiven: p2CourseHcp - p1CourseHcp,
+      lowerCourseHandicap: p1CourseHcp,
+      higherCourseHandicap: p2CourseHcp,
+    };
+  } else {
+    return {
+      lowerPlayerId: player2.id,
+      higherPlayerId: player1.id,
+      lowerPlayerName: player2.name,
+      higherPlayerName: player1.name,
+      strokesGiven: p1CourseHcp - p2CourseHcp,
+      lowerCourseHandicap: p2CourseHcp,
+      higherCourseHandicap: p1CourseHcp,
+    };
+  }
+}
+
+/**
+ * Build a strokes map for match play with DIFFERENTIAL strokes
+ * Only the higher handicap player receives strokes
+ * The lower handicap player gets 0 strokes on all holes
+ * 
+ * Returns: Map<playerId, Map<holeNumber, strokesReceived>>
+ */
+export function buildMatchPlayStrokesMap(
+  matchInfo: MatchPlayHandicapInfo,
+  holeInfo: HoleInfo[]
+): Map<string, Map<number, number>> {
+  const map = new Map<string, Map<number, number>>();
+  
+  // Lower handicap player gets 0 strokes on all holes
+  const lowerPlayerMap = new Map<number, number>();
+  holeInfo.forEach(hole => lowerPlayerMap.set(hole.number, 0));
+  map.set(matchInfo.lowerPlayerId, lowerPlayerMap);
+  
+  // Higher handicap player gets the differential strokes distributed
+  const higherPlayerMap = getStrokesPerHole(matchInfo.strokesGiven, holeInfo);
+  map.set(matchInfo.higherPlayerId, higherPlayerMap);
+  
+  return map;
+}
+
+/**
+ * Build strokes map for stroke play (each player uses their full course handicap)
+ * This is for net stroke play competitions where everyone's net is compared
+ */
+export function buildStrokePlayStrokesMap(
+  players: Array<{ id: string; handicap?: number; manualStrokes?: number }>,
+  holeInfo: HoleInfo[],
+  slopeRating: number = 113,
+  holes: 9 | 18 = 18,
+  handicapMode: 'auto' | 'manual' = 'auto'
+): Map<string, Map<number, number>> {
+  const map = new Map<string, Map<number, number>>();
+  
+  for (const player of players) {
+    let courseHcp: number;
+    
+    if (handicapMode === 'manual') {
+      courseHcp = player.manualStrokes ?? 0;
+    } else {
+      courseHcp = player.handicap !== undefined 
+        ? calculatePlayingHandicap(player.handicap, slopeRating, holes) 
+        : 0;
+    }
+    
+    const playerStrokesMap = getStrokesPerHole(courseHcp, holeInfo);
+    map.set(player.id, playerStrokesMap);
+  }
+  
+  return map;
 }

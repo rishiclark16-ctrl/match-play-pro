@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Trophy, AlertCircle, Star, Users, Crown, Dog } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trophy, AlertCircle, Star, Users, Crown, Dog, Swords } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Round, Player, Score, Press, PlayerWithScores } from '@/types/golf';
 import { calculateSkins, SkinsResult, StrokesPerHoleMap } from '@/lib/games/skins';
@@ -8,6 +8,7 @@ import { calculateNassau, NassauResult, formatNassauStatus, canPress, createPres
 import { calculateStableford, StablefordResult, getStablefordPointsColor } from '@/lib/games/stableford';
 import { calculateBestBall, BestBallResult, formatBestBallStatus } from '@/lib/games/bestball';
 import { calculateWolf, WolfResult, getWolfForHole } from '@/lib/games/wolf';
+import { calculateMatchPlay, MatchPlayResult, getMatchPlayStatusColor } from '@/lib/games/matchPlay';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -52,6 +53,10 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
   const stablefordGame = round.games?.find(g => g.type === 'stableford');
   const bestBallGame = round.games?.find(g => g.type === 'bestball');
   const wolfGame = round.games?.find(g => g.type === 'wolf');
+  const matchGame = round.games?.find(g => g.type === 'match');
+  
+  // Also check round.matchPlay for legacy support
+  const hasMatchPlay = matchGame || round.matchPlay;
   
   // Calculate the highest hole with all players scored
   const holesPlayed = useMemo(() => {
@@ -133,6 +138,18 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
     );
   }, [wolfGame, scores, players, round.holes]);
   
+  // Calculate Match Play results (2 players only)
+  const matchPlayResult: MatchPlayResult | null = useMemo(() => {
+    if (!hasMatchPlay || players.length !== 2) return null;
+    return calculateMatchPlay(
+      scores,
+      players,
+      round.holeInfo,
+      buildStrokesMap,
+      round.holes
+    );
+  }, [hasMatchPlay, scores, players, round.holeInfo, buildStrokesMap, round.holes]);
+  
   // Check if any player can press
   const pressablePlayer = useMemo(() => {
     if (!nassauResult || players.length !== 2) return null;
@@ -150,7 +167,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
     return null;
   }, [nassauResult, players, currentHole, round.presses, round.holes]);
   
-  if (!skinsGame && !nassauGame && !stablefordGame && !bestBallGame && !wolfGame) return null;
+  if (!skinsGame && !nassauGame && !stablefordGame && !bestBallGame && !wolfGame && !hasMatchPlay) return null;
   
   const handleConfirmPress = () => {
     if (pressConfirmPlayer && nassauGame) {
@@ -185,6 +202,99 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
               className="overflow-hidden"
             >
               <div className="p-4 space-y-4">
+                {/* Match Play Section */}
+                {hasMatchPlay && matchPlayResult && players.length === 2 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-sm flex items-center gap-2">
+                        <Swords className="w-4 h-4 text-primary" />
+                        MATCH PLAY
+                        {matchGame?.stakes && matchGame.stakes > 0 && (
+                          <span className="text-xs text-muted-foreground">(${matchGame.stakes})</span>
+                        )}
+                      </h4>
+                      <span className="text-xs text-muted-foreground">
+                        Thru {matchPlayResult.holesPlayed}
+                      </span>
+                    </div>
+                    
+                    {/* Match Status */}
+                    <div className={cn(
+                      "p-3 rounded-lg border",
+                      matchPlayResult.matchStatus === 'won' && "bg-success/10 border-success/30",
+                      matchPlayResult.matchStatus === 'dormie' && "bg-warning/10 border-warning/30",
+                      matchPlayResult.matchStatus === 'halved' && "bg-muted/30 border-border",
+                      matchPlayResult.matchStatus === 'ongoing' && "bg-primary/10 border-primary/30",
+                      matchPlayResult.matchStatus === 'not_started' && "bg-muted/30 border-border"
+                    )}>
+                      <div className="text-center">
+                        <span className={cn(
+                          "font-bold text-lg",
+                          matchPlayResult.matchStatus === 'won' && "text-success",
+                          matchPlayResult.matchStatus === 'dormie' && "text-warning",
+                          (matchPlayResult.matchStatus === 'halved' || matchPlayResult.matchStatus === 'not_started') && "text-muted-foreground",
+                          matchPlayResult.matchStatus === 'ongoing' && matchPlayResult.holesUp === 0 && "text-foreground",
+                          matchPlayResult.matchStatus === 'ongoing' && matchPlayResult.holesUp > 0 && "text-primary"
+                        )}>
+                          {matchPlayResult.statusText}
+                        </span>
+                        {matchPlayResult.holesRemaining > 0 && matchPlayResult.matchStatus !== 'won' && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {matchPlayResult.holesRemaining} hole{matchPlayResult.holesRemaining !== 1 ? 's' : ''} remaining
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Per-Player Status */}
+                    <div className="space-y-1">
+                      {players.map(player => {
+                        const isLeader = matchPlayResult.leaderId === player.id;
+                        const isWinner = matchPlayResult.winnerId === player.id;
+                        const strokesReceived = player.strokesPerHole 
+                          ? Array.from(player.strokesPerHole.values()).reduce((s, v) => s + v, 0)
+                          : 0;
+                        
+                        return (
+                          <div
+                            key={player.id}
+                            className="flex items-center justify-between text-sm"
+                          >
+                            <div className="flex items-center gap-2">
+                              {isWinner && <Trophy className="w-3 h-3 text-success" />}
+                              <span className={cn(
+                                isLeader && matchPlayResult.matchStatus !== 'halved' && "font-semibold"
+                              )}>
+                                {player.name}
+                              </span>
+                              {strokesReceived > 0 && (
+                                <span className="text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                                  +{strokesReceived}
+                                </span>
+                              )}
+                            </div>
+                            <span className={cn(
+                              "font-medium",
+                              getMatchPlayStatusColor(matchPlayResult, player.id)
+                            )}>
+                              {isLeader && matchPlayResult.holesUp > 0 
+                                ? `${matchPlayResult.holesUp} UP` 
+                                : matchPlayResult.holesUp === 0 
+                                  ? 'AS' 
+                                  : `${matchPlayResult.holesUp} DN`}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Divider after Match Play */}
+                {hasMatchPlay && matchPlayResult && (skinsGame || nassauGame || stablefordGame || bestBallGame || wolfGame) && (
+                  <div className="border-t border-border/50" />
+                )}
+                
                 {/* Skins Section */}
                 {skinsGame && skinsResult && (
                   <div className="space-y-2">
