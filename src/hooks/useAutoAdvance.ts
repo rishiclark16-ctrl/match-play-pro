@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { hapticSuccess } from '@/lib/haptics';
 import { toast } from 'sonner';
-
-const AUTO_ADVANCE_SECONDS = 20;
+import { AUTO_ADVANCE_SECONDS } from '@/lib/constants';
 
 interface UseAutoAdvanceOptions {
   allCurrentHoleScored: boolean;

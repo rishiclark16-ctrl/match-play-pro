@@ -1,119 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Round, Player, Score, HoleInfo, GameConfig, Press } from '@/types/golf';
-
-// Database types
-interface DbRound {
-  id: string;
-  join_code: string;
-  course_name: string;
-  course_id: string | null;
-  holes: number;
-  stroke_play: boolean;
-  match_play: boolean;
-  stableford: boolean;
-  modified_stableford: boolean;
-  stakes: number | null;
-  slope: number | null;
-  rating: number | null;
-  status: string;
-  games: GameConfig[];
-  teams: any;
-  hole_info: HoleInfo[];
-  created_at: string;
-  updated_at: string;
-}
-
-interface DbPlayer {
-  id: string;
-  round_id: string;
-  name: string;
-  handicap: number | null;
-  team_id: string | null;
-  order_index: number;
-  profile_id: string | null;
-  manual_strokes: number | null;
-  created_at: string;
-  profiles?: {
-    avatar_url: string | null;
-  } | null;
-}
-
-interface DbScore {
-  id: string;
-  round_id: string;
-  player_id: string;
-  hole_number: number;
-  strokes: number;
-  created_at: string;
-  updated_at: string;
-}
-
-interface DbPress {
-  id: string;
-  round_id: string;
-  initiated_by: string | null;
-  start_hole: number;
-  stakes: number;
-  status: string;
-  winner_id: string | null;
-  created_at: string;
-}
-
-// Transform functions
-function transformRound(db: any): Round {
-  return {
-    id: db.id,
-    courseId: db.course_id || '',
-    courseName: db.course_name,
-    holes: db.holes as 9 | 18,
-    strokePlay: db.stroke_play,
-    matchPlay: db.match_play,
-    stakes: db.stakes ?? undefined,
-    slope: db.slope ?? undefined,
-    rating: db.rating ?? undefined,
-    handicapMode: (db.handicap_mode as 'auto' | 'manual') ?? 'auto',
-    status: db.status as 'active' | 'complete',
-    games: (db.games as GameConfig[]) || [],
-    holeInfo: (db.hole_info as HoleInfo[]) || [],
-    joinCode: db.join_code,
-    createdAt: new Date(db.created_at),
-    presses: [],
-  };
-}
-
-function transformPlayer(db: any): Player {
-  return {
-    id: db.id,
-    roundId: db.round_id,
-    name: db.name,
-    handicap: db.handicap ?? undefined,
-    orderIndex: db.order_index,
-    profileId: db.profile_id ?? undefined,
-    avatarUrl: db.profiles?.avatar_url ?? undefined,
-    manualStrokes: db.manual_strokes ?? undefined,
-  };
-}
-
-function transformScore(db: any): Score {
-  return {
-    id: db.id,
-    roundId: db.round_id,
-    playerId: db.player_id,
-    holeNumber: db.hole_number,
-    strokes: db.strokes,
-  };
-}
-
-function transformPress(db: any): Press {
-  return {
-    id: db.id,
-    startHole: db.start_hole,
-    initiatedBy: db.initiated_by || '',
-    stakes: db.stakes,
-    status: db.status as Press['status'],
-  };
-}
+import { Round, Player, Score, Press } from '@/types/golf';
+import {
+  transformRound,
+  transformPlayer,
+  transformScore,
+  transformPress,
+} from '@/lib/transformers';
+import { withRetry, isSupabaseRetryable } from '@/lib/retry';
 
 export function useSupabaseRound(roundId: string | null) {
   const [round, setRound] = useState<Round | null>(null);
@@ -288,24 +182,32 @@ export function useSupabaseRound(roundId: string | null) {
       return [...prev, newScore];
     });
 
-    // Sync to Supabase
+    // Sync to Supabase with retry
     try {
-      const { error } = await supabase
-        .from('scores')
-        .upsert({
-          round_id: roundId,
-          player_id: playerId,
-          hole_number: holeNumber,
-          strokes,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'player_id,hole_number'
-        });
+      await withRetry(
+        async () => {
+          const { error } = await supabase
+            .from('scores')
+            .upsert({
+              round_id: roundId,
+              player_id: playerId,
+              hole_number: holeNumber,
+              strokes,
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'player_id,hole_number'
+            });
 
-      if (error) throw error;
+          if (error) throw error;
+        },
+        {
+          maxAttempts: 3,
+          isRetryable: isSupabaseRetryable,
+        }
+      );
       setIsOnline(true);
     } catch (err) {
-      console.error('Error saving score:', err);
+      console.error('Error saving score after retries:', err);
       setIsOnline(false);
       // Keep optimistic update - will sync when back online
     }

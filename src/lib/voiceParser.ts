@@ -1,3 +1,5 @@
+import { MIN_HOLE_SCORE, MAX_HOLE_SCORE, MAX_VOICE_SCORE } from '@/lib/constants';
+
 interface Player {
   id: string;
   name: string;
@@ -334,12 +336,12 @@ function extractScore(text: string, par: number): number | null {
   
   for (const { pattern, score } of compoundTerms) {
     if (pattern.test(normalizedText)) {
-      if (score >= 1 && score <= 15) {
+      if (score >= MIN_HOLE_SCORE && score <= MAX_HOLE_SCORE) {
         return score;
       }
     }
   }
-  
+
   // Check for single golf terms
   for (const [term, relative] of Object.entries(golfTerms)) {
     if (term === 'other') continue;
@@ -347,36 +349,36 @@ function extractScore(text: string, par: number): number | null {
     const regex = new RegExp(`\\b${term}\\b`, 'i');
     if (regex.test(normalizedText)) {
       const score = par + relative;
-      if (score >= 1 && score <= 15) {
+      if (score >= MIN_HOLE_SCORE && score <= MAX_HOLE_SCORE) {
         return score;
       }
     }
   }
-  
+
   // Try direct number match - prioritize numbers that make sense for golf
   const numberMatches = normalizedText.match(/\b(\d{1,2})\b/g);
   if (numberMatches) {
     for (const numStr of numberMatches) {
       const num = parseInt(numStr, 10);
-      if (num >= 1 && num <= 15) {
+      if (num >= MIN_HOLE_SCORE && num <= MAX_HOLE_SCORE) {
         return num;
       }
     }
   }
-  
+
   // Try word numbers - be more flexible with matching
   const words = normalizedText.split(/\s+/);
   for (const word of words) {
     // Exact match
     if (wordToNumber[word] !== undefined) {
       const num = wordToNumber[word];
-      if (num >= 1 && num <= 12) {
+      if (num >= MIN_HOLE_SCORE && num <= MAX_VOICE_SCORE) {
         return num;
       }
     }
     // Fuzzy match for word numbers
     for (const [numWord, num] of Object.entries(wordToNumber)) {
-      if (isFuzzyMatch(word, numWord, 1) && num >= 1 && num <= 12) {
+      if (isFuzzyMatch(word, numWord, 1) && num >= MIN_HOLE_SCORE && num <= MAX_VOICE_SCORE) {
         return num;
       }
     }
@@ -493,7 +495,7 @@ export function parseVoiceInput(
         }
       }
       
-      if (score && score >= 1 && score <= 15) {
+      if (score && score >= MIN_HOLE_SCORE && score <= MAX_HOLE_SCORE) {
         players.forEach(player => {
           scores.push({
             playerId: player.id,

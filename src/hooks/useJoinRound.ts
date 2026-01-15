@@ -1,26 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Round, HoleInfo, GameConfig } from '@/types/golf';
-
-function transformRound(db: any): Round {
-  return {
-    id: db.id,
-    courseId: db.course_id || '',
-    courseName: db.course_name,
-    holes: db.holes as 9 | 18,
-    strokePlay: db.stroke_play,
-    matchPlay: db.match_play,
-    stakes: db.stakes ?? undefined,
-    slope: db.slope ?? undefined,
-    rating: db.rating ?? undefined,
-    status: db.status as 'active' | 'complete',
-    games: (db.games as GameConfig[]) || [],
-    holeInfo: (db.hole_info as HoleInfo[]) || [],
-    joinCode: db.join_code,
-    createdAt: new Date(db.created_at),
-    presses: [],
-  };
-}
+import { Round } from '@/types/golf';
+import { transformRound } from '@/lib/transformers';
 
 export function useJoinRound() {
   const [loading, setLoading] = useState(false);

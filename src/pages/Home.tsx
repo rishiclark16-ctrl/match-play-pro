@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Users, X, Loader2, ChevronRight, Eye } from 'lucide-react';
@@ -12,6 +12,7 @@ import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useRounds } from '@/hooks/useRounds';
+import { useRoundsQuery } from '@/hooks/useRoundsQuery';
 import { useJoinRound } from '@/hooks/useJoinRound';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -21,7 +22,6 @@ import { useOffline } from '@/contexts/OfflineContext';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Round } from '@/types/golf';
 import { popIn } from '@/lib/animations';
 
 export default function Home() {
@@ -46,133 +46,32 @@ export default function Home() {
       .toUpperCase()
       .slice(0, 2);
   };
-  
-  // Fetch rounds from Supabase
-  const [rounds, setRounds] = useState<Round[]>([]);
-  const [sharedRounds, setSharedRounds] = useState<Round[]>([]);
-  const [loadingRounds, setLoadingRounds] = useState(true);
-  const [roundStats, setRoundStats] = useState<Map<string, { playerCount: number; currentHole: number }>>(new Map());
-  
-  const transformRoundData = (r: any): Round => ({
-    id: r.id,
-    courseId: r.course_id || '',
-    courseName: r.course_name,
-    holes: r.holes as 9 | 18,
-    strokePlay: r.stroke_play ?? true,
-    matchPlay: r.match_play ?? false,
-    stakes: r.stakes ?? undefined,
-    status: (r.status === 'active' ? 'active' : 'complete') as 'active' | 'complete',
-    createdAt: new Date(r.created_at || Date.now()),
-    joinCode: r.join_code,
-    holeInfo: r.hole_info as any,
-    slope: r.slope ?? undefined,
-    rating: r.rating ?? undefined,
-    games: (r.games as any) || [],
-    presses: [],
-  });
-  
-  const fetchRounds = useCallback(async () => {
-    if (!user) return;
-    
-    setLoadingRounds(true);
-    try {
-      // Fetch my rounds (where I'm the creator)
-      const { data: myRoundsData, error: myRoundsError } = await supabase
-        .from('rounds')
-        .select('*')
-        .eq('created_by', user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-      
-      if (myRoundsError) throw myRoundsError;
-      
-      // Fetch rounds I'm a player in but didn't create
-      const { data: playerData, error: playerError } = await supabase
-        .from('players')
-        .select('round_id')
-        .eq('profile_id', user.id);
-      
-      if (playerError) throw playerError;
-      
-      const playerRoundIds = playerData?.map(p => p.round_id).filter(Boolean) || [];
-      const myRoundIds = myRoundsData?.map(r => r.id) || [];
-      const sharedRoundIds = playerRoundIds.filter(id => !myRoundIds.includes(id));
-      
-      let sharedRoundsData: any[] = [];
-      if (sharedRoundIds.length > 0) {
-        const { data, error } = await supabase
-          .from('rounds')
-          .select('*')
-          .in('id', sharedRoundIds)
-          .order('created_at', { ascending: false });
-        
-        if (!error && data) {
-          sharedRoundsData = data;
-        }
-      }
-      
-      const transformedMyRounds = (myRoundsData || []).map(transformRoundData);
-      const transformedSharedRounds = sharedRoundsData.map(transformRoundData);
-      
-      setRounds(transformedMyRounds);
-      setSharedRounds(transformedSharedRounds);
-      
-      // Fetch player counts and current holes for all rounds
-      const allRoundIds = [...myRoundIds, ...sharedRoundIds];
-      if (allRoundIds.length > 0) {
-        // Fetch players for all rounds
-        const { data: playersData } = await supabase
-          .from('players')
-          .select('round_id')
-          .in('round_id', allRoundIds);
-        
-        // Fetch scores to determine current hole (max hole with scores)
-        const { data: scoresData } = await supabase
-          .from('scores')
-          .select('round_id, hole_number')
-          .in('round_id', allRoundIds);
-        
-        const statsMap = new Map<string, { playerCount: number; currentHole: number }>();
-        
-        allRoundIds.forEach(roundId => {
-          const playerCount = playersData?.filter(p => p.round_id === roundId).length || 0;
-          const roundScores = scoresData?.filter(s => s.round_id === roundId) || [];
-          const currentHole = roundScores.length > 0 
-            ? Math.max(...roundScores.map(s => s.hole_number))
-            : 0;
-          
-          statsMap.set(roundId, { playerCount, currentHole });
-        });
-        
-        setRoundStats(statsMap);
-      }
-    } catch (err) {
-      console.error('Error fetching rounds:', err);
-    } finally {
-      setLoadingRounds(false);
-    }
-  }, [user]);
-  
-  useEffect(() => {
-    fetchRounds();
-  }, [fetchRounds]);
+
+  // Fetch rounds using React Query (provides caching, background refetch, retry logic)
+  const {
+    rounds,
+    sharedRounds,
+    roundStats,
+    isLoading: loadingRounds,
+    refetch: refetchRounds,
+  } = useRoundsQuery();
 
   const handleDeleteRound = async (roundId: string) => {
     setDeletingRoundId(roundId);
     hapticLight();
-    
+
     const success = await deleteSupabaseRound(roundId);
-    
+
     if (success) {
       deleteLocalRound(roundId);
-      setRounds(prev => prev.filter(r => r.id !== roundId));
+      await refetchRounds(); // Refetch to update the list
       hapticSuccess();
       toast.success('Round deleted');
     } else {
       hapticError();
       toast.error('Failed to delete round');
     }
-    
+
     setDeletingRoundId(null);
   };
 
@@ -203,7 +102,7 @@ export default function Home() {
 
   const handlePullRefresh = async () => {
     hapticLight();
-    await Promise.all([fetchRounds(), fetchSpectatorRounds()]);
+    await Promise.all([refetchRounds(), fetchSpectatorRounds()]);
     hapticSuccess();
   };
 
