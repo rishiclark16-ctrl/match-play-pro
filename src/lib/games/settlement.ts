@@ -81,21 +81,25 @@ export function calculateSettlement(
     const winners = wolfStandings.filter(s => s.earnings > 0);
     const losers = wolfStandings.filter(s => s.earnings < 0);
     
-    losers.forEach(loser => {
-      let lossToDistribute = Math.abs(loser.earnings);
-      
-      winners.forEach(winner => {
-        if (lossToDistribute > 0) {
-          const proportion = winner.earnings / winners.reduce((sum, w) => sum + w.earnings, 0);
-          const payment = Math.round(proportion * Math.abs(loser.earnings) * 100) / 100;
-          
-          if (payment > 0 && ledger[loser.playerId] && ledger[loser.playerId][winner.playerId] !== undefined) {
-            ledger[loser.playerId][winner.playerId] += payment;
+    const totalWinnings = winners.reduce((sum, w) => sum + w.earnings, 0);
+
+    if (totalWinnings > 0) {
+      losers.forEach(loser => {
+        let lossToDistribute = Math.abs(loser.earnings);
+
+        winners.forEach(winner => {
+          if (lossToDistribute > 0) {
+            const proportion = winner.earnings / totalWinnings;
+            const payment = Math.round(proportion * Math.abs(loser.earnings) * 100) / 100;
+
+            if (payment > 0 && ledger[loser.playerId] && ledger[loser.playerId][winner.playerId] !== undefined) {
+              ledger[loser.playerId][winner.playerId] += payment;
+            }
+            lossToDistribute -= payment;
           }
-          lossToDistribute -= payment;
-        }
+        });
       });
-    });
+    }
   }
   
   // Net out the ledger (A owes B $10, B owes A $4 = A owes B $6)
