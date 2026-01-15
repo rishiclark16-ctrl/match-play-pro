@@ -92,7 +92,7 @@ export function ScoreInputSheet({
             </div>
 
             {/* Score Grid */}
-            <div className="grid grid-cols-4 gap-1.5 px-2 pb-1">
+            <div className="grid grid-cols-4 gap-2 px-3 pb-2">
               {scores.map((score) => {
                 const isSelected = currentScore === score;
                 const label = getScoreLabel(score, par);
@@ -104,18 +104,19 @@ export function ScoreInputSheet({
                     whileTap={{ scale: 0.92 }}
                     onClick={() => handleSelectScore(score)}
                     className={cn(
-                      "flex flex-col items-center justify-center py-2 rounded-xl border-2 transition-all min-h-[52px]",
+                      "flex flex-col items-center justify-center py-3 rounded-xl border-2 transition-all min-h-[56px] min-w-[44px] touch-manipulation",
                       getScoreButtonBg(score, isSelected)
                     )}
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     <span className={cn(
-                      "text-lg font-bold tabular-nums leading-none",
+                      "text-xl font-bold tabular-nums leading-none",
                       colorClass
                     )}>
                       {score}
                     </span>
                     <span className={cn(
-                      "text-[8px] font-bold mt-0.5 uppercase tracking-wide",
+                      "text-[9px] font-bold mt-1 uppercase tracking-wide",
                       colorClass
                     )}>
                       {label}

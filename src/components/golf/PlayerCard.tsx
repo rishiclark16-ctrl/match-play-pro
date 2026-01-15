@@ -206,13 +206,14 @@ export function PlayerCard({
             onClick={handleDecrement}
             disabled={displayScore <= 1}
             className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+              "w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl flex items-center justify-center transition-all touch-manipulation",
               "bg-muted/50 hover:bg-muted active:bg-muted-foreground/20",
               displayScore <= 1 ? "opacity-30" : "opacity-100"
             )}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-label="Decrease score"
           >
-            <Minus className="w-4 h-4" />
+            <Minus className="w-5 h-5" />
           </motion.button>
 
           {/* Score Display */}
@@ -258,13 +259,14 @@ export function PlayerCard({
             onClick={handleIncrement}
             disabled={displayScore >= 12}
             className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+              "w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl flex items-center justify-center transition-all touch-manipulation",
               "bg-muted/50 hover:bg-muted active:bg-muted-foreground/20",
               displayScore >= 12 ? "opacity-30" : "opacity-100"
             )}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-label="Increase score"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-5 h-5" />
           </motion.button>
         </div>
       ) : (

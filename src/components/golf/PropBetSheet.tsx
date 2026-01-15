@@ -123,10 +123,10 @@ export function PropBetSheet({
       <SheetTrigger asChild>
         <Button
           variant="outline"
-          size="sm"
-          className="gap-1.5 bg-card/50"
+          className="gap-2 bg-card/50 px-4 min-h-[44px] h-auto text-sm font-semibold touch-manipulation"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
         >
-          <Dices className="w-4 h-4" />
+          <Dices className="w-5 h-5" />
           <span>Props</span>
           {currentHoleBets.length > 0 && (
             <span className="ml-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">

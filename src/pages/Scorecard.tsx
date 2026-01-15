@@ -407,10 +407,11 @@ export default function Scorecard() {
               hapticLight();
               setShowExitDialog(true);
             }}
-            className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg bg-muted flex items-center justify-center shrink-0 touch-manipulation"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-label="Exit round"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </motion.button>
 
           <div className="text-center flex-1 min-w-0">
