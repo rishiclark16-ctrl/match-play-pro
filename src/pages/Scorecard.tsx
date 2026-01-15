@@ -27,7 +27,14 @@ import { parseVoiceInput, ParseResult, ParsedScore } from '@/lib/voiceParser';
 import { parseVoiceCommands, hasScoreContent } from '@/lib/voiceCommands';
 import { feedbackListeningStart, feedbackListeningStop, feedbackVoiceSuccess, feedbackVoiceError, feedbackAllScored, feedbackNextHole } from '@/lib/voiceFeedback';
 import { Press, PlayerWithScores, GameConfig } from '@/types/golf';
-import { calculatePlayingHandicap, getStrokesPerHole, calculateTotalNetStrokes, getManualStrokesPerHole } from '@/lib/handicapUtils';
+import { 
+  calculatePlayingHandicap, 
+  getStrokesPerHole, 
+  calculateTotalNetStrokes, 
+  getManualStrokesPerHole,
+  calculateMatchPlayStrokes,
+  buildMatchPlayStrokesMap,
+} from '@/lib/handicapUtils';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { setStatusBarDefault } from '@/lib/statusBar';
@@ -149,6 +156,27 @@ export default function Scorecard() {
     if (supabaseLoading && supabasePlayers.length === 0) {
       return [];
     }
+    
+    // Check if this is a 2-player match play scenario for differential strokes
+    const isMatchPlay = round.matchPlay || round.games?.some(g => g.type === 'match' || g.type === 'nassau');
+    const isTwoPlayerMatch = isMatchPlay && supabasePlayers.length === 2;
+    const isManualMode = round.handicapMode === 'manual';
+    
+    // For 2-player match play, calculate differential strokes
+    let matchPlayStrokesMap: Map<string, Map<number, number>> | undefined;
+    
+    if (isTwoPlayerMatch) {
+      const [p1, p2] = supabasePlayers;
+      const matchInfo = calculateMatchPlayStrokes(
+        { id: p1.id, name: p1.name, handicap: p1.handicap, manualStrokes: p1.manualStrokes },
+        { id: p2.id, name: p2.name, handicap: p2.handicap, manualStrokes: p2.manualStrokes },
+        round.slope || 113,
+        round.holes,
+        isManualMode ? 'manual' : 'auto'
+      );
+      matchPlayStrokesMap = buildMatchPlayStrokesMap(matchInfo, round.holeInfo);
+    }
+    
     return supabasePlayers.map(player => {
       const playerScores = roundScores.filter(s => s.playerId === player.id);
       const totalStrokes = playerScores.reduce((sum, s) => sum + s.strokes, 0);
@@ -162,11 +190,21 @@ export default function Scorecard() {
       let totalNetStrokes: number | undefined;
       let netRelativeToPar: number | undefined;
       
-      // Check handicap mode - 'manual' uses player.manualStrokes, 'auto' uses handicap index
-      const isManualMode = round.handicapMode === 'manual';
-      
-      if (isManualMode) {
-        // Manual mode: use manually entered strokes
+      // Use match play differential strokes if applicable
+      if (matchPlayStrokesMap) {
+        strokesPerHole = matchPlayStrokesMap.get(player.id);
+        // Calculate the effective handicap (sum of strokes received)
+        playingHandicap = strokesPerHole 
+          ? Array.from(strokesPerHole.values()).reduce((sum, s) => sum + s, 0) 
+          : 0;
+        totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
+        const totalPar = playerScores.reduce((sum, s) => {
+          const hole = round.holeInfo.find(h => h.number === s.holeNumber);
+          return sum + (hole?.par || 4);
+        }, 0);
+        netRelativeToPar = totalNetStrokes - totalPar;
+      } else if (isManualMode) {
+        // Manual mode for non-match-play: use manually entered strokes
         playingHandicap = player.manualStrokes ?? 0;
         strokesPerHole = getManualStrokesPerHole(playingHandicap, round.holeInfo);
         totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
@@ -176,7 +214,7 @@ export default function Scorecard() {
         }, 0);
         netRelativeToPar = totalNetStrokes - totalPar;
       } else if (player.handicap !== undefined && player.handicap !== null) {
-        // Auto mode: calculate from handicap index and course slope
+        // Auto mode for non-match-play: calculate from handicap index and course slope
         playingHandicap = calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes);
         strokesPerHole = getStrokesPerHole(playingHandicap, round.holeInfo);
         totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);

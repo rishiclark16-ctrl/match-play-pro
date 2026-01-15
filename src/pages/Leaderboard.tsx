@@ -5,7 +5,15 @@ import { ArrowLeft, RefreshCw, Trophy, Target, TrendingUp, TrendingDown, Minus }
 import { useRounds } from '@/hooks/useRounds';
 import { useSupabaseRound } from '@/hooks/useSupabaseRound';
 import { formatRelativeToPar, getScoreColor, PlayerWithScores } from '@/types/golf';
-import { calculatePlayingHandicap, getStrokesPerHole, calculateTotalNetStrokes, getManualStrokesPerHole } from '@/lib/handicapUtils';
+import { 
+  calculatePlayingHandicap, 
+  getStrokesPerHole, 
+  calculateTotalNetStrokes, 
+  getManualStrokesPerHole,
+  calculateMatchPlayStrokes,
+  buildMatchPlayStrokesMap,
+} from '@/lib/handicapUtils';
+import { calculateMatchPlay } from '@/lib/games/matchPlay';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { TechCard, TechCardContent } from '@/components/ui/tech-card';
@@ -45,6 +53,26 @@ export default function Leaderboard() {
       return [];
     }
     
+    // Check if this is a 2-player match play scenario for differential strokes
+    const isMatchPlay = round.matchPlay || round.games?.some(g => g.type === 'match' || g.type === 'nassau');
+    const isTwoPlayerMatch = isMatchPlay && supabasePlayers.length === 2;
+    const isManualMode = round.handicapMode === 'manual';
+    
+    // For 2-player match play, calculate differential strokes
+    let matchPlayStrokesMap: Map<string, Map<number, number>> | undefined;
+    
+    if (isTwoPlayerMatch) {
+      const [p1, p2] = supabasePlayers;
+      const matchInfo = calculateMatchPlayStrokes(
+        { id: p1.id, name: p1.name, handicap: p1.handicap, manualStrokes: p1.manualStrokes },
+        { id: p2.id, name: p2.name, handicap: p2.handicap, manualStrokes: p2.manualStrokes },
+        round.slope || 113,
+        round.holes,
+        isManualMode ? 'manual' : 'auto'
+      );
+      matchPlayStrokesMap = buildMatchPlayStrokesMap(matchInfo, round.holeInfo);
+    }
+    
     return supabasePlayers.map(player => {
       const playerScores = supabaseScores.filter(s => s.playerId === player.id);
       const totalStrokes = playerScores.reduce((sum, s) => sum + s.strokes, 0);
@@ -59,11 +87,20 @@ export default function Leaderboard() {
       let totalNetStrokes: number | undefined;
       let netRelativeToPar: number | undefined;
 
-      // Check handicap mode - 'manual' uses player.manualStrokes, 'auto' uses handicap index
-      const isManualMode = round.handicapMode === 'manual';
-
-      if (isManualMode) {
-        // Manual mode: use manually entered strokes
+      // Use match play differential strokes if applicable
+      if (matchPlayStrokesMap) {
+        strokesPerHole = matchPlayStrokesMap.get(player.id);
+        playingHandicap = strokesPerHole 
+          ? Array.from(strokesPerHole.values()).reduce((sum, s) => sum + s, 0) 
+          : 0;
+        totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
+        const totalPar = playerScores.reduce((sum, s) => {
+          const hole = round.holeInfo.find(h => h.number === s.holeNumber);
+          return sum + (hole?.par || 4);
+        }, 0);
+        netRelativeToPar = totalNetStrokes - totalPar;
+      } else if (isManualMode) {
+        // Manual mode for non-match-play: use manually entered strokes
         playingHandicap = player.manualStrokes ?? 0;
         strokesPerHole = getManualStrokesPerHole(playingHandicap, round.holeInfo);
         totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
@@ -73,7 +110,7 @@ export default function Leaderboard() {
         }, 0);
         netRelativeToPar = totalNetStrokes - totalPar;
       } else if (player.handicap !== undefined && player.handicap !== null) {
-        // Auto mode: calculate from handicap index and course slope
+        // Auto mode for non-match-play: calculate from handicap index and course slope
         playingHandicap = calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes);
         strokesPerHole = getStrokesPerHole(playingHandicap, round.holeInfo);
         totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
@@ -115,37 +152,32 @@ export default function Leaderboard() {
   const matchPlayStatus = useMemo(() => {
     if (!round?.matchPlay || playersWithScores.length !== 2) return null;
     
-    const [p1, p2] = playersWithScores;
-    let p1Wins = 0;
-    let p2Wins = 0;
-    let holesPlayed = 0;
-
-    for (let hole = 1; hole <= round.holes; hole++) {
-      const p1Score = p1.scores.find(s => s.holeNumber === hole)?.strokes;
-      const p2Score = p2.scores.find(s => s.holeNumber === hole)?.strokes;
-      
-      if (p1Score !== undefined && p2Score !== undefined) {
-        holesPlayed++;
-        if (p1Score < p2Score) p1Wins++;
-        else if (p2Score < p1Score) p2Wins++;
+    // Build strokes map for match play calculation
+    const strokesMap = new Map<string, Map<number, number>>();
+    playersWithScores.forEach(p => {
+      if (p.strokesPerHole) {
+        strokesMap.set(p.id, p.strokesPerHole);
       }
-    }
-
-    const diff = p1Wins - p2Wins;
-    if (diff === 0) return { status: 'All Square', leader: null, holesPlayed };
+    });
     
-    const leader = diff > 0 ? p1 : p2;
-    const upBy = Math.abs(diff);
-    const holesRemaining = round.holes - holesPlayed;
+    // Use the proper match play calculation with net scores
+    const result = calculateMatchPlay(
+      supabaseScores,
+      playersWithScores,
+      round.holeInfo,
+      strokesMap.size > 0 ? strokesMap : undefined,
+      round.holes
+    );
     
     return {
-      status: `${leader.name} ${upBy} UP`,
-      leader,
-      holesPlayed,
-      holesRemaining,
-      upBy,
+      status: result.statusText,
+      leader: result.leaderId ? playersWithScores.find(p => p.id === result.leaderId) : null,
+      holesPlayed: result.holesPlayed,
+      holesRemaining: result.holesRemaining,
+      upBy: result.holesUp,
+      matchStatus: result.matchStatus,
     };
-  }, [round, playersWithScores]);
+  }, [round, playersWithScores, supabaseScores]);
 
   const handleRefresh = () => {
     hapticLight();
