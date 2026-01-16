@@ -34,11 +34,9 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
   const [pressConfirmPlayer, setPressConfirmPlayer] = useState<Player | null>(null);
   
   // Build the strokesPerHole map for net scoring
+  // Always build if players have strokes data - individual games decide whether to use it
+  // Match play always uses differential strokes (standard golf rules)
   const buildStrokesMap = useMemo((): StrokesPerHoleMap | undefined => {
-    // Check if any game uses net scoring
-    const anyGameUsesNet = round.games?.some(g => g.useNet);
-    if (!anyGameUsesNet) return undefined;
-    
     const map = new Map<string, Map<number, number>>();
     for (const player of players) {
       if (player.strokesPerHole) {
@@ -46,7 +44,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
       }
     }
     return map.size > 0 ? map : undefined;
-  }, [players, round.games]);
+  }, [players]);
   
   const skinsGame = round.games?.find(g => g.type === 'skins');
   const nassauGame = round.games?.find(g => g.type === 'nassau');

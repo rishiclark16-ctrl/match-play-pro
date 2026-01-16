@@ -39,11 +39,8 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
   }, [players, currentHole]);
   
   // Build the strokesPerHole map for net scoring
+  // Always build if players have strokes data - individual games decide whether to use it
   const buildStrokesMap = useMemo((): StrokesPerHoleMap | undefined => {
-    // Check if any game uses net scoring
-    const anyGameUsesNet = round.games?.some(g => g.useNet);
-    if (!anyGameUsesNet) return undefined;
-    
     const map = new Map<string, Map<number, number>>();
     for (const player of players) {
       if (player.strokesPerHole) {
@@ -51,7 +48,7 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
       }
     }
     return map.size > 0 ? map : undefined;
-  }, [players, round.games]);
+  }, [players]);
   
   // Calculate carryover for skins
   const skinsContext = useMemo(() => {

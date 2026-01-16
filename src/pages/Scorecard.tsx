@@ -518,7 +518,11 @@ export default function Scorecard() {
         {playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && (
           <LiveLeaderboard
             players={playersWithScores}
-            useNetScoring={round.games?.some((g: any) => g.useNet) || false}
+            useNetScoring={
+              // Match play always uses net scoring (differential strokes)
+              // Also enable if any game explicitly has useNet
+              round.matchPlay || round.games?.some((g: any) => g.useNet) || false
+            }
             isMatchPlay={round.matchPlay}
             holeInfo={round.holeInfo}
             scores={roundScores}
