@@ -204,7 +204,7 @@ export default function Auth() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background px-6 py-8 safe-top safe-bottom relative">
+    <div className="h-screen flex flex-col overflow-hidden bg-background px-6 pt-8 pb-16 safe-top safe-bottom relative">
       {/* Technical Grid Background */}
       <div className="absolute inset-0 pointer-events-none">
         <div 
@@ -229,15 +229,15 @@ export default function Auth() {
       </div>
       
       {/* Scrollable Content */}
-      <div 
-        className="flex-1 overflow-y-auto overscroll-y-contain flex flex-col items-center justify-center relative z-10"
+      <div
+        className="flex-1 overflow-y-auto overscroll-y-contain flex flex-col items-center justify-center relative z-10 pb-8"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="w-full max-w-sm"
+          className="w-full max-w-sm pb-8"
         >
         {/* Branding */}
         <motion.div 
