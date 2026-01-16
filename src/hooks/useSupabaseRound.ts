@@ -149,7 +149,14 @@ export function useSupabaseRound(roundId: string | null) {
           }
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          setIsOnline(true);
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.error('Realtime subscription error:', err);
+          setIsOnline(false);
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -160,8 +167,10 @@ export function useSupabaseRound(roundId: string | null) {
   const saveScore = useCallback(async (playerId: string, holeNumber: number, strokes: number) => {
     if (!roundId) return;
 
-    // Optimistic update
-    const tempId = crypto.randomUUID();
+    // Optimistic update - use crypto.randomUUID with fallback for older browsers
+    const tempId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `temp-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     const newScore: Score = {
       id: tempId,
       roundId,

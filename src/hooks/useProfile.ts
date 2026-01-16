@@ -89,6 +89,17 @@ export function useProfile() {
   const updateProfile = async (updates: ProfileUpdate): Promise<boolean> => {
     if (!user) return false;
 
+    // Validate handicap if provided (valid range: -5 to 54)
+    if (updates.handicap !== undefined && updates.handicap !== null) {
+      const handicap = Number(updates.handicap);
+      if (isNaN(handicap) || handicap < -5 || handicap > 54) {
+        setError('Handicap must be between -5 and 54');
+        return false;
+      }
+      // Round to one decimal place
+      updates.handicap = Math.round(handicap * 10) / 10;
+    }
+
     try {
       const { error: updateError } = await supabase
         .from('profiles')
@@ -113,8 +124,29 @@ export function useProfile() {
   const uploadAvatar = async (file: File): Promise<string | null> => {
     if (!user) return null;
 
+    // Validate file size (max 5MB)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      setError('Avatar image must be less than 5MB');
+      return null;
+    }
+
+    // Validate file type
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setError('Avatar must be a JPEG, PNG, WebP, or GIF image');
+      return null;
+    }
+
     try {
-      const fileExt = file.name.split('.').pop();
+      // Sanitize file extension from mime type (not user-provided filename)
+      const mimeToExt: Record<string, string> = {
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/webp': 'webp',
+        'image/gif': 'gif',
+      };
+      const fileExt = mimeToExt[file.type] || 'jpg';
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
       // Upload to storage
@@ -124,15 +156,19 @@ export function useProfile() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
+      // Get public URL with error handling
+      const { data: urlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
 
+      if (!urlData?.publicUrl) {
+        throw new Error('Failed to generate public URL for avatar');
+      }
+
       // Update profile with new URL
-      const success = await updateProfile({ avatar_url: publicUrl });
+      const success = await updateProfile({ avatar_url: urlData.publicUrl });
       if (success) {
-        return publicUrl;
+        return urlData.publicUrl;
       }
       return null;
     } catch (err) {
