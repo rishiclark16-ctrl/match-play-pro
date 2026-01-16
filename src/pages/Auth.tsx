@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Loader2, Check, X } from 'lucide-react';
 import { z } from 'zod';
+import { Capacitor } from '@capacitor/core';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,7 +50,8 @@ function getPasswordStrength(password: string): PasswordStrength {
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { user, loading: authLoading, signUp, signIn } = useAuth();
+  const { user, loading: authLoading, signUp, signIn, signInWithApple } = useAuth();
+  const isNativeIOS = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
   
   const [mode, setMode] = useState<'signup' | 'signin'>('signup');
   const [email, setEmail] = useState('');
@@ -57,6 +59,7 @@ export default function Auth() {
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAppleSigningIn, setIsAppleSigningIn] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -150,6 +153,37 @@ export default function Auth() {
     setMode(mode === 'signup' ? 'signin' : 'signup');
     setErrors({});
     hapticLight();
+  };
+
+  const handleAppleSignIn = async () => {
+    hapticLight();
+    setIsAppleSigningIn(true);
+
+    try {
+      const { error } = await signInWithApple();
+
+      if (error) {
+        if (error.message === 'Sign in cancelled') {
+          // User cancelled - don't show error
+        } else {
+          toast({
+            title: 'Sign in failed',
+            description: error.message,
+            variant: 'destructive',
+          });
+          hapticError();
+        }
+      } else {
+        hapticSuccess();
+        toast({
+          title: 'Welcome!',
+          description: 'You are now signed in.',
+        });
+        navigate('/', { replace: true });
+      }
+    } finally {
+      setIsAppleSigningIn(false);
+    }
   };
 
   if (authLoading) {
@@ -403,7 +437,7 @@ export default function Auth() {
                 <Button
                   type="submit"
                   className="w-full h-14 text-base font-bold rounded-xl bg-primary shadow-md"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isAppleSigningIn}
                 >
                   {isSubmitting ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -415,6 +449,40 @@ export default function Auth() {
                 </Button>
               </motion.div>
             </form>
+
+            {/* Sign in with Apple - only show on native iOS */}
+            {isNativeIOS && (
+              <>
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground font-medium">or</span>
+                  </div>
+                </div>
+
+                <motion.div whileTap={{ scale: 0.98 }}>
+                  <Button
+                    type="button"
+                    onClick={handleAppleSignIn}
+                    disabled={isSubmitting || isAppleSigningIn}
+                    className="w-full h-14 text-base font-bold rounded-xl bg-black text-white hover:bg-black/90 shadow-md flex items-center justify-center gap-3"
+                  >
+                    {isAppleSigningIn ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                        </svg>
+                        Sign in with Apple
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
+              </>
+            )}
 
             <p className="text-center text-sm text-muted-foreground mt-6">
               {mode === 'signup' ? (
