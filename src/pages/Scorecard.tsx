@@ -397,10 +397,10 @@ export default function Scorecard() {
 
       {/* Fixed Header */}
       <header
-        className="flex-shrink-0 z-30 bg-background border-b border-border"
+        className="flex-shrink-0 z-30 bg-background border-b border-border safe-top"
         style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
       >
-        <div className="pt-2 pb-2 px-4 flex items-center justify-between gap-3">
+        <div className="pt-3 pb-3 px-4 flex items-center justify-between gap-3">
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => {
@@ -447,15 +447,16 @@ export default function Scorecard() {
 
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <button
-                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg bg-muted flex items-center justify-center active:scale-95 transition-transform touch-manipulation cursor-pointer"
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg bg-muted flex items-center justify-center touch-manipulation"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
-                  onClick={e => e.stopPropagation()}
+                  aria-label="More options"
                 >
                   <MoreVertical className="w-5 h-5" />
-                </button>
+                </motion.button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 z-50">
+              <DropdownMenuContent align="end" className="w-48 z-50" sideOffset={8}>
                 <DropdownMenuItem onClick={() => setShowShareModal(true)}>
                   <Share2 className="w-4 h-4 mr-2" />
                   Share Round
@@ -511,38 +512,45 @@ export default function Scorecard() {
 
       {/* Scrollable Content Area */}
       <main
-        className="flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain relative z-10 px-4 pb-32"
-        style={{ WebkitOverflowScrolling: 'touch' }}
+        className="flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain relative z-10 px-4 pt-2 pb-40"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          scrollBehavior: 'smooth',
+        }}
       >
         {/* Live Leaderboard - hide during playoff */}
         {playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && (
-          <LiveLeaderboard
-            players={playersWithScores}
-            useNetScoring={
-              // Match play always uses net scoring (differential strokes)
-              // Also enable if any game explicitly has useNet
-              round.matchPlay || round.games?.some((g: any) => g.useNet) || false
-            }
-            isMatchPlay={round.matchPlay}
-            holeInfo={round.holeInfo}
-            scores={roundScores}
-          />
+          <div className="mb-4">
+            <LiveLeaderboard
+              players={playersWithScores}
+              useNetScoring={
+                // Match play always uses net scoring (differential strokes)
+                // Also enable if any game explicitly has useNet
+                round.matchPlay || round.games?.some((g: any) => g.useNet) || false
+              }
+              isMatchPlay={round.matchPlay}
+              holeInfo={round.holeInfo}
+              scores={roundScores}
+            />
+          </div>
         )}
 
         {/* Live Money Tracker */}
         {playoffHole === 0 && (round.games?.length > 0 || propBets.some(pb => pb.winnerId)) && (
-          <MoneyTracker
-            players={playersWithScores}
-            scores={roundScores}
-            games={round.games || []}
-            holeInfo={round.holeInfo}
-            presses={[]}
-            currentHole={currentHole}
-            propBets={propBets}
-          />
+          <div className="mb-4">
+            <MoneyTracker
+              players={playersWithScores}
+              scores={roundScores}
+              games={round.games || []}
+              holeInfo={round.holeInfo}
+              presses={[]}
+              currentHole={currentHole}
+              propBets={propBets}
+            />
+          </div>
         )}
 
-        <div className="space-y-3">
+        <div className="space-y-4 mt-3">
           {/* Hole Summary - hide during playoff */}
           {playoffHole === 0 &&
             (round.games?.length > 0 || playersWithScores.some(p => p.handicap !== undefined)) && (

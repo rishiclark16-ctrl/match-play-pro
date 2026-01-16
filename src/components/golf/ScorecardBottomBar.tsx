@@ -58,11 +58,11 @@ export function ScorecardBottomBar({
   return (
     <div
       className={cn(
-        'fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border transition-opacity',
+        'fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border transition-opacity safe-bottom',
         showFinishOptions && 'opacity-0 pointer-events-none'
       )}
     >
-      <div className="px-3 py-2 flex items-center justify-between gap-2">
+      <div className="px-3 py-3 flex items-center justify-between gap-2">
         {/* Leaderboard Button */}
         <motion.button
           whileTap={{ scale: 0.95 }}
