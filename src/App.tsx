@@ -28,6 +28,7 @@ const Groups = lazy(() => import("./pages/Groups"));
 const Stats = lazy(() => import("./pages/Stats"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const Support = lazy(() => import("./pages/Support"));
 
 const queryClient = new QueryClient();
 
@@ -182,6 +183,14 @@ function AppContent() {
           element={
             <Suspense fallback={<PageSkeleton variant="default" />}>
               <TermsOfService />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/support"
+          element={
+            <Suspense fallback={<PageSkeleton variant="default" />}>
+              <Support />
             </Suspense>
           }
         />
