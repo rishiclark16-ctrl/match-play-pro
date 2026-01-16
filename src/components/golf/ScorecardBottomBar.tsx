@@ -67,6 +67,7 @@ export function ScorecardBottomBar({
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={onNavigateToLeaderboard}
+          aria-label="View leaderboard"
           className="flex items-center gap-2 px-4 min-h-[44px] rounded-lg bg-card border border-border touch-manipulation"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
@@ -95,6 +96,7 @@ export function ScorecardBottomBar({
             <Button
               onClick={onFinishRound}
               size="sm"
+              aria-label="End playoff and finish round"
               className="px-4 min-h-[44px] h-auto rounded-lg font-bold text-sm touch-manipulation"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
@@ -105,6 +107,7 @@ export function ScorecardBottomBar({
         ) : canFinish && !isSpectator ? (
           <Button
             onClick={onShowFinishOptions}
+            aria-label="Finish round"
             className="px-5 min-h-[44px] h-auto rounded-lg font-bold text-sm touch-manipulation"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
@@ -115,6 +118,7 @@ export function ScorecardBottomBar({
           <Button
             onClick={onShowFinishOptions}
             variant="outline"
+            aria-label="Show finish options"
             className="px-5 min-h-[44px] h-auto rounded-lg font-bold text-sm border-2 border-primary text-primary touch-manipulation"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >

@@ -70,6 +70,12 @@ export function VoiceButton({
         transition={isListening ? { duration: 0.6, repeat: Infinity } : {}}
         onClick={handlePress}
         disabled={disabled || !isSupported}
+        aria-label={
+          !isSupported ? 'Voice input not supported' :
+          isProcessing ? 'Processing voice input' :
+          isListening ? 'Stop listening' :
+          'Start voice scoring'
+        }
         className={cn(
           "relative w-16 h-16 rounded-full flex items-center justify-center transition-all border-2",
           !isSupported && "bg-muted border-border cursor-not-allowed",

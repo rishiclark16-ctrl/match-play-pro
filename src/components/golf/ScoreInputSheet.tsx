@@ -103,6 +103,8 @@ export function ScoreInputSheet({
                     key={score}
                     whileTap={{ scale: 0.92 }}
                     onClick={() => handleSelectScore(score)}
+                    aria-label={`Score ${score}, ${label}`}
+                    aria-pressed={isSelected}
                     className={cn(
                       "flex flex-col items-center justify-center py-3 rounded-xl border-2 transition-all min-h-[56px] min-w-[44px] touch-manipulation",
                       getScoreButtonBg(score, isSelected)

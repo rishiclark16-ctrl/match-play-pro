@@ -1,5 +1,21 @@
 import { Score, Player, HoleInfo, StablefordPoints } from '@/types/golf';
 
+// Type for net scoring: Map<playerId, Map<holeNumber, strokes>>
+export type StrokesPerHoleMap = Map<string, Map<number, number>>;
+
+// Helper to get net score for a player on a hole
+function getNetScore(
+  playerId: string,
+  holeNumber: number,
+  grossStrokes: number,
+  strokesPerHole?: StrokesPerHoleMap
+): number {
+  if (!strokesPerHole) return grossStrokes;
+  const playerStrokes = strokesPerHole.get(playerId);
+  const holeStrokes = playerStrokes?.get(holeNumber) || 0;
+  return grossStrokes - holeStrokes;
+}
+
 // Standard Stableford points
 const STANDARD_POINTS: StablefordPoints = {
   albatross: 5,
@@ -66,7 +82,8 @@ export function calculateStableford(
   scores: Score[],
   players: Player[],
   holeInfo: HoleInfo[],
-  modified: boolean = false
+  modified: boolean = false,
+  strokesPerHole?: StrokesPerHoleMap
 ): StablefordResult {
   const standings: StablefordStanding[] = players.map(p => ({
     playerId: p.id,
@@ -74,25 +91,27 @@ export function calculateStableford(
     totalPoints: 0,
     holePoints: []
   }));
-  
+
   let holesScored = 0;
-  
+
   scores.forEach(score => {
     const hole = holeInfo.find(h => h.number === score.holeNumber);
     if (!hole) return;
-    
-    const points = getStablefordPoints(score.strokes, hole.par, modified);
+
+    // Use net score for points calculation when handicap strokes are provided
+    const netStrokes = getNetScore(score.playerId, score.holeNumber, score.strokes, strokesPerHole);
+    const points = getStablefordPoints(netStrokes, hole.par, modified);
     const standing = standings.find(s => s.playerId === score.playerId);
     if (standing) {
       standing.totalPoints += points;
       standing.holePoints.push({ hole: score.holeNumber, points });
     }
   });
-  
+
   // Count unique holes scored
   const uniqueHoles = new Set(scores.map(s => s.holeNumber));
   holesScored = uniqueHoles.size;
-  
+
   return {
     standings: standings.sort((a, b) => b.totalPoints - a.totalPoints),
     modified,

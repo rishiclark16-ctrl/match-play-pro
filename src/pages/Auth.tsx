@@ -441,6 +441,18 @@ export default function Auth() {
                 </>
               )}
             </p>
+
+            {/* Legal links - required by App Store */}
+            <p className="text-center text-xs text-muted-foreground mt-4">
+              By continuing, you agree to our{' '}
+              <a href="/terms-of-service" className="text-primary hover:underline">
+                Terms of Service
+              </a>{' '}
+              and{' '}
+              <a href="/privacy-policy" className="text-primary hover:underline">
+                Privacy Policy
+              </a>
+            </p>
           </TechCardContent>
         </TechCard>
       </motion.div>

@@ -411,6 +411,28 @@ export default function Profile() {
             </TechCardContent>
           </TechCard>
         </motion.section>
+
+        {/* Legal Links */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.25 }}
+          className="flex justify-center gap-4 pt-4 pb-8"
+        >
+          <a
+            href="/privacy-policy"
+            className="text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            Privacy Policy
+          </a>
+          <span className="text-muted-foreground/30">•</span>
+          <a
+            href="/terms-of-service"
+            className="text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            Terms of Service
+          </a>
+        </motion.div>
     </AppLayout>
   );
 }

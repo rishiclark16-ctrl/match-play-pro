@@ -3,7 +3,7 @@
     "apps": [],
     "details": [
       {
-        "appID": "TEAM_ID.dev.matchgolf.app",
+        "appID": "YPMSN56J9D.dev.matchgolf.app",
         "paths": [
           "/round/*",
           "/join/*",
@@ -14,7 +14,7 @@
   },
   "webcredentials": {
     "apps": [
-      "TEAM_ID.dev.matchgolf.app"
+      "YPMSN56J9D.dev.matchgolf.app"
     ]
   }
 }

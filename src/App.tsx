@@ -26,6 +26,8 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Friends = lazy(() => import("./pages/Friends"));
 const Groups = lazy(() => import("./pages/Groups"));
 const Stats = lazy(() => import("./pages/Stats"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 
 const queryClient = new QueryClient();
 
@@ -165,6 +167,23 @@ function AppContent() {
               </Suspense>
             </AuthGuard>
           } 
+        />
+        {/* Public legal pages - no auth required */}
+        <Route
+          path="/privacy-policy"
+          element={
+            <Suspense fallback={<PageSkeleton variant="default" />}>
+              <PrivacyPolicy />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/terms-of-service"
+          element={
+            <Suspense fallback={<PageSkeleton variant="default" />}>
+              <TermsOfService />
+            </Suspense>
+          }
         />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />

@@ -103,13 +103,15 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
   // Calculate Stableford results
   const stablefordResult: StablefordResult | null = useMemo(() => {
     if (!stablefordGame || players.length < 2) return null;
+    const useStrokesMap = stablefordGame.useNet ? buildStrokesMap : undefined;
     return calculateStableford(
       scores,
       players,
       round.holeInfo,
-      stablefordGame.modifiedStableford ?? false
+      stablefordGame.modifiedStableford ?? false,
+      useStrokesMap
     );
-  }, [stablefordGame, scores, players, round.holeInfo]);
+  }, [stablefordGame, scores, players, round.holeInfo, buildStrokesMap]);
   
   // Calculate Best Ball results
   const bestBallResult: BestBallResult | null = useMemo(() => {

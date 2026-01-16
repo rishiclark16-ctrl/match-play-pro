@@ -156,14 +156,21 @@ async function handleSync(event) {
 
 /**
  * Listen for messages from the main app
+ * Security: Only accept messages from same origin
  */
 self.addEventListener('message', (event) => {
+  // Validate origin to prevent cross-origin attacks
+  if (event.origin && event.origin !== self.location.origin) {
+    console.warn('[SW] Ignoring message from untrusted origin:', event.origin);
+    return;
+  }
+
   if (event.data && event.data.type === 'SUPABASE_CONFIG') {
     supabaseUrl = event.data.url;
     supabaseKey = event.data.key;
     console.log('[SW] Received Supabase configuration');
   }
-  
+
   if (event.data && event.data.type === 'TRIGGER_SYNC') {
     // Manual sync trigger from the app
     console.log('[SW] Manual sync requested');
