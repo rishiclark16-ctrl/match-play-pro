@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone } from 'lucide-react';
+import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Settings, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { HomeCourseSelector } from '@/components/profile/HomeCourseSelector';
 import { TechCard, TechCardContent } from '@/components/ui/tech-card';
@@ -13,6 +14,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile, ProfileUpdate } from '@/hooks/useProfile';
 import { useFriends } from '@/hooks/useFriends';
+import { useSettings } from '@/hooks/useSettings';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -30,6 +32,7 @@ export default function Profile() {
   const { user, signOut } = useAuth();
   const { profile, loading, updateProfile, uploadAvatar } = useProfile();
   const { friends } = useFriends();
+  const { settings, updateSettings } = useSettings();
   const [copied, setCopied] = useState(false);
 
   const [fullName, setFullName] = useState('');
@@ -412,26 +415,80 @@ export default function Profile() {
           </TechCard>
         </motion.section>
 
-        {/* Legal Links */}
+        {/* Scoring Settings Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.22 }}
+          className="space-y-3"
+        >
+          <div className="flex items-center gap-2">
+            <Settings className="w-4 h-4 text-primary" />
+            <span className="label-sm">Scoring Settings</span>
+          </div>
+
+          {/* Net Scoring Toggle */}
+          <TechCard hover>
+            <TechCardContent className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <Label className="label-sm">Use Net Scoring</Label>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Determine winners by handicap-adjusted scores
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.useNetScoring}
+                  onCheckedChange={(checked) => {
+                    hapticLight();
+                    updateSettings({ useNetScoring: checked });
+                    toast.success(checked ? 'Net scoring enabled' : 'Gross scoring enabled');
+                  }}
+                />
+              </div>
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/50 text-[11px] text-muted-foreground">
+                <HelpCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                <span>
+                  {settings.useNetScoring
+                    ? 'Winners are determined by net scores (strokes minus handicap). Match play uses differential strokes per hole.'
+                    : 'Winners are determined by gross scores (raw strokes). Handicaps are ignored for winner calculation.'}
+                </span>
+              </div>
+            </TechCardContent>
+          </TechCard>
+        </motion.section>
+
+        {/* Support & Legal Links */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.25 }}
-          className="flex justify-center gap-4 pt-4 pb-8"
+          className="flex flex-col items-center gap-3 pt-4 pb-8"
         >
-          <a
-            href="/privacy-policy"
-            className="text-xs text-muted-foreground hover:text-primary transition-colors"
+          <button
+            onClick={() => {
+              hapticLight();
+              navigate('/support');
+            }}
+            className="text-sm text-primary font-semibold hover:underline transition-colors"
           >
-            Privacy Policy
-          </a>
-          <span className="text-muted-foreground/30">•</span>
-          <a
-            href="/terms-of-service"
-            className="text-xs text-muted-foreground hover:text-primary transition-colors"
-          >
-            Terms of Service
-          </a>
+            Help & Support
+          </button>
+          <div className="flex justify-center gap-4">
+            <a
+              href="/privacy-policy"
+              className="text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              Privacy Policy
+            </a>
+            <span className="text-muted-foreground/30">•</span>
+            <a
+              href="/terms-of-service"
+              className="text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              Terms of Service
+            </a>
+          </div>
         </motion.div>
     </AppLayout>
   );

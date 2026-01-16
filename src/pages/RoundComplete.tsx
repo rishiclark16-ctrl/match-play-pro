@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Share2, Plus, Home, Medal, Award, Loader2, Image, DollarSign, Target, Flame, ChevronDown, ChevronUp, Users, ArrowRight } from 'lucide-react';
 import { useRounds } from '@/hooks/useRounds';
 import { useRoundSharing } from '@/hooks/useRoundSharing';
+import { useSettings } from '@/hooks/useSettings';
 import { formatRelativeToPar, getScoreColor, getScoreType, PlayerWithScores, Score, Player, Round, HoleInfo, GameConfig, Press } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -12,17 +13,20 @@ import { toast } from 'sonner';
 import { shareResults, shareText } from '@/lib/shareResults';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { supabase } from '@/integrations/supabase/client';
-import { calculateSkins, SkinsResult } from '@/lib/games/skins';
+import { calculateSkins, SkinsResult, StrokesPerHoleMap } from '@/lib/games/skins';
 import { calculateNassau, NassauResult } from '@/lib/games/nassau';
 import { calculateWolfStandings, WolfStanding } from '@/lib/games/wolf';
 import { calculateSettlement, getTotalWinnings } from '@/lib/games/settlement';
+import { calculateMatchPlay, MatchPlayResult } from '@/lib/games/matchPlay';
 import { TechCard, TechCardContent } from '@/components/ui/tech-card';
+import { calculateMatchPlayStrokes, buildMatchPlayStrokesMap, buildStrokePlayStrokesMap, calculatePlayingHandicap, calculateTotalNetStrokes } from '@/lib/handicapUtils';
 
 export default function RoundComplete() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getRoundById, getPlayersWithScores, completeRound, getScoresForRound, getPlayersForRound, getPressesForRound } = useRounds();
   const { shareRoundWithFriends } = useRoundSharing();
+  const { settings } = useSettings();
   const [isSharing, setIsSharing] = useState(false);
   const [shareMode, setShareMode] = useState<'image' | 'text' | null>(null);
   const [sharedWithFriends, setSharedWithFriends] = useState(false);
@@ -195,18 +199,31 @@ export default function RoundComplete() {
     autoShare();
   }, [round, sharedWithFriends, shareRoundWithFriends]);
 
-  // Calculate players with scores
+  // Calculate players with scores (including net scores)
   const playersWithScores = useMemo(() => {
     if (!round || rawPlayers.length === 0) return [];
-    
+
     return rawPlayers.map(player => {
       const playerScores = rawScores.filter(s => s.playerId === player.id);
       const totalStrokes = playerScores.reduce((sum, s) => sum + s.strokes, 0);
-      
+
       const totalRelativeToPar = playerScores.reduce((sum, s) => {
         const hole = round.holeInfo.find(h => h.number === s.holeNumber);
         return sum + (s.strokes - (hole?.par || 4));
       }, 0);
+
+      // Calculate net scores
+      const playingHandicap = player.handicap !== undefined
+        ? calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes)
+        : 0;
+      const totalNetStrokes = calculateTotalNetStrokes(
+        totalStrokes,
+        playingHandicap,
+        playerScores.length,
+        round.holes
+      );
+      const parTotal = round.holeInfo.reduce((sum, h) => sum + h.par, 0);
+      const netRelativeToPar = totalNetStrokes - parTotal;
 
       return {
         ...player,
@@ -214,17 +231,71 @@ export default function RoundComplete() {
         totalStrokes,
         totalRelativeToPar,
         holesPlayed: playerScores.length,
+        playingHandicap,
+        totalNetStrokes,
+        netRelativeToPar,
       };
     });
   }, [round, rawPlayers, rawScores]);
 
-  // Sort by total strokes (lowest first)
-  const sortedPlayers = useMemo(() => {
-    return [...playersWithScores].sort((a, b) => a.totalStrokes - b.totalStrokes);
-  }, [playersWithScores]);
+  // Build strokes map for match play net scoring
+  const strokesPerHoleMap = useMemo((): StrokesPerHoleMap | undefined => {
+    if (!round || rawPlayers.length !== 2) return undefined;
 
-  const winner = sortedPlayers[0];
-  const hasTie = sortedPlayers.length > 1 && sortedPlayers[0]?.totalStrokes === sortedPlayers[1]?.totalStrokes;
+    const [p1, p2] = rawPlayers;
+    const matchInfo = calculateMatchPlayStrokes(
+      { id: p1.id, name: p1.name, handicap: p1.handicap, manualStrokes: p1.manualStrokes },
+      { id: p2.id, name: p2.name, handicap: p2.handicap, manualStrokes: p2.manualStrokes },
+      round.slope || 113,
+      round.holes,
+      round.handicapMode || 'auto'
+    );
+    return buildMatchPlayStrokesMap(matchInfo, round.holeInfo);
+  }, [round, rawPlayers]);
+
+  // Calculate match play result using proper net scoring
+  const matchPlayResult = useMemo((): MatchPlayResult | null => {
+    if (!round?.matchPlay || playersWithScores.length !== 2) return null;
+    return calculateMatchPlay(
+      rawScores,
+      playersWithScores,
+      round.holeInfo,
+      settings.useNetScoring ? strokesPerHoleMap : undefined,
+      round.holes
+    );
+  }, [round, playersWithScores, rawScores, strokesPerHoleMap, settings.useNetScoring]);
+
+  // Sort by net or gross strokes based on settings (lowest first)
+  const sortedPlayers = useMemo(() => {
+    return [...playersWithScores].sort((a, b) => {
+      if (settings.useNetScoring) {
+        return (a.totalNetStrokes ?? a.totalStrokes) - (b.totalNetStrokes ?? b.totalStrokes);
+      }
+      return a.totalStrokes - b.totalStrokes;
+    });
+  }, [playersWithScores, settings.useNetScoring]);
+
+  // Determine winner - use match play result if match play is enabled
+  const winner = useMemo(() => {
+    // For match play, winner is determined by holes up/down, not total strokes
+    if (round?.matchPlay && matchPlayResult?.winnerId) {
+      return playersWithScores.find(p => p.id === matchPlayResult.winnerId) || sortedPlayers[0];
+    }
+    return sortedPlayers[0];
+  }, [round, matchPlayResult, playersWithScores, sortedPlayers]);
+
+  const hasTie = useMemo(() => {
+    // For match play, check if match is halved
+    if (round?.matchPlay && matchPlayResult) {
+      return matchPlayResult.matchStatus === 'halved';
+    }
+    // For stroke play, check if top scores are equal
+    if (sortedPlayers.length < 2) return false;
+    if (settings.useNetScoring) {
+      return (sortedPlayers[0]?.totalNetStrokes ?? 0) === (sortedPlayers[1]?.totalNetStrokes ?? 0);
+    }
+    return sortedPlayers[0]?.totalStrokes === sortedPlayers[1]?.totalStrokes;
+  }, [round, matchPlayResult, sortedPlayers, settings.useNetScoring]);
 
   // Calculate game results
   const gameResults = useMemo(() => {
@@ -272,27 +343,8 @@ export default function RoundComplete() {
   const settlements = useMemo(() => {
     if (!round || playersWithScores.length === 0) return [];
 
-    // Get match play winner
-    let matchPlayWinnerId: string | null = null;
-    if (round.matchPlay && playersWithScores.length === 2) {
-      const [p1, p2] = playersWithScores;
-      let p1Wins = 0;
-      let p2Wins = 0;
-
-      for (let hole = 1; hole <= round.holes; hole++) {
-        const p1Score = p1.scores.find(s => s.holeNumber === hole)?.strokes;
-        const p2Score = p2.scores.find(s => s.holeNumber === hole)?.strokes;
-        
-        if (p1Score !== undefined && p2Score !== undefined) {
-          if (p1Score < p2Score) p1Wins++;
-          else if (p2Score < p1Score) p2Wins++;
-        }
-      }
-
-      if (p1Wins !== p2Wins) {
-        matchPlayWinnerId = p1Wins > p2Wins ? p1.id : p2.id;
-      }
-    }
+    // Use the match play result winner (uses net scoring)
+    const matchPlayWinnerId = matchPlayResult?.winnerId || null;
 
     const wolfResults = (round as any).wolfResults || [];
 
@@ -305,7 +357,7 @@ export default function RoundComplete() {
       wolfResults,
       round.games?.find(g => g.type === 'wolf')?.stakes
     );
-  }, [round, playersWithScores, rawPlayers, gameResults]);
+  }, [round, playersWithScores, rawPlayers, gameResults, matchPlayResult]);
 
   // Calculate highlights
   const highlights = useMemo(() => {
@@ -392,46 +444,6 @@ export default function RoundComplete() {
 
     return highlights.slice(0, 8);
   }, [round, rawScores, rawPlayers, gameResults]);
-
-  // Match play calculation (if enabled and 2 players)
-  const matchPlayResult = useMemo(() => {
-    if (!round?.matchPlay || playersWithScores.length !== 2) return null;
-    
-    const [p1, p2] = playersWithScores;
-    let p1Wins = 0;
-    let p2Wins = 0;
-
-    for (let hole = 1; hole <= round.holes; hole++) {
-      const p1Score = p1.scores.find(s => s.holeNumber === hole)?.strokes;
-      const p2Score = p2.scores.find(s => s.holeNumber === hole)?.strokes;
-      
-      if (p1Score !== undefined && p2Score !== undefined) {
-        if (p1Score < p2Score) p1Wins++;
-        else if (p2Score < p1Score) p2Wins++;
-      }
-    }
-
-    const diff = p1Wins - p2Wins;
-    if (diff === 0) {
-      return { status: 'Match Halved', winner: null };
-    }
-    
-    const matchWinner = diff > 0 ? p1 : p2;
-    const upBy = Math.abs(diff);
-    const holesRemaining = round.holes - (p1Wins + p2Wins + (round.holes - Math.max(p1.holesPlayed, p2.holesPlayed)));
-    
-    if (holesRemaining > 0 && upBy > holesRemaining) {
-      return { 
-        status: `${matchWinner.name} wins ${upBy} & ${holesRemaining}`, 
-        winner: matchWinner 
-      };
-    }
-    
-    return { 
-      status: `${matchWinner.name} wins ${upBy} UP`, 
-      winner: matchWinner 
-    };
-  }, [round, playersWithScores]);
 
   if (loading) {
     return (
@@ -653,24 +665,43 @@ export default function RoundComplete() {
                     </span>
                   </div>
                   <h2 className="text-xl font-bold tracking-tight">
-                    {hasTie 
-                      ? sortedPlayers.filter(p => p.totalStrokes === winner.totalStrokes).map(p => p.name).join(' & ')
+                    {hasTie
+                      ? sortedPlayers.filter(p => {
+                          const pScore = settings.useNetScoring ? (p.totalNetStrokes ?? p.totalStrokes) : p.totalStrokes;
+                          const winnerScore = settings.useNetScoring ? (winner.totalNetStrokes ?? winner.totalStrokes) : winner.totalStrokes;
+                          return pScore === winnerScore;
+                        }).map(p => p.name).join(' & ')
                       : winner.name
                     }
                   </h2>
                 </div>
-                
+
                 <div className="text-right">
-                  <div className="text-3xl font-black tabular-nums tracking-tight">
-                    {winner.totalStrokes}
-                  </div>
-                  <div className={cn(
-                    "text-sm font-bold",
-                    winner.totalRelativeToPar < 0 ? "text-success" : 
-                    winner.totalRelativeToPar > 0 ? "text-destructive" : "text-muted-foreground"
-                  )}>
-                    {formatRelativeToPar(winner.totalRelativeToPar)}
-                  </div>
+                  {/* For match play, show the match result; otherwise show strokes */}
+                  {round?.matchPlay && matchPlayResult ? (
+                    <>
+                      <div className="text-2xl font-black tracking-tight">
+                        {matchPlayResult.winMargin || (matchPlayResult.holesUp > 0 ? `${matchPlayResult.holesUp} UP` : 'AS')}
+                      </div>
+                      <div className="text-xs font-medium text-muted-foreground">
+                        Net {winner.totalNetStrokes ?? winner.totalStrokes}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-3xl font-black tabular-nums tracking-tight">
+                        {settings.useNetScoring ? (winner.totalNetStrokes ?? winner.totalStrokes) : winner.totalStrokes}
+                      </div>
+                      <div className={cn(
+                        "text-sm font-bold",
+                        (settings.useNetScoring ? (winner.netRelativeToPar ?? winner.totalRelativeToPar) : winner.totalRelativeToPar) < 0 ? "text-success" :
+                        (settings.useNetScoring ? (winner.netRelativeToPar ?? winner.totalRelativeToPar) : winner.totalRelativeToPar) > 0 ? "text-destructive" : "text-muted-foreground"
+                      )}>
+                        {formatRelativeToPar(settings.useNetScoring ? (winner.netRelativeToPar ?? winner.totalRelativeToPar) : winner.totalRelativeToPar)}
+                        {settings.useNetScoring && winner.playingHandicap ? ' (net)' : ''}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </TechCardContent>
@@ -690,7 +721,7 @@ export default function RoundComplete() {
             <TechCardContent className="p-3">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Match Play</span>
-                <span className="font-bold text-sm">{matchPlayResult.status}</span>
+                <span className="font-bold text-sm">{matchPlayResult.statusText}</span>
               </div>
             </TechCardContent>
           </TechCard>
@@ -903,13 +934,16 @@ export default function RoundComplete() {
 
                         {/* Score */}
                         <div className="text-right shrink-0">
-                          <p className="text-xl font-black tabular-nums">{player.totalStrokes}</p>
+                          <p className="text-xl font-black tabular-nums">
+                            {settings.useNetScoring ? (player.totalNetStrokes ?? player.totalStrokes) : player.totalStrokes}
+                          </p>
                           <p className={cn(
                             "text-xs font-bold",
-                            player.totalRelativeToPar < 0 ? "text-success" : 
-                            player.totalRelativeToPar > 0 ? "text-destructive" : "text-muted-foreground"
+                            (settings.useNetScoring ? (player.netRelativeToPar ?? player.totalRelativeToPar) : player.totalRelativeToPar) < 0 ? "text-success" :
+                            (settings.useNetScoring ? (player.netRelativeToPar ?? player.totalRelativeToPar) : player.totalRelativeToPar) > 0 ? "text-destructive" : "text-muted-foreground"
                           )}>
-                            {formatRelativeToPar(player.totalRelativeToPar)}
+                            {formatRelativeToPar(settings.useNetScoring ? (player.netRelativeToPar ?? player.totalRelativeToPar) : player.totalRelativeToPar)}
+                            {settings.useNetScoring && player.playingHandicap ? ' (net)' : ''}
                           </p>
                         </div>
                       </div>
