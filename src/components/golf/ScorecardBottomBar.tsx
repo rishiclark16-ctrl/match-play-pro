@@ -66,7 +66,7 @@ export function ScorecardBottomBar({
         paddingBottom: 'max(env(safe-area-inset-bottom), 8px)',
       }}
     >
-      <div className="px-4 py-3 flex items-center justify-between gap-3">
+      <div className="px-4 py-2 flex items-center justify-between gap-3">
         {/* Leaderboard Button */}
         <motion.button
           whileTap={{ scale: 0.95 }}

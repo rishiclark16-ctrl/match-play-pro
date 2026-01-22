@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Flag } from 'lucide-react';
 import { HoleNavigator } from '@/components/golf/HoleNavigator';
 import { PlayerCard } from '@/components/golf/PlayerCard';
@@ -569,7 +569,7 @@ export default function Scorecard() {
 
       {/* Scrollable Content Area */}
       <main
-        className="flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain relative z-10 px-4 pt-2 pb-40"
+        className="flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain relative z-10 px-4 pt-2 pb-48"
         style={{
           WebkitOverflowScrolling: 'touch',
           scrollBehavior: 'smooth',
@@ -623,32 +623,39 @@ export default function Scorecard() {
           {/* Regular scoring mode */}
           {playoffHole === 0 && (
             <>
-              <AnimatePresence mode="popLayout">
-                {playersWithScores.map((player, index) => {
-                  const holeScore = player.scores.find(s => s.holeNumber === currentHole)?.strokes;
-                  return (
-                    <motion.div
-                      key={player.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                    >
-                      <PlayerCard
-                        player={player}
-                        currentHoleScore={holeScore}
-                        currentHolePar={currentHoleInfo.par}
-                        currentHoleNumber={currentHole}
-                        isLeading={player.id === leadingPlayerId}
-                        onScoreTap={canEditScores ? () => setSelectedPlayerId(player.id) : undefined}
-                        onQuickScore={canEditScores ? score => handleQuickScore(player.id, score) : undefined}
-                        showNetScores={true}
-                        voiceHighlight={isListening}
-                        voiceSuccess={voiceSuccessPlayerIds.has(player.id)}
-                      />
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+              <LayoutGroup>
+                <AnimatePresence mode="popLayout">
+                  {playersWithScores.map((player, index) => {
+                    const holeScore = player.scores.find(s => s.holeNumber === currentHole)?.strokes;
+                    return (
+                      <motion.div
+                        key={player.id}
+                        layout
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{
+                          layout: { type: "spring", stiffness: 300, damping: 30 },
+                          opacity: { duration: 0.2 }
+                        }}
+                      >
+                        <PlayerCard
+                          player={player}
+                          currentHoleScore={holeScore}
+                          currentHolePar={currentHoleInfo.par}
+                          currentHoleNumber={currentHole}
+                          isLeading={player.id === leadingPlayerId}
+                          onScoreTap={canEditScores ? () => setSelectedPlayerId(player.id) : undefined}
+                          onQuickScore={canEditScores ? score => handleQuickScore(player.id, score) : undefined}
+                          showNetScores={true}
+                          voiceHighlight={isListening}
+                          voiceSuccess={voiceSuccessPlayerIds.has(player.id)}
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </LayoutGroup>
 
               {/* Next Hole Button */}
               <AnimatePresence>

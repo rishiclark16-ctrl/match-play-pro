@@ -19,8 +19,8 @@ interface ScorecardHeaderProps {
   onShowExitDialog: () => void;
   onShowShareModal: () => void;
   onShowEndDialog: () => void;
-  onAddScorekeeper: (playerId: string) => Promise<boolean>;
-  onRemoveScorekeeper: (playerId: string) => Promise<boolean>;
+  onAddScorekeeper: (playerId: string) => Promise<void>;
+  onRemoveScorekeeper: (playerId: string) => Promise<void>;
   onUpdateGames: (games: GameConfig[]) => Promise<void>;
 }
 
@@ -51,7 +51,7 @@ export function ScorecardHeader({
           paddingTop: 'max(env(safe-area-inset-top), 12px)',
         }}
       >
-        <div className="pt-2 pb-3 px-4 flex items-center justify-between gap-3">
+        <div className="pt-1 pb-3 px-4 flex items-center justify-between gap-3">
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => {

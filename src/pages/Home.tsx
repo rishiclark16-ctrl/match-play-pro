@@ -9,6 +9,7 @@ import { SpectatorRoundCard } from '@/components/golf/SpectatorRoundCard';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { TechCard } from '@/components/ui/tech-card';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
+import { RoundListSkeleton } from '@/components/ui/round-list-skeleton';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AppBackground } from '@/components/ui/app-background';
@@ -223,16 +224,9 @@ export default function Home() {
         <PullToRefresh onRefresh={handlePullRefresh} className="h-full min-h-0">
           <main className="px-6 py-4 pb-nav">
             {loadingRounds ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex flex-col items-center justify-center py-20 gap-4"
-              >
-                <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center border border-border">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                </div>
-                <p className="text-sm font-medium text-muted-foreground">Loading rounds...</p>
-              </motion.div>
+              <div className="pt-2">
+                <RoundListSkeleton />
+              </div>
             ) : (rounds.length > 0 || sharedRounds.length > 0 || spectatorRounds.length > 0) ? (
               <div className="space-y-6">
                 {/* Spectating Rounds Section */}

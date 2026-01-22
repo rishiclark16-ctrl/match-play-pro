@@ -4,8 +4,9 @@ import { ScoreInputSheet } from '@/components/golf/ScoreInputSheet';
 import { VoiceConfirmationModal } from '@/components/golf/VoiceConfirmationModal';
 import { ShareJoinCodeModal } from '@/components/golf/ShareJoinCodeModal';
 import { PlayoffWinnerModal } from '@/components/golf/PlayoffWinnerModal';
+import { PlayoffWinner } from '@/hooks/usePlayoff';
 import { PlayerWithScores } from '@/types/golf';
-import { ParseResult } from '@/lib/voiceParser';
+import { ParseResult, ParsedScore } from '@/lib/voiceParser';
 
 interface SelectedPlayerInfo {
   name: string;
@@ -26,7 +27,7 @@ interface ScorecardModalsProps {
   parseResult: ParseResult | null;
   players: PlayerWithScores[];
   onCloseVoiceModal: () => void;
-  onVoiceConfirm: () => void;
+  onVoiceConfirm: (scores: ParsedScore[]) => void;
   onVoiceRetry: () => void;
 
   // Share modal
@@ -38,7 +39,7 @@ interface ScorecardModalsProps {
 
   // Playoff winner
   showWinnerModal: boolean;
-  playoffWinner: PlayerWithScores | null;
+  playoffWinner: PlayoffWinner | null;
   onFinishWithWinner: () => void;
 
   // Exit dialog
