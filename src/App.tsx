@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +13,7 @@ import { Capacitor } from '@capacitor/core';
 import { setStatusBarDefault } from '@/lib/statusBar';
 import { useDeepLinks } from '@/hooks/useDeepLinks';
 import NotFound from "./pages/NotFound";
+import { SplashScreen } from "@/components/ui/splash-screen";
 
 // Lazy load all pages for better initial load
 const Home = lazy(() => import("./pages/Home"));
@@ -34,6 +35,8 @@ const queryClient = new QueryClient();
 
 // Inner component that uses router hooks
 function AppContent() {
+  const [showSplash, setShowSplash] = useState(true);
+
   // Handle deep links from native app
   useDeepLinks();
 
@@ -46,8 +49,9 @@ function AppContent() {
 
   return (
     <>
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
       <Toaster />
-      <Sonner 
+      <Sonner
         position="top-center"
         toastOptions={{
           style: {
@@ -59,115 +63,115 @@ function AppContent() {
       />
       <Routes>
         {/* Auth page - public */}
-        <Route 
-          path="/auth" 
+        <Route
+          path="/auth"
           element={
             <Suspense fallback={<PageSkeleton variant="default" />}>
               <Auth />
             </Suspense>
-          } 
+          }
         />
-        
+
         {/* Protected routes - require authentication */}
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="default" />}>
                 <Home />
               </Suspense>
             </AuthGuard>
-          } 
+          }
         />
-        <Route 
-          path="/new-round" 
+        <Route
+          path="/new-round"
           element={
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="default" />}>
                 <NewRound />
               </Suspense>
             </AuthGuard>
-          } 
+          }
         />
-        <Route 
-          path="/join" 
+        <Route
+          path="/join"
           element={
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="default" />}>
                 <JoinRound />
               </Suspense>
             </AuthGuard>
-          } 
+          }
         />
-        <Route 
-          path="/round/:id" 
+        <Route
+          path="/round/:id"
           element={
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="scorecard" />}>
                 <Scorecard />
               </Suspense>
             </AuthGuard>
-          } 
+          }
         />
-        <Route 
-          path="/round/:id/leaderboard" 
+        <Route
+          path="/round/:id/leaderboard"
           element={
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="list" />}>
                 <Leaderboard />
               </Suspense>
             </AuthGuard>
-          } 
+          }
         />
-        <Route 
-          path="/round/:id/complete" 
+        <Route
+          path="/round/:id/complete"
           element={
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="default" />}>
                 <RoundComplete />
               </Suspense>
             </AuthGuard>
-          } 
+          }
         />
-        <Route 
-          path="/profile" 
+        <Route
+          path="/profile"
           element={
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="default" />}>
                 <Profile />
               </Suspense>
             </AuthGuard>
-          } 
+          }
         />
-        <Route 
-          path="/friends" 
+        <Route
+          path="/friends"
           element={
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="list" />}>
                 <Friends />
               </Suspense>
             </AuthGuard>
-          } 
+          }
         />
-        <Route 
-          path="/groups" 
+        <Route
+          path="/groups"
           element={
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="list" />}>
                 <Groups />
               </Suspense>
             </AuthGuard>
-          } 
+          }
         />
-        <Route 
-          path="/stats" 
+        <Route
+          path="/stats"
           element={
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="default" />}>
                 <Stats />
               </Suspense>
             </AuthGuard>
-          } 
+          }
         />
         {/* Public legal pages - no auth required */}
         <Route
