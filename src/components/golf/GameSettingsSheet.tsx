@@ -23,23 +23,37 @@ interface GameSettingsSheetProps {
   round: Round;
   onUpdateGames: (games: GameConfig[]) => Promise<void>;
   playerCount: number;
+  // Optional controlled props for external trigger
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSettingsSheetProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function GameSettingsSheet({
+  round,
+  onUpdateGames,
+  playerCount,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+}: GameSettingsSheetProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-  
+
+  // Use controlled props if provided, otherwise use internal state
+  const isControlled = controlledOpen !== undefined;
+  const isOpen = isControlled ? controlledOpen : internalOpen;
+  const setIsOpen = isControlled ? (controlledOnOpenChange || (() => { })) : setInternalOpen;
+
   // Local state for game settings
   const [games, setGames] = useState<GameConfig[]>(round.games || []);
-  
+
   // Individual game states
   const skinsGame = games.find(g => g.type === 'skins');
   const nassauGame = games.find(g => g.type === 'nassau');
   const stablefordGame = games.find(g => g.type === 'stableford');
   const bestBallGame = games.find(g => g.type === 'bestball');
   const wolfGame = games.find(g => g.type === 'wolf');
-  
+
   // Reset when sheet opens
   useEffect(() => {
     if (isOpen) {
@@ -47,10 +61,10 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
       setHasChanges(false);
     }
   }, [isOpen, round.games]);
-  
+
   const updateGame = (type: GameConfig['type'], updates: Partial<GameConfig> | null) => {
     setHasChanges(true);
-    
+
     if (updates === null) {
       // Remove game
       setGames(games.filter(g => g.type !== type));
@@ -71,7 +85,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
       }
     }
   };
-  
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -86,19 +100,22 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
       setIsSaving(false);
     }
   };
-  
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          className="w-10 h-10 rounded-full bg-muted/80 flex items-center justify-center"
-          aria-label="Game settings"
-        >
-          <Settings className="w-5 h-5" />
-        </motion.button>
-      </SheetTrigger>
-      
+      {/* Only render trigger when uncontrolled */}
+      {!isControlled && (
+        <SheetTrigger asChild>
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            className="w-10 h-10 rounded-full bg-muted/80 flex items-center justify-center"
+            aria-label="Game settings"
+          >
+            <Settings className="w-5 h-5" />
+          </motion.button>
+        </SheetTrigger>
+      )}
+
       <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl">
         <SheetHeader className="pb-4 border-b border-border/50">
           <SheetTitle className="flex items-center gap-2">
@@ -106,7 +123,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
             Game Settings
           </SheetTitle>
         </SheetHeader>
-        
+
         <div className="flex-1 min-h-0 overflow-y-auto py-4 space-y-4" style={{ WebkitOverflowScrolling: 'touch' }}>
           {/* Skins */}
           <div className={cn(
@@ -129,7 +146,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                 }}
               />
             </div>
-            
+
             {skinsGame && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -150,7 +167,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                     <span className="text-sm text-muted-foreground">/hole</span>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="skins-carryover"
@@ -159,7 +176,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                   />
                   <Label htmlFor="skins-carryover" className="text-sm">Carryovers (ties roll over)</Label>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="skins-net"
@@ -171,7 +188,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
               </motion.div>
             )}
           </div>
-          
+
           {/* Nassau - only for 2 players */}
           {playerCount === 2 && (
             <div className={cn(
@@ -194,7 +211,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                   }}
                 />
               </div>
-              
+
               {nassauGame && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
@@ -215,7 +232,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                       <span className="text-sm text-muted-foreground">/bet</span>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="nassau-autopress"
@@ -224,7 +241,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                     />
                     <Label htmlFor="nassau-autopress" className="text-sm">Auto-press when 2 down</Label>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="nassau-net"
@@ -237,7 +254,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
               )}
             </div>
           )}
-          
+
           {/* Stableford */}
           <div className={cn(
             "p-4 rounded-xl border transition-all",
@@ -259,7 +276,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                 }}
               />
             </div>
-            
+
             {stablefordGame && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -269,7 +286,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                 <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-lg">
                   🦅 Eagle: 4 pts • 🐦 Birdie: 3 pts • Par: 2 pts • Bogey: 1 pt
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="stableford-modified"
@@ -278,7 +295,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                   />
                   <Label htmlFor="stableford-modified" className="text-sm">Modified (aggressive with negatives)</Label>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="stableford-net"
@@ -290,7 +307,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
               </motion.div>
             )}
           </div>
-          
+
           {/* Best Ball - only for 4 players */}
           {playerCount >= 2 && (
             <div className={cn(
@@ -313,7 +330,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                   }}
                 />
               </div>
-              
+
               {bestBallGame && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
@@ -324,7 +341,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                     <AlertCircle className="w-4 h-4" />
                     Teams will be auto-assigned based on player order
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="bestball-net"
@@ -337,7 +354,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
               )}
             </div>
           )}
-          
+
           {/* Wolf - only for 4 players */}
           {playerCount === 4 && (
             <div className={cn(
@@ -363,7 +380,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                   }}
                 />
               </div>
-              
+
               {wolfGame && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
@@ -384,7 +401,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                       <span className="text-sm text-muted-foreground">/point</span>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="wolf-carryover"
@@ -393,7 +410,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                     />
                     <Label htmlFor="wolf-carryover" className="text-sm">Carryovers (pushes roll over)</Label>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="wolf-net"
@@ -402,7 +419,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
                     />
                     <Label htmlFor="wolf-net" className="text-sm">Net Wolf (use handicap strokes)</Label>
                   </div>
-                  
+
                   <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-lg">
                     🐺 Lone Wolf: 3x points • ⚡ Blind Wolf: 6x points
                   </div>
@@ -410,7 +427,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
               )}
             </div>
           )}
-          
+
           <div className="p-4 rounded-xl border border-border bg-muted/20">
             <h4 className="font-semibold mb-3">Display Settings</h4>
             <div className="space-y-3">
@@ -425,7 +442,7 @@ export function GameSettingsSheet({ round, onUpdateGames, playerCount }: GameSet
             </div>
           </div>
         </div>
-        
+
         <SheetFooter className="pt-4 border-t border-border/50">
           <Button
             onClick={handleSave}

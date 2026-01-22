@@ -20,8 +20,11 @@ interface ManageScorekeepersSheetProps {
   players: Player[];
   scorekeeperIds: string[];
   isCreator: boolean;
-  onAddScorekeeper: (profileId: string) => Promise<void>;
-  onRemoveScorekeeper: (profileId: string) => Promise<void>;
+  onAddScorekeeper: (profileId: string) => Promise<boolean | void>;
+  onRemoveScorekeeper: (profileId: string) => Promise<boolean | void>;
+  // Optional controlled props for external trigger
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function ManageScorekeepersSheet({
@@ -30,9 +33,16 @@ export function ManageScorekeepersSheet({
   isCreator,
   onAddScorekeeper,
   onRemoveScorekeeper,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: ManageScorekeepersSheetProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
+
+  // Use controlled props if provided, otherwise use internal state
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? (controlledOnOpenChange || (() => { })) : setInternalOpen;
 
   if (!isCreator) return null;
 
@@ -69,15 +79,18 @@ export function ManageScorekeepersSheet({
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
-        >
-          <UserCog className="w-4 h-4 text-muted-foreground" />
-          <span className="text-xs font-medium">Scorekeepers</span>
-        </motion.button>
-      </SheetTrigger>
+      {/* Only render trigger when uncontrolled */}
+      {!isControlled && (
+        <SheetTrigger asChild>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+          >
+            <UserCog className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs font-medium">Scorekeepers</span>
+          </motion.button>
+        </SheetTrigger>
+      )}
       <SheetContent side="bottom" className="rounded-t-2xl">
         <SheetHeader className="pb-4">
           <SheetTitle className="flex items-center gap-2">
@@ -140,8 +153,8 @@ export function ManageScorekeepersSheet({
                         {isPlayerCreator
                           ? 'Always has scoring permission'
                           : isScorekeeper
-                          ? 'Can enter scores'
-                          : 'View only'}
+                            ? 'Can enter scores'
+                            : 'View only'}
                       </p>
                     </div>
                   </div>

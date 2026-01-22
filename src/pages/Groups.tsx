@@ -4,6 +4,7 @@ import { ArrowLeft, Plus, Users, Trash2, Edit2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AppBackground } from '@/components/ui/app-background';
 import { useGroups, GolfGroup } from '@/hooks/useGroups';
 import { CreateGroupSheet } from '@/components/groups/CreateGroupSheet';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
@@ -20,9 +21,9 @@ export default function Groups() {
   const handleDelete = async (groupId: string) => {
     setDeletingId(groupId);
     hapticLight();
-    
+
     const success = await deleteGroup(groupId);
-    
+
     if (success) {
       hapticSuccess();
       toast.success('Group deleted');
@@ -30,7 +31,7 @@ export default function Groups() {
       hapticError();
       toast.error('Failed to delete group');
     }
-    
+
     setDeletingId(null);
   };
 
@@ -40,9 +41,12 @@ export default function Groups() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background relative">
+      {/* Technical Grid Background */}
+      <AppBackground />
       {/* Fixed Header */}
-      <header 
-        className="flex-shrink-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 pt-3 pb-3"
+      <header
+        className="flex-shrink-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 pb-3"
+        style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)' }}
       >
         <div className="flex items-center gap-3">
           <Button
@@ -149,7 +153,7 @@ export default function Groups() {
                       </Button>
                     </div>
                   </div>
-                  
+
                   {/* Members */}
                   <div className="flex items-center gap-2">
                     <div className="flex -space-x-2">

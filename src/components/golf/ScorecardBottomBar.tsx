@@ -66,17 +66,17 @@ export function ScorecardBottomBar({
         paddingBottom: 'max(env(safe-area-inset-bottom), 8px)',
       }}
     >
-      <div className="px-3 py-3 flex items-center justify-between gap-2">
+      <div className="px-4 py-3 flex items-center justify-between gap-3">
         {/* Leaderboard Button */}
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={onNavigateToLeaderboard}
           aria-label="View leaderboard"
-          className="flex items-center gap-2 px-4 min-h-[44px] rounded-lg bg-card border border-border touch-manipulation"
+          className="flex items-center gap-2 px-4 h-12 min-h-[48px] rounded-xl bg-card border border-border shadow-sm touch-manipulation"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <BarChart3 className="w-5 h-5 text-muted-foreground" />
-          <span className="font-semibold text-sm">Board</span>
+          <span className="font-semibold text-sm hidden xs:inline">Board</span>
         </motion.button>
 
         {/* Voice Button - centered, only for scorekeepers */}
@@ -88,20 +88,20 @@ export function ScorecardBottomBar({
             onPress={onVoicePress}
           />
         ) : (
-          <div className="w-14" />
+          <div className="w-16" />
         )}
 
         {/* Finish / Progress / Playoff */}
         {playoffHole > 0 ? (
           <div className="flex items-center gap-2">
-            <div className="px-4 min-h-[44px] flex items-center rounded-lg bg-primary/10 border-2 border-primary">
+            <div className="px-3 h-12 min-h-[48px] flex items-center rounded-xl bg-primary/10 border-2 border-primary">
               <span className="font-bold text-sm text-primary">Playoff #{playoffHole}</span>
             </div>
             <Button
               onClick={onFinishRound}
               size="sm"
               aria-label="End playoff and finish round"
-              className="px-4 min-h-[44px] h-auto rounded-lg font-bold text-sm touch-manipulation"
+              className="px-4 h-12 min-h-[48px] rounded-xl font-bold text-sm touch-manipulation shadow-sm"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <Trophy className="w-4 h-4 mr-1.5" />
@@ -112,7 +112,7 @@ export function ScorecardBottomBar({
           <Button
             onClick={onShowFinishOptions}
             aria-label="Finish round"
-            className="px-5 min-h-[44px] h-auto rounded-lg font-bold text-sm touch-manipulation"
+            className="px-5 h-12 min-h-[48px] rounded-xl font-bold text-sm touch-manipulation shadow-sm"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <Trophy className="w-4 h-4 mr-1.5" />
@@ -123,7 +123,7 @@ export function ScorecardBottomBar({
             onClick={onShowFinishOptions}
             variant="outline"
             aria-label="Show finish options"
-            className="px-5 min-h-[44px] h-auto rounded-lg font-bold text-sm border-2 border-primary text-primary touch-manipulation"
+            className="px-5 h-12 min-h-[48px] rounded-xl font-bold text-sm border-2 border-primary text-primary touch-manipulation"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <Flag className="w-4 h-4 mr-1.5" />
@@ -140,7 +140,7 @@ export function ScorecardBottomBar({
             onPropBetUpdated={onPropBetUpdated}
           />
         ) : (
-          <div className="px-4 min-h-[44px] flex items-center rounded-lg bg-card border border-border">
+          <div className="px-4 h-12 min-h-[48px] flex items-center rounded-xl bg-card border border-border shadow-sm">
             <span className="font-bold tabular-nums text-sm">
               {completedHoles}/{totalHoles}
             </span>

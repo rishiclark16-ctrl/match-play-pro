@@ -47,17 +47,17 @@ export default function NewRound() {
 
   const [step, setStep] = useState<Step>('course');
   const [isLoadingApiCourse, setIsLoadingApiCourse] = useState(false);
-  
+
   const [showTeeSelector, setShowTeeSelector] = useState(false);
   const [pendingCourseDetails, setPendingCourseDetails] = useState<GolfCourseDetails | null>(null);
   const [pendingApiCourse, setPendingApiCourse] = useState<GolfCourseResult | null>(null);
-  
+
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [courseName, setCourseName] = useState('');
   const [courseLocation, setCourseLocation] = useState('');
   const [holeCount, setHoleCount] = useState<9 | 18>(18);
-  
+
   const [players, setPlayers] = useState<PlayerData[]>([
     { id: '1', name: '', handicap: undefined, manualStrokes: 0 },
     { id: '2', name: '', handicap: undefined, manualStrokes: 0 },
@@ -81,24 +81,24 @@ export default function NewRound() {
       setProfileApplied(true);
     }
   }, [profile, profileApplied]);
-  
+
   const [strokePlay, setStrokePlay] = useState(true);
   const [matchPlay, setMatchPlay] = useState(false);
   const [stakes, setStakes] = useState<string>('');
-  
+
   const [skinsEnabled, setSkinsEnabled] = useState(false);
   const [skinsStakes, setSkinsStakes] = useState('2');
   const [skinsCarryover, setSkinsCarryover] = useState(true);
   const [nassauEnabled, setNassauEnabled] = useState(false);
   const [nassauStakes, setNassauStakes] = useState('5');
   const [nassauAutoPress, setNassauAutoPress] = useState(false);
-  
+
   const [stablefordEnabled, setStablefordEnabled] = useState(false);
   const [stablefordModified, setStablefordModified] = useState(false);
-  
+
   const [bestBallEnabled, setBestBallEnabled] = useState(false);
   const [bestBallTeams, setBestBallTeams] = useState<Team[]>([]);
-  
+
   const [wolfEnabled, setWolfEnabled] = useState(false);
   const [wolfStakes, setWolfStakes] = useState('2');
   const [wolfCarryover, setWolfCarryover] = useState(true);
@@ -126,7 +126,7 @@ export default function NewRound() {
       const details = await getCourseDetails(apiCourse.id);
       if (details) {
         const hasTees = (details.tees?.male?.length || 0) + (details.tees?.female?.length || 0) > 0;
-        
+
         if (hasTees) {
           setPendingCourseDetails(details);
           setPendingApiCourse(apiCourse);
@@ -144,7 +144,7 @@ export default function NewRound() {
 
   const handleTeeSelect = (teeName: string, gender: 'male' | 'female') => {
     if (!pendingCourseDetails || !pendingApiCourse) return;
-    
+
     const teeInfo = getTeeInfo(pendingCourseDetails, teeName, gender);
     finalizeCourseSelection(pendingCourseDetails, pendingApiCourse, teeName, gender, teeInfo);
     setShowTeeSelector(false);
@@ -153,7 +153,7 @@ export default function NewRound() {
   };
 
   const finalizeCourseSelection = (
-    details: GolfCourseDetails, 
+    details: GolfCourseDetails,
     apiCourse: GolfCourseResult,
     teeName?: string,
     gender: 'male' | 'female' = 'male',
@@ -163,10 +163,10 @@ export default function NewRound() {
     const location = [details.location?.city, details.location?.state]
       .filter(Boolean)
       .join(', ');
-    
+
     const courseName = details.course_name || apiCourse.course_name;
     const displayName = teeName ? `${courseName} (${teeName})` : courseName;
-    
+
     const course = createCourse(
       displayName,
       location || undefined,
@@ -174,7 +174,7 @@ export default function NewRound() {
       teeInfo?.slope_rating || details.tees?.male?.[0]?.slope_rating,
       teeInfo?.course_rating || details.tees?.male?.[0]?.course_rating
     );
-    
+
     setSelectedCourse(course);
     setHoleCount(holes.length === 9 ? 9 : 18);
     toast.success(`Loaded ${displayName} with real par data!`);
@@ -196,7 +196,7 @@ export default function NewRound() {
 
   const handleAddFriend = (friend: Friend) => {
     const emptySlotIndex = players.findIndex(p => !p.name.trim());
-    
+
     if (emptySlotIndex !== -1) {
       const updated = [...players];
       updated[emptySlotIndex] = {
@@ -216,7 +216,7 @@ export default function NewRound() {
         profileId: friend.id,
       }]);
     }
-    
+
     setAddedFriendIds(prev => [...prev, friend.id]);
   };
 
@@ -228,11 +228,11 @@ export default function NewRound() {
       manualStrokes: 0,
       profileId: member.profileId || undefined,
     }));
-    
+
     while (newPlayers.length < 2) {
       newPlayers.push({ id: Date.now().toString() + newPlayers.length, name: '', handicap: undefined, manualStrokes: 0 });
     }
-    
+
     setPlayers(newPlayers);
     setAddedFriendIds(group.members.filter(m => m.profileId).map(m => m.profileId!));
     toast.success(`Loaded ${group.name}`);
@@ -242,11 +242,11 @@ export default function NewRound() {
     if (!selectedCourse || isCreating) return;
 
     setIsCreating(true);
-    
+
     try {
       const holeInfo: HoleInfo[] = selectedCourse.holes.slice(0, holeCount);
       const games: GameConfig[] = [];
-      
+
       if (skinsEnabled) {
         games.push({
           id: generateId(),
@@ -255,7 +255,7 @@ export default function NewRound() {
           carryover: skinsCarryover,
         });
       }
-      
+
       if (nassauEnabled) {
         games.push({
           id: generateId(),
@@ -264,7 +264,7 @@ export default function NewRound() {
           autoPress: nassauAutoPress,
         });
       }
-      
+
       if (stablefordEnabled) {
         games.push({
           id: generateId(),
@@ -273,13 +273,13 @@ export default function NewRound() {
           modifiedStableford: stablefordModified,
         });
       }
-      
+
       if (bestBallEnabled && players.filter(p => p.name.trim()).length >= 2) {
         const validPlayers = players.filter(p => p.name.trim());
         const teams = bestBallTeams.length > 0 ? bestBallTeams : createDefaultTeams(
           validPlayers.map((p, i) => ({ id: p.id, roundId: '', name: p.name, orderIndex: i }))
         );
-        
+
         games.push({
           id: generateId(),
           type: 'bestball',
@@ -287,7 +287,7 @@ export default function NewRound() {
           teams,
         });
       }
-      
+
       if (wolfEnabled && players.filter(p => p.name.trim()).length === 4) {
         games.push({
           id: generateId(),
@@ -296,7 +296,7 @@ export default function NewRound() {
           carryover: wolfCarryover,
         });
       }
-      
+
       if (matchPlay && stakes) {
         games.push({
           id: generateId(),
@@ -304,7 +304,7 @@ export default function NewRound() {
           stakes: Number(stakes) || 0,
         });
       }
-      
+
       const result = await createRound({
         courseId: selectedCourse.id,
         courseName: selectedCourse.name,
@@ -319,8 +319,8 @@ export default function NewRound() {
         games,
         players: players
           .filter(p => p.name.trim())
-          .map(p => ({ 
-            name: p.name.trim(), 
+          .map(p => ({
+            name: p.name.trim(),
             handicap: p.handicap,
             manualStrokes: p.manualStrokes ?? 0,
             teamId: bestBallTeams.find(t => t.playerIds.includes(p.id))?.id
@@ -333,7 +333,7 @@ export default function NewRound() {
       } else if (result.error) {
         console.error('Round creation error:', result.error);
         toast.error(result.error.message);
-        
+
         // Redirect to auth if session expired
         if (result.error.isAuthError) {
           navigate('/auth');
@@ -369,7 +369,7 @@ export default function NewRound() {
                     </TechCardContent>
                   </TechCard>
                 )}
-                
+
                 {!isLoadingApiCourse && (
                   <CourseSearch
                     courses={courses}
@@ -378,7 +378,7 @@ export default function NewRound() {
                     onSelectApiCourse={handleSelectApiCourse}
                   />
                 )}
-                
+
                 {selectedCourse && (
                   <TechCard variant="highlighted" corners>
                     <TechCardContent className="p-4">
@@ -394,7 +394,7 @@ export default function NewRound() {
                             )}
                           </div>
                         </div>
-                        
+
                         {(selectedCourse.rating || selectedCourse.slope) && (
                           <div className="text-right">
                             <div className="flex items-center gap-2">
@@ -413,7 +413,7 @@ export default function NewRound() {
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="mt-3 pt-3 border-t border-border flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="font-medium">{selectedCourse.holes.length} holes</span>
                         <span className="w-1 h-1 rounded-full bg-border" />
@@ -449,7 +449,7 @@ export default function NewRound() {
               <TechCard>
                 <TechCardContent className="p-5 space-y-4">
                   <p className="font-semibold text-lg">Add New Course</p>
-                  
+
                   <Input
                     placeholder="Course name"
                     value={courseName}
@@ -462,7 +462,7 @@ export default function NewRound() {
                     onChange={(e) => setCourseLocation(e.target.value)}
                     className="py-6 text-base"
                   />
-                  
+
                   <div className="grid grid-cols-2 gap-3">
                     {[9, 18].map((count) => (
                       <motion.button
@@ -542,7 +542,7 @@ export default function NewRound() {
                   </motion.button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {handicapMode === 'auto' 
+                  {handicapMode === 'auto'
                     ? 'Strokes calculated automatically from handicap indexes and course slope.'
                     : 'Manually enter the strokes each player receives.'}
                 </p>
@@ -597,9 +597,9 @@ export default function NewRound() {
                         const strokes = (p.manualStrokes ?? 0) - minStrokes;
                         const receiver = validPlayers.find(vp => vp.manualStrokes === minStrokes);
                         if (strokes === 0) {
-                          return <p key={p.id}><span className="font-medium text-foreground">{p.name || `Player ${i+1}`}</span> gives strokes</p>;
+                          return <p key={p.id}><span className="font-medium text-foreground">{p.name || `Player ${i + 1}`}</span> gives strokes</p>;
                         }
-                        return <p key={p.id}><span className="font-medium text-foreground">{p.name || `Player ${i+1}`}</span> gets {strokes} stroke{strokes !== 1 ? 's' : ''}</p>;
+                        return <p key={p.id}><span className="font-medium text-foreground">{p.name || `Player ${i + 1}`}</span> gets {strokes} stroke{strokes !== 1 ? 's' : ''}</p>;
                       });
                     })()}
                   </div>
@@ -634,7 +634,7 @@ export default function NewRound() {
             {/* Scoring Section */}
             <div className="space-y-3">
               <p className="label-sm">Scoring Format</p>
-              
+
               {/* Stroke Play */}
               <TechCard variant={strokePlay ? "highlighted" : "default"}>
                 <TechCardContent className="p-4 flex items-center justify-between">
@@ -656,7 +656,7 @@ export default function NewRound() {
                     </div>
                     <Switch checked={matchPlay} onCheckedChange={setMatchPlay} />
                   </div>
-                  
+
                   {matchPlay && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
@@ -685,7 +685,7 @@ export default function NewRound() {
             {/* Side Games */}
             <div className="space-y-3">
               <p className="label-sm">Side Games</p>
-              
+
               {/* Skins */}
               <TechCard variant={skinsEnabled ? "highlighted" : "default"}>
                 <TechCardContent className="p-4">
@@ -699,7 +699,7 @@ export default function NewRound() {
                     </div>
                     <Switch checked={skinsEnabled} onCheckedChange={setSkinsEnabled} />
                   </div>
-                  
+
                   {skinsEnabled && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
@@ -718,7 +718,7 @@ export default function NewRound() {
                         />
                         <span className="text-sm text-muted-foreground">per hole</span>
                       </div>
-                      
+
                       <div className="flex items-center gap-3">
                         <Checkbox
                           id="carryover"
@@ -733,7 +733,7 @@ export default function NewRound() {
                   )}
                 </TechCardContent>
               </TechCard>
-              
+
               {/* Nassau */}
               <TechCard variant={nassauEnabled ? "highlighted" : "default"}>
                 <TechCardContent className="p-4">
@@ -747,7 +747,7 @@ export default function NewRound() {
                     </div>
                     <Switch checked={nassauEnabled} onCheckedChange={setNassauEnabled} />
                   </div>
-                  
+
                   {nassauEnabled && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
@@ -766,7 +766,7 @@ export default function NewRound() {
                         />
                         <span className="text-sm text-muted-foreground">per bet</span>
                       </div>
-                      
+
                       <div className="flex items-center gap-3">
                         <Checkbox
                           id="autopress"
@@ -781,7 +781,7 @@ export default function NewRound() {
                   )}
                 </TechCardContent>
               </TechCard>
-              
+
               {/* Stableford */}
               <TechCard variant={stablefordEnabled ? "highlighted" : "default"}>
                 <TechCardContent className="p-4">
@@ -795,7 +795,7 @@ export default function NewRound() {
                     </div>
                     <Switch checked={stablefordEnabled} onCheckedChange={setStablefordEnabled} />
                   </div>
-                  
+
                   {stablefordEnabled && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
@@ -805,7 +805,7 @@ export default function NewRound() {
                       <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg font-mono">
                         🦅 Eagle: 4 • 🐦 Birdie: 3 • Par: 2 • Bogey: 1 • 2+: 0
                       </div>
-                      
+
                       <div className="flex items-center gap-3">
                         <Checkbox
                           id="modifiedStableford"
@@ -820,7 +820,7 @@ export default function NewRound() {
                   )}
                 </TechCardContent>
               </TechCard>
-              
+
               {/* Best Ball */}
               {players.filter(p => p.name.trim()).length >= 2 && (
                 <TechCard variant={bestBallEnabled ? "highlighted" : "default"}>
@@ -831,7 +831,7 @@ export default function NewRound() {
                         <div>
                           <p className="font-semibold">Best Ball</p>
                           <p className="text-sm text-muted-foreground">
-                            {players.filter(p => p.name.trim()).length === 4 
+                            {players.filter(p => p.name.trim()).length === 4
                               ? "2v2 team format"
                               : "Team format - best score counts"}
                           </p>
@@ -839,7 +839,7 @@ export default function NewRound() {
                       </div>
                       <Switch checked={bestBallEnabled} onCheckedChange={setBestBallEnabled} />
                     </div>
-                    
+
                     {bestBallEnabled && players.filter(p => p.name.trim()).length === 4 && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
@@ -866,7 +866,7 @@ export default function NewRound() {
                   </TechCardContent>
                 </TechCard>
               )}
-              
+
               {/* Wolf */}
               {players.filter(p => p.name.trim()).length === 4 && (
                 <TechCard variant={wolfEnabled ? "highlighted" : "default"}>
@@ -881,7 +881,7 @@ export default function NewRound() {
                       </div>
                       <Switch checked={wolfEnabled} onCheckedChange={setWolfEnabled} />
                     </div>
-                    
+
                     {wolfEnabled && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
@@ -900,7 +900,7 @@ export default function NewRound() {
                           />
                           <span className="text-sm text-muted-foreground">per point</span>
                         </div>
-                        
+
                         <div className="flex items-center gap-3">
                           <Checkbox
                             id="wolfcarryover"
@@ -911,7 +911,7 @@ export default function NewRound() {
                             Carryovers (pushes roll over)
                           </label>
                         </div>
-                        
+
                         <div className="text-xs text-muted-foreground bg-warning/10 p-3 rounded-lg border border-warning/20 font-mono">
                           🐺 Lone Wolf: 3x • ⚡ Blind Wolf: 6x
                         </div>
@@ -938,9 +938,9 @@ export default function NewRound() {
     <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       {/* Technical Grid Background */}
       <div className="absolute inset-0 tech-grid-subtle opacity-40 pointer-events-none" />
-      
+
       {/* Fixed Header */}
-      <header 
+      <header
         className="flex-shrink-0 relative z-10 px-4 pt-3 pb-4"
       >
         <div className="flex items-center gap-4">
@@ -951,7 +951,7 @@ export default function NewRound() {
           >
             <ArrowLeft className="w-5 h-5" />
           </motion.button>
-          
+
           <div className="flex-1">
             <h1 className="headline-sm">{stepConfig[step].title}</h1>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -959,7 +959,7 @@ export default function NewRound() {
             </p>
           </div>
         </div>
-        
+
         {/* Progress Bar */}
         <div className="flex gap-2 mt-4">
           {steps.map((s, i) => (
@@ -967,8 +967,8 @@ export default function NewRound() {
               key={s}
               className={cn(
                 "h-1.5 flex-1 rounded-full transition-all",
-                i <= currentStepIndex 
-                  ? "bg-primary" 
+                i <= currentStepIndex
+                  ? "bg-primary"
                   : "bg-border"
               )}
             />
@@ -984,8 +984,9 @@ export default function NewRound() {
       </main>
 
       {/* Bottom Button */}
-      <div 
-        className="fixed bottom-0 left-0 right-0 z-20 p-4 pb-5 bg-gradient-to-t from-background via-background to-transparent"
+      <div
+        className="fixed bottom-0 left-0 right-0 z-20 p-4 bg-gradient-to-t from-background via-background to-transparent"
+        style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
       >
         {step !== 'format' ? (
           <motion.div whileTap={{ scale: 0.98 }}>

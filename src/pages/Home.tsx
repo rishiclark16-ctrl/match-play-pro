@@ -11,6 +11,7 @@ import { TechCard } from '@/components/ui/tech-card';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { AppBackground } from '@/components/ui/app-background';
 import { useRounds } from '@/hooks/useRounds';
 import { useRoundsQuery } from '@/hooks/useRoundsQuery';
 import { useJoinRound } from '@/hooks/useJoinRound';
@@ -123,41 +124,15 @@ export default function Home() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       {/* Technical Grid Background */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Subtle grid */}
-        <div 
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `
-              linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
-              linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)
-            `,
-            backgroundSize: '48px 48px',
-          }}
-        />
-        
-        {/* Top gradient accent */}
-        <div 
-          className="absolute top-0 left-0 right-0 h-80"
-          style={{
-            background: 'linear-gradient(180deg, hsl(var(--primary) / 0.04) 0%, transparent 100%)',
-          }}
-        />
-        
-        {/* Corner accents */}
-        <div className="absolute top-6 left-6 w-12 h-12 border-l-2 border-t-2 border-primary/20" />
-        <div className="absolute top-6 right-6 w-12 h-12 border-r-2 border-t-2 border-primary/10" />
-        
-        {/* Data lines */}
-        <div className="absolute top-32 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-      </div>
-      
+      <AppBackground />
+
       {/* Fixed Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex-shrink-0 px-6 pb-3 pt-3 flex items-center justify-between relative z-10"
+        className="flex-shrink-0 px-6 pb-3 flex items-center justify-between relative z-10"
+        style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)' }}
       >
         <div className="flex items-center gap-4">
           {/* Logo mark */}
@@ -168,12 +143,12 @@ export default function Home() {
             {/* Corner accent on logo */}
             <div className="absolute -top-1 -left-1 w-3 h-3 border-l-2 border-t-2 border-primary" />
           </div>
-          
+
           <div>
             <h1 className="text-2xl font-black tracking-tight text-foreground">MATCH</h1>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Golf Scorecard</p>
           </div>
-          
+
           {/* Offline Indicator */}
           <OfflineIndicator
             isOnline={isOnline}
@@ -183,7 +158,7 @@ export default function Home() {
             onSyncClick={syncNow}
           />
         </div>
-        
+
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => {
@@ -247,182 +222,182 @@ export default function Home() {
       <div className="flex-1 min-h-0 relative z-10">
         <PullToRefresh onRefresh={handlePullRefresh} className="h-full min-h-0">
           <main className="px-6 py-4 pb-nav">
-          {loadingRounds ? (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center py-20 gap-4"
-            >
-              <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center border border-border">
-                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            {loadingRounds ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center justify-center py-20 gap-4"
+              >
+                <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center border border-border">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+                <p className="text-sm font-medium text-muted-foreground">Loading rounds...</p>
+              </motion.div>
+            ) : (rounds.length > 0 || sharedRounds.length > 0 || spectatorRounds.length > 0) ? (
+              <div className="space-y-6">
+                {/* Spectating Rounds Section */}
+                {spectatorRounds.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-primary" />
+                      <h2 className="text-xs font-bold uppercase tracking-widest text-primary">Watching Live</h2>
+                    </div>
+                    {spectatorRounds.map((round, index) => (
+                      <motion.div
+                        key={round.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.08, duration: 0.3 }}
+                      >
+                        <SpectatorRoundCard
+                          round={round}
+                          onClick={() => navigate(`/round/${round.id}?spectator=true`)}
+                          onLeave={() => handleLeaveSpectating(round.id)}
+                          currentHole={spectatorStats.get(round.id)?.currentHole}
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Active Rounds Section */}
+                {activeRounds.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                      <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">My Live Rounds</h2>
+                    </div>
+                    {activeRounds.map((round, index) => {
+                      const stats = roundStats.get(round.id);
+                      return (
+                        <motion.div
+                          key={round.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: (index + spectatorRounds.length) * 0.08, duration: 0.3 }}
+                        >
+                          <RoundCard
+                            round={round}
+                            onClick={() => navigate(`/round/${round.id}`)}
+                            onDelete={handleDeleteRound}
+                            isDeleting={deletingRoundId === round.id}
+                            playerCount={stats?.playerCount}
+                            currentHole={stats?.currentHole}
+                          />
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Shared With Me Section - Active */}
+                {activeSharedRounds.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-accent-foreground" />
+                      <h2 className="text-xs font-bold uppercase tracking-widest text-accent-foreground">Shared With Me</h2>
+                    </div>
+                    {activeSharedRounds.map((round, index) => {
+                      const stats = roundStats.get(round.id);
+                      return (
+                        <motion.div
+                          key={round.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: (index + spectatorRounds.length + activeRounds.length) * 0.08, duration: 0.3 }}
+                        >
+                          <RoundCard
+                            round={round}
+                            onClick={() => navigate(`/round/${round.id}`)}
+                            playerCount={stats?.playerCount}
+                            currentHole={stats?.currentHole}
+                          />
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Completed Rounds Section */}
+                {completedRounds.length > 0 && (
+                  <div className="space-y-3">
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">My History</h2>
+                    {completedRounds.map((round, index) => {
+                      const stats = roundStats.get(round.id);
+                      return (
+                        <motion.div
+                          key={round.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: (index + activeRounds.length + activeSharedRounds.length + spectatorRounds.length) * 0.08, duration: 0.3 }}
+                        >
+                          <RoundCard
+                            round={round}
+                            onClick={() => navigate(`/round/${round.id}/complete`)}
+                            onDelete={handleDeleteRound}
+                            isDeleting={deletingRoundId === round.id}
+                            playerCount={stats?.playerCount}
+                            currentHole={stats?.currentHole}
+                          />
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Shared Completed Rounds Section */}
+                {completedSharedRounds.length > 0 && (
+                  <div className="space-y-3">
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Shared History</h2>
+                    {completedSharedRounds.map((round, index) => {
+                      const stats = roundStats.get(round.id);
+                      return (
+                        <motion.div
+                          key={round.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: (index + activeRounds.length + activeSharedRounds.length + completedRounds.length + spectatorRounds.length) * 0.08, duration: 0.3 }}
+                        >
+                          <RoundCard
+                            round={round}
+                            onClick={() => navigate(`/round/${round.id}/complete`)}
+                            playerCount={stats?.playerCount}
+                            currentHole={stats?.currentHole}
+                          />
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-              <p className="text-sm font-medium text-muted-foreground">Loading rounds...</p>
-            </motion.div>
-          ) : (rounds.length > 0 || sharedRounds.length > 0 || spectatorRounds.length > 0) ? (
-            <div className="space-y-6">
-              {/* Spectating Rounds Section */}
-              {spectatorRounds.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Eye className="w-4 h-4 text-primary" />
-                    <h2 className="text-xs font-bold uppercase tracking-widest text-primary">Watching Live</h2>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-center justify-center py-16 text-center"
+              >
+                <TechCard corners className="p-8 max-w-xs mx-auto">
+                  <div className="w-20 h-20 rounded-xl bg-muted flex items-center justify-center mx-auto mb-6 border border-border">
+                    <span className="text-4xl">⛳</span>
                   </div>
-                  {spectatorRounds.map((round, index) => (
-                    <motion.div 
-                      key={round.id} 
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.08, duration: 0.3 }}
-                    >
-                      <SpectatorRoundCard
-                        round={round}
-                        onClick={() => navigate(`/round/${round.id}?spectator=true`)}
-                        onLeave={() => handleLeaveSpectating(round.id)}
-                        currentHole={spectatorStats.get(round.id)?.currentHole}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-
-              {/* Active Rounds Section */}
-              {activeRounds.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                    <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">My Live Rounds</h2>
-                  </div>
-                  {activeRounds.map((round, index) => {
-                    const stats = roundStats.get(round.id);
-                    return (
-                      <motion.div 
-                        key={round.id} 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: (index + spectatorRounds.length) * 0.08, duration: 0.3 }}
-                      >
-                        <RoundCard
-                          round={round}
-                          onClick={() => navigate(`/round/${round.id}`)}
-                          onDelete={handleDeleteRound}
-                          isDeleting={deletingRoundId === round.id}
-                          playerCount={stats?.playerCount}
-                          currentHole={stats?.currentHole}
-                        />
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Shared With Me Section - Active */}
-              {activeSharedRounds.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-accent-foreground" />
-                    <h2 className="text-xs font-bold uppercase tracking-widest text-accent-foreground">Shared With Me</h2>
-                  </div>
-                  {activeSharedRounds.map((round, index) => {
-                    const stats = roundStats.get(round.id);
-                    return (
-                      <motion.div 
-                        key={round.id} 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: (index + spectatorRounds.length + activeRounds.length) * 0.08, duration: 0.3 }}
-                      >
-                        <RoundCard
-                          round={round}
-                          onClick={() => navigate(`/round/${round.id}`)}
-                          playerCount={stats?.playerCount}
-                          currentHole={stats?.currentHole}
-                        />
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-              
-              {/* Completed Rounds Section */}
-              {completedRounds.length > 0 && (
-                <div className="space-y-3">
-                  <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">My History</h2>
-                  {completedRounds.map((round, index) => {
-                    const stats = roundStats.get(round.id);
-                    return (
-                      <motion.div 
-                        key={round.id} 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: (index + activeRounds.length + activeSharedRounds.length + spectatorRounds.length) * 0.08, duration: 0.3 }}
-                      >
-                        <RoundCard
-                          round={round}
-                          onClick={() => navigate(`/round/${round.id}/complete`)}
-                          onDelete={handleDeleteRound}
-                          isDeleting={deletingRoundId === round.id}
-                          playerCount={stats?.playerCount}
-                          currentHole={stats?.currentHole}
-                        />
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Shared Completed Rounds Section */}
-              {completedSharedRounds.length > 0 && (
-                <div className="space-y-3">
-                  <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Shared History</h2>
-                  {completedSharedRounds.map((round, index) => {
-                    const stats = roundStats.get(round.id);
-                    return (
-                      <motion.div 
-                        key={round.id} 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: (index + activeRounds.length + activeSharedRounds.length + completedRounds.length + spectatorRounds.length) * 0.08, duration: 0.3 }}
-                      >
-                        <RoundCard
-                          round={round}
-                          onClick={() => navigate(`/round/${round.id}/complete`)}
-                          playerCount={stats?.playerCount}
-                          currentHole={stats?.currentHole}
-                        />
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ) : (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center py-16 text-center"
-            >
-              <TechCard corners className="p-8 max-w-xs mx-auto">
-                <div className="w-20 h-20 rounded-xl bg-muted flex items-center justify-center mx-auto mb-6 border border-border">
-                  <span className="text-4xl">⛳</span>
-                </div>
-                <h2 className="text-xl font-bold mb-2">No rounds yet</h2>
-                <p className="text-sm text-muted-foreground">
-                  Start your first round to track scores with your group.
-                </p>
-                <Button 
-                  onClick={() => {
-                    hapticLight();
-                    navigate('/new-round');
-                  }}
-                  className="w-full mt-6 py-6 font-semibold rounded-xl bg-primary"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  New Round
-                </Button>
-              </TechCard>
-            </motion.div>
-          )}
-        </main>
+                  <h2 className="text-xl font-bold mb-2">No rounds yet</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Start your first round to track scores with your group.
+                  </p>
+                  <Button
+                    onClick={() => {
+                      hapticLight();
+                      navigate('/new-round');
+                    }}
+                    className="w-full mt-6 py-6 font-semibold rounded-xl bg-primary"
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    New Round
+                  </Button>
+                </TechCard>
+              </motion.div>
+            )}
+          </main>
         </PullToRefresh>
       </div>
 
@@ -448,7 +423,7 @@ export default function Home() {
                 {/* Corner accents */}
                 <div className="absolute top-3 left-3 w-4 h-4 border-l-2 border-t-2 border-primary" />
                 <div className="absolute top-3 right-3 w-4 h-4 border-r-2 border-t-2 border-primary/50" />
-                
+
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowJoinModal(false)}
@@ -456,7 +431,7 @@ export default function Home() {
                 >
                   <X className="w-5 h-5" />
                 </motion.button>
-                
+
                 <div className="pt-2">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-primary mb-1">Join</p>
                   <h3 className="text-xl font-bold mb-1">Enter Round Code</h3>
@@ -464,7 +439,7 @@ export default function Home() {
                     Enter the 6-character code to join as spectator.
                   </p>
                 </div>
-                
+
                 <Input
                   placeholder="XXXXXX"
                   value={joinCode}
@@ -475,13 +450,13 @@ export default function Home() {
                   maxLength={6}
                   className="py-6 text-center text-2xl font-black tracking-[0.4em] uppercase rounded-xl bg-muted border-border font-mono"
                 />
-                
+
                 {joinError && (
                   <p className="text-danger text-sm mt-3 font-medium">{joinError}</p>
                 )}
-                
+
                 <motion.div whileTap={{ scale: 0.98 }}>
-                  <Button 
+                  <Button
                     onClick={handleJoinRound}
                     disabled={joinCode.length !== 6 || joinLoading}
                     className="w-full mt-5 py-6 text-base font-bold rounded-xl bg-primary"
@@ -494,7 +469,7 @@ export default function Home() {
                     Join Round
                   </Button>
                 </motion.div>
-                
+
                 <p className="text-xs text-muted-foreground text-center mt-4">
                   Follow along and see scores in real-time
                 </p>

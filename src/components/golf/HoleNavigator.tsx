@@ -13,12 +13,12 @@ interface HoleNavigatorProps {
   onNext: () => void;
 }
 
-export function HoleNavigator({ 
-  currentHole, 
-  totalHoles, 
+export function HoleNavigator({
+  currentHole,
+  totalHoles,
   holeInfo,
-  onPrevious, 
-  onNext 
+  onPrevious,
+  onNext
 }: HoleNavigatorProps) {
   const canGoPrevious = currentHole > 1;
   const canGoNext = currentHole < totalHoles;
@@ -77,8 +77,8 @@ export function HoleNavigator({
         disabled={!canGoPrevious}
         className={cn(
           "w-12 h-12 min-w-[48px] min-h-[48px] rounded-lg flex items-center justify-center transition-colors border touch-manipulation cursor-pointer select-none",
-          canGoPrevious 
-            ? "bg-card border-border text-foreground hover:bg-muted active:bg-muted" 
+          canGoPrevious
+            ? "bg-card border-border text-foreground hover:bg-muted active:bg-muted"
             : "opacity-0 pointer-events-none border-transparent"
         )}
         style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -93,7 +93,7 @@ export function HoleNavigator({
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.12}
         onDragEnd={handleDragEnd}
-        className="flex-1 max-w-[200px] cursor-grab active:cursor-grabbing touch-pan-y"
+        className="flex-1 max-w-[200px] sm:max-w-[240px] cursor-grab active:cursor-grabbing touch-pan-y"
       >
         <div className="overflow-hidden">
           <AnimatePresence mode="wait" custom={direction}>
@@ -114,10 +114,10 @@ export function HoleNavigator({
                   {String(currentHole).padStart(2, '0')}
                 </span>
               </div>
-              
+
               {/* Divider */}
               <div className="w-px h-12 bg-border" />
-              
+
               {/* Par & Yardage & Handicap */}
               <div className="text-center">
                 <div className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-primary text-primary-foreground">
@@ -151,8 +151,8 @@ export function HoleNavigator({
         disabled={!canGoNext}
         className={cn(
           "w-12 h-12 min-w-[48px] min-h-[48px] rounded-lg flex items-center justify-center transition-colors border touch-manipulation cursor-pointer select-none",
-          canGoNext 
-            ? "bg-card border-border text-foreground hover:bg-muted active:bg-muted" 
+          canGoNext
+            ? "bg-card border-border text-foreground hover:bg-muted active:bg-muted"
             : "opacity-0 pointer-events-none border-transparent"
         )}
         style={{ WebkitTapHighlightColor: 'transparent' }}

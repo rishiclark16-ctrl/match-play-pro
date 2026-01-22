@@ -13,6 +13,7 @@ import { PlayoffMode } from '@/components/golf/PlayoffMode';
 import { FinishOptionsOverlay } from '@/components/golf/FinishOptionsOverlay';
 import { ScorecardBottomBar } from '@/components/golf/ScorecardBottomBar';
 import { ScorecardHeader } from '@/components/golf/ScorecardHeader';
+import { AppBackground } from '@/components/ui/app-background';
 import { ScorecardModals } from '@/components/golf/ScorecardModals';
 import { useRounds } from '@/hooks/useRounds';
 import { useSupabaseRound } from '@/hooks/useSupabaseRound';
@@ -119,15 +120,15 @@ export default function Scorecard() {
     if (supabaseLoading && supabasePlayers.length === 0) {
       return [];
     }
-    
+
     // Check if this is a 2-player match play scenario for differential strokes
     const isMatchPlay = round.matchPlay || round.games?.some(g => g.type === 'match' || g.type === 'nassau');
     const isTwoPlayerMatch = isMatchPlay && supabasePlayers.length === 2;
     const isManualMode = round.handicapMode === 'manual';
-    
+
     // For 2-player match play, calculate differential strokes
     let matchPlayStrokesMap: Map<string, Map<number, number>> | undefined;
-    
+
     if (isTwoPlayerMatch) {
       const [p1, p2] = supabasePlayers;
       const matchInfo = calculateMatchPlayStrokes(
@@ -139,7 +140,7 @@ export default function Scorecard() {
       );
       matchPlayStrokesMap = buildMatchPlayStrokesMap(matchInfo, round.holeInfo);
     }
-    
+
     return supabasePlayers.map(player => {
       const playerScores = roundScores.filter(s => s.playerId === player.id);
       const totalStrokes = playerScores.reduce((sum, s) => sum + s.strokes, 0);
@@ -512,9 +513,7 @@ export default function Scorecard() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       {/* Technical Grid Background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.015)_1px,transparent_1px)] bg-[size:24px_24px]" />
-      </div>
+      <AppBackground />
 
       {/* Spectator/View-Only Banner */}
       {(isSpectator || !isScorekeeper) && (

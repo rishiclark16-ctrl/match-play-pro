@@ -55,7 +55,7 @@ export function PropBetSheet({
 
   const handleCreatePropBet = async () => {
     if (!selectedType) return;
-    
+
     setIsSaving(true);
     hapticLight();
 
@@ -89,7 +89,7 @@ export function PropBetSheet({
       // Don't call onPropBetAdded - realtime subscription handles it
       hapticSuccess();
       toast.success(`${getPropBetLabel(selectedType)} added!`);
-      
+
       // Reset form
       setSelectedType(null);
       setCustomDescription('');
@@ -151,13 +151,13 @@ export function PropBetSheet({
       <SheetTrigger asChild>
         <Button
           variant="outline"
-          className="gap-2 bg-card/50 px-4 min-h-[44px] h-auto text-sm font-semibold touch-manipulation"
+          className="gap-2 bg-card px-4 h-12 min-h-[48px] rounded-xl text-sm font-semibold shadow-sm touch-manipulation border-border"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <Dices className="w-5 h-5" />
-          <span>Props</span>
+          <span className="hidden xs:inline">Props</span>
           {currentHoleBets.length > 0 && (
-            <span className="ml-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+            <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
               {currentHoleBets.length}
             </span>
           )}
@@ -177,7 +177,7 @@ export function PropBetSheet({
           {currentHoleBets.length > 0 && (
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-muted-foreground">Active Bets</h3>
-              
+
               {currentHoleBets.map(bet => (
                 <motion.div
                   key={bet.id}
@@ -185,8 +185,8 @@ export function PropBetSheet({
                   animate={{ opacity: 1, y: 0 }}
                   className={cn(
                     "p-4 rounded-xl border",
-                    bet.winnerId 
-                      ? "bg-success/10 border-success/30" 
+                    bet.winnerId
+                      ? "bg-success/10 border-success/30"
                       : "bg-card border-border"
                   )}
                 >
