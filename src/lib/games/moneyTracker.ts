@@ -143,17 +143,22 @@ export function calculateLiveMoney(
                     }
                   });
                 } else {
-                  // Lone Wolf wins - gets 3x from each hunter
-                  const loneWolfMultiplier = result.isBlindWolf ? 3 : 2;
-                  pbWolf.wolf += pointValue * 3 * loneWolfMultiplier;
-                  pbWolf.total += pointValue * 3 * loneWolfMultiplier;
-                  
+                  // Lone Wolf wins - gets 4 points from each hunter (doubled stakes)
+                  // Blind wolf: 4 × blindWolfMultiplier points per hunter
+                  const basePointsPerHunter = result.isBlindWolf
+                    ? 4 * (game.blindWolfMultiplier || 2)
+                    : 4;
+                  const wolfWinnings = game.stakes * basePointsPerHunter * 3; // 3 hunters
+                  pbWolf.wolf += wolfWinnings;
+                  pbWolf.total += wolfWinnings;
+
+                  const hunterLoss = game.stakes * basePointsPerHunter;
                   players.forEach(p => {
                     if (p.id !== result.wolfId) {
                       const pb = breakdown.get(p.id);
                       if (pb) {
-                        pb.wolf -= pointValue * loneWolfMultiplier;
-                        pb.total -= pointValue * loneWolfMultiplier;
+                        pb.wolf -= hunterLoss;
+                        pb.total -= hunterLoss;
                       }
                     }
                   });
@@ -183,16 +188,21 @@ export function calculateLiveMoney(
                     }
                   });
                 } else {
-                  const loneWolfMultiplier = result.isBlindWolf ? 3 : 2;
-                  pbWolf.wolf -= pointValue * 3 * loneWolfMultiplier;
-                  pbWolf.total -= pointValue * 3 * loneWolfMultiplier;
-                  
+                  // Hunters win - Lone Wolf loses to all hunters
+                  const basePointsPerHunter = result.isBlindWolf
+                    ? 4 * (game.blindWolfMultiplier || 2)
+                    : 4;
+                  const wolfLoss = game.stakes * basePointsPerHunter * 3; // 3 hunters
+                  pbWolf.wolf -= wolfLoss;
+                  pbWolf.total -= wolfLoss;
+
+                  const hunterWinnings = game.stakes * basePointsPerHunter;
                   players.forEach(p => {
                     if (p.id !== result.wolfId) {
                       const pb = breakdown.get(p.id);
                       if (pb) {
-                        pb.wolf += pointValue * loneWolfMultiplier;
-                        pb.total += pointValue * loneWolfMultiplier;
+                        pb.wolf += hunterWinnings;
+                        pb.total += hunterWinnings;
                       }
                     }
                   });

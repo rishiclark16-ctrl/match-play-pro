@@ -89,7 +89,7 @@ export function calculateStableford(
     playerId: p.id,
     playerName: p.name,
     totalPoints: 0,
-    holePoints: []
+    holePoints: [] as StablefordStanding['holePoints']
   }));
 
   let holesScored = 0;

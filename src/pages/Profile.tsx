@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Settings, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Settings, HelpCircle, Mic } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { validatePlayerName, validateHandicap, sanitizeString } from '@/lib/validation';
 
 const TEE_OPTIONS = [
   { value: 'back', label: 'Back', color: 'bg-foreground text-background' },
@@ -98,14 +99,37 @@ export default function Profile() {
 
     // Debounce save by 800ms
     saveTimeoutRef.current = setTimeout(() => {
+      // Validate name (allow empty/null)
+      const trimmedName = fullName.trim();
+      let validatedName: string | null = null;
+      if (trimmedName) {
+        const nameResult = validatePlayerName(trimmedName);
+        if (!nameResult.success) {
+          toast.error('Invalid name', { description: nameResult.error ?? 'Validation failed' });
+          return;
+        }
+        validatedName = nameResult.data;
+      }
+
+      // Validate handicap (allow empty/null)
+      let validatedHandicap: number | null = null;
+      if (handicap) {
+        const handicapResult = validateHandicap(handicap);
+        if (!handicapResult.success) {
+          toast.error('Invalid handicap', { description: handicapResult.error ?? 'Validation failed' });
+          return;
+        }
+        validatedHandicap = handicapResult.data ?? null;
+      }
+
       const updates: ProfileUpdate = {
-        full_name: fullName.trim() || null,
-        handicap: handicap ? parseFloat(handicap) : null,
+        full_name: validatedName,
+        handicap: validatedHandicap,
         tee_preference: teePreference,
         home_course_id: homeCourseId,
         home_course_name: homeCourseName,
         email: discoveryEmail.trim().toLowerCase() || null,
-        phone: discoveryPhone.trim() || null,
+        phone: sanitizeString(discoveryPhone) || null,
       };
       autoSave(updates);
     }, 800);
@@ -456,6 +480,70 @@ export default function Profile() {
               </div>
             </TechCardContent>
           </TechCard>
+        </motion.section>
+
+        {/* Voice Control Settings Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.24 }}
+          className="space-y-3"
+        >
+          <div className="flex items-center gap-2">
+            <Mic className="w-4 h-4 text-primary" />
+            <span className="label-sm">Voice Control</span>
+          </div>
+
+          {/* Continuous Voice Toggle */}
+          <TechCard hover>
+            <TechCardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <Label className="label-sm">Continuous Listening</Label>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Keep listening after saving scores
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.continuousVoice}
+                  onCheckedChange={(checked) => {
+                    hapticLight();
+                    updateSettings({ continuousVoice: checked });
+                    toast.success(checked ? 'Continuous mode on' : 'Continuous mode off');
+                  }}
+                />
+              </div>
+            </TechCardContent>
+          </TechCard>
+
+          {/* Always Confirm Toggle */}
+          <TechCard hover>
+            <TechCardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <Label className="label-sm">Always Confirm</Label>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Review all voice scores before saving
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.alwaysConfirmVoice}
+                  onCheckedChange={(checked) => {
+                    hapticLight();
+                    updateSettings({ alwaysConfirmVoice: checked });
+                    toast.success(checked ? 'Confirmation required' : 'High confidence saves auto');
+                  }}
+                />
+              </div>
+            </TechCardContent>
+          </TechCard>
+
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 text-[11px] text-muted-foreground">
+            <HelpCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+            <span>
+              Voice commands: "Mike 5, John par" • "next hole" • "go to hole 7" • "finish round" • Say "yes" or "no" to confirm
+            </span>
+          </div>
         </motion.section>
 
         {/* Support & Legal Links */}

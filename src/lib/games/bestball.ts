@@ -52,7 +52,7 @@ export function calculateBestBall(
       totalScore: 0,
       holesPlayed: 0,
       relativeToPar: 0,
-      holeResults: [],
+      holeResults: [] as BestBallStanding['holeResults'],
       playerContributions: teamPlayers.map(p => ({
         playerId: p.id,
         playerName: p.name,

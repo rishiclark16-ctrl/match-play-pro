@@ -1,10 +1,12 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Share2, Plus, Home, Medal, Award, Loader2, Image, DollarSign, Target, Flame, ChevronDown, ChevronUp, Users, ArrowRight } from 'lucide-react';
+import { Trophy, Share2, Plus, Home, Medal, Award, Loader2, Image, DollarSign, Target, Flame, ChevronDown, ChevronUp, Users, ArrowRight, Send, Check, X, RotateCcw } from 'lucide-react';
 import { useRounds } from '@/hooks/useRounds';
 import { useRoundSharing } from '@/hooks/useRoundSharing';
 import { useSettings } from '@/hooks/useSettings';
+import { usePropBets } from '@/hooks/usePropBets';
+import { useSettlementTracking, TrackedSettlement } from '@/hooks/useSettlementTracking';
 import { formatRelativeToPar, getScoreColor, getScoreType, PlayerWithScores, Score, Player, Round, HoleInfo, GameConfig, Press } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -19,6 +21,7 @@ import { calculateWolfStandings, WolfStanding } from '@/lib/games/wolf';
 import { calculateSettlement, getTotalWinnings } from '@/lib/games/settlement';
 import { calculateMatchPlay, MatchPlayResult } from '@/lib/games/matchPlay';
 import { TechCard, TechCardContent } from '@/components/ui/tech-card';
+import { ShareRoundResultsSheet } from '@/components/golf/ShareRoundResultsSheet';
 import { calculateMatchPlayStrokes, buildMatchPlayStrokesMap, buildStrokePlayStrokesMap, calculatePlayingHandicap, calculateTotalNetStrokes } from '@/lib/handicapUtils';
 
 export default function RoundComplete() {
@@ -27,12 +30,14 @@ export default function RoundComplete() {
   const { getRoundById, getPlayersWithScores, completeRound, getScoresForRound, getPlayersForRound, getPressesForRound } = useRounds();
   const { shareRoundWithFriends } = useRoundSharing();
   const { settings } = useSettings();
+  const { propBets } = usePropBets(id);
   const [isSharing, setIsSharing] = useState(false);
   const [shareMode, setShareMode] = useState<'image' | 'text' | null>(null);
   const [sharedWithFriends, setSharedWithFriends] = useState(false);
   const [showSettlements, setShowSettlements] = useState(true);
   const [showHighlights, setShowHighlights] = useState(false);
   const [showGames, setShowGames] = useState(true);
+  const [showShareSheet, setShowShareSheet] = useState(false);
   
   // State for Supabase data
   const [supabaseRound, setSupabaseRound] = useState<Round | null>(null);
@@ -355,9 +360,19 @@ export default function RoundComplete() {
       matchPlayWinnerId,
       round.stakes,
       wolfResults,
-      round.games?.find(g => g.type === 'wolf')?.stakes
+      round.games?.find(g => g.type === 'wolf')?.stakes,
+      propBets
     );
-  }, [round, playersWithScores, rawPlayers, gameResults, matchPlayResult]);
+  }, [round, playersWithScores, rawPlayers, gameResults, matchPlayResult, propBets]);
+
+  // Settlement payment tracking
+  const {
+    trackedSettlements,
+    markAsPaid,
+    markAsForgiven,
+    markAsPending,
+    stats: settlementStats,
+  } = useSettlementTracking(id, settlements);
 
   // Calculate highlights
   const highlights = useMemo(() => {
@@ -536,20 +551,22 @@ export default function RoundComplete() {
     return <span className="text-xs font-bold text-muted-foreground">{rank + 1}</span>;
   };
 
-  const CollapsibleSection = ({ 
-    title, 
-    icon: Icon, 
-    isOpen, 
-    onToggle, 
+  const CollapsibleSection = ({
+    title,
+    icon: Icon,
+    isOpen,
+    onToggle,
     children,
-    count 
-  }: { 
-    title: string; 
-    icon: any; 
-    isOpen: boolean; 
+    count,
+    badge,
+  }: {
+    title: string;
+    icon: any;
+    isOpen: boolean;
     onToggle: () => void;
     children: React.ReactNode;
     count?: number;
+    badge?: React.ReactNode;
   }) => (
     <div className="mb-3">
       <button
@@ -564,6 +581,7 @@ export default function RoundComplete() {
               {count}
             </span>
           )}
+          {badge}
         </div>
         {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
       </button>
@@ -729,27 +747,139 @@ export default function RoundComplete() {
       )}
 
         {/* Settlements Section */}
-        {/* Settlements Section */}
         {settlements.length > 0 && (
           <CollapsibleSection
             title="Settlements"
             icon={DollarSign}
             isOpen={showSettlements}
             onToggle={() => setShowSettlements(!showSettlements)}
-            count={settlements.length}
+            count={settlementStats.pending > 0 ? settlementStats.pending : undefined}
+            badge={settlementStats.pending === 0 ? (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-success/20 text-success uppercase">
+                All Settled
+              </span>
+            ) : undefined}
           >
-            {settlements.map((s, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50"
-              >
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium">{s.fromPlayerName}</span>
-                  <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                  <span className="font-medium">{s.toPlayerName}</span>
+            {/* Settlement Stats Summary */}
+            {settlements.length > 1 && (
+              <div className="flex items-center justify-between p-2 mb-2 rounded-lg bg-primary/5 border border-primary/10">
+                <div className="flex items-center gap-3 text-xs">
+                  <span className="text-muted-foreground">
+                    <span className="font-semibold text-foreground">{settlementStats.paid}</span> paid
+                  </span>
+                  {settlementStats.pending > 0 && (
+                    <span className="text-muted-foreground">
+                      <span className="font-semibold text-warning">{settlementStats.pending}</span> pending
+                    </span>
+                  )}
+                  {settlementStats.forgiven > 0 && (
+                    <span className="text-muted-foreground">
+                      <span className="font-semibold text-muted-foreground">{settlementStats.forgiven}</span> forgiven
+                    </span>
+                  )}
                 </div>
-                <span className="font-bold text-primary tabular-nums">${s.amount.toFixed(0)}</span>
+                {settlementStats.pendingAmount > 0 && (
+                  <span className="text-xs font-semibold text-warning">
+                    ${settlementStats.pendingAmount.toFixed(0)} remaining
+                  </span>
+                )}
               </div>
+            )}
+
+            {/* Settlement Items */}
+            {trackedSettlements.map((s, i) => (
+              <motion.div
+                key={i}
+                layout
+                className={cn(
+                  "p-3 rounded-lg border transition-all",
+                  s.status === 'paid' && "bg-success/5 border-success/20",
+                  s.status === 'forgiven' && "bg-muted/30 border-border/30 opacity-60",
+                  s.status === 'pending' && "bg-muted/50 border-border/50"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className={cn("font-medium", s.status !== 'pending' && "text-muted-foreground")}>
+                      {s.fromPlayerName.split(' ')[0]}
+                    </span>
+                    <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                    <span className={cn("font-medium", s.status !== 'pending' && "text-muted-foreground")}>
+                      {s.toPlayerName.split(' ')[0]}
+                    </span>
+                  </div>
+                  <span className={cn(
+                    "font-bold tabular-nums",
+                    s.status === 'paid' && "text-success",
+                    s.status === 'forgiven' && "text-muted-foreground line-through",
+                    s.status === 'pending' && "text-primary"
+                  )}>
+                    ${s.amount.toFixed(0)}
+                  </span>
+                </div>
+
+                {/* Status & Actions */}
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
+                  {s.status === 'pending' ? (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 gap-1 text-xs border-success/30 text-success hover:bg-success hover:text-success-foreground"
+                        onClick={() => {
+                          hapticSuccess();
+                          markAsPaid(s);
+                          toast.success('Marked as paid!');
+                        }}
+                      >
+                        <Check className="w-3 h-3" />
+                        Paid
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 gap-1 text-xs text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          hapticLight();
+                          markAsForgiven(s);
+                          toast.info('Settlement forgiven');
+                        }}
+                      >
+                        <X className="w-3 h-3" />
+                        Forgive
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "text-xs font-medium flex items-center gap-1",
+                        s.status === 'paid' && "text-success",
+                        s.status === 'forgiven' && "text-muted-foreground"
+                      )}>
+                        {s.status === 'paid' && <Check className="w-3 h-3" />}
+                        {s.status === 'paid' ? 'Paid' : 'Forgiven'}
+                        {s.paidAt && (
+                          <span className="text-muted-foreground ml-1">
+                            • {format(s.paidAt, 'MMM d')}
+                          </span>
+                        )}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          hapticLight();
+                          markAsPending(s);
+                          toast.info('Reset to pending');
+                        }}
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
             ))}
           </CollapsibleSection>
         )}
@@ -959,13 +1089,26 @@ export default function RoundComplete() {
       {/* Bottom Buttons */}
       <div className="fixed bottom-0 left-0 right-0 p-4 pb-4 bg-gradient-to-t from-background via-background to-transparent z-50 pointer-events-auto">
         <div className="space-y-2">
+          {/* Send to Group Button */}
+          <Button
+            onClick={() => {
+              hapticLight();
+              setShowShareSheet(true);
+            }}
+            variant="outline"
+            className="w-full h-12 text-base font-bold rounded-lg border-2 border-primary text-primary hover:bg-primary/10"
+          >
+            <Send className="w-5 h-5 mr-2" />
+            Send Results to Group
+          </Button>
+
           {/* Share Buttons */}
           <div className="flex gap-2">
             <Button
               variant="outline"
               onClick={handleShareImage}
               disabled={isSharing}
-              className="flex-1 h-11 text-sm font-semibold rounded-lg border-2"
+              className="flex-1 h-11 text-sm font-semibold rounded-lg"
             >
               {isSharing && shareMode === 'image' ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -974,7 +1117,7 @@ export default function RoundComplete() {
               )}
               Image
             </Button>
-            
+
             <Button
               variant="outline"
               onClick={handleShareText}
@@ -1015,6 +1158,21 @@ export default function RoundComplete() {
           </button>
         </div>
       </div>
+
+      {/* Share Results Sheet */}
+      <ShareRoundResultsSheet
+        isOpen={showShareSheet}
+        onClose={() => setShowShareSheet(false)}
+        round={round}
+        players={playersWithScores}
+        settlements={settlements}
+        winner={winner}
+        hasTie={hasTie}
+        useNetScoring={settings.useNetScoring}
+        matchPlayResult={matchPlayResult}
+        skinsResult={gameResults?.skinsResult}
+        nassauResult={gameResults?.nassauResult}
+      />
     </div>
   );
 }

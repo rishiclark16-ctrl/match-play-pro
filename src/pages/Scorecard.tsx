@@ -1,23 +1,19 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MoreVertical, Flag, Share2, RotateCcw } from 'lucide-react';
+import { Flag } from 'lucide-react';
 import { HoleNavigator } from '@/components/golf/HoleNavigator';
 import { PlayerCard } from '@/components/golf/PlayerCard';
-import { ScoreInputSheet } from '@/components/golf/ScoreInputSheet';
-import { VoiceConfirmationModal } from '@/components/golf/VoiceConfirmationModal';
 import { GamesSection } from '@/components/golf/GamesSection';
 import { HoleSummary } from '@/components/golf/HoleSummary';
 import { LiveLeaderboard } from '@/components/golf/LiveLeaderboard';
-import { GameSettingsSheet } from '@/components/golf/GameSettingsSheet';
-import { ShareJoinCodeModal } from '@/components/golf/ShareJoinCodeModal';
 import { SpectatorBanner } from '@/components/golf/SpectatorBanner';
 import { MoneyTracker } from '@/components/golf/MoneyTracker';
-import { ManageScorekeepersSheet } from '@/components/golf/ManageScorekeepersSheet';
 import { PlayoffMode } from '@/components/golf/PlayoffMode';
-import { PlayoffWinnerModal } from '@/components/golf/PlayoffWinnerModal';
 import { FinishOptionsOverlay } from '@/components/golf/FinishOptionsOverlay';
 import { ScorecardBottomBar } from '@/components/golf/ScorecardBottomBar';
+import { ScorecardHeader } from '@/components/golf/ScorecardHeader';
+import { ScorecardModals } from '@/components/golf/ScorecardModals';
 import { useRounds } from '@/hooks/useRounds';
 import { useSupabaseRound } from '@/hooks/useSupabaseRound';
 import { useKeepAwake } from '@/hooks/useKeepAwake';
@@ -26,20 +22,24 @@ import { useScorekeeper } from '@/hooks/useScorekeeper';
 import { useAutoAdvance } from '@/hooks/useAutoAdvance';
 import { usePlayoff } from '@/hooks/usePlayoff';
 import { useVoiceScoring } from '@/hooks/useVoiceScoring';
+import { useSettings } from '@/hooks/useSettings';
 import { Press, PlayerWithScores, GameConfig } from '@/types/golf';
-import { 
-  calculatePlayingHandicap, 
-  getStrokesPerHole, 
-  calculateTotalNetStrokes, 
+import {
+  calculatePlayingHandicap,
+  getStrokesPerHole,
+  calculateTotalNetStrokes,
   getManualStrokesPerHole,
   calculateMatchPlayStrokes,
   buildMatchPlayStrokesMap,
 } from '@/lib/handicapUtils';
+import { checkAutoPress } from '@/lib/games/nassau';
+import { calculateSettlement } from '@/lib/games/settlement';
+import { calculateSkins } from '@/lib/games/skins';
+import { calculateNassau } from '@/lib/games/nassau';
+import { calculateMatchPlay } from '@/lib/games/matchPlay';
 import { toast } from 'sonner';
-import { hapticLight, hapticSuccess } from '@/lib/haptics';
+import { hapticSuccess } from '@/lib/haptics';
 import { setStatusBarDefault } from '@/lib/statusBar';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 
 export default function Scorecard() {
@@ -50,6 +50,9 @@ export default function Scorecard() {
 
   // Keep screen awake during active round
   useKeepAwake(true);
+
+  // Voice settings
+  const { settings } = useSettings();
 
   // Set status bar style for native apps
   useEffect(() => {
@@ -239,6 +242,83 @@ export default function Scorecard() {
     );
   }, [round, playersWithScores]);
 
+  // Calculate settlements preview for finish overlay
+  const settlementsPreview = useMemo(() => {
+    if (!round || playersWithScores.length < 2) return [];
+
+    // Calculate results for each game type
+    let skinsResult;
+    let nassauResult;
+    let matchPlayWinnerId: string | null = null;
+    let matchPlayStakes = 0;
+
+    for (const game of round.games || []) {
+      if (game.type === 'skins') {
+        skinsResult = calculateSkins(
+          roundScores,
+          playersWithScores,
+          round.holes,
+          game.stakes,
+          game.carryover ?? true
+        );
+      } else if (game.type === 'nassau') {
+        // Build strokes map if using net scoring
+        let strokesPerHole: Map<string, Map<number, number>> | undefined;
+        if (game.useNet) {
+          strokesPerHole = new Map();
+          for (const player of playersWithScores) {
+            if (player.strokesPerHole) {
+              strokesPerHole.set(player.id, player.strokesPerHole);
+            }
+          }
+          if (strokesPerHole.size === 0) strokesPerHole = undefined;
+        }
+        nassauResult = calculateNassau(
+          roundScores,
+          playersWithScores,
+          game.stakes,
+          round.presses || [],
+          round.holes,
+          strokesPerHole
+        );
+      } else if (game.type === 'match') {
+        // Build strokes map if using net scoring
+        let matchStrokesMap: Map<string, Map<number, number>> | undefined;
+        if (game.useNet) {
+          matchStrokesMap = new Map();
+          for (const player of playersWithScores) {
+            if (player.strokesPerHole) {
+              matchStrokesMap.set(player.id, player.strokesPerHole);
+            }
+          }
+          if (matchStrokesMap.size === 0) matchStrokesMap = undefined;
+        }
+        const matchResult = calculateMatchPlay(
+          roundScores,
+          playersWithScores,
+          round.holeInfo,
+          matchStrokesMap,
+          round.holes
+        );
+        if (matchResult.winnerId) {
+          matchPlayWinnerId = matchResult.winnerId;
+          matchPlayStakes = game.stakes;
+        }
+      }
+    }
+
+    return calculateSettlement(
+      playersWithScores,
+      skinsResult,
+      nassauResult,
+      matchPlayWinnerId,
+      matchPlayStakes,
+      undefined, // wolfResults - not needed for preview
+      0, // wolfStakes
+      propBets
+    );
+  }, [round, playersWithScores, roundScores, propBets]);
+
   const currentHoleInfo = round?.holeInfo.find(h => h.number === currentHole) || {
     number: currentHole,
     par: 4,
@@ -302,6 +382,9 @@ export default function Scorecard() {
     games: round?.games || [],
     onScoreSaved: handleSaveScore,
     onNavigateToHole: setCurrentHole,
+    onFinishRound: () => setShowFinishOptions(true),
+    continuousVoice: settings.continuousVoice,
+    alwaysConfirmVoice: settings.alwaysConfirmVoice,
   });
 
   // Handle quick score from +/- buttons
@@ -344,6 +427,49 @@ export default function Scorecard() {
       addPressLocal(round.id, press);
     }
   }, [round, addPressToSupabase, addPressLocal]);
+
+  // Auto-press check for Nassau
+  useEffect(() => {
+    if (!round) return;
+
+    const nassauGame = round.games?.find(g => g.type === 'nassau');
+    if (!nassauGame || !nassauGame.autoPress) return;
+    if (playersWithScores.length !== 2) return;
+
+    // Build strokes map if using net scoring
+    let strokesPerHole: Map<string, Map<number, number>> | undefined;
+    if (nassauGame.useNet) {
+      strokesPerHole = new Map();
+      for (const player of playersWithScores) {
+        if (player.strokesPerHole) {
+          strokesPerHole.set(player.id, player.strokesPerHole);
+        }
+      }
+      if (strokesPerHole.size === 0) strokesPerHole = undefined;
+    }
+
+    const autoPress = checkAutoPress(
+      roundScores,
+      playersWithScores,
+      nassauGame.stakes,
+      round.presses || [],
+      round.holes,
+      strokesPerHole
+    );
+
+    if (autoPress) {
+      // Find who triggered the press
+      const pressingPlayer = playersWithScores.find(p => p.id === autoPress.initiatedBy);
+      handleAddPress(autoPress);
+      toast.info(
+        `Auto-Press! ${pressingPlayer?.name.split(' ')[0] || 'Player'} is 2 down`,
+        {
+          description: `Press $${nassauGame.stakes} starting hole ${autoPress.startHole}`,
+          duration: 4000,
+        }
+      );
+    }
+  }, [round, roundScores, playersWithScores, handleAddPress]);
 
   const handleUpdateGames = useCallback(async (games: GameConfig[]) => {
     if (round) {
@@ -396,88 +522,20 @@ export default function Scorecard() {
       )}
 
       {/* Fixed Header */}
-      <header
-        className="flex-shrink-0 z-30 bg-background border-b border-border safe-top"
-        style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
-      >
-        <div className="pt-3 pb-3 px-4 flex items-center justify-between gap-3">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => {
-              hapticLight();
-              setShowExitDialog(true);
-            }}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg bg-muted flex items-center justify-center shrink-0 touch-manipulation"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            aria-label="Exit round"
-          >
-            <X className="w-5 h-5" />
-          </motion.button>
-
-          <div className="text-center flex-1 min-w-0">
-            <h1 className="text-base font-bold truncate">{round.courseName}</h1>
-            <p className="text-xs text-muted-foreground/80 font-mono tracking-widest uppercase">
-              {round.joinCode}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            {isCreator && !isSpectator && (
-              <ManageScorekeepersSheet
-                players={playersWithScores.map(p => ({
-                  id: p.id,
-                  name: p.name,
-                  profile_id: (p as any).profile_id,
-                  order_index: (p as any).order_index,
-                }))}
-                scorekeeperIds={scorekeeperIds}
-                isCreator={isCreator}
-                onAddScorekeeper={addScorekeeper}
-                onRemoveScorekeeper={removeScorekeeper}
-              />
-            )}
-
-            {canEditScores && (
-              <GameSettingsSheet
-                round={round}
-                onUpdateGames={handleUpdateGames}
-                playerCount={playersWithScores.length}
-              />
-            )}
-
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg bg-muted flex items-center justify-center touch-manipulation"
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
-                  aria-label="More options"
-                >
-                  <MoreVertical className="w-5 h-5" />
-                </motion.button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 z-50" sideOffset={8}>
-                <DropdownMenuItem onClick={() => setShowShareModal(true)}>
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share Round
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => toast.info('Reset feature coming soon')}>
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Reset This Hole
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setShowEndDialog(true)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Flag className="w-4 h-4 mr-2" />
-                  End Round Early
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
+      <ScorecardHeader
+        round={round}
+        playersWithScores={playersWithScores}
+        isCreator={isCreator}
+        isSpectator={isSpectator}
+        canEditScores={canEditScores}
+        scorekeeperIds={scorekeeperIds}
+        onShowExitDialog={() => setShowExitDialog(true)}
+        onShowShareModal={() => setShowShareModal(true)}
+        onShowEndDialog={() => setShowEndDialog(true)}
+        onAddScorekeeper={addScorekeeper}
+        onRemoveScorekeeper={removeScorekeeper}
+        onUpdateGames={handleUpdateGames}
+      />
 
       {/* Hole Navigator - Fixed, hide during playoff */}
       {playoffHole === 0 && (
@@ -635,13 +693,14 @@ export default function Scorecard() {
           )}
 
           {/* Games Section - hide during playoff */}
-          {playoffHole === 0 && round.games && round.games.length > 0 && (
+          {playoffHole === 0 && (round.games?.length > 0 || propBets.length > 0) && (
             <GamesSection
               round={round}
               players={playersWithScores}
               scores={roundScores}
               currentHole={currentHole}
               onAddPress={handleAddPress}
+              propBets={propBets}
             />
           )}
         </div>
@@ -670,6 +729,7 @@ export default function Scorecard() {
           }}
           onStartPlayoff={handleStartPlayoff}
           onContinue={() => setShowFinishOptions(false)}
+          settlements={settlementsPreview}
         />
       )}
 
@@ -699,84 +759,37 @@ export default function Scorecard() {
         onPropBetUpdated={updatePropBet}
       />
 
-      {/* Score Input Sheet */}
-      <ScoreInputSheet
-        isOpen={!!selectedPlayerId}
-        onClose={() => setSelectedPlayerId(null)}
+      {/* All Modals and Dialogs */}
+      <ScorecardModals
+        selectedPlayerId={selectedPlayerId}
+        selectedPlayer={selectedPlayer ? {
+          name: selectedPlayer.name,
+          currentHoleScore: selectedPlayer.scores.find(s => s.holeNumber === currentHole)?.strokes,
+        } : undefined}
+        currentHole={currentHole}
+        currentHolePar={currentHoleInfo.par}
+        onCloseScoreInput={() => setSelectedPlayerId(null)}
         onSelectScore={handleScoreSelect}
-        playerName={selectedPlayer?.name || ''}
-        holeNumber={currentHole}
-        par={currentHoleInfo.par}
-        currentScore={selectedPlayer?.scores.find(s => s.holeNumber === currentHole)?.strokes}
-      />
-
-      {/* Voice Confirmation Modal */}
-      <VoiceConfirmationModal
-        isOpen={showVoiceModal}
-        onClose={closeVoiceModal}
-        onConfirm={handleVoiceConfirm}
-        onRetry={handleVoiceRetry}
+        showVoiceModal={showVoiceModal}
         parseResult={parseResult}
         players={playersWithScores}
-        holeNumber={currentHole}
-        par={currentHoleInfo.par}
-      />
-
-      {/* Share Join Code Modal */}
-      <ShareJoinCodeModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
+        onCloseVoiceModal={closeVoiceModal}
+        onVoiceConfirm={handleVoiceConfirm}
+        onVoiceRetry={handleVoiceRetry}
+        showShareModal={showShareModal}
         joinCode={round.joinCode}
         courseName={round.courseName}
         roundId={round.id}
+        onCloseShareModal={() => setShowShareModal(false)}
+        showWinnerModal={showWinnerModal}
+        playoffWinner={playoffWinner}
+        onFinishWithWinner={handleFinishWithWinner}
+        showExitDialog={showExitDialog}
+        onSetShowExitDialog={setShowExitDialog}
+        showEndDialog={showEndDialog}
+        onSetShowEndDialog={setShowEndDialog}
+        onFinishRound={handleFinishRound}
       />
-
-      {/* Playoff Winner Modal */}
-      <PlayoffWinnerModal
-        isOpen={showWinnerModal}
-        winner={playoffWinner}
-        onFinish={handleFinishWithWinner}
-      />
-
-      {/* Exit Dialog */}
-      <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
-        <AlertDialogContent className="rounded-xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Exit Round?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Your progress is saved. You can continue this round anytime from the home screen.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-lg">Stay</AlertDialogCancel>
-            <AlertDialogAction onClick={() => navigate('/')} className="rounded-lg">
-              Exit
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* End Round Dialog */}
-      <AlertDialog open={showEndDialog} onOpenChange={setShowEndDialog}>
-        <AlertDialogContent className="rounded-xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>End Round Early?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will mark the round as complete with current scores. You won't be able to add
-              more scores after this.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-lg">Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleFinishRound}
-              className="rounded-lg bg-destructive hover:bg-destructive/90"
-            >
-              End Round
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

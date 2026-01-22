@@ -1,73 +1,181 @@
-# Welcome to your Lovable project
+# MATCH Golf
 
-## Project info
+A mobile-first golf scoring app with real-time multiplayer support, betting games, and voice scoring.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Tech Stack
 
-## How can I edit this code?
+- **Frontend**: React 18 + TypeScript + Vite
+- **Styling**: TailwindCSS + shadcn/ui
+- **Backend**: Supabase (PostgreSQL, Auth, Real-time)
+- **Mobile**: Capacitor 6.2 (iOS/Android)
+- **Testing**: Vitest
 
-There are several ways of editing your application.
+## Getting Started
 
-**Use Lovable**
+### Prerequisites
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- Node.js 18+
+- npm or yarn
+- Supabase account (for backend)
 
-Changes made via Lovable will be committed automatically to this repo.
+### Installation
 
-**Use your preferred IDE**
+```bash
+# Install dependencies
+npm install
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your Supabase credentials
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Environment Variables
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-**Use GitHub Codespaces**
+## Development
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+# Run dev server
+npm run dev
 
-## What technologies are used for this project?
+# Run tests
+npm test
 
-This project is built with:
+# Run tests with coverage
+npm run test:coverage
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# Build for production
+npm run build
 
-## How can I deploy this project?
+# Type check
+npm run typecheck
+```
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Mobile Development
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+# Build and sync to iOS
+npm run build && npx cap sync ios
 
-Yes, you can!
+# Build and sync to Android
+npm run build && npx cap sync android
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# Open in Xcode
+npx cap open ios
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+# Open in Android Studio
+npx cap open android
+```
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── golf/           # Golf-specific components
+│   │   ├── PlayerCard.tsx
+│   │   ├── HoleNavigator.tsx
+│   │   ├── GamesSection.tsx
+│   │   ├── MoneyTracker.tsx
+│   │   └── ...
+│   └── ui/             # shadcn/ui components
+├── hooks/
+│   ├── useSupabaseRound.ts   # Real-time round sync
+│   ├── useVoiceScoring.ts    # Voice input handling
+│   ├── usePlayoff.ts         # Playoff mode logic
+│   └── ...
+├── lib/
+│   ├── games/          # Game calculation logic
+│   │   ├── nassau.ts
+│   │   ├── skins.ts
+│   │   ├── matchPlay.ts
+│   │   ├── wolf.ts
+│   │   ├── stableford.ts
+│   │   └── bestball.ts
+│   ├── voiceParser.ts  # Voice transcript parsing
+│   ├── validation.ts   # Input validation schemas
+│   └── handicapUtils.ts
+├── pages/
+│   ├── Scorecard.tsx   # Main scoring page
+│   ├── Home.tsx
+│   ├── NewRound.tsx
+│   └── ...
+├── types/
+│   ├── golf.ts         # Core type definitions
+│   └── betting.ts      # Betting-related types
+└── integrations/
+    └── supabase/       # Supabase client & types
+```
+
+## Features
+
+### Scoring
+- Tap or voice input for scores
+- Real-time sync across devices
+- Offline support with sync queue
+- Handicap calculations (Course Handicap, Match Play differential)
+
+### Betting Games
+- **Nassau**: Front 9 / Back 9 / Overall with auto-press
+- **Skins**: Individual hole wins with optional carryover
+- **Match Play**: 2-player head-to-head with net scoring
+- **Wolf**: 4-player rotating wolf format
+- **Stableford**: Points-based scoring
+- **Best Ball**: Team best ball format
+- **Prop Bets**: Custom side bets
+
+### Voice Scoring
+- Natural language input: "Mike got a 4, Bob had a 5"
+- Fuzzy name matching with nicknames
+- Golf term recognition (birdie, bogey, etc.)
+- Confirmation modal for verification
+
+### Multiplayer
+- Join codes for round sharing
+- Real-time score updates via Supabase
+- Spectator mode
+- Scorekeeper permissions
+
+## Testing
+
+Tests are located alongside source files with `.test.ts` extension.
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test file
+npm test -- src/lib/games/nassau.test.ts
+
+# Watch mode
+npm test -- --watch
+```
+
+### Test Coverage
+
+| Module | Tests |
+|--------|-------|
+| voiceParser | 114 |
+| wolf | 55 |
+| stableford | 42 |
+| matchPlay | 31 |
+| bestball | 30 |
+| nassau | 27 |
+| skins | 22 |
+| settlement | 18 |
+| **Total** | **339** |
+
+## Architecture
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture documentation.
+
+## License
+
+Private - All rights reserved

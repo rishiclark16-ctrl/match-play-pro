@@ -2,6 +2,7 @@ import { Player, Settlement, GameConfig, WolfHoleResult } from '@/types/golf';
 import { SkinsResult } from './skins';
 import { NassauResult } from './nassau';
 import { calculateWolfStandings } from './wolf';
+import { PropBet } from '@/types/betting';
 
 export interface NetSettlement {
   fromPlayerId: string;
@@ -18,7 +19,8 @@ export function calculateSettlement(
   matchPlayWinnerId?: string | null,
   matchPlayStakes?: number,
   wolfResults?: WolfHoleResult[],
-  wolfStakes?: number
+  wolfStakes?: number,
+  propBets?: PropBet[]
 ): NetSettlement[] {
   // Build a ledger of who owes whom
   const ledger: Record<string, Record<string, number>> = {};
@@ -41,7 +43,7 @@ export function calculateSettlement(
     const losers = standings.filter(s => s.earnings < 0);
     
     // Distribute losses to winners proportionally
-    let remainingWinnings = winners.reduce((sum, w) => sum + w.earnings, 0);
+    const remainingWinnings = winners.reduce((sum, w) => sum + w.earnings, 0);
     
     losers.forEach(loser => {
       let lossToDistribute = Math.abs(loser.earnings);
@@ -101,7 +103,27 @@ export function calculateSettlement(
       });
     }
   }
-  
+
+  // Process prop bets
+  if (propBets && propBets.length > 0) {
+    // Only include settled prop bets (have a winner)
+    const settledBets = propBets.filter(pb => pb.winnerId);
+
+    settledBets.forEach(bet => {
+      if (!bet.winnerId) return;
+
+      // Each non-winner pays the winner the bet stakes
+      players.forEach(player => {
+        if (player.id !== bet.winnerId) {
+          // player owes winner the stakes
+          if (ledger[player.id] && ledger[player.id][bet.winnerId!] !== undefined) {
+            ledger[player.id][bet.winnerId!] += bet.stakes;
+          }
+        }
+      });
+    });
+  }
+
   // Net out the ledger (A owes B $10, B owes A $4 = A owes B $6)
   const netSettlements: NetSettlement[] = [];
   const processed = new Set<string>();

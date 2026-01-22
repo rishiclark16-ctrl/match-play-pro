@@ -22,6 +22,13 @@ export interface ParseResult {
   confidenceReason: string;
 }
 
+export interface CorrectionResult {
+  type: 'correction';
+  playerId: string;
+  playerName: string;
+  newScore: number;
+}
+
 // Word numbers to digits - comprehensive with common mishearings
 const wordToNumber: Record<string, number> = {
   // Standard words
@@ -360,7 +367,8 @@ function extractScore(text: string, par: number): number | null {
   if (numberMatches) {
     for (const numStr of numberMatches) {
       const num = parseInt(numStr, 10);
-      if (num >= MIN_HOLE_SCORE && num <= MAX_HOLE_SCORE) {
+      // Ensure parseInt returned a valid number (not NaN) and is within range
+      if (!isNaN(num) && isFinite(num) && num >= MIN_HOLE_SCORE && num <= MAX_HOLE_SCORE) {
         return num;
       }
     }
@@ -457,7 +465,7 @@ export function parseVoiceInput(
     /\ball\s+(pars?|bogeys?|bogies?|birdies?|eagles?|doubles?|triples?)\b/i,
     /\beverybody\s+(?:got|made|had|shot)\s+(?:a\s+)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten|par|birdie|bogey|bogie|eagle|double|triple)\b/i,
     /\beveryone\s+(?:got|made|had|shot)\s+(?:a\s+)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten|par|birdie|bogey|bogie|eagle|double|triple)\b/i,
-    /\bsame\s+(?:score\s+)?(?:for\s+)?(?:all|everybody|everyone)\s*[:\-]?\s*(\d+|one|two|three|four|five|six|seven|eight|nine|ten|par|birdie|bogey|bogie)\b/i,
+    /\bsame\s+(?:score\s+)?(?:for\s+)?(?:all|everybody|everyone)\s*[:|-]?\s*(\d+|one|two|three|four|five|six|seven|eight|nine|ten|par|birdie|bogey|bogie)\b/i,
   ];
   
   for (const pattern of allPatterns) {
@@ -597,12 +605,12 @@ export function parseVoiceInput(
     }
   }
   
-  const filteredUnrecognized = unrecognized.filter(u => 
-    u.length > 2 && 
+  const filteredUnrecognized = unrecognized.filter(u =>
+    u.length > 2 &&
     !['and', 'the', 'got', 'had', 'made', 'shot', 'scored', 'with', 'for', 'a'].includes(u.toLowerCase())
   );
   const { level, reason } = calculateConfidence(scores, players, filteredUnrecognized);
-  
+
   return {
     success: scores.length > 0,
     scores,
@@ -611,4 +619,66 @@ export function parseVoiceInput(
     confidence: level,
     confidenceReason: reason,
   };
+}
+
+/**
+ * Parse voice correction commands like:
+ * - "change Mike to 6"
+ * - "fix John's score to 5"
+ * - "update Tim to par"
+ * - "make Adam's score a birdie"
+ * - "actually Mike had 5"
+ */
+export function parseVoiceCorrection(
+  transcript: string,
+  players: Player[],
+  currentPar: number
+): CorrectionResult | null {
+  const text = normalizeText(transcript);
+
+  // Correction patterns
+  const correctionPatterns = [
+    // "change X to Y" / "change X's score to Y"
+    /(?:change|fix|update|correct|make)\s+(\w+)(?:'s)?(?:\s+score)?\s+(?:to|a|an)\s+(\w+|\d+)/i,
+    // "actually X had/got Y"
+    /(?:actually|wait|no)\s+(\w+)\s+(?:had|got|made|shot|scored)\s+(?:a\s+)?(\w+|\d+)/i,
+    // "X should be Y" / "X's score should be Y"
+    /(\w+)(?:'s)?(?:\s+score)?\s+(?:should|needs to)\s+be\s+(?:a\s+)?(\w+|\d+)/i,
+    // "that should be Y for X"
+    /(?:that|it)\s+should\s+be\s+(?:a\s+)?(\w+|\d+)\s+for\s+(\w+)/i,
+  ];
+
+  for (const pattern of correctionPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      let playerText: string;
+      let scoreText: string;
+
+      // Handle pattern where score comes before player name
+      if (pattern.source.includes('for\\s+(\\w+)')) {
+        scoreText = match[1];
+        playerText = match[2];
+      } else {
+        playerText = match[1];
+        scoreText = match[2];
+      }
+
+      // Find the player
+      const player = findPlayerMatch(playerText, players);
+      if (!player) continue;
+
+      // Extract the score
+      const score = extractScore(scoreText, currentPar);
+      if (!score) continue;
+
+      return {
+        type: 'correction',
+        playerId: player.id,
+        playerName: player.name,
+        newScore: score,
+      };
+    }
+  }
+
+  return null;
 }

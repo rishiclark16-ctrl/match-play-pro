@@ -255,6 +255,71 @@ export interface NassauHoleContext {
   canPress: boolean;
 }
 
+/**
+ * Check if an auto-press should be triggered after a score update.
+ * Returns a Press if auto-press conditions are met, null otherwise.
+ *
+ * Auto-press triggers when:
+ * - A player becomes exactly 2 down on overall
+ * - No existing press already started on this hole
+ * - Max 3 presses haven't been reached
+ * - Not on the last hole
+ */
+export function checkAutoPress(
+  scores: Score[],
+  players: Player[],
+  stakes: number,
+  existingPresses: Press[],
+  holesInRound: 9 | 18,
+  strokesPerHole?: StrokesPerHoleMap
+): Press | null {
+  if (players.length !== 2) return null;
+
+  const result = calculateNassau(scores, players, stakes, existingPresses, holesInRound, strokesPerHole);
+
+  // Find the current hole (highest hole with all scores)
+  let currentHole = 0;
+  for (let hole = 1; hole <= holesInRound; hole++) {
+    const holeScores = scores.filter(s => s.holeNumber === hole);
+    if (holeScores.length === players.length) {
+      currentHole = hole;
+    }
+  }
+
+  if (currentHole === 0 || currentHole >= holesInRound) return null;
+
+  const [p1, p2] = players;
+  const overallMargin = result.overall.margin;
+  const leaderId = result.overall.winnerId;
+
+  if (!leaderId || overallMargin < 2) return null;
+
+  // Determine who is down
+  const losingPlayer = leaderId === p1.id ? p2 : p1;
+
+  // Check if we already have a press starting on this hole
+  const pressOnThisHole = existingPresses.some(p => p.startHole === currentHole + 1);
+  if (pressOnThisHole) return null;
+
+  // Check max presses
+  if (existingPresses.length >= 3) return null;
+
+  // Check if this is exactly 2 down (not already pressed when they were 2 down before)
+  // We create press for next hole
+  const nextHole = currentHole + 1;
+
+  // Only auto-press if going 2 down for the first time or after a press has reset
+  // Check margin on previous hole to see if they just went 2 down
+  const previousHoleScores = scores.filter(s => s.holeNumber < currentHole);
+  const previousResult = calculateNassau(previousHoleScores, players, stakes, existingPresses, holesInRound, strokesPerHole);
+  const previousMargin = previousResult.overall.margin;
+
+  // Only trigger if we just became 2 down (weren't 2+ down before)
+  if (previousMargin >= 2) return null;
+
+  return createPress(losingPlayer.id, nextHole, stakes);
+}
+
 export function getNassauHoleContext(
   scores: Score[],
   players: Player[],

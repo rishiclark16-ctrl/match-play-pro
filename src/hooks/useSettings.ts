@@ -2,12 +2,16 @@ import { useState, useEffect, useCallback } from 'react';
 
 export interface AppSettings {
   useNetScoring: boolean; // Default true - use net scores for winner determination
+  continuousVoice: boolean; // Default true - keep listening after successful entry
+  alwaysConfirmVoice: boolean; // Default false - show confirmation even for high confidence
 }
 
 const SETTINGS_KEY = 'match-golf-settings';
 
 const DEFAULT_SETTINGS: AppSettings = {
   useNetScoring: true,
+  continuousVoice: true,
+  alwaysConfirmVoice: false,
 };
 
 export function useSettings() {

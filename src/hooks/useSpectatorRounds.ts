@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { Round } from '@/types/golf';
+import { Round, HoleInfo, GameConfig, Press } from '@/types/golf';
 
 interface SpectatingRound extends Round {
   isSpectating: true;
@@ -63,11 +63,11 @@ export function useSpectatorRounds() {
         status: 'active' as const,
         createdAt: new Date(r.created_at || Date.now()),
         joinCode: r.join_code,
-        holeInfo: r.hole_info as any,
+        holeInfo: (r.hole_info as unknown as HoleInfo[]) || [],
         slope: r.slope ?? undefined,
         rating: r.rating ?? undefined,
-        games: (r.games as any) || [],
-        presses: [],
+        games: (r.games as unknown as GameConfig[]) || [],
+        presses: [] as Press[],
         isSpectating: true as const,
       }));
 

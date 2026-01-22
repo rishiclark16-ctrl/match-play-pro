@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { PropBet } from '@/types/betting';
+import { captureException } from '@/lib/sentry';
+import { toast } from 'sonner';
+
+export interface PropBetOperationResult {
+  success: boolean;
+  error?: string;
+}
 
 export function usePropBets(roundId: string | undefined) {
   const [propBets, setPropBets] = useState<PropBet[]>([]);
@@ -32,7 +39,7 @@ export function usePropBets(roundId: string | undefined) {
         description: row.description,
         winnerId: row.winner_id,
         createdBy: row.created_by,
-        createdAt: new Date(row.created_at),
+        createdAt: row.created_at ? new Date(row.created_at) : new Date(),
       }));
 
       setPropBets(transformed);
@@ -102,17 +109,81 @@ export function usePropBets(roundId: string | undefined) {
     };
   }, [roundId]);
 
-  // Add prop bet locally (for optimistic updates)
-  const addPropBet = useCallback((propBet: PropBet) => {
+  // Add prop bet with Supabase persistence
+  const addPropBet = useCallback(async (propBet: PropBet): Promise<PropBetOperationResult> => {
+    // Optimistic update
     setPropBets(prev => [...prev, propBet]);
+
+    try {
+      const { error } = await supabase
+        .from('prop_bets')
+        .insert({
+          id: propBet.id,
+          round_id: propBet.roundId,
+          type: propBet.type,
+          hole_number: propBet.holeNumber,
+          stakes: propBet.stakes,
+          description: propBet.description || null,
+          winner_id: propBet.winnerId || null,
+          created_by: propBet.createdBy || null,
+        });
+
+      if (error) throw error;
+      return { success: true };
+    } catch (err) {
+      // Rollback optimistic update
+      setPropBets(prev => prev.filter(bet => bet.id !== propBet.id));
+
+      const message = err instanceof Error ? err.message : 'Failed to add prop bet';
+      console.error('Error adding prop bet:', err);
+      captureException(err instanceof Error ? err : new Error(message), {
+        context: 'addPropBet',
+        roundId: propBet.roundId,
+        propBetType: propBet.type,
+        holeNumber: propBet.holeNumber
+      });
+      toast.error('Failed to add prop bet', { description: 'Please try again' });
+      return { success: false, error: message };
+    }
   }, []);
 
-  // Update prop bet locally
-  const updatePropBet = useCallback((propBet: PropBet) => {
+  // Update prop bet with Supabase persistence
+  const updatePropBet = useCallback(async (propBet: PropBet): Promise<PropBetOperationResult> => {
+    // Store previous state for rollback
+    const previousBets = [...propBets];
+
+    // Optimistic update
     setPropBets(prev =>
       prev.map(bet => (bet.id === propBet.id ? propBet : bet))
     );
-  }, []);
+
+    try {
+      const { error } = await supabase
+        .from('prop_bets')
+        .update({
+          winner_id: propBet.winnerId || null,
+          description: propBet.description || null,
+          stakes: propBet.stakes,
+        })
+        .eq('id', propBet.id);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (err) {
+      // Rollback optimistic update
+      setPropBets(previousBets);
+
+      const message = err instanceof Error ? err.message : 'Failed to update prop bet';
+      console.error('Error updating prop bet:', err);
+      captureException(err instanceof Error ? err : new Error(message), {
+        context: 'updatePropBet',
+        propBetId: propBet.id,
+        roundId: propBet.roundId
+      });
+      toast.error('Failed to update prop bet', { description: 'Please try again' });
+      return { success: false, error: message };
+    }
+  }, [propBets]);
 
   // Get prop bets for a specific hole
   const getPropBetsForHole = useCallback(

@@ -43,6 +43,6 @@ export function GeometricBackground({ variant = 'grid', className }: GeometricBa
   );
 }
 
-export function GeometricAccent({ className }: { className?: string }) {
+export function GeometricAccent({ className }: { className?: string }): null {
   return null; // Removed for cleaner design
 }

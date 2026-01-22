@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
-import { parseVoiceInput, ParseResult, ParsedScore } from '@/lib/voiceParser';
+import { parseVoiceInput, parseVoiceCorrection, ParseResult, ParsedScore } from '@/lib/voiceParser';
 import { parseVoiceCommands, hasScoreContent } from '@/lib/voiceCommands';
 import {
   feedbackListeningStart,
@@ -26,6 +26,9 @@ interface UseVoiceScoringOptions {
   games: GameConfig[];
   onScoreSaved: (playerId: string, score: number) => void;
   onNavigateToHole: (hole: number) => void;
+  onFinishRound?: () => void;
+  continuousVoice?: boolean; // Keep listening after successful entry
+  alwaysConfirmVoice?: boolean; // Always show confirmation modal
 }
 
 interface UseVoiceScoringReturn {
@@ -49,11 +52,15 @@ export function useVoiceScoring({
   games,
   onScoreSaved,
   onNavigateToHole,
+  onFinishRound,
+  continuousVoice = true,
+  alwaysConfirmVoice = false,
 }: UseVoiceScoringOptions): UseVoiceScoringReturn {
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
   const [voiceSuccessPlayerIds, setVoiceSuccessPlayerIds] = useState<Set<string>>(new Set());
   const previousIsListening = useRef(false);
+  const continuousVoiceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     isListening,
@@ -76,20 +83,61 @@ export function useVoiceScoring({
     previousIsListening.current = isListening;
   }, [isListening, isProcessing]);
 
+  // Helper to restart listening for continuous mode
+  const restartListeningForContinuousMode = useCallback(() => {
+    if (continuousVoice && isSupported) {
+      // Clear any existing timeout
+      if (continuousVoiceTimeoutRef.current) {
+        clearTimeout(continuousVoiceTimeoutRef.current);
+      }
+      // Restart listening after a brief pause
+      continuousVoiceTimeoutRef.current = setTimeout(() => {
+        startListening();
+      }, 1500);
+    }
+  }, [continuousVoice, isSupported, startListening]);
+
   // Process voice transcript when it arrives
   useEffect(() => {
     if (!transcript) return;
 
     const playerList = players.map(p => ({ id: p.id, name: p.name }));
     const commands = parseVoiceCommands(transcript, playerList, games);
-    const navCommand = commands.find(c => c.type === 'next_hole' || c.type === 'previous_hole');
+    const normalizedTranscript = transcript.toLowerCase().trim();
+
+    // Check for finish round command
+    const finishPatterns = [
+      /\b(?:finish|end|complete|done\s+with)\s+(?:the\s+)?round\b/i,
+      /\bround\s+(?:is\s+)?(?:finished|complete|done|over)\b/i,
+      /\bwe'?re?\s+done\b/i,
+      /\bthat'?s?\s+(?:it|the\s+round)\b/i,
+    ];
+
+    if (finishPatterns.some(p => p.test(normalizedTranscript)) && onFinishRound) {
+      feedbackVoiceSuccess();
+      toast.success('Finishing round...', { duration: 1500 });
+      onFinishRound();
+      resetVoice();
+      return;
+    }
+
+    // Check for navigation commands
+    const navCommand = commands.find(c => c.type === 'next_hole' || c.type === 'previous_hole' || c.type === 'go_to_hole');
 
     if (navCommand) {
-      if (navCommand.type === 'next_hole' && navCommand.holeNumber) {
+      if (navCommand.type === 'go_to_hole' && navCommand.holeNumber) {
         onNavigateToHole(Math.min(totalHoles, Math.max(1, navCommand.holeNumber)));
         feedbackNextHole();
         toast.info(`Hole ${navCommand.holeNumber}`, { duration: 1500 });
         resetVoice();
+        restartListeningForContinuousMode();
+        return;
+      } else if (navCommand.type === 'next_hole' && navCommand.holeNumber) {
+        onNavigateToHole(Math.min(totalHoles, Math.max(1, navCommand.holeNumber)));
+        feedbackNextHole();
+        toast.info(`Hole ${navCommand.holeNumber}`, { duration: 1500 });
+        resetVoice();
+        restartListeningForContinuousMode();
         return;
       } else if (navCommand.type === 'next_hole') {
         if (currentHole < totalHoles) {
@@ -98,6 +146,7 @@ export function useVoiceScoring({
           toast.info(`Hole ${currentHole + 1}`, { duration: 1500 });
         }
         resetVoice();
+        restartListeningForContinuousMode();
         return;
       } else if (navCommand.type === 'previous_hole') {
         if (currentHole > 1) {
@@ -106,14 +155,28 @@ export function useVoiceScoring({
           toast.info(`Hole ${currentHole - 1}`, { duration: 1500 });
         }
         resetVoice();
+        restartListeningForContinuousMode();
         return;
       }
+    }
+
+    // Check for correction commands first (e.g., "change Mike to 6")
+    const correction = parseVoiceCorrection(transcript, playerList, par);
+    if (correction) {
+      // Apply correction immediately
+      onScoreSaved(correction.playerId, correction.newScore);
+      feedbackVoiceSuccess();
+      toast.success(`${correction.playerName.split(' ')[0]} → ${correction.newScore}`, { duration: 2000 });
+      resetVoice();
+      restartListeningForContinuousMode();
+      return;
     }
 
     if (hasScoreContent(transcript)) {
       const result = parseVoiceInput(transcript, playerList, par);
 
-      if (result.confidence === 'high' && result.scores.length > 0) {
+      // If alwaysConfirmVoice is on, show modal even for high confidence
+      if (result.confidence === 'high' && result.scores.length > 0 && !alwaysConfirmVoice) {
         // High confidence - save immediately
         result.scores.forEach(({ playerId, score }) => {
           onScoreSaved(playerId, score);
@@ -134,8 +197,9 @@ export function useVoiceScoring({
         }
 
         resetVoice();
+        restartListeningForContinuousMode();
       } else if (result.scores.length > 0) {
-        // Medium confidence - show modal for confirmation
+        // Medium confidence or alwaysConfirm - show modal for confirmation
         setParseResult(result);
         setShowVoiceModal(true);
         resetVoice();
@@ -160,7 +224,7 @@ export function useVoiceScoring({
       setShowVoiceModal(true);
       resetVoice();
     }
-  }, [transcript, players, currentHole, totalHoles, par, games, onScoreSaved, onNavigateToHole, resetVoice]);
+  }, [transcript, players, currentHole, totalHoles, par, games, onScoreSaved, onNavigateToHole, onFinishRound, resetVoice, alwaysConfirmVoice, restartListeningForContinuousMode]);
 
   // Show voice errors
   useEffect(() => {
@@ -188,8 +252,12 @@ export function useVoiceScoring({
     });
     setShowVoiceModal(false);
     setParseResult(null);
+    feedbackVoiceSuccess();
     toast.success(`${scores.length} score${scores.length > 1 ? 's' : ''} saved!`, { duration: 2000 });
-  }, [onScoreSaved]);
+
+    // Restart listening in continuous mode
+    restartListeningForContinuousMode();
+  }, [onScoreSaved, restartListeningForContinuousMode]);
 
   const handleVoiceRetry = useCallback(() => {
     setShowVoiceModal(false);

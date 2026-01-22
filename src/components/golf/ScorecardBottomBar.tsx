@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { VoiceButton } from '@/components/golf/VoiceButton';
 import { PropBetSheet } from '@/components/golf/PropBetSheet';
 import { cn } from '@/lib/utils';
-import { PlayerWithScores, HoleInfo, PropBet } from '@/types/golf';
+import { PlayerWithScores, HoleInfo } from '@/types/golf';
+import { PropBet } from '@/types/betting';
 
 interface ScorecardBottomBarProps {
   roundId: string;
@@ -58,9 +59,12 @@ export function ScorecardBottomBar({
   return (
     <div
       className={cn(
-        'fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border transition-opacity safe-bottom',
+        'fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border transition-opacity',
         showFinishOptions && 'opacity-0 pointer-events-none'
       )}
+      style={{
+        paddingBottom: 'max(env(safe-area-inset-bottom), 8px)',
+      }}
     >
       <div className="px-3 py-3 flex items-center justify-between gap-2">
         {/* Leaderboard Button */}

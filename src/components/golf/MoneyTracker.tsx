@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, TrendingDown, Minus, DollarSign, Flame, Sparkles } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, DollarSign, Flame, Sparkles, ChevronRight } from 'lucide-react';
 import { PlayerWithScores, GameConfig, HoleInfo, Score, Press } from '@/types/golf';
 import { PropBet } from '@/types/betting';
 import { calculateLiveMoney, formatMoney, getMoneyColor } from '@/lib/games/moneyTracker';
+import { BettingBreakdownSheet } from './BettingBreakdownSheet';
 import { cn } from '@/lib/utils';
 
 interface MoneyTrackerProps {
@@ -25,6 +26,9 @@ export function MoneyTracker({
   currentHole,
   propBets,
 }: MoneyTrackerProps) {
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | undefined>();
+
   // Calculate money state for current hole
   const currentMoney = useMemo(() => {
     // Show money tracker if there are games OR prop bets with winners
@@ -44,19 +48,42 @@ export function MoneyTracker({
     return calculateLiveMoney(players, scores, games, holeInfo, presses, currentHole, previousMoney, propBets);
   }, [players, scores, games, holeInfo, presses, currentHole, propBets]);
 
+  // Prepare breakdown data for the sheet - must be before early return
+  const breakdownPlayers = useMemo(() => {
+    if (!currentMoney) return [];
+    return currentMoney.players.map((player, index) => ({
+      playerId: player.playerId,
+      playerName: player.playerName,
+      breakdown: currentMoney.breakdown.get(player.playerId) || {
+        skins: 0,
+        nassau: 0,
+        wolf: 0,
+        propBets: 0,
+        total: 0,
+      },
+      currentBalance: player.currentBalance,
+      rank: index + 1,
+    }));
+  }, [currentMoney]);
+
   // Don't render if no money data
   if (!currentMoney) {
     return null;
   }
 
   const hasAnyMoney = currentMoney.players.some(p => p.currentBalance !== 0);
-  
+
   // Find the leader and their margin
   const leader = currentMoney.players[0];
   const secondPlace = currentMoney.players[1];
-  const leadMargin = leader && secondPlace 
-    ? leader.currentBalance - secondPlace.currentBalance 
+  const leadMargin = leader && secondPlace
+    ? leader.currentBalance - secondPlace.currentBalance
     : 0;
+
+  const handlePlayerClick = (playerId: string) => {
+    setSelectedPlayerId(playerId);
+    setShowBreakdown(true);
+  };
 
   return (
     <motion.div
@@ -106,20 +133,23 @@ export function MoneyTracker({
         {currentMoney.players.map((player, index) => {
           const isLeader = index === 0 && player.currentBalance > 0;
           const isLast = index === currentMoney.players.length - 1 && player.currentBalance < 0;
-          
+
           return (
-            <motion.div
+            <motion.button
               key={player.playerId}
               layout
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handlePlayerClick(player.playerId)}
               className={cn(
-                "flex items-center justify-between p-2 rounded-lg",
-                isLeader && "bg-success/10 border border-success/30",
-                isLast && "bg-danger/5 border border-danger/20",
-                !isLeader && !isLast && "bg-muted/30"
+                "w-full flex items-center justify-between p-2 rounded-lg cursor-pointer touch-manipulation transition-colors",
+                isLeader && "bg-success/10 border border-success/30 active:bg-success/20",
+                isLast && "bg-danger/5 border border-danger/20 active:bg-danger/10",
+                !isLeader && !isLast && "bg-muted/30 active:bg-muted/50"
               )}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <div className="flex items-center gap-2">
                 {/* Position indicator */}
@@ -129,13 +159,13 @@ export function MoneyTracker({
                 )}>
                   {index + 1}
                 </span>
-                
+
                 <span className="text-sm font-semibold text-foreground truncate max-w-[100px]">
                   {player.playerName.split(' ')[0]}
                 </span>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {/* Change indicator */}
                 <AnimatePresence mode="wait">
                   {player.change !== 0 && (
@@ -171,8 +201,11 @@ export function MoneyTracker({
                 >
                   {player.currentBalance === 0 ? 'E' : formatMoney(player.currentBalance)}
                 </motion.span>
+
+                {/* Tap indicator */}
+                <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
               </div>
-            </motion.div>
+            </motion.button>
           );
         })}
       </div>
@@ -196,6 +229,14 @@ export function MoneyTracker({
           All even so far
         </div>
       )}
+
+      {/* Betting Breakdown Sheet */}
+      <BettingBreakdownSheet
+        isOpen={showBreakdown}
+        onClose={() => setShowBreakdown(false)}
+        players={breakdownPlayers}
+        selectedPlayerId={selectedPlayerId}
+      />
     </motion.div>
   );
 }

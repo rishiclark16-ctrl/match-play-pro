@@ -289,7 +289,7 @@ export function useFriends() {
 
     try {
       // Normalize phone - remove common formatting characters
-      const normalizedPhone = phone.replace(/[\s\-\(\)\+]/g, '').trim();
+      const normalizedPhone = phone.replace(/[\s\-()+ ]/g, '').trim();
       
       // Find user by phone in profiles (try both with and without formatting)
       const { data: profiles, error: profileError } = await supabase
@@ -301,7 +301,7 @@ export function useFriends() {
       
       // Find matching phone (normalize stored phones too)
       const matchingProfile = profiles?.find(p => {
-        const storedPhone = p.phone?.replace(/[\s\-\(\)\+]/g, '') || '';
+        const storedPhone = p.phone?.replace(/[\s\-()+ ]/g, '') || '';
         return storedPhone === normalizedPhone || 
                storedPhone.endsWith(normalizedPhone) || 
                normalizedPhone.endsWith(storedPhone);

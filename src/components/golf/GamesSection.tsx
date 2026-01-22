@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Trophy, AlertCircle, Star, Users, Crown, Dog, Swords } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trophy, AlertCircle, Star, Users, Crown, Dog, Swords, Dices } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Round, Player, Score, Press, PlayerWithScores } from '@/types/golf';
+import { PropBet, getPropBetIcon, getPropBetLabel } from '@/types/betting';
 import { calculateSkins, SkinsResult, StrokesPerHoleMap } from '@/lib/games/skins';
 import { calculateNassau, NassauResult, formatNassauStatus, canPress, createPress } from '@/lib/games/nassau';
 import { calculateStableford, StablefordResult, getStablefordPointsColor } from '@/lib/games/stableford';
@@ -27,9 +28,10 @@ interface GamesSectionProps {
   scores: Score[];
   currentHole: number;
   onAddPress: (press: Press) => void;
+  propBets?: PropBet[];
 }
 
-export function GamesSection({ round, players, scores, currentHole, onAddPress }: GamesSectionProps) {
+export function GamesSection({ round, players, scores, currentHole, onAddPress, propBets = [] }: GamesSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [pressConfirmPlayer, setPressConfirmPlayer] = useState<Player | null>(null);
   
@@ -166,8 +168,34 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
     }
     return null;
   }, [nassauResult, players, currentHole, round.presses, round.holes]);
-  
-  if (!skinsGame && !nassauGame && !stablefordGame && !bestBallGame && !wolfGame && !hasMatchPlay) return null;
+
+  // Calculate prop bets summary (junk bets)
+  const propBetsSummary = useMemo(() => {
+    if (!propBets || propBets.length === 0) return null;
+
+    const wonBets = propBets.filter(pb => pb.winnerId);
+    if (wonBets.length === 0) return null;
+
+    // Group by player
+    const playerStats = new Map<string, { count: number; earnings: number; types: string[] }>();
+
+    wonBets.forEach(bet => {
+      const stats = playerStats.get(bet.winnerId!) || { count: 0, earnings: 0, types: [] };
+      stats.count++;
+      stats.earnings += bet.stakes * (players.length - 1); // Winner gets stakes from each other player
+      stats.types.push(bet.type);
+      playerStats.set(bet.winnerId!, stats);
+    });
+
+    return {
+      totalBets: wonBets.length,
+      playerStats,
+    };
+  }, [propBets, players.length]);
+
+  const hasPropBets = propBets.length > 0;
+
+  if (!skinsGame && !nassauGame && !stablefordGame && !bestBallGame && !wolfGame && !hasMatchPlay && !hasPropBets) return null;
   
   const handleConfirmPress = () => {
     if (pressConfirmPlayer && nassauGame) {
@@ -604,6 +632,60 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress }
                         {wolfResult.carryover} points carrying over
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Divider before Props */}
+                {(skinsGame || nassauGame || stablefordGame || bestBallGame || wolfGame || hasMatchPlay) && hasPropBets && propBetsSummary && (
+                  <div className="border-t border-border/50" />
+                )}
+
+                {/* Prop Bets / Junk Summary */}
+                {hasPropBets && propBetsSummary && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-sm flex items-center gap-2">
+                        <Dices className="w-4 h-4 text-primary" />
+                        SIDE BETS
+                      </h4>
+                      <span className="text-xs text-muted-foreground">
+                        {propBetsSummary.totalBets} won
+                      </span>
+                    </div>
+
+                    <div className="space-y-1">
+                      {players.map(player => {
+                        const stats = propBetsSummary.playerStats.get(player.id);
+                        if (!stats) return null;
+
+                        return (
+                          <div
+                            key={player.id}
+                            className="flex items-center justify-between text-sm"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span>{player.name.split(' ')[0]}:</span>
+                              <div className="flex gap-0.5">
+                                {stats.types.slice(0, 4).map((type, i) => (
+                                  <span key={i} className="text-xs" title={getPropBetLabel(type as PropBet['type'])}>
+                                    {getPropBetIcon(type as PropBet['type'])}
+                                  </span>
+                                ))}
+                                {stats.types.length > 4 && (
+                                  <span className="text-xs text-muted-foreground">+{stats.types.length - 4}</span>
+                                )}
+                              </div>
+                            </div>
+                            <span className={cn(
+                              "font-medium",
+                              stats.earnings > 0 && "text-success"
+                            )}>
+                              +${stats.earnings}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>

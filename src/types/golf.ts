@@ -70,7 +70,7 @@ export interface SkinResult {
 export interface Press {
   id: string;
   startHole: number;
-  initiatedBy: string;
+  initiatedBy?: string;
   stakes: number;
   status: 'active' | 'won' | 'lost' | 'pushed';
 }

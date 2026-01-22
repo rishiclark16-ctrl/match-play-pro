@@ -14,12 +14,14 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Linting */
+    /* Linting - Gradual strict mode enablement */
     "strict": false,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noImplicitAny": false,
-    "noFallthroughCasesInSwitch": false,
+    "noFallthroughCasesInSwitch": true,
+    /* strictNullChecks: enable after updating interface types to use | null */
 
     "baseUrl": ".",
     "paths": {

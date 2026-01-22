@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Target, Flame, Dices, Check, X, Trophy } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { PlayerWithScores, HoleInfo } from '@/types/golf';
 import { PropBet, PROP_BET_TEMPLATES, getPropBetLabel, getPropBetIcon } from '@/types/betting';
+import { PropBetCelebration } from './PropBetCelebration';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { hapticLight, hapticMedium, hapticSuccess, hapticError } from '@/lib/haptics';
@@ -38,6 +39,14 @@ export function PropBetSheet({
   const [customDescription, setCustomDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [selectingWinner, setSelectingWinner] = useState<string | null>(null);
+
+  // Celebration state
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationData, setCelebrationData] = useState<{
+    winnerName: string;
+    betType: string;
+    amount: number;
+  } | null>(null);
 
   // Filter prop bets for current hole
   const currentHoleBets = propBets.filter(pb => pb.holeNumber === currentHole);
@@ -74,7 +83,7 @@ export function PropBetSheet({
         description: data.description,
         winnerId: data.winner_id,
         createdBy: data.created_by,
-        createdAt: new Date(data.created_at),
+        createdAt: data.created_at ? new Date(data.created_at) : new Date(),
       };
 
       // Don't call onPropBetAdded - realtime subscription handles it
@@ -105,10 +114,24 @@ export function PropBetSheet({
 
       if (error) throw error;
 
-      // Don't call onPropBetUpdated - realtime subscription handles it
+      // Find the bet and winner details
+      const bet = currentHoleBets.find(b => b.id === propBetId);
       const winner = players.find(p => p.id === winnerId);
+
+      // Don't call onPropBetUpdated - realtime subscription handles it
       hapticSuccess();
-      toast.success(`${winner?.name.split(' ')[0]} wins!`);
+
+      // Trigger celebration animation
+      if (winner && bet) {
+        setCelebrationData({
+          winnerName: winner.name,
+          betType: bet.type,
+          amount: bet.stakes,
+        });
+        setShowCelebration(true);
+      } else {
+        toast.success(`${winner?.name.split(' ')[0]} wins!`);
+      }
     } catch (error) {
       console.error('Error updating prop bet:', error);
       toast.error('Failed to update winner');
@@ -117,6 +140,11 @@ export function PropBetSheet({
       setSelectingWinner(null);
     }
   };
+
+  const handleCelebrationComplete = useCallback(() => {
+    setShowCelebration(false);
+    setCelebrationData(null);
+  }, []);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -220,34 +248,98 @@ export function PropBetSheet({
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-muted-foreground">Add Side Bet</h3>
 
-            {/* Bet Type Selection */}
-            <div className="grid grid-cols-3 gap-2">
-              {PROP_BET_TEMPLATES.map(template => {
-                // Only show CTP on par 3s
-                if (template.type === 'ctp' && !isPar3) return null;
-                
-                const isSelected = selectedType === template.type;
-                
-                return (
-                  <motion.button
-                    key={template.type}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      setSelectedType(isSelected ? null : template.type);
-                      hapticLight();
-                    }}
-                    className={cn(
-                      "p-3 rounded-xl border-2 transition-all text-center",
-                      isSelected 
-                        ? "border-primary bg-primary/10" 
-                        : "border-border hover:border-primary/50"
-                    )}
-                  >
-                    <span className="text-2xl block mb-1">{template.icon}</span>
-                    <span className="text-xs font-semibold">{template.label}</span>
-                  </motion.button>
-                );
-              })}
+            {/* Standard Bets */}
+            <div>
+              <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">Standard</p>
+              <div className="grid grid-cols-3 gap-2">
+                {PROP_BET_TEMPLATES.filter(t => t.category === 'standard').map(template => {
+                  // Only show CTP and Greenie on par 3s
+                  if ((template.type === 'ctp' || template.type === 'greenie') && !isPar3) return null;
+
+                  const isSelected = selectedType === template.type;
+
+                  return (
+                    <motion.button
+                      key={template.type}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        setSelectedType(isSelected ? null : template.type);
+                        hapticLight();
+                      }}
+                      className={cn(
+                        "p-3 rounded-xl border-2 transition-all text-center",
+                        isSelected
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <span className="text-2xl block mb-1">{template.icon}</span>
+                      <span className="text-xs font-semibold">{template.label}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Junk/Save Bets */}
+            <div>
+              <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">Junk / Saves</p>
+              <div className="grid grid-cols-3 gap-2">
+                {PROP_BET_TEMPLATES.filter(t => t.category === 'junk').map(template => {
+                  const isSelected = selectedType === template.type;
+
+                  return (
+                    <motion.button
+                      key={template.type}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        setSelectedType(isSelected ? null : template.type);
+                        hapticLight();
+                      }}
+                      className={cn(
+                        "p-3 rounded-xl border-2 transition-all text-center",
+                        isSelected
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <span className="text-2xl block mb-1">{template.icon}</span>
+                      <span className="text-xs font-semibold">{template.label}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Negative Bets & Custom */}
+            <div>
+              <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">Penalty / Custom</p>
+              <div className="grid grid-cols-3 gap-2">
+                {PROP_BET_TEMPLATES.filter(t => t.category === 'negative' || t.category === 'custom').map(template => {
+                  const isSelected = selectedType === template.type;
+
+                  return (
+                    <motion.button
+                      key={template.type}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        setSelectedType(isSelected ? null : template.type);
+                        hapticLight();
+                      }}
+                      className={cn(
+                        "p-3 rounded-xl border-2 transition-all text-center",
+                        isSelected
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50",
+                        template.category === 'negative' && "border-destructive/30"
+                      )}
+                    >
+                      <span className="text-2xl block mb-1">{template.icon}</span>
+                      <span className="text-xs font-semibold">{template.label}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Stakes */}
@@ -320,6 +412,17 @@ export function PropBetSheet({
           )}
         </div>
       </SheetContent>
+
+      {/* Winner Celebration Animation */}
+      {celebrationData && (
+        <PropBetCelebration
+          isVisible={showCelebration}
+          winnerName={celebrationData.winnerName}
+          betType={celebrationData.betType}
+          amount={celebrationData.amount}
+          onComplete={handleCelebrationComplete}
+        />
+      )}
     </Sheet>
   );
 }

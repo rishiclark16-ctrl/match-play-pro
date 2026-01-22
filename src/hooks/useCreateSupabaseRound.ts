@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Round, HoleInfo, GameConfig, generateJoinCode } from '@/types/golf';
 import { Json } from '@/integrations/supabase/types';
+import { captureException } from '@/lib/sentry';
 
 interface CreateRoundInput {
   courseId: string;
@@ -114,9 +115,26 @@ export function useCreateSupabaseRound() {
 
       if (playersError) {
         console.error('Error creating players:', playersError);
-        // Clean up round if players failed
-        await supabase.from('rounds').delete().eq('id', roundId);
-        const isAuthError = playersError.code === '401' || 
+        // Clean up round if players failed - wrap in try-catch to handle cleanup failures
+        try {
+          const { error: cleanupError } = await supabase.from('rounds').delete().eq('id', roundId);
+          if (cleanupError) {
+            console.error('Failed to cleanup round after player insert failure:', cleanupError);
+            captureException(new Error(`Cleanup failed: ${cleanupError.message}`), {
+              context: 'createRound.cleanup',
+              roundId,
+              originalError: playersError.message
+            });
+          }
+        } catch (cleanupErr) {
+          console.error('Exception during round cleanup:', cleanupErr);
+          captureException(cleanupErr instanceof Error ? cleanupErr : new Error('Cleanup exception'), {
+            context: 'createRound.cleanup',
+            roundId
+          });
+        }
+
+        const isAuthError = playersError.code === '401' ||
           playersError.message?.toLowerCase().includes('jwt') ||
           playersError.message?.toLowerCase().includes('auth');
         return {

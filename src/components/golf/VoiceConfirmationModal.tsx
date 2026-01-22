@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, AlertCircle, Mic, Check, ChevronRight } from 'lucide-react';
+import { X, AlertCircle, Mic, Check, ChevronRight, Volume2 } from 'lucide-react';
 import { ParsedScore, ParseResult } from '@/lib/voiceParser';
 import { getScoreColor, getScoreLabel, PlayerWithScores } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScoreInputSheet } from './ScoreInputSheet';
+import { feedbackListeningStart, feedbackVoiceSuccess } from '@/lib/voiceFeedback';
 
 interface VoiceConfirmationModalProps {
   isOpen: boolean;
@@ -16,6 +17,30 @@ interface VoiceConfirmationModalProps {
   players: PlayerWithScores[];
   holeNumber: number;
   par: number;
+}
+
+// Voice command patterns for modal confirmation
+const CONFIRM_PATTERNS = [
+  /^(?:yes|yeah|yep|yup|confirm|save|correct|that'?s?\s*(?:right|correct|it)|ok(?:ay)?|affirmative|good|perfect|sounds?\s*good)$/i,
+];
+
+const RETRY_PATTERNS = [
+  /^(?:no|nope|nah|retry|again|try\s*again|wrong|incorrect|cancel|redo)$/i,
+];
+
+// Parse modal voice commands
+function parseModalVoiceCommand(transcript: string): 'confirm' | 'retry' | null {
+  const text = transcript.toLowerCase().trim();
+
+  for (const pattern of CONFIRM_PATTERNS) {
+    if (pattern.test(text)) return 'confirm';
+  }
+
+  for (const pattern of RETRY_PATTERNS) {
+    if (pattern.test(text)) return 'retry';
+  }
+
+  return null;
 }
 
 export function VoiceConfirmationModal({
@@ -30,6 +55,117 @@ export function VoiceConfirmationModal({
 }: VoiceConfirmationModalProps) {
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editedScores, setEditedScores] = useState<Map<string, number>>(new Map());
+  const [isVoiceListening, setIsVoiceListening] = useState(false);
+  const [voiceHint, setVoiceHint] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const listenTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Check if voice recognition is supported
+  const isVoiceSupported = typeof window !== 'undefined' &&
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+  // Start listening for voice confirmation when modal opens (with parsed scores)
+  const startVoiceListening = useCallback(() => {
+    if (!isVoiceSupported || editingPlayerId) return;
+
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognitionAPI) return;
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      setIsVoiceListening(true);
+      setVoiceHint('Listening... say "yes" or "no"');
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      const command = parseModalVoiceCommand(transcript);
+
+      if (command === 'confirm') {
+        feedbackVoiceSuccess();
+        setVoiceHint('Confirmed!');
+        setTimeout(() => {
+          handleConfirm();
+        }, 200);
+      } else if (command === 'retry') {
+        setVoiceHint('Retrying...');
+        setTimeout(() => {
+          onRetry();
+        }, 200);
+      } else {
+        // Didn't understand, keep listening
+        setVoiceHint(`Heard "${transcript}" - say "yes" to confirm`);
+        // Restart listening after a moment
+        setTimeout(() => {
+          if (isOpen && parseResult?.scores?.length) {
+            startVoiceListening();
+          }
+        }, 1500);
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      if (event.error !== 'aborted' && event.error !== 'no-speech') {
+        console.log('Modal voice error:', event.error);
+      }
+      setIsVoiceListening(false);
+      setVoiceHint(null);
+    };
+
+    recognition.onend = () => {
+      setIsVoiceListening(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    try {
+      recognition.start();
+      feedbackListeningStart();
+    } catch (err) {
+      console.log('Failed to start modal voice recognition');
+    }
+  }, [isVoiceSupported, editingPlayerId, isOpen, parseResult]);
+
+  // Stop voice listening
+  const stopVoiceListening = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.abort();
+      recognitionRef.current = null;
+    }
+    setIsVoiceListening(false);
+    setVoiceHint(null);
+    if (listenTimeoutRef.current) {
+      clearTimeout(listenTimeoutRef.current);
+      listenTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Auto-start voice listening when modal opens with parsed scores
+  useEffect(() => {
+    if (isOpen && parseResult?.scores?.length && isVoiceSupported && !editingPlayerId) {
+      // Small delay before starting voice to let modal animate in
+      listenTimeoutRef.current = setTimeout(() => {
+        startVoiceListening();
+      }, 600);
+    } else {
+      stopVoiceListening();
+    }
+
+    return () => {
+      stopVoiceListening();
+    };
+  }, [isOpen, parseResult?.scores?.length, isVoiceSupported, editingPlayerId]);
+
+  // Stop listening when editing a score
+  useEffect(() => {
+    if (editingPlayerId) {
+      stopVoiceListening();
+    }
+  }, [editingPlayerId, stopVoiceListening]);
 
   // Merge parsed scores with any edits
   const getCurrentScores = (): ParsedScore[] => {
@@ -100,9 +236,18 @@ export function VoiceConfirmationModal({
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 pb-4 shrink-0">
                   <div>
-                    <h3 className="text-xl font-bold text-foreground">Confirm Scores</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xl font-bold text-foreground">Confirm Scores</h3>
+                      {isVoiceListening && (
+                        <motion.div
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ repeat: Infinity, duration: 1.5 }}
+                          className="w-3 h-3 rounded-full bg-primary"
+                        />
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      Hole {holeNumber} • Par {par}
+                      {voiceHint || `Hole ${holeNumber} • Par ${par}`}
                     </p>
                   </div>
                   <motion.button
@@ -165,21 +310,29 @@ export function VoiceConfirmationModal({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="px-6 pb-6 pt-2 flex gap-3 shrink-0 border-t border-border/50">
-                  <Button
-                    variant="outline"
-                    onClick={handleClose}
-                    className="flex-1 py-6 rounded-2xl font-semibold"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleConfirm}
-                    className="flex-1 py-6 rounded-2xl font-semibold"
-                  >
-                    <Check className="w-5 h-5 mr-2" />
-                    Confirm
-                  </Button>
+                <div className="px-6 pb-6 pt-2 shrink-0 border-t border-border/50">
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={handleClose}
+                      className="flex-1 py-6 rounded-2xl font-semibold"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleConfirm}
+                      className="flex-1 py-6 rounded-2xl font-semibold"
+                    >
+                      <Check className="w-5 h-5 mr-2" />
+                      Confirm
+                    </Button>
+                  </div>
+                  {isVoiceSupported && (
+                    <p className="text-xs text-muted-foreground text-center mt-3">
+                      <Volume2 className="w-3 h-3 inline mr-1" />
+                      Say "yes" to confirm or "no" to retry
+                    </p>
+                  )}
                 </div>
               </>
             ) : (

@@ -98,16 +98,17 @@ export function useRoundSharing() {
         const round = rounds?.find(r => r.id === share.round_id);
         const profile = profiles?.find(p => p.id === share.shared_by_id);
         
-        return {
+        const sharedRound: SharedRound = {
           id: share.id,
           roundId: share.round_id,
           sharedById: share.shared_by_id,
           sharedByName: profile?.full_name || null,
           courseName: round?.course_name || 'Unknown Course',
-          playedAt: round?.created_at || share.created_at,
+          playedAt: round?.created_at || share.created_at || new Date().toISOString(),
           totalScore: null, // Could fetch from scores table if needed
           seenAt: share.seen_at,
         };
+        return sharedRound;
       });
     } catch (err) {
       console.error('Error getting shared rounds:', err);

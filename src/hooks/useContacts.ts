@@ -61,7 +61,7 @@ export function useContacts() {
         try {
           const props = ['name', 'email', 'tel'];
           const opts = { multiple: true };
-          // @ts-ignore - Contact Picker API
+          // @ts-expect-error - Contact Picker API not typed
           const webContacts = await navigator.contacts.select(props, opts);
           
           return webContacts.map((c: any) => ({
@@ -111,9 +111,10 @@ export function useContacts() {
     });
 
     // Create a map for quick lookup
-    const profileByEmail = new Map<string, typeof matchedProfiles[0]>();
-    const profileByPhone = new Map<string, typeof matchedProfiles[0]>();
-    
+    type ProfileType = NonNullable<typeof matchedProfiles>[number];
+    const profileByEmail = new Map<string, ProfileType>();
+    const profileByPhone = new Map<string, ProfileType>();
+
     matchedProfiles?.forEach(p => {
       if (p.email) profileByEmail.set(p.email.toLowerCase(), p);
       if (p.phone) profileByPhone.set(p.phone.replace(/\D/g, ''), p);
@@ -124,7 +125,7 @@ export function useContacts() {
     const matchedContactIds = new Set<string>();
 
     deviceContacts.forEach(contact => {
-      let matchedProfile: typeof matchedProfiles[0] | undefined;
+      let matchedProfile: ProfileType | undefined;
 
       // Try to match by email first
       for (const email of contact.emails) {
