@@ -434,7 +434,7 @@
   }
 
   .pb-safe {
-    padding-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .pt-safe {

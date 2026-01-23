@@ -10,10 +10,10 @@ import { StatusBar, Style } from '@capacitor/status-bar';
  */
 export async function setStatusBarDark(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
-  
+
   try {
-    await StatusBar.setStyle({ style: Style.Dark });
-    await StatusBar.setBackgroundColor({ color: '#FFFFFF' }); // White background
+    await StatusBar.setStyle({ style: Style.Dark }); // Light text
+    await StatusBar.setBackgroundColor({ color: '#09090b' }); // Dark background
   } catch (error) {
     console.warn('[StatusBar] Not available:', error);
   }
@@ -25,7 +25,7 @@ export async function setStatusBarDark(): Promise<void> {
  */
 export async function setStatusBarDefault(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
-  
+
   try {
     await StatusBar.setStyle({ style: Style.Light });
     await StatusBar.setBackgroundColor({ color: '#FFFFFF' });
@@ -40,7 +40,7 @@ export async function setStatusBarDefault(): Promise<void> {
  */
 export async function setStatusBarLight(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
-  
+
   try {
     await StatusBar.setStyle({ style: Style.Light });
     await StatusBar.setBackgroundColor({ color: '#FFFFFF' });
@@ -54,7 +54,7 @@ export async function setStatusBarLight(): Promise<void> {
  */
 export async function hideStatusBar(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
-  
+
   try {
     await StatusBar.hide();
   } catch (error) {
@@ -67,7 +67,7 @@ export async function hideStatusBar(): Promise<void> {
  */
 export async function showStatusBar(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
-  
+
   try {
     await StatusBar.show();
   } catch (error) {
@@ -81,7 +81,7 @@ export async function showStatusBar(): Promise<void> {
  */
 export async function setStatusBarOverlay(overlay: boolean): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
-  
+
   try {
     await StatusBar.setOverlaysWebView({ overlay });
   } catch (error) {
