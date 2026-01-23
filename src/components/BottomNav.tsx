@@ -37,7 +37,7 @@ export function BottomNav() {
         transform: 'translateZ(0)',
         WebkitTapHighlightColor: 'transparent',
         touchAction: 'manipulation',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingBottom: '0px',
       }}
     >
       <div className="flex items-center justify-around h-14 px-2">

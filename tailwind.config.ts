@@ -100,7 +100,7 @@ export default {
       spacing: {
         '18': '4.5rem',
         '88': '22rem',
-        'nav': 'calc(88px + env(safe-area-inset-bottom))',
+        'nav': '88px',
       },
       keyframes: {
         "accordion-down": {

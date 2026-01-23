@@ -986,7 +986,7 @@ export default function NewRound() {
       {/* Bottom Button */}
       <div
         className="fixed bottom-0 left-0 right-0 z-20 p-4 bg-gradient-to-t from-background via-background to-transparent"
-        style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
+        style={{ paddingBottom: '1rem' }}
       >
         {step !== 'format' ? (
           <motion.div whileTap={{ scale: 0.98 }}>

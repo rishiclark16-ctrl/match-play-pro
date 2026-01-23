@@ -509,9 +509,9 @@
     @apply before:absolute before:top-0 before:bottom-0 before:left-0 before:w-1 before:bg-primary;
   }
 
-  /* Bottom nav spacing - 100px (nav bar + raised center button + comfortable buffer) + safe area for iPhone home indicator */
+  /* Bottom nav spacing - 100px (nav bar + raised center button + comfortable buffer) */
   .pb-nav {
-    padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 100px;
   }
 
   /* Winner highlight */

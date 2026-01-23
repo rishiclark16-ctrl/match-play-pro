@@ -63,7 +63,7 @@ export function ScorecardBottomBar({
         showFinishOptions && 'opacity-0 pointer-events-none'
       )}
       style={{
-        paddingBottom: 'max(env(safe-area-inset-bottom), 8px)',
+        paddingBottom: '8px',
       }}
     >
       <div className="px-4 py-2 flex items-center justify-between gap-3">
