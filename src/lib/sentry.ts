@@ -9,9 +9,8 @@ const IS_PRODUCTION = import.meta.env.PROD;
  */
 export function initSentry() {
   if (!SENTRY_DSN) {
-    if (IS_PRODUCTION) {
-      console.warn('Sentry DSN not configured. Error tracking disabled.');
-    }
+    // Sentry DSN not configured - error tracking disabled
+    // Set VITE_SENTRY_DSN in .env to enable
     return;
   }
 

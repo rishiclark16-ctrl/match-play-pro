@@ -14,23 +14,23 @@ export async function setStatusBarDark(): Promise<void> {
   try {
     await StatusBar.setStyle({ style: Style.Dark }); // Light text
     await StatusBar.setBackgroundColor({ color: '#09090b' }); // Dark background
-  } catch (error) {
-    console.warn('[StatusBar] Not available:', error);
+  } catch {
+    // StatusBar not available on this platform/configuration
   }
 }
 
 /**
  * Set default status bar style for the app
- * Light style (dark text) with white background - matches our white theme
+ * Light style (dark text) - overlay mode is configured in capacitor.config.ts
  */
 export async function setStatusBarDefault(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
 
   try {
-    await StatusBar.setOverlaysWebView({ overlay: true });
+    // Note: overlaysWebView is set in capacitor.config.ts, not at runtime
     await StatusBar.setStyle({ style: Style.Light });
-  } catch (error) {
-    console.warn('[StatusBar] Not available:', error);
+  } catch {
+    // StatusBar not available on this platform/configuration
   }
 }
 
@@ -44,8 +44,8 @@ export async function setStatusBarLight(): Promise<void> {
   try {
     await StatusBar.setStyle({ style: Style.Light });
     await StatusBar.setBackgroundColor({ color: '#FFFFFF' });
-  } catch (error) {
-    console.warn('[StatusBar] Not available:', error);
+  } catch {
+    // StatusBar not available on this platform/configuration
   }
 }
 
@@ -57,8 +57,8 @@ export async function hideStatusBar(): Promise<void> {
 
   try {
     await StatusBar.hide();
-  } catch (error) {
-    console.warn('[StatusBar] Not available:', error);
+  } catch {
+    // StatusBar not available on this platform/configuration
   }
 }
 
@@ -70,8 +70,8 @@ export async function showStatusBar(): Promise<void> {
 
   try {
     await StatusBar.show();
-  } catch (error) {
-    console.warn('[StatusBar] Not available:', error);
+  } catch {
+    // StatusBar not available on this platform/configuration
   }
 }
 
@@ -84,7 +84,7 @@ export async function setStatusBarOverlay(overlay: boolean): Promise<void> {
 
   try {
     await StatusBar.setOverlaysWebView({ overlay });
-  } catch (error) {
-    console.warn('[StatusBar] Not available:', error);
+  } catch {
+    // StatusBar not available on this platform/configuration
   }
 }
