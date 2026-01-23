@@ -27,8 +27,8 @@ export async function setStatusBarDefault(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
 
   try {
+    await StatusBar.setOverlaysWebView({ overlay: true });
     await StatusBar.setStyle({ style: Style.Light });
-    await StatusBar.setBackgroundColor({ color: '#FFFFFF' });
   } catch (error) {
     console.warn('[StatusBar] Not available:', error);
   }
