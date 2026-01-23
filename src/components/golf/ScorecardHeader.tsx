@@ -48,7 +48,7 @@ export function ScorecardHeader({
         style={{
           WebkitTransform: 'translateZ(0)',
           transform: 'translateZ(0)',
-          paddingTop: '0px',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
         <div className="pt-1 pb-3 px-4 flex items-center justify-between gap-3">
