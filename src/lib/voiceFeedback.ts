@@ -1,12 +1,23 @@
 // Audio and haptic feedback for voice recognition
 import { hapticSuccess, hapticError, hapticMedium, hapticLight } from './haptics';
 
+// Webkit prefixed AudioContext (Safari)
+interface WindowWithWebkit extends Window {
+  webkitAudioContext?: typeof AudioContext;
+}
+
 // Audio context for playing sounds
 let audioContext: AudioContext | null = null;
 
 function getAudioContext(): AudioContext {
   if (!audioContext) {
-    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const win = window as WindowWithWebkit;
+    const AudioContextClass = window.AudioContext || win.webkitAudioContext;
+    if (AudioContextClass) {
+      audioContext = new AudioContextClass();
+    } else {
+      throw new Error('AudioContext not supported');
+    }
   }
   return audioContext;
 }

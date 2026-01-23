@@ -2,6 +2,13 @@ import { useState, useCallback } from 'react';
 import { Contacts } from '@capacitor-community/contacts';
 import { supabase } from '@/integrations/supabase/client';
 
+// Contact Picker API result type (Web Contacts API)
+interface WebContact {
+  name?: string[];
+  email?: string[];
+  tel?: string[];
+}
+
 export interface DeviceContact {
   id: string;
   name: string;
@@ -53,9 +60,7 @@ export function useContacts() {
           emails: c.emails?.map(e => e.address?.toLowerCase() || '').filter(Boolean) || [],
           phones: c.phones?.map(p => p.number?.replace(/\D/g, '') || '').filter(Boolean) || [],
         }));
-    } catch (capacitorError) {
-      console.log('Capacitor Contacts not available, trying Contact Picker API...');
-      
+    } catch {
       // Fallback to Contact Picker API (web)
       if ('contacts' in navigator && 'ContactsManager' in window) {
         try {
@@ -64,11 +69,11 @@ export function useContacts() {
           // @ts-expect-error - Contact Picker API not typed
           const webContacts = await navigator.contacts.select(props, opts);
           
-          return webContacts.map((c: any) => ({
+          return (webContacts as WebContact[]).map((c) => ({
             id: crypto.randomUUID(),
             name: c.name?.[0] || 'Unknown',
-            emails: (c.email || []).map((e: string) => e.toLowerCase()),
-            phones: (c.tel || []).map((p: string) => p.replace(/\D/g, '')),
+            emails: (c.email || []).map((e) => e.toLowerCase()),
+            phones: (c.tel || []).map((p) => p.replace(/\D/g, '')),
           }));
         } catch (webError) {
           throw new Error('Contact access not available on this device');
@@ -175,8 +180,8 @@ export function useContacts() {
       const result = await matchContactsWithUsers(deviceContacts, currentUserId);
       setContacts(result);
       return result;
-    } catch (err: any) {
-      setError(err.message || 'Failed to sync contacts');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to sync contacts');
       return null;
     } finally {
       setLoading(false);

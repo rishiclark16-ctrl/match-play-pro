@@ -1,14 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  queueScore, 
-  getUnsyncedScores, 
-  markScoreSynced, 
+import {
+  queueScore,
+  getUnsyncedScores,
+  markScoreSynced,
   cleanupSyncedScores,
-  getPendingCount 
+  getPendingCount
 } from '@/lib/offlineDb';
 import { hapticSuccess, hapticWarning } from '@/lib/haptics';
 import { toast } from 'sonner';
+
+// Extended ServiceWorkerRegistration with Background Sync APIs (not in standard TS types)
+interface SyncManager {
+  register(tag: string): Promise<void>;
+}
+interface PeriodicSyncManager {
+  register(tag: string, options?: { minInterval?: number }): Promise<void>;
+}
+interface ExtendedServiceWorkerRegistration extends ServiceWorkerRegistration {
+  sync?: SyncManager;
+  periodicSync?: PeriodicSyncManager;
+}
 
 // Background Sync tag
 const SYNC_TAG = 'sync-scores';
@@ -25,18 +37,14 @@ function isBackgroundSyncSupported(): boolean {
  */
 async function registerBackgroundSync(): Promise<boolean> {
   if (!isBackgroundSyncSupported()) {
-    console.log('[OfflineSync] Background Sync not supported');
     return false;
   }
 
   try {
-    const registration = await navigator.serviceWorker.ready;
-    // Use type assertion since sync is not in standard TS types yet
-    await (registration as any).sync.register(SYNC_TAG);
-    console.log('[OfflineSync] Background sync registered');
+    const registration = await navigator.serviceWorker.ready as ExtendedServiceWorkerRegistration;
+    await registration.sync?.register(SYNC_TAG);
     return true;
-  } catch (error) {
-    console.error('[OfflineSync] Failed to register background sync:', error);
+  } catch {
     return false;
   }
 }
@@ -54,9 +62,8 @@ async function configureServiceWorker(): Promise<void> {
       url: import.meta.env.VITE_SUPABASE_URL,
       key: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
     });
-    console.log('[OfflineSync] Service worker configured');
-  } catch (error) {
-    console.error('[OfflineSync] Failed to configure service worker:', error);
+  } catch {
+    // Service worker configuration failed - offline sync may not work
   }
 }
 
@@ -65,7 +72,6 @@ async function configureServiceWorker(): Promise<void> {
  */
 async function registerPeriodicSync(): Promise<boolean> {
   if (!('periodicSync' in ServiceWorkerRegistration.prototype)) {
-    console.log('[OfflineSync] Periodic Background Sync not supported');
     return false;
   }
 
@@ -77,14 +83,14 @@ async function registerPeriodicSync(): Promise<boolean> {
     });
 
     if (status.state === 'granted') {
-      await (registration as any).periodicSync.register('sync-scores-periodic', {
+      const extReg = registration as ExtendedServiceWorkerRegistration;
+      await extReg.periodicSync?.register('sync-scores-periodic', {
         minInterval: 15 * 60 * 1000, // 15 minutes minimum
       });
-      console.log('[OfflineSync] Periodic background sync registered');
       return true;
     }
-  } catch (error) {
-    console.error('[OfflineSync] Failed to register periodic sync:', error);
+  } catch {
+    // Periodic sync registration failed
   }
   return false;
 }
@@ -120,18 +126,14 @@ export function useOfflineSync(): UseOfflineSyncReturn {
     if (!isOnline || isSyncing) return;
 
     setIsSyncing(true);
-    console.log('[OfflineSync] Starting sync...');
 
     try {
       const unsyncedScores = await getUnsyncedScores();
-      
+
       if (unsyncedScores.length === 0) {
-        console.log('[OfflineSync] No pending scores to sync');
         setIsSyncing(false);
         return;
       }
-
-      console.log(`[OfflineSync] Syncing ${unsyncedScores.length} scores...`);
 
       // Group scores by round and player for efficient upsert
       for (const score of unsyncedScores) {
@@ -150,14 +152,11 @@ export function useOfflineSync(): UseOfflineSyncReturn {
               }
             );
 
-          if (error) {
-            console.error('[OfflineSync] Failed to sync score:', error);
-          } else {
+          if (!error) {
             await markScoreSynced(score.id);
-            console.log('[OfflineSync] Synced score:', score.id);
           }
-        } catch (err) {
-          console.error('[OfflineSync] Error syncing score:', err);
+        } catch {
+          // Individual score sync failed - will retry later
         }
       }
 
@@ -167,9 +166,7 @@ export function useOfflineSync(): UseOfflineSyncReturn {
 
       hapticSuccess();
       toast.success('Scores synced successfully');
-      console.log('[OfflineSync] Sync complete');
-    } catch (error) {
-      console.error('[OfflineSync] Sync failed:', error);
+    } catch {
       hapticWarning();
       toast.error('Failed to sync some scores');
     } finally {
@@ -203,21 +200,19 @@ export function useOfflineSync(): UseOfflineSyncReturn {
 
         if (error) throw error;
         return;
-      } catch (error) {
-        console.log('[OfflineSync] Online save failed, queuing offline:', error);
+      } catch {
+        // Online save failed - queue for offline sync
       }
     }
 
     // Queue for offline sync
     await queueScore(roundId, playerId, holeNumber, strokes);
     await updatePendingCount();
-    
+
     // Register for background sync so it syncs even if app is closed
     if (backgroundSyncSupported) {
       registerBackgroundSync();
     }
-    
-    console.log('[OfflineSync] Score queued for offline sync');
   }, [isOnline, updatePendingCount, backgroundSyncSupported]);
 
   // Configure service worker with Supabase credentials
@@ -232,18 +227,16 @@ export function useOfflineSync(): UseOfflineSyncReturn {
   // Listen for online/offline events
   useEffect(() => {
     const handleOnline = () => {
-      console.log('[OfflineSync] Back online');
       setIsOnline(true);
       hapticSuccess();
       toast.success('Back online');
     };
 
     const handleOffline = () => {
-      console.log('[OfflineSync] Gone offline');
       setIsOnline(false);
       hapticWarning();
       toast.warning('You are offline - scores will sync when back online');
-      
+
       // Register for background sync when going offline
       if (backgroundSyncSupported) {
         registerBackgroundSync();

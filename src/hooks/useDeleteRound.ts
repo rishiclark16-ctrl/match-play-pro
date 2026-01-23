@@ -46,9 +46,9 @@ export function useDeleteRound() {
       if (roundError) throw roundError;
 
       return true;
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error deleting round:', err);
-      setError(err.message || 'Failed to delete round');
+      setError(err instanceof Error ? err.message : 'Failed to delete round');
       return false;
     } finally {
       setLoading(false);

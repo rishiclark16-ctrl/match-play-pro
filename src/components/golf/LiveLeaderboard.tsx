@@ -194,7 +194,7 @@ export function LiveLeaderboard({
                     ? "border-primary ring-2 ring-primary/30" 
                     : "border-border"
                 )}>
-                  <AvatarImage src={(player1 as any).avatarUrl} />
+                  <AvatarImage src={player1.avatarUrl} />
                   <AvatarFallback className={cn(
                     "font-bold text-lg",
                     matchPlayStatus.leaderId === player1.id 
@@ -257,7 +257,7 @@ export function LiveLeaderboard({
                     ? "border-primary ring-2 ring-primary/30" 
                     : "border-border"
                 )}>
-                  <AvatarImage src={(player2 as any).avatarUrl} />
+                  <AvatarImage src={player2.avatarUrl} />
                   <AvatarFallback className={cn(
                     "font-bold text-lg",
                     matchPlayStatus.leaderId === player2.id 
@@ -323,7 +323,7 @@ export function LiveLeaderboard({
                       )}
                       style={{ zIndex: 3 - i }}
                     >
-                      <AvatarImage src={(p as any).avatarUrl} />
+                      <AvatarImage src={p.avatarUrl} />
                       <AvatarFallback className="bg-ink text-ink-foreground font-bold text-sm">
                         {getInitials(p.name)}
                       </AvatarFallback>
@@ -332,7 +332,7 @@ export function LiveLeaderboard({
                 </div>
               ) : (
                 <Avatar className="w-12 h-12 border-2 border-primary ring-2 ring-primary/30">
-                  <AvatarImage src={(leader as any).avatarUrl} />
+                  <AvatarImage src={leader.avatarUrl} />
                   <AvatarFallback className="bg-ink text-ink-foreground font-bold text-lg">
                     {getInitials(leader.name)}
                   </AvatarFallback>
@@ -398,7 +398,7 @@ export function LiveLeaderboard({
                       {position}.
                     </span>
                     <Avatar className="w-6 h-6 border border-border">
-                      <AvatarImage src={(player as any).avatarUrl} />
+                      <AvatarImage src={player.avatarUrl} />
                       <AvatarFallback className="bg-ink text-ink-foreground text-[10px] font-bold">
                         {getInitials(player.name)}
                       </AvatarFallback>
@@ -426,7 +426,7 @@ export function LiveLeaderboard({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Avatar className="w-6 h-6 border border-border">
-                  <AvatarImage src={(sortedPlayers[1] as any).avatarUrl} />
+                  <AvatarImage src={sortedPlayers[1].avatarUrl} />
                   <AvatarFallback className="bg-ink text-ink-foreground text-[10px] font-bold">
                     {getInitials(sortedPlayers[1].name)}
                   </AvatarFallback>

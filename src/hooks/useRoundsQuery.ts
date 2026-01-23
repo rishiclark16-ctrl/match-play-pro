@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Round } from '@/types/golf';
-import { transformRound } from '@/lib/transformers';
+import { transformRound, DbRound } from '@/lib/transformers';
 import { useAuth } from '@/hooks/useAuth';
 
 export interface RoundStats {
@@ -38,7 +38,7 @@ async function fetchUserRounds(userId: string): Promise<RoundsQueryResult> {
   const myRoundIds = myRoundsData?.map(r => r.id) || [];
   const sharedRoundIds = playerRoundIds.filter(id => !myRoundIds.includes(id));
 
-  let sharedRoundsData: any[] = [];
+  let sharedRoundsData: DbRound[] = [];
   if (sharedRoundIds.length > 0) {
     const { data, error } = await supabase
       .from('rounds')

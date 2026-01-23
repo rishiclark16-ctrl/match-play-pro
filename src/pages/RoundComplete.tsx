@@ -337,8 +337,7 @@ export default function RoundComplete() {
     }
 
     if (wolfGame && rawPlayers.length === 4) {
-      const wolfResults = (round as any).wolfResults || [];
-      wolfStandings = calculateWolfStandings(wolfResults, rawPlayers, wolfGame.stakes || 1);
+      wolfStandings = calculateWolfStandings(wolfGame.wolfResults || [], rawPlayers, wolfGame.stakes || 1);
     }
 
     return { skinsResult, nassauResult, wolfStandings };
@@ -350,8 +349,7 @@ export default function RoundComplete() {
 
     // Use the match play result winner (uses net scoring)
     const matchPlayWinnerId = matchPlayResult?.winnerId || null;
-
-    const wolfResults = (round as any).wolfResults || [];
+    const wolfGame = round.games?.find(g => g.type === 'wolf');
 
     return calculateSettlement(
       rawPlayers,
@@ -359,8 +357,8 @@ export default function RoundComplete() {
       gameResults?.nassauResult,
       matchPlayWinnerId,
       round.stakes,
-      wolfResults,
-      round.games?.find(g => g.type === 'wolf')?.stakes,
+      wolfGame?.wolfResults,
+      wolfGame?.stakes,
       propBets
     );
   }, [round, playersWithScores, rawPlayers, gameResults, matchPlayResult, propBets]);
@@ -561,7 +559,7 @@ export default function RoundComplete() {
     badge,
   }: {
     title: string;
-    icon: any;
+    icon: React.ElementType;
     isOpen: boolean;
     onToggle: () => void;
     children: React.ReactNode;

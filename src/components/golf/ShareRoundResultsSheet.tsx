@@ -86,7 +86,7 @@ export function ShareRoundResultsSheet({
   // Filter friends who weren't in the round
   const friendsNotInRound = useMemo(() => {
     const playerProfileIds = new Set(
-      players.map(p => (p as any).profileId).filter(Boolean)
+      players.map(p => p.profileId).filter(Boolean)
     );
     return friends.filter(f => !playerProfileIds.has(f.id));
   }, [friends, players]);
@@ -131,9 +131,9 @@ export function ShareRoundResultsSheet({
         });
         hapticSuccess();
         toast.success('Shared!');
-      } catch (err: any) {
+      } catch (err) {
         // User cancelled - that's ok
-        if (err.name !== 'AbortError') {
+        if (err instanceof Error && err.name !== 'AbortError') {
           hapticError();
           toast.error('Failed to share');
         }

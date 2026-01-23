@@ -25,21 +25,18 @@ export function useDeepLinks() {
     if (!Capacitor.isNativePlatform()) return;
 
     const handleDeepLink = (event: URLOpenListenerEvent) => {
-      console.log('[DeepLink] Received URL:', event.url);
-
       try {
         const url = new URL(event.url);
         const path = url.pathname || url.host; // Custom schemes put path in host
-        
+
         // Parse the path and navigate
         const route = parseDeepLinkPath(path, url.searchParams);
-        
+
         if (route) {
-          console.log('[DeepLink] Navigating to:', route);
           navigate(route);
         }
-      } catch (error) {
-        console.error('[DeepLink] Failed to parse URL:', error);
+      } catch {
+        // Invalid URL - ignore
       }
     };
 
@@ -49,7 +46,6 @@ export function useDeepLinks() {
     // Check if app was opened with a URL (cold start)
     App.getLaunchUrl().then((launchUrl) => {
       if (launchUrl?.url) {
-        console.log('[DeepLink] App launched with URL:', launchUrl.url);
         handleDeepLink({ url: launchUrl.url });
       }
     });

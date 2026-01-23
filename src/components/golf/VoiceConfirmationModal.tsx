@@ -81,7 +81,7 @@ export function VoiceConfirmationModal({
       setVoiceHint('Listening... say "yes" or "no"');
     };
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0][0].transcript;
       const command = parseModalVoiceCommand(transcript);
 
@@ -108,10 +108,7 @@ export function VoiceConfirmationModal({
       }
     };
 
-    recognition.onerror = (event: any) => {
-      if (event.error !== 'aborted' && event.error !== 'no-speech') {
-        console.log('Modal voice error:', event.error);
-      }
+    recognition.onerror = () => {
       setIsVoiceListening(false);
       setVoiceHint(null);
     };
@@ -125,8 +122,8 @@ export function VoiceConfirmationModal({
     try {
       recognition.start();
       feedbackListeningStart();
-    } catch (err) {
-      console.log('Failed to start modal voice recognition');
+    } catch {
+      // Voice recognition failed to start - silent fail
     }
   }, [isVoiceSupported, editingPlayerId, isOpen, parseResult]);
 

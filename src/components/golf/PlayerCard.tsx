@@ -158,7 +158,7 @@ export function PlayerCard({
           "w-12 h-12 rounded-xl transition-all",
           isLeading && player.holesPlayed > 0 && "ring-2 ring-primary/50 shadow-md shadow-primary/15"
         )}>
-          <AvatarImage src={(player as any).avatarUrl} className="rounded-xl object-cover" />
+          <AvatarImage src={player.avatarUrl} className="rounded-xl object-cover" />
           <AvatarFallback className="bg-ink text-ink-foreground text-sm font-bold rounded-xl">
             {initials}
           </AvatarFallback>

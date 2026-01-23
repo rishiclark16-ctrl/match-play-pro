@@ -28,8 +28,8 @@ interface ScorecardBottomBarProps {
   onVoicePress: () => void;
   onShowFinishOptions: () => void;
   onFinishRound: () => void;
-  onPropBetAdded: (bet: any) => void;
-  onPropBetUpdated: (bet: any) => void;
+  onPropBetAdded: (bet: PropBet) => Promise<{ success: boolean; error?: string }>;
+  onPropBetUpdated: (bet: PropBet) => Promise<{ success: boolean; error?: string }>;
 }
 
 export function ScorecardBottomBar({

@@ -43,7 +43,7 @@ export default function Friends() {
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   // Get friend code from profile
-  const friendCode = (profile as any)?.friend_code as string | null;
+  const friendCode = profile?.friend_code ?? null;
   const userName = profile?.full_name;
 
   // Handle deep link from QR code
@@ -259,7 +259,7 @@ export default function Friends() {
           <TechCard hover>
             <TechCardContent className="space-y-3">
               {/* Search Type Tabs */}
-              <Tabs value={searchType} onValueChange={(v) => setSearchType(v as any)}>
+              <Tabs value={searchType} onValueChange={(v) => setSearchType(v as 'code' | 'email' | 'phone')}>
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="code" className="text-xs gap-1">
                     <Hash className="w-3 h-3" />

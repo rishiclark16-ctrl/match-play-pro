@@ -24,20 +24,10 @@ import { useAutoAdvance } from '@/hooks/useAutoAdvance';
 import { usePlayoff } from '@/hooks/usePlayoff';
 import { useVoiceScoring } from '@/hooks/useVoiceScoring';
 import { useSettings } from '@/hooks/useSettings';
+import { usePlayersWithScores } from '@/hooks/usePlayersWithScores';
+import { useSettlementPreview } from '@/hooks/useSettlementPreview';
 import { Press, PlayerWithScores, GameConfig } from '@/types/golf';
-import {
-  calculatePlayingHandicap,
-  getStrokesPerHole,
-  calculateTotalNetStrokes,
-  getManualStrokesPerHole,
-  calculateMatchPlayStrokes,
-  buildMatchPlayStrokesMap,
-} from '@/lib/handicapUtils';
 import { checkAutoPress } from '@/lib/games/nassau';
-import { calculateSettlement } from '@/lib/games/settlement';
-import { calculateSkins } from '@/lib/games/skins';
-import { calculateNassau } from '@/lib/games/nassau';
-import { calculateMatchPlay } from '@/lib/games/matchPlay';
 import { toast } from 'sonner';
 import { hapticSuccess } from '@/lib/haptics';
 import { setStatusBarDefault } from '@/lib/statusBar';
@@ -110,99 +100,25 @@ export default function Scorecard() {
   // Get scores - prefer Supabase data
   const roundScores = supabaseScores.length > 0 ? supabaseScores : getScoresForRound(round?.id || '');
 
-  // Build players with scores
-  const playersWithScores: PlayerWithScores[] = useMemo(() => {
-    if (!round) return [];
-    const useSupabase = supabasePlayers.length > 0 || supabaseLoading || supabaseRound !== null;
-    if (!useSupabase) {
-      return getPlayersWithScores(round.id, round.holeInfo, round.slope, round.holes);
-    }
-    if (supabaseLoading && supabasePlayers.length === 0) {
-      return [];
-    }
+  // Use Supabase players when available
+  const useSupabaseData = supabasePlayers.length > 0 || supabaseLoading || supabaseRound !== null;
 
-    // Check if this is a 2-player match play scenario for differential strokes
-    const isMatchPlay = round.matchPlay || round.games?.some(g => g.type === 'match' || g.type === 'nassau');
-    const isTwoPlayerMatch = isMatchPlay && supabasePlayers.length === 2;
-    const isManualMode = round.handicapMode === 'manual';
+  // Build players with scores using hook for Supabase data
+  const supabasePlayersWithScores = usePlayersWithScores({
+    round,
+    players: supabasePlayers,
+    scores: roundScores,
+    isLoading: supabaseLoading,
+  });
 
-    // For 2-player match play, calculate differential strokes
-    let matchPlayStrokesMap: Map<string, Map<number, number>> | undefined;
+  // Fall back to local storage if not using Supabase
+  const localPlayersWithScores = useMemo(() => {
+    if (!round || useSupabaseData) return [];
+    return getPlayersWithScores(round.id, round.holeInfo, round.slope, round.holes);
+  }, [round, useSupabaseData, getPlayersWithScores]);
 
-    if (isTwoPlayerMatch) {
-      const [p1, p2] = supabasePlayers;
-      const matchInfo = calculateMatchPlayStrokes(
-        { id: p1.id, name: p1.name, handicap: p1.handicap, manualStrokes: p1.manualStrokes },
-        { id: p2.id, name: p2.name, handicap: p2.handicap, manualStrokes: p2.manualStrokes },
-        round.slope || 113,
-        round.holes,
-        isManualMode ? 'manual' : 'auto'
-      );
-      matchPlayStrokesMap = buildMatchPlayStrokesMap(matchInfo, round.holeInfo);
-    }
-
-    return supabasePlayers.map(player => {
-      const playerScores = roundScores.filter(s => s.playerId === player.id);
-      const totalStrokes = playerScores.reduce((sum, s) => sum + s.strokes, 0);
-      const totalRelativeToPar = playerScores.reduce((sum, s) => {
-        const hole = round.holeInfo.find(h => h.number === s.holeNumber);
-        return sum + (s.strokes - (hole?.par || 4));
-      }, 0);
-
-      let playingHandicap: number | undefined;
-      let strokesPerHole: Map<number, number> | undefined;
-      let totalNetStrokes: number | undefined;
-      let netRelativeToPar: number | undefined;
-
-      // Use match play differential strokes if applicable
-      if (matchPlayStrokesMap) {
-        strokesPerHole = matchPlayStrokesMap.get(player.id);
-        // Calculate the effective handicap (sum of strokes received)
-        playingHandicap = strokesPerHole
-          ? Array.from(strokesPerHole.values()).reduce((sum, s) => sum + s, 0)
-          : 0;
-        totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
-        const totalPar = playerScores.reduce((sum, s) => {
-          const hole = round.holeInfo.find(h => h.number === s.holeNumber);
-          return sum + (hole?.par || 4);
-        }, 0);
-        netRelativeToPar = totalNetStrokes - totalPar;
-      } else if (isManualMode) {
-        // Manual mode for non-match-play: use manually entered strokes
-        playingHandicap = player.manualStrokes ?? 0;
-        strokesPerHole = getManualStrokesPerHole(playingHandicap, round.holeInfo);
-        totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
-        const totalPar = playerScores.reduce((sum, s) => {
-          const hole = round.holeInfo.find(h => h.number === s.holeNumber);
-          return sum + (hole?.par || 4);
-        }, 0);
-        netRelativeToPar = totalNetStrokes - totalPar;
-      } else if (player.handicap !== undefined && player.handicap !== null) {
-        // Auto mode for non-match-play: calculate from handicap index and course slope
-        playingHandicap = calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes);
-        strokesPerHole = getStrokesPerHole(playingHandicap, round.holeInfo);
-        totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
-        const totalPar = playerScores.reduce((sum, s) => {
-          const hole = round.holeInfo.find(h => h.number === s.holeNumber);
-          return sum + (hole?.par || 4);
-        }, 0);
-        netRelativeToPar = totalNetStrokes - totalPar;
-      }
-
-      return {
-        ...player,
-        scores: playerScores,
-        totalStrokes,
-        totalRelativeToPar,
-        holesPlayed: playerScores.length,
-        playingHandicap,
-        strokesPerHole,
-        totalNetStrokes,
-        netRelativeToPar,
-        manualStrokes: player.manualStrokes,
-      };
-    });
-  }, [round, supabasePlayers, supabaseLoading, supabaseRound, roundScores, getPlayersWithScores]);
+  // Use appropriate players list
+  const playersWithScores: PlayerWithScores[] = useSupabaseData ? supabasePlayersWithScores : localPlayersWithScores;
 
   // Calculate how many holes have been fully scored
   const completedHoles = useMemo(() => {
@@ -244,81 +160,12 @@ export default function Scorecard() {
   }, [round, playersWithScores]);
 
   // Calculate settlements preview for finish overlay
-  const settlementsPreview = useMemo(() => {
-    if (!round || playersWithScores.length < 2) return [];
-
-    // Calculate results for each game type
-    let skinsResult;
-    let nassauResult;
-    let matchPlayWinnerId: string | null = null;
-    let matchPlayStakes = 0;
-
-    for (const game of round.games || []) {
-      if (game.type === 'skins') {
-        skinsResult = calculateSkins(
-          roundScores,
-          playersWithScores,
-          round.holes,
-          game.stakes,
-          game.carryover ?? true
-        );
-      } else if (game.type === 'nassau') {
-        // Build strokes map if using net scoring
-        let strokesPerHole: Map<string, Map<number, number>> | undefined;
-        if (game.useNet) {
-          strokesPerHole = new Map();
-          for (const player of playersWithScores) {
-            if (player.strokesPerHole) {
-              strokesPerHole.set(player.id, player.strokesPerHole);
-            }
-          }
-          if (strokesPerHole.size === 0) strokesPerHole = undefined;
-        }
-        nassauResult = calculateNassau(
-          roundScores,
-          playersWithScores,
-          game.stakes,
-          round.presses || [],
-          round.holes,
-          strokesPerHole
-        );
-      } else if (game.type === 'match') {
-        // Build strokes map if using net scoring
-        let matchStrokesMap: Map<string, Map<number, number>> | undefined;
-        if (game.useNet) {
-          matchStrokesMap = new Map();
-          for (const player of playersWithScores) {
-            if (player.strokesPerHole) {
-              matchStrokesMap.set(player.id, player.strokesPerHole);
-            }
-          }
-          if (matchStrokesMap.size === 0) matchStrokesMap = undefined;
-        }
-        const matchResult = calculateMatchPlay(
-          roundScores,
-          playersWithScores,
-          round.holeInfo,
-          matchStrokesMap,
-          round.holes
-        );
-        if (matchResult.winnerId) {
-          matchPlayWinnerId = matchResult.winnerId;
-          matchPlayStakes = game.stakes;
-        }
-      }
-    }
-
-    return calculateSettlement(
-      playersWithScores,
-      skinsResult,
-      nassauResult,
-      matchPlayWinnerId,
-      matchPlayStakes,
-      undefined, // wolfResults - not needed for preview
-      0, // wolfStakes
-      propBets
-    );
-  }, [round, playersWithScores, roundScores, propBets]);
+  const settlementsPreview = useSettlementPreview({
+    round,
+    playersWithScores,
+    scores: roundScores,
+    propBets,
+  });
 
   const currentHoleInfo = round?.holeInfo.find(h => h.number === currentHole) || {
     number: currentHole,
@@ -583,7 +430,7 @@ export default function Scorecard() {
               useNetScoring={
                 // Match play always uses net scoring (differential strokes)
                 // Also enable if any game explicitly has useNet
-                round.matchPlay || round.games?.some((g: any) => g.useNet) || false
+                round.matchPlay || round.games?.some(g => g.useNet) || false
               }
               isMatchPlay={round.matchPlay}
               holeInfo={round.holeInfo}

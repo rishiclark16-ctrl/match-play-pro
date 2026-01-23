@@ -107,7 +107,6 @@ export async function queueScore(
     synced: false,
   });
 
-  console.log('[OfflineDB] Queued score:', { roundId, playerId, holeNumber, strokes });
   return id;
 }
 

@@ -112,10 +112,11 @@ export function useAuth() {
       return { error: null };
     } catch (err) {
       // User cancelled or other error
-      if ((err as any)?.message?.includes('cancelled') || (err as any)?.code === '1001') {
+      const errorObj = err as { message?: string; code?: string | number };
+      if (errorObj?.message?.includes('cancelled') || errorObj?.code === '1001') {
         return { error: new Error('Sign in cancelled') };
       }
-      return { error: err as Error };
+      return { error: err instanceof Error ? err : new Error('Sign in failed') };
     }
   };
 

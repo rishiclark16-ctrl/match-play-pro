@@ -20,13 +20,11 @@ export function useKeepAwake(enabled: boolean = true) {
 
         if (enabled) {
           await KeepAwake.keepAwake();
-          console.log('[KeepAwake] Screen will stay on');
         } else {
           await KeepAwake.allowSleep();
-          console.log('[KeepAwake] Screen can sleep');
         }
-      } catch (error) {
-        console.warn('[KeepAwake] Not available:', error);
+      } catch {
+        // KeepAwake not available on this platform
       }
     };
 
