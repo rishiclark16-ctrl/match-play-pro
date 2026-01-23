@@ -75,7 +75,7 @@ export function useProfile() {
         setProfile(data as Profile);
       }
     } catch (err) {
-      console.error('Error fetching profile:', err);
+      // Error handled by state
       setError('Failed to load profile');
     } finally {
       setLoading(false);
@@ -115,7 +115,7 @@ export function useProfile() {
       setProfile(prev => prev ? { ...prev, ...updates } : null);
       return true;
     } catch (err) {
-      console.error('Error updating profile:', err);
+      // Error handled by toast
       setError('Failed to update profile');
       return false;
     }
@@ -172,7 +172,7 @@ export function useProfile() {
       }
       return null;
     } catch (err) {
-      console.error('Error uploading avatar:', err);
+      // Error handled by toast
       setError('Failed to upload avatar');
       return null;
     }

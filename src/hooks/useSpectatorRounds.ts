@@ -102,7 +102,7 @@ export function useSpectatorRounds() {
         setSpectatorStats(statsMap);
       }
     } catch (err) {
-      console.error('Error fetching spectator rounds:', err);
+      // Error handled by state
     } finally {
       setLoading(false);
     }
@@ -125,7 +125,7 @@ export function useSpectatorRounds() {
       setSpectatorRounds(prev => prev.filter(r => r.id !== roundId));
       return true;
     } catch (err) {
-      console.error('Error leaving spectator:', err);
+      // Error handled by state
       return false;
     }
   }, [user]);

@@ -83,7 +83,7 @@ export function useCreateSupabaseRound() {
         });
 
       if (roundError) {
-        console.error('Error creating round:', roundError);
+        // Create round error handled
         const isAuthError = roundError.code === '401' || 
           roundError.message?.toLowerCase().includes('jwt') ||
           roundError.message?.toLowerCase().includes('auth');
@@ -114,12 +114,12 @@ export function useCreateSupabaseRound() {
         .insert(playersToInsert);
 
       if (playersError) {
-        console.error('Error creating players:', playersError);
+        // Create players error handled
         // Clean up round if players failed - wrap in try-catch to handle cleanup failures
         try {
           const { error: cleanupError } = await supabase.from('rounds').delete().eq('id', roundId);
           if (cleanupError) {
-            console.error('Failed to cleanup round after player insert failure:', cleanupError);
+            // Cleanup error handled
             captureException(new Error(`Cleanup failed: ${cleanupError.message}`), {
               context: 'createRound.cleanup',
               roundId,
@@ -127,7 +127,7 @@ export function useCreateSupabaseRound() {
             });
           }
         } catch (cleanupErr) {
-          console.error('Exception during round cleanup:', cleanupErr);
+          // Exception handled
           captureException(cleanupErr instanceof Error ? cleanupErr : new Error('Cleanup exception'), {
             context: 'createRound.cleanup',
             roundId
@@ -170,7 +170,7 @@ export function useCreateSupabaseRound() {
 
       return { round };
     } catch (err) {
-      console.error('Error in createRound:', err);
+      // CreateRound error handled
       return {
         round: null,
         error: {

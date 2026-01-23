@@ -197,7 +197,7 @@ export async function shareResults(
       URL.revokeObjectURL(url);
     }
   } catch (err) {
-    console.error('Error sharing:', err);
+    // Share error handled
     throw err;
   }
 }

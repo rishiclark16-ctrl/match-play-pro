@@ -70,7 +70,7 @@ export function useGolfCourseSearch() {
       const data = await response.json();
       setSearchResults(data.courses || []);
     } catch (err) {
-      console.error('Course search error:', err);
+      // Search error handled
       setError(err instanceof Error ? err.message : 'Search failed');
       setSearchResults([]);
     } finally {

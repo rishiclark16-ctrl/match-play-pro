@@ -47,7 +47,7 @@ export function useDeleteRound() {
 
       return true;
     } catch (err) {
-      console.error('Error deleting round:', err);
+      // Error handled by toast
       setError(err instanceof Error ? err.message : 'Failed to delete round');
       return false;
     } finally {

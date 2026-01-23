@@ -46,7 +46,7 @@ export function useVoiceRecognition(): UseVoiceRecognitionReturn {
           initRecognition();
         })
         .catch((err) => {
-          console.error('Microphone permission error:', err);
+          // Permission error handled
           setError('Microphone access needed. Please allow microphone access.');
         });
     } else {
@@ -80,7 +80,7 @@ export function useVoiceRecognition(): UseVoiceRecognitionReturn {
     };
     
     recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
+      // Recognition error handled
       
       let errorMessage = 'Could not recognize speech. Try again.';
       
@@ -123,7 +123,7 @@ export function useVoiceRecognition(): UseVoiceRecognitionReturn {
     try {
       recognition.start();
     } catch (err) {
-      console.error('Failed to start recognition:', err);
+      // Start error handled
       setError('Failed to start voice recognition. Try again.');
     }
   }, []);

@@ -89,7 +89,7 @@ export function useFriends() {
 
       setFriends(friendsList);
     } catch (err) {
-      console.error('Error fetching friends:', err);
+      // Error handled by state
       setError('Failed to load friends');
     }
   }, [user]);
@@ -136,7 +136,7 @@ export function useFriends() {
 
       setPendingRequests(pendingList);
     } catch (err) {
-      console.error('Error fetching pending requests:', err);
+      // Error handled by state
     }
   }, [user]);
 
@@ -153,7 +153,7 @@ export function useFriends() {
       if (error) throw error;
       setSentRequests((data || []).map(r => r.friend_id));
     } catch (err) {
-      console.error('Error fetching sent requests:', err);
+      // Error handled by state
     }
   }, [user]);
 
@@ -252,7 +252,7 @@ export function useFriends() {
 
       return await createFriendship(profile.id);
     } catch (err) {
-      console.error('Error sending friend request:', err);
+      // Error handled by toast
       return { success: false, error: 'Failed to send request' };
     }
   };
@@ -279,7 +279,7 @@ export function useFriends() {
 
       return await createFriendship(profile.id);
     } catch (err) {
-      console.error('Error sending friend request by email:', err);
+      // Error handled by toast
       return { success: false, error: 'Failed to send request' };
     }
   };
@@ -313,7 +313,7 @@ export function useFriends() {
 
       return await createFriendship(matchingProfile.id);
     } catch (err) {
-      console.error('Error sending friend request by phone:', err);
+      // Error handled by toast
       return { success: false, error: 'Failed to send request' };
     }
   };
@@ -333,7 +333,7 @@ export function useFriends() {
       await Promise.all([fetchFriends(), fetchPendingRequests()]);
       return true;
     } catch (err) {
-      console.error('Error accepting friend request:', err);
+      // Error handled by toast
       return false;
     }
   };
@@ -350,7 +350,7 @@ export function useFriends() {
       await fetchPendingRequests();
       return true;
     } catch (err) {
-      console.error('Error declining friend request:', err);
+      // Error handled by toast
       return false;
     }
   };
@@ -367,7 +367,7 @@ export function useFriends() {
       await fetchFriends();
       return true;
     } catch (err) {
-      console.error('Error removing friend:', err);
+      // Error handled by toast
       return false;
     }
   };

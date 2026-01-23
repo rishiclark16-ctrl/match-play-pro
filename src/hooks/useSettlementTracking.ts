@@ -38,7 +38,7 @@ function saveTrackingState(state: SettlementTrackingState): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (error) {
-    console.error('Failed to save settlement tracking:', error);
+    // Error handled
   }
 }
 

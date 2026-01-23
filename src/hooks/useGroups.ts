@@ -109,8 +109,7 @@ export function useGroups() {
       });
 
       setGroups(groupsWithMembers);
-    } catch (err) {
-      console.error('Error fetching groups:', err);
+    } catch {
       setError('Failed to load groups');
     } finally {
       setLoading(false);
@@ -161,8 +160,7 @@ export function useGroups() {
 
       await fetchGroups();
       return groups.find(g => g.id === group.id) || null;
-    } catch (err) {
-      console.error('Error creating group:', err);
+    } catch {
       setError('Failed to create group');
       return null;
     }
@@ -184,8 +182,7 @@ export function useGroups() {
       if (error) throw error;
       await fetchGroups();
       return true;
-    } catch (err) {
-      console.error('Error updating group:', err);
+    } catch {
       return false;
     }
   };
@@ -200,8 +197,7 @@ export function useGroups() {
       if (error) throw error;
       setGroups(prev => prev.filter(g => g.id !== groupId));
       return true;
-    } catch (err) {
-      console.error('Error deleting group:', err);
+    } catch {
       return false;
     }
   };
@@ -236,8 +232,7 @@ export function useGroups() {
 
       await fetchGroups();
       return true;
-    } catch (err) {
-      console.error('Error updating members:', err);
+    } catch {
       return false;
     }
   };

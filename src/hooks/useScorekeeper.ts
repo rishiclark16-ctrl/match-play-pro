@@ -33,7 +33,7 @@ export function useScorekeeper(roundId: string | undefined, players: { id: strin
       if (error) throw error;
       setScorekeeperIds((data?.scorekeeper_ids as string[]) || []);
     } catch (err) {
-      console.error('Error fetching scorekeeper IDs:', err);
+      // Error handled
     } finally {
       setLoading(false);
     }
@@ -98,7 +98,7 @@ export function useScorekeeper(roundId: string | undefined, players: { id: strin
       .eq('id', roundId);
 
     if (error) {
-      console.error('Error adding scorekeeper:', error);
+      // Error handled by toast
       throw error;
     }
 
@@ -117,7 +117,7 @@ export function useScorekeeper(roundId: string | undefined, players: { id: strin
       .eq('id', roundId);
 
     if (error) {
-      console.error('Error removing scorekeeper:', error);
+      // Error handled by toast
       throw error;
     }
 

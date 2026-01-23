@@ -94,7 +94,7 @@ export function PropBetSheet({
       setSelectedType(null);
       setCustomDescription('');
     } catch (error) {
-      console.error('Error creating prop bet:', error);
+      // Error handled by toast
       toast.error('Failed to create prop bet');
       hapticError();
     } finally {
@@ -133,7 +133,7 @@ export function PropBetSheet({
         toast.success(`${winner?.name.split(' ')[0]} wins!`);
       }
     } catch (error) {
-      console.error('Error updating prop bet:', error);
+      // Error handled by toast
       toast.error('Failed to update winner');
       hapticError();
     } finally {

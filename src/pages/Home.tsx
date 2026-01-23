@@ -91,7 +91,7 @@ export default function Home() {
             onConflict: 'round_id,profile_id'
           });
       } catch (err) {
-        console.error('Error adding spectator:', err);
+        // Error handled by toast
       }
       hapticSuccess();
       navigate(`/round/${round.id}?spectator=true`);

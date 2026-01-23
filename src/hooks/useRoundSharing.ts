@@ -57,7 +57,7 @@ export function useRoundSharing() {
 
       return friendsInRound.length;
     } catch (err) {
-      console.error('Error sharing round with friends:', err);
+      // Error handled by state
       return 0;
     }
   };
@@ -111,7 +111,7 @@ export function useRoundSharing() {
         return sharedRound;
       });
     } catch (err) {
-      console.error('Error getting shared rounds:', err);
+      // Error handled by state
       return [];
     }
   };

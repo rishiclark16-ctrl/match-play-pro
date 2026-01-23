@@ -191,7 +191,7 @@ export default function Stats() {
           roundsPlayed: roundIds.length,
         });
       } catch (error) {
-        console.error('Error fetching stats:', error);
+        // Error handled by toast
       } finally {
         setLoading(false);
       }

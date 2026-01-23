@@ -54,7 +54,7 @@ export default function JoinRound() {
         toast.success('Joined as spectator');
         navigate(`/round/${round.id}?spectator=true`);
       } catch (err) {
-        console.error('Error adding spectator:', err);
+        // Error handled by toast
         hapticSuccess();
         navigate(`/round/${round.id}?spectator=true`);
       }

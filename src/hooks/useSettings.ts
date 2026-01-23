@@ -27,7 +27,7 @@ export function useSettings() {
         setSettings({ ...DEFAULT_SETTINGS, ...parsed });
       }
     } catch (err) {
-      console.error('Error loading settings:', err);
+      // Settings load error
     }
     setLoaded(true);
   }, []);
@@ -39,7 +39,7 @@ export function useSettings() {
       try {
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings));
       } catch (err) {
-        console.error('Error saving settings:', err);
+        // Settings save error
       }
       return newSettings;
     });

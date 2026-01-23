@@ -22,8 +22,8 @@ export function QRCodeScanner({ open, onClose, onScan }: QRCodeScannerProps) {
         if (state === 2) { // SCANNING state
           await scannerRef.current.stop();
         }
-      } catch (err) {
-        console.warn('Error stopping scanner:', err);
+      } catch {
+        // Scanner may already be stopped
       }
       scannerRef.current = null;
     }
@@ -74,8 +74,8 @@ export function QRCodeScanner({ open, onClose, onScan }: QRCodeScannerProps) {
             // Ignore scan errors (no QR found in frame)
           }
         );
-      } catch (err) {
-        console.error('Error starting scanner:', err);
+      } catch {
+        // Camera access denied or not available
       }
     };
 

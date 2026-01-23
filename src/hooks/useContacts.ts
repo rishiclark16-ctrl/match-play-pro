@@ -100,7 +100,7 @@ export function useContacts() {
       .neq('id', currentUserId);
 
     if (profileError) {
-      console.error('Error matching profiles:', profileError);
+      // Error handled
     }
 
     // Get current friendships

@@ -91,7 +91,7 @@ export function useSupabaseRound(roundId: string | null) {
         setPresses(transformedPresses);
         setIsOnline(true);
       } catch (err) {
-        console.error('Error fetching round:', err);
+        // Fetch error handled
         setError('Failed to load round');
         setIsOnline(false);
       } finally {
@@ -167,7 +167,7 @@ export function useSupabaseRound(roundId: string | null) {
         if (status === 'SUBSCRIBED') {
           setIsOnline(true);
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.error('Realtime subscription error:', err);
+          // Realtime error handled
           setIsOnline(false);
         }
       });
@@ -255,7 +255,7 @@ export function useSupabaseRound(roundId: string | null) {
       return { success: true };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to add press';
-      console.error('Error adding press:', err);
+      // Press error handled
       captureException(err instanceof Error ? err : new Error(message), {
         context: 'addPress',
         roundId,
@@ -281,7 +281,7 @@ export function useSupabaseRound(roundId: string | null) {
       return { success: true };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to complete round';
-      console.error('Error completing round:', err);
+      // Complete error handled
       captureException(err instanceof Error ? err : new Error(message), {
         context: 'completeRound',
         roundId
@@ -309,7 +309,7 @@ export function useSupabaseRound(roundId: string | null) {
       return { success: true };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update games';
-      console.error('Error updating games:', err);
+      // Games error handled
       captureException(err instanceof Error ? err : new Error(message), {
         context: 'updateGames',
         roundId,

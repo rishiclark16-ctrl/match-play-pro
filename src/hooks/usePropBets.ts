@@ -44,7 +44,7 @@ export function usePropBets(roundId: string | undefined) {
 
       setPropBets(transformed);
     } catch (err) {
-      console.error('Error fetching prop bets:', err);
+      // Error handled by state
       setError(err instanceof Error ? err.message : 'Failed to fetch prop bets');
     } finally {
       setLoading(false);
@@ -135,7 +135,7 @@ export function usePropBets(roundId: string | undefined) {
       setPropBets(prev => prev.filter(bet => bet.id !== propBet.id));
 
       const message = err instanceof Error ? err.message : 'Failed to add prop bet';
-      console.error('Error adding prop bet:', err);
+      // Error handled by toast
       captureException(err instanceof Error ? err : new Error(message), {
         context: 'addPropBet',
         roundId: propBet.roundId,
@@ -174,7 +174,7 @@ export function usePropBets(roundId: string | undefined) {
       setPropBets(previousBets);
 
       const message = err instanceof Error ? err.message : 'Failed to update prop bet';
-      console.error('Error updating prop bet:', err);
+      // Error handled by toast
       captureException(err instanceof Error ? err : new Error(message), {
         context: 'updatePropBet',
         propBetId: propBet.id,

@@ -111,7 +111,6 @@ function parseDeepLinkPath(path: string, params: URLSearchParams): string | null
     return '/';
   }
   
-  console.warn('[DeepLink] Unknown path:', cleanPath);
   return null;
 }
 
