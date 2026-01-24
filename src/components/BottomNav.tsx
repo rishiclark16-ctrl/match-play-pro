@@ -40,7 +40,7 @@ export function BottomNav() {
         paddingBottom: '0px',
       }}
     >
-      <div className="flex items-center justify-around h-14 px-2">
+      <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const active = isActive(item.to);
 
@@ -50,11 +50,11 @@ export function BottomNav() {
                 key={item.to}
                 to={item.to}
                 onClick={() => hapticLight()}
-                className="flex flex-col items-center justify-center -mt-5 touch-manipulation cursor-pointer select-none"
+                className="flex flex-col items-center justify-center -mt-6 touch-manipulation cursor-pointer select-none"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
-                <div className="w-14 h-14 min-w-[56px] min-h-[56px] rounded-full bg-primary shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform">
-                  <Plus className="w-7 h-7 text-primary-foreground" strokeWidth={2.5} />
+                <div className="w-16 h-16 min-w-[64px] min-h-[64px] rounded-full bg-primary shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform">
+                  <Plus className="w-8 h-8 text-primary-foreground" strokeWidth={2.5} />
                 </div>
               </Link>
             );
@@ -65,25 +65,25 @@ export function BottomNav() {
               key={item.to}
               to={item.to}
               onClick={() => hapticLight()}
-              className="flex flex-col items-center justify-center min-w-[56px] min-h-[48px] px-2 py-1 touch-manipulation cursor-pointer select-none active:scale-95 transition-transform"
+              className="flex flex-col items-center justify-center min-w-[64px] min-h-[56px] px-3 py-2 touch-manipulation cursor-pointer select-none active:scale-95 transition-transform"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <div
                 className={cn(
-                  "relative p-2 rounded-lg transition-colors",
+                  "relative p-2.5 rounded-xl transition-colors",
                   active ? "bg-primary/10" : ""
                 )}
               >
                 <item.icon
                   className={cn(
-                    "w-5 h-5 transition-colors",
+                    "w-6 h-6 transition-colors",
                     active ? "text-primary" : "text-muted-foreground"
                   )}
                   strokeWidth={active ? 2.5 : 2}
                 />
               </div>
               <span className={cn(
-                "text-[9px] font-semibold uppercase tracking-wide transition-colors",
+                "text-[10px] font-semibold uppercase tracking-wide transition-colors mt-0.5",
                 active ? "text-primary" : "text-muted-foreground"
               )}>
                 {item.label}

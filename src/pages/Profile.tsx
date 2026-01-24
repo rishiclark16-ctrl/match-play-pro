@@ -227,8 +227,7 @@ export default function Profile() {
     <AppLayout
       header={headerContent}
       background={<GeometricBackground />}
-      hideBottomNav
-      mainClassName="px-4 pb-nav space-y-6"
+      mainClassName="px-4 space-y-6"
     >
         {/* Avatar Section */}
         <motion.div

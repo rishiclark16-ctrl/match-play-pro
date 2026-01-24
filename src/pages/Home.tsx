@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Users, X, Loader2, ChevronRight, Eye } from 'lucide-react';
+import { Plus, Users, X, Loader2, ChevronRight, Eye, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RoundCard } from '@/components/golf/RoundCard';
@@ -24,7 +24,7 @@ import { useOffline } from '@/contexts/OfflineContext';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { popIn } from '@/lib/animations';
+import { popIn, staggerItem } from '@/lib/animations';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ export default function Home() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { joinRound, loading: joinLoading, error: joinError, clearError } = useJoinRound();
-  const { deleteRound: deleteSupabaseRound, loading: deleteLoading } = useDeleteRound();
+  const { deleteRound: deleteSupabaseRound } = useDeleteRound();
   const { spectatorRounds, spectatorStats, leaveSpectating, fetchSpectatorRounds } = useSpectatorRounds();
   const { isOnline, isSyncing, pendingCount, backgroundSyncSupported, syncNow } = useOffline();
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -49,7 +49,6 @@ export default function Home() {
       .slice(0, 2);
   };
 
-  // Fetch rounds using React Query (provides caching, background refetch, retry logic)
   const {
     rounds,
     sharedRounds,
@@ -66,7 +65,7 @@ export default function Home() {
 
     if (success) {
       deleteLocalRound(roundId);
-      await refetchRounds(); // Refetch to update the list
+      await refetchRounds();
       hapticSuccess();
       toast.success('Round deleted');
     } else {
@@ -80,7 +79,6 @@ export default function Home() {
   const handleJoinRound = async () => {
     const round = await joinRound(joinCode.trim());
     if (round && user) {
-      // Add user as spectator
       try {
         await supabase
           .from('round_spectators')
@@ -122,85 +120,85 @@ export default function Home() {
   const activeSharedRounds = sharedRounds.filter(r => r.status === 'active');
   const completedSharedRounds = sharedRounds.filter(r => r.status === 'complete');
 
-  return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
-      {/* Technical Grid Background */}
-      <AppBackground />
-
-      {/* Fixed Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="flex-shrink-0 px-6 pb-3 pt-safe flex items-center justify-between relative z-10"
-      >
-        <div className="flex items-center gap-4">
-          {/* Logo mark */}
-          <div className="relative">
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-2xl font-black text-primary-foreground tracking-tighter">M</span>
-            </div>
-            {/* Corner accent on logo */}
-            <div className="absolute -top-1 -left-1 w-3 h-3 border-l-2 border-t-2 border-primary" />
+  // Header content for AppLayout
+  const headerContent = (
+    <div className="px-6 pb-3 pt-safe flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        {/* Logo mark */}
+        <div className="relative">
+          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+            <span className="text-2xl font-black text-primary-foreground tracking-tighter">M</span>
           </div>
-
-          <div>
-            <h1 className="text-2xl font-black tracking-tight text-foreground">MATCH</h1>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Golf Scorecard</p>
-          </div>
-
-          {/* Offline Indicator */}
-          <OfflineIndicator
-            isOnline={isOnline}
-            isSyncing={isSyncing}
-            pendingCount={pendingCount}
-            backgroundSyncSupported={backgroundSyncSupported}
-            onSyncClick={syncNow}
-          />
+          <div className="absolute -top-1 -left-1 w-3 h-3 border-l-2 border-t-2 border-primary" />
         </div>
 
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            hapticLight();
-            navigate('/profile');
-          }}
-          className="relative focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-xl touch-manipulation cursor-pointer select-none min-w-[48px] min-h-[48px]"
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-        >
-          <Avatar className="h-12 w-12 rounded-xl border-2 border-border">
-            <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || 'Profile'} className="rounded-xl" />
-            <AvatarFallback className="rounded-xl bg-primary text-primary-foreground text-sm font-bold">
-              {getInitials(profile?.full_name)}
-            </AvatarFallback>
-          </Avatar>
-          {/* Online indicator */}
-          <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-success border-2 border-background" />
-        </motion.button>
-      </motion.header>
+        <div>
+          <h1 className="text-2xl font-black tracking-tight text-foreground">MATCH</h1>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Golf Scorecard</p>
+        </div>
 
-      {/* Stats Bar */}
+        <OfflineIndicator
+          isOnline={isOnline}
+          isSyncing={isSyncing}
+          pendingCount={pendingCount}
+          backgroundSyncSupported={backgroundSyncSupported}
+          onSyncClick={syncNow}
+        />
+      </div>
+
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        onClick={() => {
+          hapticLight();
+          navigate('/profile');
+        }}
+        className="relative focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-xl touch-manipulation cursor-pointer select-none min-w-[48px] min-h-[48px]"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
+      >
+        <Avatar className="h-12 w-12 rounded-xl border-2 border-border">
+          <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || 'Profile'} className="rounded-xl" />
+          <AvatarFallback className="rounded-xl bg-primary text-primary-foreground text-sm font-bold">
+            {getInitials(profile?.full_name)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-success border-2 border-background" />
+      </motion.button>
+    </div>
+  );
+
+  return (
+    <AppLayout
+      header={headerContent}
+      background={<AppBackground />}
+      mainClassName="px-0"
+    >
+      {/* Stats Bar - Enhanced with icons */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="flex-shrink-0 px-6 py-3 border-y border-border bg-muted/30 relative z-10"
+        transition={{ delay: 0.05, duration: 0.2 }}
+        className="flex-shrink-0 px-6 py-3 border-y border-border bg-muted/30"
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Active</p>
-              <p className="text-2xl font-black tabular-nums text-foreground">{activeRounds.length}</p>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
+                <Zap className="w-5 h-5 text-success" />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Active</p>
+                <p className="text-2xl font-black tabular-nums text-foreground">{activeRounds.length}</p>
+              </div>
             </div>
-            <div className="w-px h-8 bg-border" />
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Shared</p>
-              <p className="text-2xl font-black tabular-nums text-accent-foreground">{sharedRounds.length}</p>
-            </div>
-            <div className="w-px h-8 bg-border" />
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Watching</p>
-              <p className="text-2xl font-black tabular-nums text-primary">{spectatorRounds.length}</p>
+            <div className="w-px h-12 bg-border" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Eye className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Watching</p>
+                <p className="text-2xl font-black tabular-nums text-foreground">{spectatorRounds.length}</p>
+              </div>
             </div>
           </div>
           <motion.button
@@ -209,19 +207,19 @@ export default function Home() {
               hapticLight();
               setShowJoinModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-semibold touch-manipulation cursor-pointer select-none active:bg-primary/20"
+            className="flex items-center gap-2 px-5 py-3 min-h-[48px] rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm font-semibold touch-manipulation cursor-pointer select-none active:bg-primary/20"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-5 h-5" />
             <span>Watch</span>
           </motion.button>
         </div>
       </motion.div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 min-h-0 relative z-10">
+      <div className="flex-1 min-h-0">
         <PullToRefresh onRefresh={handlePullRefresh} className="h-full min-h-0">
-          <main className="px-6 py-4 pb-nav">
+          <div className="px-6 py-4 pb-nav">
             {loadingRounds ? (
               <div className="pt-2">
                 <RoundListSkeleton />
@@ -238,9 +236,10 @@ export default function Home() {
                     {spectatorRounds.map((round, index) => (
                       <motion.div
                         key={round.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.08, duration: 0.3 }}
+                        variants={staggerItem}
+                        initial="initial"
+                        animate="animate"
+                        custom={index}
                       >
                         <SpectatorRoundCard
                           round={round}
@@ -265,9 +264,10 @@ export default function Home() {
                       return (
                         <motion.div
                           key={round.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: (index + spectatorRounds.length) * 0.08, duration: 0.3 }}
+                          variants={staggerItem}
+                          initial="initial"
+                          animate="animate"
+                          custom={index + spectatorRounds.length}
                         >
                           <RoundCard
                             round={round}
@@ -295,9 +295,10 @@ export default function Home() {
                       return (
                         <motion.div
                           key={round.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: (index + spectatorRounds.length + activeRounds.length) * 0.08, duration: 0.3 }}
+                          variants={staggerItem}
+                          initial="initial"
+                          animate="animate"
+                          custom={index + spectatorRounds.length + activeRounds.length}
                         >
                           <RoundCard
                             round={round}
@@ -320,9 +321,10 @@ export default function Home() {
                       return (
                         <motion.div
                           key={round.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: (index + activeRounds.length + activeSharedRounds.length + spectatorRounds.length) * 0.08, duration: 0.3 }}
+                          variants={staggerItem}
+                          initial="initial"
+                          animate="animate"
+                          custom={index + activeRounds.length + activeSharedRounds.length + spectatorRounds.length}
                         >
                           <RoundCard
                             round={round}
@@ -347,9 +349,10 @@ export default function Home() {
                       return (
                         <motion.div
                           key={round.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: (index + activeRounds.length + activeSharedRounds.length + completedRounds.length + spectatorRounds.length) * 0.08, duration: 0.3 }}
+                          variants={staggerItem}
+                          initial="initial"
+                          animate="animate"
+                          custom={index + activeRounds.length + activeSharedRounds.length + completedRounds.length + spectatorRounds.length}
                         >
                           <RoundCard
                             round={round}
@@ -364,33 +367,56 @@ export default function Home() {
                 )}
               </div>
             ) : (
+              /* Premium Empty State */
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center justify-center py-16 text-center"
+                transition={{ duration: 0.3 }}
+                className="flex flex-col items-center justify-center py-12 text-center"
               >
-                <TechCard corners className="p-8 max-w-xs mx-auto">
-                  <div className="w-20 h-20 rounded-xl bg-muted flex items-center justify-center mx-auto mb-6 border border-border">
-                    <span className="text-4xl">⛳</span>
+                <TechCard corners className="p-8 max-w-sm mx-auto relative overflow-hidden">
+                  {/* Subtle grid background */}
+                  <div className="absolute inset-0 tech-grid-subtle opacity-50" />
+
+                  <div className="relative z-10">
+                    {/* Golf flag icon with animation */}
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+                      className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-6 border border-primary/20"
+                    >
+                      <div className="relative">
+                        <div className="w-1 h-14 bg-primary/60 rounded-full" />
+                        <div className="absolute top-0 left-1 w-8 h-6 bg-primary rounded-sm"
+                             style={{ clipPath: 'polygon(0 0, 100% 25%, 100% 75%, 0 100%)' }} />
+                      </div>
+                    </motion.div>
+
+                    <h2 className="text-2xl font-black mb-2 tracking-tight">Ready to Play?</h2>
+                    <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+                      Start tracking scores, side games, and settlements with your group.
+                    </p>
+
+                    <Button
+                      onClick={() => {
+                        hapticLight();
+                        navigate('/new-round');
+                      }}
+                      className="w-full py-6 font-bold rounded-xl bg-primary text-base"
+                    >
+                      <Plus className="w-5 h-5 mr-2" />
+                      Start New Round
+                    </Button>
+
+                    <p className="text-xs text-muted-foreground mt-4">
+                      Or tap <span className="font-semibold text-primary">Watch</span> above to follow a friend's round
+                    </p>
                   </div>
-                  <h2 className="text-xl font-bold mb-2">No rounds yet</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Start your first round to track scores with your group.
-                  </p>
-                  <Button
-                    onClick={() => {
-                      hapticLight();
-                      navigate('/new-round');
-                    }}
-                    className="w-full mt-6 py-6 font-semibold rounded-xl bg-primary"
-                  >
-                    <Plus className="w-5 h-5 mr-2" />
-                    New Round
-                  </Button>
                 </TechCard>
               </motion.div>
             )}
-          </main>
+          </div>
         </PullToRefresh>
       </div>
 
@@ -402,6 +428,7 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
               className="fixed inset-0 bg-foreground/20 backdrop-blur-sm z-40"
               onClick={() => setShowJoinModal(false)}
             />
@@ -413,7 +440,6 @@ export default function Home() {
               className="fixed inset-x-6 top-1/2 -translate-y-1/2 z-50"
             >
               <TechCard variant="elevated" corners className="p-6 relative">
-                {/* Corner accents */}
                 <div className="absolute top-3 left-3 w-4 h-4 border-l-2 border-t-2 border-primary" />
                 <div className="absolute top-3 right-3 w-4 h-4 border-r-2 border-t-2 border-primary/50" />
 
@@ -471,6 +497,6 @@ export default function Home() {
           </>
         )}
       </AnimatePresence>
-    </div>
+    </AppLayout>
   );
 }

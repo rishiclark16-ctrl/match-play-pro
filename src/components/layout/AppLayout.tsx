@@ -46,7 +46,7 @@ export function AppLayout({
   disableScroll = false,
 }: AppLayoutProps) {
   return (
-    <div className={cn("h-screen flex flex-col overflow-hidden bg-background relative", className)}>
+    <div className={cn("h-screen flex flex-col overflow-hidden overflow-x-hidden bg-background relative", className)}>
       {/* Background layer */}
       {background}
 

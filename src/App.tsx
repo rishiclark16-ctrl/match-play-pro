@@ -11,7 +11,6 @@ import { BottomNav } from "@/components/BottomNav";
 import { OfflineProvider } from "@/contexts/OfflineContext";
 import { Capacitor } from '@capacitor/core';
 import { setStatusBarDefault } from '@/lib/statusBar';
-import { lockSafeAreaInsets } from '@/lib/safeArea';
 import { useDeepLinks } from '@/hooks/useDeepLinks';
 import NotFound from "./pages/NotFound";
 import { SplashScreen } from "@/components/ui/splash-screen";
@@ -41,12 +40,10 @@ function AppContent() {
   // Handle deep links from native app
   useDeepLinks();
 
-  // Initialize native status bar styling and lock safe area insets on app start
+  // Initialize native status bar styling on app start
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       setStatusBarDefault();
-      // Lock safe area insets to prevent iOS WebView shifting bug
-      lockSafeAreaInsets();
     }
   }, []);
 
