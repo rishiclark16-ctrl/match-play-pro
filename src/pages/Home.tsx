@@ -122,7 +122,7 @@ export default function Home() {
 
   // Header content for AppLayout
   const headerContent = (
-    <div className="px-6 pb-3 pt-safe flex items-center justify-between">
+    <div className="px-6 pb-3 flex items-center justify-between" style={{ paddingTop: '59px' }}>
       <div className="flex items-center gap-4">
         {/* Logo mark */}
         <div className="relative">
