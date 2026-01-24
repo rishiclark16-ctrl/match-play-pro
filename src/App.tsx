@@ -42,15 +42,22 @@ function lockSafeAreaInsets() {
 
   // Get computed values
   const computedStyle = getComputedStyle(measureEl);
-  const safeTop = computedStyle.paddingTop;
-  const safeBottom = computedStyle.paddingBottom;
-
-  // Set as CSS custom properties on root
-  document.documentElement.style.setProperty('--safe-area-top', safeTop);
-  document.documentElement.style.setProperty('--safe-area-bottom', safeBottom);
+  const safeTop = parseInt(computedStyle.paddingTop, 10) || 0;
+  const safeBottom = parseInt(computedStyle.paddingBottom, 10) || 0;
 
   // Clean up
   document.body.removeChild(measureEl);
+
+  // Only lock if we got valid values (non-zero for devices with notch)
+  // On notch devices, safe-area-inset-top is typically 44-59px
+  if (safeTop > 0) {
+    document.documentElement.style.setProperty('--safe-area-top', `${safeTop}px`);
+  }
+  if (safeBottom > 0) {
+    document.documentElement.style.setProperty('--safe-area-bottom', `${safeBottom}px`);
+  }
+
+  return safeTop > 0;
 }
 
 // Inner component that uses router hooks
@@ -62,17 +69,20 @@ function AppContent() {
 
   // Initialize native status bar styling and lock safe area values on app start
   useEffect(() => {
-    // Lock safe area values immediately
-    lockSafeAreaInsets();
+    // Try to lock safe area values with retries
+    // iOS WebView sometimes delays safe area calculation
+    const tryLock = (attempt: number) => {
+      const success = lockSafeAreaInsets();
+      if (!success && attempt < 5) {
+        setTimeout(() => tryLock(attempt + 1), 100 * attempt);
+      }
+    };
 
-    // Also lock after a short delay to catch any late calculations
-    const timer = setTimeout(lockSafeAreaInsets, 100);
+    tryLock(1);
 
     if (Capacitor.isNativePlatform()) {
       setStatusBarDefault();
     }
-
-    return () => clearTimeout(timer);
   }, []);
 
   return (
