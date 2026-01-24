@@ -201,7 +201,7 @@ export default function Profile() {
   }
 
   const headerContent = (
-    <div className="flex items-center gap-4 px-4 pb-2" style={{ paddingTop: '59px' }}>
+    <div className="flex items-center gap-4 px-4 pb-2 pt-safe-content">
       <button
         onClick={() => navigate(-1)}
         className="w-11 h-11 rounded-lg bg-card border border-border flex items-center justify-center hover:bg-accent transition-colors"

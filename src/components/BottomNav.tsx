@@ -37,7 +37,7 @@ export function BottomNav() {
         transform: 'translateZ(0)',
         WebkitTapHighlightColor: 'transparent',
         touchAction: 'manipulation',
-        paddingBottom: '0px',
+        paddingBottom: '34px', // Home indicator safe area
       }}
     >
       <div className="flex items-center justify-around h-16 px-2">

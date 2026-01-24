@@ -12,7 +12,7 @@ export function RoundCompleteHeader({ round }: RoundCompleteHeaderProps) {
   const dateStr = format(new Date(round.createdAt), 'MMM d, yyyy');
 
   return (
-    <header className="flex-shrink-0 relative z-10 pt-safe pb-4 px-4">
+    <header className="flex-shrink-0 relative z-10 pt-safe-content pb-4 px-4">
       {/* Corner Accents */}
       <div className="absolute top-4 left-4 w-6 h-6 border-l-2 border-t-2 border-primary/30" />
       <div className="absolute top-4 right-4 w-6 h-6 border-r-2 border-t-2 border-primary/20" />

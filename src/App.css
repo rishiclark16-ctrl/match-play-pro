@@ -1,12 +1,1 @@
-/* App-level styles - minimal reset */
-html, body, #root {
-  width: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: hsl(var(--background));
-}
-
-#root {
-  display: flex;
-  flex-direction: column;
-}
+/* App.css - All styles are in index.css */

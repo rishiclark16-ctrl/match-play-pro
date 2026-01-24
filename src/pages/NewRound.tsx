@@ -360,7 +360,7 @@ export default function NewRound() {
       <div className="absolute inset-0 tech-grid-subtle opacity-40 pointer-events-none" />
 
       {/* Fixed Header */}
-      <header className="flex-shrink-0 relative z-10 px-4 pt-safe pb-4">
+      <header className="flex-shrink-0 relative z-10 px-4 pt-safe-content pb-4">
         <div className="flex items-center gap-4">
           <motion.button
             whileTap={{ scale: 0.9 }}

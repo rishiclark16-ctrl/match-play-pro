@@ -220,7 +220,7 @@ export default function Stats() {
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center gap-3 px-6 pb-2 pt-safe"
+      className="flex items-center gap-3 px-6 pb-2 pt-safe-content"
     >
       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
         <BarChart3 className="w-6 h-6 text-primary" />

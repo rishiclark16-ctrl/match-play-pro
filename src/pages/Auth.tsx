@@ -204,7 +204,7 @@ export default function Auth() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background px-6 pt-8 pb-16 safe-top safe-bottom relative">
+    <div className="h-screen flex flex-col overflow-hidden bg-background px-6 pt-safe-content pb-16 relative">
       {/* Technical Grid Background */}
       <div className="absolute inset-0 pointer-events-none">
         <div 

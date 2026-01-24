@@ -44,7 +44,7 @@ export function ScorecardHeader({
   return (
     <>
       <header
-        className="flex-shrink-0 z-30 bg-background border-b border-border pt-safe"
+        className="flex-shrink-0 z-30 bg-background border-b border-border pt-safe-content"
         style={{
           WebkitTransform: 'translateZ(0)',
           transform: 'translateZ(0)',

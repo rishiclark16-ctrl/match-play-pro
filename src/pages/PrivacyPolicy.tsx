@@ -7,7 +7,7 @@ export default function PrivacyPolicy() {
 
   return (
     <div className="h-screen flex flex-col bg-background pb-safe">
-      <header className="shrink-0 bg-background border-b border-border px-4 py-3 pt-safe">
+      <header className="shrink-0 bg-background border-b border-border px-4 py-3 pt-safe-content">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
