@@ -367,8 +367,8 @@ export default function Leaderboard() {
       <div className="absolute inset-0 tech-grid-subtle opacity-40 pointer-events-none" />
       
       {/* Fixed Header */}
-      <header 
-        className="flex-shrink-0 relative z-10 pb-2 pt-2 px-4 border-b border-border bg-background/80 backdrop-blur-sm"
+      <header
+        className="flex-shrink-0 relative z-10 pb-2 pt-safe px-4 border-b border-border bg-background/80 backdrop-blur-sm"
       >
         <div className="flex items-center gap-4">
           <motion.button

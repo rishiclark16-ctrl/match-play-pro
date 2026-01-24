@@ -6,8 +6,8 @@ export default function PrivacyPolicy() {
   const navigate = useNavigate();
 
   return (
-    <div className="h-screen flex flex-col bg-background safe-top safe-bottom">
-      <header className="shrink-0 bg-background border-b border-border px-4 py-3">
+    <div className="h-screen flex flex-col bg-background pb-safe">
+      <header className="shrink-0 bg-background border-b border-border px-4 py-3 pt-safe">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"

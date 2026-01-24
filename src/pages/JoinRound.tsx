@@ -88,8 +88,8 @@ export default function JoinRound() {
       </div>
 
       {/* Header */}
-      <header 
-        className="flex-shrink-0 px-6 pt-6 pb-6 relative z-10"
+      <header
+        className="flex-shrink-0 px-6 pt-safe pb-6 relative z-10"
       >
         <motion.button
           whileTap={{ scale: 0.95 }}

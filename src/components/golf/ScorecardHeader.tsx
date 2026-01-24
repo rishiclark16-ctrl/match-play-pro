@@ -44,14 +44,13 @@ export function ScorecardHeader({
   return (
     <>
       <header
-        className="flex-shrink-0 z-30 bg-background border-b border-border"
+        className="flex-shrink-0 z-30 bg-background border-b border-border pt-safe"
         style={{
           WebkitTransform: 'translateZ(0)',
           transform: 'translateZ(0)',
-          paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
-        <div className="pt-1 pb-3 px-4 flex items-center justify-between gap-3">
+        <div className="pb-3 px-4 flex items-center justify-between gap-3">
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => {

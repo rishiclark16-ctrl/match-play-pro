@@ -45,8 +45,7 @@ export default function Groups() {
       <AppBackground />
       {/* Fixed Header */}
       <header
-        className="flex-shrink-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 pb-3"
-        style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)' }}
+        className="flex-shrink-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 pb-3 pt-safe"
       >
         <div className="flex items-center gap-3">
           <Button

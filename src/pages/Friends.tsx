@@ -162,7 +162,7 @@ export default function Friends() {
   };
 
   const headerContent = (
-    <div className="bg-background/95 backdrop-blur-sm border-b-2 border-border px-4 pb-2">
+    <div className="bg-background/95 backdrop-blur-sm border-b-2 border-border px-4 pb-2 pt-safe">
       <div className="flex items-center gap-3">
         <Button
           variant="outline"
