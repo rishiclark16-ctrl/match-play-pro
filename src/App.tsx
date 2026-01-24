@@ -33,6 +33,26 @@ const Support = lazy(() => import("./pages/Support"));
 
 const queryClient = new QueryClient();
 
+// Lock safe area insets on app load to prevent shifting
+function lockSafeAreaInsets() {
+  // Create a temporary element to measure the safe area
+  const measureEl = document.createElement('div');
+  measureEl.style.cssText = 'position:fixed;top:0;left:0;right:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none;';
+  document.body.appendChild(measureEl);
+
+  // Get computed values
+  const computedStyle = getComputedStyle(measureEl);
+  const safeTop = computedStyle.paddingTop;
+  const safeBottom = computedStyle.paddingBottom;
+
+  // Set as CSS custom properties on root
+  document.documentElement.style.setProperty('--safe-area-top', safeTop);
+  document.documentElement.style.setProperty('--safe-area-bottom', safeBottom);
+
+  // Clean up
+  document.body.removeChild(measureEl);
+}
+
 // Inner component that uses router hooks
 function AppContent() {
   const [showSplash, setShowSplash] = useState(true);
@@ -40,11 +60,19 @@ function AppContent() {
   // Handle deep links from native app
   useDeepLinks();
 
-  // Initialize native status bar styling on app start
+  // Initialize native status bar styling and lock safe area values on app start
   useEffect(() => {
+    // Lock safe area values immediately
+    lockSafeAreaInsets();
+
+    // Also lock after a short delay to catch any late calculations
+    const timer = setTimeout(lockSafeAreaInsets, 100);
+
     if (Capacitor.isNativePlatform()) {
       setStatusBarDefault();
     }
+
+    return () => clearTimeout(timer);
   }, []);
 
   return (
