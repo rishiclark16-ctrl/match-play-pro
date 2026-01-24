@@ -90,20 +90,30 @@ export function useScorekeeper(roundId: string | undefined, players: { id: strin
   const addScorekeeper = useCallback(async (profileId: string) => {
     if (!roundId || !isCreator) return;
 
+    // Verify profileId is actually a player in this round
+    const isPlayerInRound = players.some(p => p.profileId === profileId);
+    if (!isPlayerInRound) {
+      throw new Error('Player is not in this round');
+    }
+
+    // Prevent duplicates
+    if (scorekeeperIds.includes(profileId)) {
+      return; // Already a scorekeeper
+    }
+
     const newIds = [...scorekeeperIds, profileId];
-    
+
     const { error } = await supabase
       .from('rounds')
       .update({ scorekeeper_ids: newIds })
       .eq('id', roundId);
 
     if (error) {
-      // Error handled by toast
       throw error;
     }
 
     setScorekeeperIds(newIds);
-  }, [roundId, isCreator, scorekeeperIds]);
+  }, [roundId, isCreator, scorekeeperIds, players]);
 
   // Remove a scorekeeper (only creator can do this)
   const removeScorekeeper = useCallback(async (profileId: string) => {

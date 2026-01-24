@@ -52,22 +52,49 @@ export function useProfile() {
         .single();
 
       if (fetchError) {
-        // Profile might not exist yet for new users
+        // Profile might not exist yet for new users - create it
         if (fetchError.code === 'PGRST116') {
-          setProfile({
-            id: user.id,
-            full_name: user.user_metadata?.full_name || null,
-            handicap: null,
-            home_course_id: null,
-            home_course_name: null,
-            avatar_url: null,
-            tee_preference: null,
-            friend_code: null,
-            email: user.email || null,
-            phone: null,
-            created_at: null,
-            updated_at: null,
-          });
+          // Create the profile in database (trigger may have failed)
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              full_name: user.user_metadata?.full_name || null,
+              email: user.email || null,
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            // If insert fails (maybe profile exists now), try fetching again
+            const { data: retryData } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', user.id)
+              .single();
+
+            if (retryData) {
+              setProfile(retryData as Profile);
+              return;
+            }
+            // If still no profile, use stub
+            setProfile({
+              id: user.id,
+              full_name: user.user_metadata?.full_name || null,
+              handicap: null,
+              home_course_id: null,
+              home_course_name: null,
+              avatar_url: null,
+              tee_preference: null,
+              friend_code: null,
+              email: user.email || null,
+              phone: null,
+              created_at: null,
+              updated_at: null,
+            });
+          } else if (newProfile) {
+            setProfile(newProfile as Profile);
+          }
         } else {
           throw fetchError;
         }
