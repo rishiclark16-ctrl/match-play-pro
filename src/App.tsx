@@ -11,6 +11,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { OfflineProvider } from "@/contexts/OfflineContext";
 import { Capacitor } from '@capacitor/core';
 import { setStatusBarDefault } from '@/lib/statusBar';
+import { lockSafeAreaInsets } from '@/lib/safeArea';
 import { useDeepLinks } from '@/hooks/useDeepLinks';
 import NotFound from "./pages/NotFound";
 import { SplashScreen } from "@/components/ui/splash-screen";
@@ -33,33 +34,6 @@ const Support = lazy(() => import("./pages/Support"));
 
 const queryClient = new QueryClient();
 
-// Lock safe area insets on app load to prevent shifting
-function lockSafeAreaInsets() {
-  // Create a temporary element to measure the safe area
-  const measureEl = document.createElement('div');
-  measureEl.style.cssText = 'position:fixed;top:0;left:0;right:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none;';
-  document.body.appendChild(measureEl);
-
-  // Get computed values
-  const computedStyle = getComputedStyle(measureEl);
-  const safeTop = parseInt(computedStyle.paddingTop, 10) || 0;
-  const safeBottom = parseInt(computedStyle.paddingBottom, 10) || 0;
-
-  // Clean up
-  document.body.removeChild(measureEl);
-
-  // Only lock if we got valid values (non-zero for devices with notch)
-  // On notch devices, safe-area-inset-top is typically 44-59px
-  if (safeTop > 0) {
-    document.documentElement.style.setProperty('--safe-area-top', `${safeTop}px`);
-  }
-  if (safeBottom > 0) {
-    document.documentElement.style.setProperty('--safe-area-bottom', `${safeBottom}px`);
-  }
-
-  return safeTop > 0;
-}
-
 // Inner component that uses router hooks
 function AppContent() {
   const [showSplash, setShowSplash] = useState(true);
@@ -67,21 +41,12 @@ function AppContent() {
   // Handle deep links from native app
   useDeepLinks();
 
-  // Initialize native status bar styling and lock safe area values on app start
+  // Initialize native status bar styling and lock safe area insets on app start
   useEffect(() => {
-    // Try to lock safe area values with retries
-    // iOS WebView sometimes delays safe area calculation
-    const tryLock = (attempt: number) => {
-      const success = lockSafeAreaInsets();
-      if (!success && attempt < 5) {
-        setTimeout(() => tryLock(attempt + 1), 100 * attempt);
-      }
-    };
-
-    tryLock(1);
-
     if (Capacitor.isNativePlatform()) {
       setStatusBarDefault();
+      // Lock safe area insets to prevent iOS WebView shifting bug
+      lockSafeAreaInsets();
     }
   }, []);
 
