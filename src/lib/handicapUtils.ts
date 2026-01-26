@@ -95,11 +95,16 @@ export function calculateTotalNetStrokes(
 
 /**
  * Format handicap display string
+ * - Negative internal value (-3) = plus handicap, displays as "+3"
+ * - Positive internal value (5) = regular handicap, displays as "5"
+ * - Zero = scratch
  */
 export function formatHandicap(handicap: number | undefined): string {
   if (handicap === undefined || handicap === null) return '–';
-  if (handicap === 0) return '0';
-  return handicap > 0 ? `+${handicap}` : `${handicap}`;
+  if (handicap === 0) return 'Scr';
+  // Plus handicaps are stored as negative, display with + sign
+  if (handicap < 0) return `+${Math.abs(handicap)}`;
+  return `${handicap}`;
 }
 
 /**

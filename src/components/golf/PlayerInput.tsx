@@ -55,16 +55,21 @@ export function PlayerInput({
               </div>
               
               {handicapMode === 'auto' ? (
-                <Input
-                  type="number"
-                  placeholder="Handicap (optional)"
-                  value={handicap ?? ''}
-                  onChange={(e) => onHandicapChange(e.target.value ? Number(e.target.value) : undefined)}
-                  className="py-5 font-mono"
-                  min={-10}
-                  max={54}
-                  step="0.1"
-                />
+                <div className="space-y-1">
+                  <Input
+                    type="number"
+                    placeholder="Handicap (e.g., 12 or -3 for +3)"
+                    value={handicap ?? ''}
+                    onChange={(e) => onHandicapChange(e.target.value ? Number(e.target.value) : undefined)}
+                    className="py-5 font-mono"
+                    min={-10}
+                    max={54}
+                    step="0.1"
+                  />
+                  <p className="text-[10px] text-muted-foreground px-1">
+                    Plus handicaps: enter negative (e.g., -3 for +3)
+                  </p>
+                </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <Input
