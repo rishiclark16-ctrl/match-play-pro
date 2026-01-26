@@ -43,12 +43,13 @@ export const courseNameSchema = z
 
 /**
  * Handicap validation
- * - Number between 0 and 54 (USGA max)
+ * - Number between -10 (plus handicap) and 54 (USGA max)
+ * - Decimals allowed (e.g., 5.3) - rounded when calculating strokes
  * - Can be null/undefined for no handicap
  */
 export const handicapSchema = z
   .number()
-  .min(0, 'Handicap cannot be negative')
+  .min(-10, 'Handicap cannot be lower than +10')
   .max(MAX_HANDICAP, `Handicap cannot exceed ${MAX_HANDICAP}`)
   .nullable()
   .optional();

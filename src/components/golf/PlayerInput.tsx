@@ -61,8 +61,9 @@ export function PlayerInput({
                   value={handicap ?? ''}
                   onChange={(e) => onHandicapChange(e.target.value ? Number(e.target.value) : undefined)}
                   className="py-5 font-mono"
-                  min={0}
+                  min={-10}
                   max={54}
+                  step="0.1"
                 />
               ) : (
                 <div className="flex items-center gap-2">
