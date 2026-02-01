@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Flag } from 'lucide-react';
@@ -15,6 +15,7 @@ import { ScorecardBottomBar } from '@/components/golf/ScorecardBottomBar';
 import { ScorecardHeader } from '@/components/golf/ScorecardHeader';
 import { AppBackground } from '@/components/ui/app-background';
 import { ScorecardModals } from '@/components/golf/ScorecardModals';
+import { ScorecardTutorial } from '@/components/golf/ScorecardTutorial';
 import { useRounds } from '@/hooks/useRounds';
 import { useSupabaseRound } from '@/hooks/useSupabaseRound';
 import { useKeepAwake } from '@/hooks/useKeepAwake';
@@ -42,13 +43,33 @@ export default function Scorecard() {
   // Keep screen awake during active round
   useKeepAwake(true);
 
-  // Voice settings
-  const { settings } = useSettings();
+  // Voice settings and tutorial tracking
+  const { settings, updateSettings, loaded: settingsLoaded } = useSettings();
 
   // Set status bar style for native apps
   useEffect(() => {
     setStatusBarDefault();
   }, []);
+
+  // Show tutorial for first 3 rounds
+  useEffect(() => {
+    if (!settingsLoaded || !round || isSpectator) return;
+    if (settings.tutorialDismissed) return;
+    if (settings.tutorialViewCount >= 3) return;
+
+    // Delay to let scorecard render first
+    const timer = setTimeout(() => setShowTutorial(true), 800);
+    return () => clearTimeout(timer);
+  }, [settingsLoaded, round, isSpectator, settings.tutorialDismissed, settings.tutorialViewCount]);
+
+  // Handle tutorial completion
+  const handleTutorialComplete = useCallback((dontShowAgain: boolean) => {
+    setShowTutorial(false);
+    updateSettings({
+      tutorialViewCount: settings.tutorialViewCount + 1,
+      ...(dontShowAgain && { tutorialDismissed: true }),
+    });
+  }, [settings.tutorialViewCount, updateSettings]);
 
   // Use Supabase for live sync
   const {
@@ -92,6 +113,13 @@ export default function Scorecard() {
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // Tutorial refs
+  const voiceButtonRef = useRef<HTMLDivElement>(null);
+  const playerCardRef = useRef<HTMLDivElement>(null);
+  const holeNavRef = useRef<HTMLDivElement>(null);
+  const leaderboardRef = useRef<HTMLDivElement>(null);
 
   // Use Supabase round if available, otherwise fall back to local
   const localRound = getRoundById(id || '');
@@ -390,6 +418,7 @@ export default function Scorecard() {
           style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
         >
           <HoleNavigator
+            ref={holeNavRef}
             currentHole={currentHole}
             totalHoles={round.holes}
             holeInfo={currentHoleInfo}
@@ -426,6 +455,7 @@ export default function Scorecard() {
         {playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && (
           <div className="mb-4">
             <LiveLeaderboard
+              ref={leaderboardRef}
               players={playersWithScores}
               useNetScoring={
                 // Match play always uses net scoring (differential strokes)
@@ -477,6 +507,7 @@ export default function Scorecard() {
                     return (
                       <motion.div
                         key={player.id}
+                        ref={index === 0 ? playerCardRef : undefined}
                         layout
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -604,12 +635,24 @@ export default function Scorecard() {
         isProcessing={isProcessing}
         isSupported={isSupported}
         propBets={propBets}
+        voiceButtonRef={voiceButtonRef}
         onNavigateToLeaderboard={() => navigate(`/round/${round.id}/leaderboard`)}
         onVoicePress={handleVoicePress}
         onShowFinishOptions={() => setShowFinishOptions(true)}
         onFinishRound={handleFinishRound}
         onPropBetAdded={addPropBet}
         onPropBetUpdated={updatePropBet}
+      />
+
+      {/* Tutorial Overlay */}
+      <ScorecardTutorial
+        isOpen={showTutorial}
+        onComplete={handleTutorialComplete}
+        playerNames={playersWithScores.map(p => p.name)}
+        voiceButtonRef={voiceButtonRef}
+        playerCardRef={playerCardRef}
+        holeNavRef={holeNavRef}
+        leaderboardRef={leaderboardRef}
       />
 
       {/* All Modals and Dialogs */}

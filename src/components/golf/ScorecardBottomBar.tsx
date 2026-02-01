@@ -24,6 +24,7 @@ interface ScorecardBottomBarProps {
   isProcessing: boolean;
   isSupported: boolean;
   propBets: PropBet[];
+  voiceButtonRef?: React.RefObject<HTMLDivElement>;
   onNavigateToLeaderboard: () => void;
   onVoicePress: () => void;
   onShowFinishOptions: () => void;
@@ -49,6 +50,7 @@ export function ScorecardBottomBar({
   isProcessing,
   isSupported,
   propBets,
+  voiceButtonRef,
   onNavigateToLeaderboard,
   onVoicePress,
   onShowFinishOptions,
@@ -81,12 +83,14 @@ export function ScorecardBottomBar({
 
         {/* Voice Button - centered, only for scorekeepers */}
         {canEditScores ? (
-          <VoiceButton
-            isListening={isListening}
-            isProcessing={isProcessing}
-            isSupported={isSupported}
-            onPress={onVoicePress}
-          />
+          <div ref={voiceButtonRef}>
+            <VoiceButton
+              isListening={isListening}
+              isProcessing={isProcessing}
+              isSupported={isSupported}
+              onPress={onVoicePress}
+            />
+          </div>
         ) : (
           <div className="w-16" />
         )}

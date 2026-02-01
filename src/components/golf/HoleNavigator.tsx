@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { HoleInfo } from '@/types/golf';
@@ -13,13 +13,13 @@ interface HoleNavigatorProps {
   onNext: () => void;
 }
 
-export function HoleNavigator({
+export const HoleNavigator = forwardRef<HTMLDivElement, HoleNavigatorProps>(function HoleNavigator({
   currentHole,
   totalHoles,
   holeInfo,
   onPrevious,
   onNext
-}: HoleNavigatorProps) {
+}, ref) {
   const canGoPrevious = currentHole > 1;
   const canGoNext = currentHole < totalHoles;
   const [direction, setDirection] = useState(0);
@@ -69,7 +69,7 @@ export function HoleNavigator({
   };
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
+    <div ref={ref} className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
       {/* Previous Button */}
       <motion.button
         whileTap={{ scale: 0.92 }}
@@ -162,4 +162,4 @@ export function HoleNavigator({
       </motion.button>
     </div>
   );
-}
+});

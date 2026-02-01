@@ -4,6 +4,8 @@ export interface AppSettings {
   useNetScoring: boolean; // Default true - use net scores for winner determination
   continuousVoice: boolean; // Default true - keep listening after successful entry
   alwaysConfirmVoice: boolean; // Default false - show confirmation even for high confidence
+  tutorialViewCount: number; // 0-3, show tutorial if < 3
+  tutorialDismissed: boolean; // User chose "Don't show again"
 }
 
 const SETTINGS_KEY = 'match-golf-settings';
@@ -12,6 +14,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   useNetScoring: true,
   continuousVoice: true,
   alwaysConfirmVoice: false,
+  tutorialViewCount: 0,
+  tutorialDismissed: false,
 };
 
 export function useSettings() {

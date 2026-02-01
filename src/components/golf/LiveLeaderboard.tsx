@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, forwardRef } from 'react';
 import { motion } from 'framer-motion';
 import { Crown, Swords } from 'lucide-react';
 import { PlayerWithScores, HoleInfo, Score } from '@/types/golf';
@@ -111,13 +111,13 @@ function formatMatchPlayScore(status: MatchPlayStatus, isLeader: boolean): strin
   return `${status.holesUp} DN`;
 }
 
-export function LiveLeaderboard({ 
-  players, 
+export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(function LiveLeaderboard({
+  players,
   useNetScoring = false,
   isMatchPlay = false,
   holeInfo = [],
   scores = []
-}: LiveLeaderboardProps) {
+}, ref) {
   
   // Calculate match play status for 2-player matches
   const matchPlayStatus = useMemo(() => {
@@ -157,9 +157,10 @@ export function LiveLeaderboard({
   // Match Play 2-player display
   if (isMatchPlay && matchPlayStatus && sortedPlayers.length === 2) {
     const [player1, player2] = sortedPlayers;
-    
+
     return (
       <motion.div
+        ref={ref}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-b border-border"
@@ -303,6 +304,7 @@ export function LiveLeaderboard({
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-b border-border"
@@ -466,4 +468,4 @@ export function LiveLeaderboard({
       </div>
     </motion.div>
   );
-}
+});
