@@ -32,34 +32,47 @@ export interface SearchResult {
   friendCode: string | null;
 }
 
+const PAGE_SIZE = 20;
+
 export function useFriends() {
   const { user } = useAuth();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([]);
   const [sentRequests, setSentRequests] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(0);
 
-  const fetchFriends = useCallback(async () => {
+  const fetchFriends = useCallback(async (pageNum: number = 0, append: boolean = false) => {
     if (!user) return;
 
     try {
+      const from = pageNum * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
       // Get accepted friendships where user is either sender or receiver
-      const { data: friendships, error: friendshipsError } = await supabase
+      const { data: friendships, error: friendshipsError, count } = await supabase
         .from('friendships')
-        .select('id, user_id, friend_id, status')
+        .select('id, user_id, friend_id, status', { count: 'exact' })
         .eq('status', 'accepted')
-        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
+        .order('accepted_at', { ascending: false })
+        .range(from, to);
 
       if (friendshipsError) throw friendshipsError;
 
+      // Update hasMore based on total count
+      setHasMore(count ? from + PAGE_SIZE < count : false);
+
       if (!friendships || friendships.length === 0) {
-        setFriends([]);
+        if (!append) setFriends([]);
         return;
       }
 
       // Get friend IDs
-      const friendIds = friendships.map(f => 
+      const friendIds = friendships.map(f =>
         f.user_id === user.id ? f.friend_id : f.user_id
       );
 
@@ -73,7 +86,7 @@ export function useFriends() {
 
       // Map profiles to friends with friendship IDs
       const friendsList: Friend[] = (profiles || []).map(profile => {
-        const friendship = friendships.find(f => 
+        const friendship = friendships.find(f =>
           f.user_id === profile.id || f.friend_id === profile.id
         );
         return {
@@ -87,12 +100,25 @@ export function useFriends() {
         };
       });
 
-      setFriends(friendsList);
+      if (append) {
+        setFriends(prev => [...prev, ...friendsList]);
+      } else {
+        setFriends(friendsList);
+      }
     } catch (err) {
       // Error handled by state
       setError('Failed to load friends');
     }
   }, [user]);
+
+  const loadMoreFriends = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    await fetchFriends(nextPage, true);
+    setPage(nextPage);
+    setLoadingMore(false);
+  }, [loadingMore, hasMore, page, fetchFriends]);
 
   const fetchPendingRequests = useCallback(async () => {
     if (!user) return;
@@ -401,6 +427,8 @@ export function useFriends() {
     pendingRequests,
     sentRequests,
     loading,
+    loadingMore,
+    hasMore,
     error,
     sendFriendRequest,
     sendFriendRequestByEmail,
@@ -409,6 +437,10 @@ export function useFriends() {
     declineFriendRequest,
     removeFriend,
     searchByCode,
-    refetch: () => Promise.all([fetchFriends(), fetchPendingRequests(), fetchSentRequests()]),
+    loadMoreFriends,
+    refetch: () => {
+      setPage(0);
+      return Promise.all([fetchFriends(0, false), fetchPendingRequests(), fetchSentRequests()]);
+    },
   };
 }

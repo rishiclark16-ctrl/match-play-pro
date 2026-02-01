@@ -23,13 +23,18 @@ export interface GolfGroup {
   createdAt: string;
 }
 
+const PAGE_SIZE = 20;
+
 export function useGroups() {
   const { user } = useAuth();
   const [groups, setGroups] = useState<GolfGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(0);
 
-  const fetchGroups = useCallback(async () => {
+  const fetchGroups = useCallback(async (pageNum: number = 0, append: boolean = false) => {
     if (!user) {
       setGroups([]);
       setLoading(false);
@@ -37,17 +42,24 @@ export function useGroups() {
     }
 
     try {
-      // Fetch groups owned by user
-      const { data: groupsData, error: groupsError } = await supabase
+      const from = pageNum * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      // Fetch groups owned by user with pagination
+      const { data: groupsData, error: groupsError, count } = await supabase
         .from('golf_groups')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (groupsError) throw groupsError;
 
+      // Update hasMore based on total count
+      setHasMore(count ? from + PAGE_SIZE < count : false);
+
       if (!groupsData || groupsData.length === 0) {
-        setGroups([]);
+        if (!append) setGroups([]);
         setLoading(false);
         return;
       }
@@ -108,7 +120,11 @@ export function useGroups() {
         };
       });
 
-      setGroups(groupsWithMembers);
+      if (append) {
+        setGroups(prev => [...prev, ...groupsWithMembers]);
+      } else {
+        setGroups(groupsWithMembers);
+      }
     } catch {
       setError('Failed to load groups');
     } finally {
@@ -116,8 +132,18 @@ export function useGroups() {
     }
   }, [user]);
 
+  const loadMoreGroups = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    await fetchGroups(nextPage, true);
+    setPage(nextPage);
+    setLoadingMore(false);
+  }, [loadingMore, hasMore, page, fetchGroups]);
+
   useEffect(() => {
-    fetchGroups();
+    setPage(0);
+    fetchGroups(0, false);
   }, [fetchGroups]);
 
   const createGroup = async (
@@ -240,11 +266,17 @@ export function useGroups() {
   return {
     groups,
     loading,
+    loadingMore,
+    hasMore,
     error,
     createGroup,
     updateGroup,
     deleteGroup,
     updateMembers,
-    refetch: fetchGroups,
+    loadMoreGroups,
+    refetch: () => {
+      setPage(0);
+      return fetchGroups(0, false);
+    },
   };
 }
