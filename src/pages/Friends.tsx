@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, UserPlus, Users, Search, Hash, AtSign, Phone, ScanLine, Contact } from 'lucide-react';
+import { ArrowLeft, UserPlus, Users, Search, Hash, AtSign, Phone, ScanLine, Contact, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,12 +10,14 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProfile } from '@/hooks/useProfile';
 import { useFriends } from '@/hooks/useFriends';
+import { useSubscription } from '@/hooks/useSubscription';
 import { FriendCard } from '@/components/friends/FriendCard';
 import { FriendRequestCard } from '@/components/friends/FriendRequestCard';
 import { ShareFriendCode } from '@/components/friends/ShareFriendCode';
 import { FriendCodeQR } from '@/components/friends/FriendCodeQR';
 import { QRCodeScanner } from '@/components/friends/QRCodeScanner';
 import { ContactSyncSheet } from '@/components/friends/ContactSyncSheet';
+import { PaywallModal, ProBadge } from '@/components/subscription';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 
@@ -41,6 +43,12 @@ export default function Friends() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [contactSyncOpen, setContactSyncOpen] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
+
+  // Subscription gating for friend limits
+  const { isPro, canAddFriend, limits } = useSubscription();
+  const atFriendLimit = !canAddFriend(friends.length);
+  const maxFriends = limits.maxFriends;
 
   // Get friend code from profile
   const friendCode = profile?.friend_code ?? null;
@@ -63,11 +71,17 @@ export default function Friends() {
   const handleSendRequest = async (codeOverride?: string) => {
     const value = codeOverride || searchValue.trim();
     if (!value) return;
-    
+
+    // Check friend limit before sending request
+    if (atFriendLimit) {
+      setShowPaywall(true);
+      return;
+    }
+
     setIsSending(true);
-    
+
     let result: { success: boolean; error?: string };
-    
+
     switch (searchType) {
       case 'email':
         result = await sendFriendRequestByEmail(value);
@@ -78,7 +92,7 @@ export default function Friends() {
       default:
         result = await sendFriendRequest(value);
     }
-    
+
     setIsSending(false);
 
     if (result.success) {
@@ -96,6 +110,12 @@ export default function Friends() {
   };
 
   const handleAccept = async (friendshipId: string) => {
+    // Check friend limit before accepting
+    if (atFriendLimit) {
+      setShowPaywall(true);
+      return;
+    }
+
     setProcessingId(friendshipId);
     const success = await acceptFriendRequest(friendshipId);
     setProcessingId(null);
@@ -352,9 +372,23 @@ export default function Friends() {
             <Users className="w-4 h-4 text-primary" />
             <span className="label-sm">Your Friends</span>
             <span className="ml-auto text-xs font-mono text-muted-foreground">
-              {friends.length}
+              {friends.length}{!isPro && maxFriends !== Infinity ? `/${maxFriends}` : ''}
             </span>
           </div>
+
+          {/* Friend limit upgrade prompt */}
+          {atFriendLimit && (
+            <motion.button
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              onClick={() => setShowPaywall(true)}
+              className="w-full mb-3 py-3 px-4 rounded-xl bg-gold/10 border-2 border-gold/30 text-gold font-semibold flex items-center justify-center gap-2 hover:bg-gold/20 transition-all"
+            >
+              <Crown className="w-4 h-4" />
+              <span>Upgrade for unlimited friends</span>
+              <ProBadge size="sm" variant="default" />
+            </motion.button>
+          )}
           
           {loading ? (
             <TechCard>
@@ -405,6 +439,13 @@ export default function Friends() {
       <ContactSyncSheet
         open={contactSyncOpen}
         onClose={() => setContactSyncOpen(false)}
+      />
+
+      {/* Paywall Modal */}
+      <PaywallModal
+        open={showPaywall}
+        onOpenChange={setShowPaywall}
+        feature="Unlimited Friends"
       />
     </AppLayout>
   );

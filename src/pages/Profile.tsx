@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Settings, HelpCircle, Mic } from 'lucide-react';
+import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Settings, HelpCircle, Mic, Crown, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile, ProfileUpdate } from '@/hooks/useProfile';
 import { useFriends } from '@/hooks/useFriends';
 import { useSettings } from '@/hooks/useSettings';
+import { useSubscription } from '@/hooks/useSubscription';
+import { PaywallModal } from '@/components/subscription/PaywallModal';
+import { ProBadge } from '@/components/subscription/ProBadge';
+import { restorePurchases, openManagementUrl } from '@/services/purchases';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
+import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { validatePlayerName, validateHandicap, sanitizeString } from '@/lib/validation';
@@ -34,7 +39,10 @@ export default function Profile() {
   const { profile, loading, updateProfile, uploadAvatar } = useProfile();
   const { friends } = useFriends();
   const { settings, updateSettings } = useSettings();
+  const { isPro, tier, refreshSubscription } = useSubscription();
   const [copied, setCopied] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   const [fullName, setFullName] = useState('');
   const [handicap, setHandicap] = useState('');
@@ -47,11 +55,13 @@ export default function Profile() {
   
   // Track if initial load is complete to prevent auto-save on mount
   const isInitialized = useRef(false);
+  const hasLoadedOnce = useRef(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize form with profile data
+  // Initialize form with profile data - only on first load
   useEffect(() => {
-    if (profile) {
+    if (profile && !hasLoadedOnce.current) {
+      hasLoadedOnce.current = true;
       setFullName(profile.full_name || '');
       setHandicap(profile.handicap?.toString() || '');
       setTeePreference(profile.tee_preference);
@@ -71,6 +81,7 @@ export default function Profile() {
     const success = await updateProfile(updates);
     if (success) {
       hapticSuccess();
+      toast.success('Saved', { duration: 1000 });
     } else {
       hapticError();
       toast.error('Failed to save');
@@ -175,6 +186,43 @@ export default function Profile() {
   const handleHomeCourseClear = () => {
     setHomeCourseId(null);
     setHomeCourseName(null);
+  };
+
+  const handleRestorePurchases = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      toast.error('Purchases only available on iOS');
+      return;
+    }
+
+    setIsRestoring(true);
+    hapticLight();
+
+    try {
+      const result = await restorePurchases();
+      if (result.success && result.customerInfo?.isPro) {
+        hapticSuccess();
+        toast.success('Subscription restored!');
+        refreshSubscription();
+      } else if (result.success) {
+        toast.info('No active subscription found');
+      } else {
+        hapticError();
+        toast.error(result.error || 'Failed to restore');
+      }
+    } catch {
+      hapticError();
+      toast.error('Failed to restore purchases');
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    hapticLight();
+    const opened = await openManagementUrl();
+    if (!opened) {
+      toast.error('Could not open subscription management');
+    }
   };
 
   const handleCopyFriendCode = async () => {
@@ -438,6 +486,71 @@ export default function Profile() {
           </TechCard>
         </motion.section>
 
+        {/* Subscription Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.21 }}
+          className="space-y-3"
+        >
+          <div className="flex items-center gap-2">
+            <Crown className="w-4 h-4 text-primary" />
+            <span className="label-sm">Subscription</span>
+          </div>
+
+          <TechCard hover>
+            <TechCardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="label-sm">Current Plan</span>
+                  {isPro && <ProBadge size="sm" />}
+                </div>
+                <span className={cn(
+                  "text-sm font-bold",
+                  isPro ? "text-primary" : "text-muted-foreground"
+                )}>
+                  {isPro ? 'Pro' : 'Free'}
+                </span>
+              </div>
+
+              {!isPro ? (
+                <Button
+                  onClick={() => {
+                    hapticLight();
+                    setShowPaywall(true);
+                  }}
+                  className="w-full"
+                >
+                  <Crown className="w-4 h-4 mr-2" />
+                  Upgrade to Pro
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={handleManageSubscription}
+                  className="w-full"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Manage Subscription
+                </Button>
+              )}
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRestorePurchases}
+                disabled={isRestoring}
+                className="w-full text-muted-foreground"
+              >
+                {isRestoring ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : null}
+                Restore Purchases
+              </Button>
+            </TechCardContent>
+          </TechCard>
+        </motion.section>
+
         {/* Scoring Settings Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -577,6 +690,12 @@ export default function Profile() {
             </a>
           </div>
         </motion.div>
+
+        {/* Paywall Modal */}
+        <PaywallModal
+          open={showPaywall}
+          onOpenChange={setShowPaywall}
+        />
     </AppLayout>
   );
 }

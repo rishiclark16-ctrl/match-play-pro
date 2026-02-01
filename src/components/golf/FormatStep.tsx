@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check } from 'lucide-react';
+import { Check, Lock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TechCard, TechCardContent } from '@/components/ui/tech-card';
+import { useSubscription } from '@/hooks/useSubscription';
+import { ProBadge, PaywallModal } from '@/components/subscription';
 
 interface PlayerData {
   id: string;
@@ -87,6 +90,16 @@ export function FormatStep({
 }: FormatStepProps) {
   const validPlayers = players.filter(p => p.name.trim());
   const playerCount = validPlayers.length;
+
+  // Subscription gating
+  const { isPro, canUseGame, canUseSkinsCarryover } = useSubscription();
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallFeature, setPaywallFeature] = useState<string | undefined>();
+
+  const handleProFeature = (featureLabel: string, callback: () => void) => {
+    setPaywallFeature(featureLabel);
+    setShowPaywall(true);
+  };
 
   return (
     <motion.div
@@ -187,10 +200,26 @@ export function FormatStep({
                   <Checkbox
                     id="carryover"
                     checked={skinsCarryover}
-                    onCheckedChange={checked => onSkinsCarryoverChange(checked === true)}
+                    disabled={!canUseSkinsCarryover()}
+                    onCheckedChange={checked => {
+                      if (canUseSkinsCarryover()) {
+                        onSkinsCarryoverChange(checked === true);
+                      } else {
+                        handleProFeature('Skins Carryover', () => {});
+                      }
+                    }}
                   />
-                  <label htmlFor="carryover" className="text-sm font-medium">
+                  <label
+                    htmlFor="carryover"
+                    className="text-sm font-medium flex items-center gap-2"
+                    onClick={() => {
+                      if (!canUseSkinsCarryover()) {
+                        handleProFeature('Skins Carryover', () => {});
+                      }
+                    }}
+                  >
                     Carryovers (ties roll over)
+                    {!canUseSkinsCarryover() && <ProBadge size="sm" variant="subtle" />}
                   </label>
                 </div>
               </motion.div>
@@ -198,18 +227,32 @@ export function FormatStep({
           </TechCardContent>
         </TechCard>
 
-        {/* Nassau */}
-        <TechCard variant={nassauEnabled ? 'highlighted' : 'default'}>
+        {/* Nassau - Pro Feature */}
+        <TechCard variant={nassauEnabled ? 'highlighted' : 'default'} className={!canUseGame('nassau') ? 'opacity-75' : ''}>
           <TechCardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {nassauEnabled && <Check className="w-4 h-4 text-primary" />}
+                {nassauEnabled && canUseGame('nassau') && <Check className="w-4 h-4 text-primary" />}
+                {!canUseGame('nassau') && <Lock className="w-4 h-4 text-muted-foreground" />}
                 <div>
-                  <p className="font-semibold">Nassau</p>
+                  <p className="font-semibold flex items-center gap-2">
+                    Nassau
+                    {!canUseGame('nassau') && <ProBadge size="sm" />}
+                  </p>
                   <p className="text-sm text-muted-foreground">Front 9 + Back 9 + Overall</p>
                 </div>
               </div>
-              <Switch checked={nassauEnabled} onCheckedChange={onNassauEnabledChange} />
+              <Switch
+                checked={nassauEnabled}
+                disabled={!canUseGame('nassau')}
+                onCheckedChange={(checked) => {
+                  if (canUseGame('nassau')) {
+                    onNassauEnabledChange(checked);
+                  } else {
+                    handleProFeature('Nassau', () => {});
+                  }
+                }}
+              />
             </div>
 
             {nassauEnabled && (
@@ -246,18 +289,32 @@ export function FormatStep({
           </TechCardContent>
         </TechCard>
 
-        {/* Stableford */}
-        <TechCard variant={stablefordEnabled ? 'highlighted' : 'default'}>
+        {/* Stableford - Pro Feature */}
+        <TechCard variant={stablefordEnabled ? 'highlighted' : 'default'} className={!canUseGame('stableford') ? 'opacity-75' : ''}>
           <TechCardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {stablefordEnabled && <Check className="w-4 h-4 text-primary" />}
+                {stablefordEnabled && canUseGame('stableford') && <Check className="w-4 h-4 text-primary" />}
+                {!canUseGame('stableford') && <Lock className="w-4 h-4 text-muted-foreground" />}
                 <div>
-                  <p className="font-semibold">Stableford</p>
+                  <p className="font-semibold flex items-center gap-2">
+                    Stableford
+                    {!canUseGame('stableford') && <ProBadge size="sm" />}
+                  </p>
                   <p className="text-sm text-muted-foreground">Points-based scoring</p>
                 </div>
               </div>
-              <Switch checked={stablefordEnabled} onCheckedChange={onStablefordEnabledChange} />
+              <Switch
+                checked={stablefordEnabled}
+                disabled={!canUseGame('stableford')}
+                onCheckedChange={(checked) => {
+                  if (canUseGame('stableford')) {
+                    onStablefordEnabledChange(checked);
+                  } else {
+                    handleProFeature('Stableford', () => {});
+                  }
+                }}
+              />
             </div>
 
             {stablefordEnabled && (
@@ -285,21 +342,35 @@ export function FormatStep({
           </TechCardContent>
         </TechCard>
 
-        {/* Best Ball */}
+        {/* Best Ball - Pro Feature */}
         {playerCount >= 2 && (
-          <TechCard variant={bestBallEnabled ? 'highlighted' : 'default'}>
+          <TechCard variant={bestBallEnabled ? 'highlighted' : 'default'} className={!canUseGame('bestball') ? 'opacity-75' : ''}>
             <TechCardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {bestBallEnabled && <Check className="w-4 h-4 text-primary" />}
+                  {bestBallEnabled && canUseGame('bestball') && <Check className="w-4 h-4 text-primary" />}
+                  {!canUseGame('bestball') && <Lock className="w-4 h-4 text-muted-foreground" />}
                   <div>
-                    <p className="font-semibold">Best Ball</p>
+                    <p className="font-semibold flex items-center gap-2">
+                      Best Ball
+                      {!canUseGame('bestball') && <ProBadge size="sm" />}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       {playerCount === 4 ? '2v2 team format' : 'Team format - best score counts'}
                     </p>
                   </div>
                 </div>
-                <Switch checked={bestBallEnabled} onCheckedChange={onBestBallEnabledChange} />
+                <Switch
+                  checked={bestBallEnabled}
+                  disabled={!canUseGame('bestball')}
+                  onCheckedChange={(checked) => {
+                    if (canUseGame('bestball')) {
+                      onBestBallEnabledChange(checked);
+                    } else {
+                      handleProFeature('Best Ball', () => {});
+                    }
+                  }}
+                />
               </div>
 
               {bestBallEnabled && playerCount === 4 && (
@@ -335,19 +406,33 @@ export function FormatStep({
           </TechCard>
         )}
 
-        {/* Wolf */}
+        {/* Wolf - Pro Feature */}
         {playerCount === 4 && (
-          <TechCard variant={wolfEnabled ? 'highlighted' : 'default'}>
+          <TechCard variant={wolfEnabled ? 'highlighted' : 'default'} className={!canUseGame('wolf') ? 'opacity-75' : ''}>
             <TechCardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {wolfEnabled && <Check className="w-4 h-4 text-warning" />}
+                  {wolfEnabled && canUseGame('wolf') && <Check className="w-4 h-4 text-warning" />}
+                  {!canUseGame('wolf') && <Lock className="w-4 h-4 text-muted-foreground" />}
                   <div>
-                    <p className="font-semibold">Wolf</p>
+                    <p className="font-semibold flex items-center gap-2">
+                      Wolf
+                      {!canUseGame('wolf') && <ProBadge size="sm" />}
+                    </p>
                     <p className="text-sm text-muted-foreground">Rotating captain picks partner</p>
                   </div>
                 </div>
-                <Switch checked={wolfEnabled} onCheckedChange={onWolfEnabledChange} />
+                <Switch
+                  checked={wolfEnabled}
+                  disabled={!canUseGame('wolf')}
+                  onCheckedChange={(checked) => {
+                    if (canUseGame('wolf')) {
+                      onWolfEnabledChange(checked);
+                    } else {
+                      handleProFeature('Wolf', () => {});
+                    }
+                  }}
+                />
               </div>
 
               {wolfEnabled && (
@@ -389,6 +474,13 @@ export function FormatStep({
           </TechCard>
         )}
       </div>
+
+      {/* Paywall Modal */}
+      <PaywallModal
+        open={showPaywall}
+        onOpenChange={setShowPaywall}
+        feature={paywallFeature}
+      />
     </motion.div>
   );
 }

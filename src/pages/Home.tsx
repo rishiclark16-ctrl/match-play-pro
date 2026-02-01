@@ -25,6 +25,7 @@ import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { popIn, staggerItem } from '@/lib/animations';
+import logoImage from '@/assets/logo.png';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -123,14 +124,13 @@ export default function Home() {
   // Header content for AppLayout
   const headerContent = (
     <div className="px-6 pb-3 flex items-center justify-between pt-safe-content">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         {/* Logo mark */}
-        <div className="relative">
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-            <span className="text-2xl font-black text-primary-foreground tracking-tighter">M</span>
-          </div>
-          <div className="absolute -top-1 -left-1 w-3 h-3 border-l-2 border-t-2 border-primary" />
-        </div>
+        <img
+          src={logoImage}
+          alt="MATCH Golf"
+          className="w-12 h-12 rounded-xl"
+        />
 
         <div>
           <h1 className="text-2xl font-black tracking-tight text-foreground">MATCH</h1>

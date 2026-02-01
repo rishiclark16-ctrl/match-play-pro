@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { TechCard, TechCardContent } from '@/components/ui/tech-card';
 import { toast } from '@/hooks/use-toast';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
+import logoImage from '@/assets/logo.png';
 
 const signUpSchema = z.object({
   email: z.string().trim().email('Please enter a valid email'),
@@ -246,17 +247,17 @@ export default function Auth() {
           transition={{ delay: 0.1 }}
           className="text-center mb-10"
         >
-          <motion.div 
+          <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", damping: 15, stiffness: 200, delay: 0.2 }}
             className="relative inline-block mb-5"
           >
-            <div className="w-20 h-20 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-4xl font-black text-primary-foreground tracking-tighter">M</span>
-            </div>
-            {/* Corner accent on logo */}
-            <div className="absolute -top-2 -left-2 w-5 h-5 border-l-2 border-t-2 border-primary" />
+            <img
+              src={logoImage}
+              alt="MATCH Golf"
+              className="w-24 h-24 rounded-2xl shadow-lg"
+            />
           </motion.div>
           
           <motion.h1 

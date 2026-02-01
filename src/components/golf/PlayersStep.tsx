@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { Plus, Crown } from 'lucide-react';
 import { TechCard, TechCardContent } from '@/components/ui/tech-card';
 import { PlayerInput } from '@/components/golf/PlayerInput';
 import { QuickAddFriends } from '@/components/friends/QuickAddFriends';
 import { GroupSelector } from '@/components/groups/GroupSelector';
 import { Friend } from '@/hooks/useFriends';
 import { GolfGroup } from '@/hooks/useGroups';
+import { useSubscription, TIER_LIMITS } from '@/hooks/useSubscription';
+import { PaywallModal, ProBadge } from '@/components/subscription';
 import { cn } from '@/lib/utils';
 
 interface PlayerData {
@@ -48,6 +51,22 @@ export function PlayersStep({
   onNavigateToGroups,
 }: PlayersStepProps) {
   const validPlayers = players.filter(p => p.name.trim());
+
+  // Subscription gating for player limits
+  const { isPro, canAddPlayer, limits } = useSubscription();
+  const [showPaywall, setShowPaywall] = useState(false);
+
+  const maxPlayers = limits.maxPlayers;
+  const canAdd = canAddPlayer(players.length);
+  const atFreeLimit = !isPro && players.length >= TIER_LIMITS.free.maxPlayers;
+
+  const handleAddPlayer = () => {
+    if (canAdd) {
+      onAddPlayer();
+    } else {
+      setShowPaywall(true);
+    }
+  };
 
   return (
     <motion.div
@@ -112,14 +131,44 @@ export function PlayersStep({
         ))}
       </AnimatePresence>
 
-      {players.length < 4 && (
+      {/* Add Player Button */}
+      {players.length < maxPlayers && (
         <motion.button
           whileTap={{ scale: 0.98 }}
-          onClick={onAddPlayer}
-          className="w-full py-4 px-6 rounded-xl border-2 border-dashed border-primary/30 text-primary font-semibold flex items-center justify-center gap-2 hover:bg-primary-light hover:border-primary/50 transition-all"
+          onClick={handleAddPlayer}
+          className={cn(
+            'w-full py-4 px-6 rounded-xl border-2 border-dashed font-semibold flex items-center justify-center gap-2 transition-all',
+            canAdd
+              ? 'border-primary/30 text-primary hover:bg-primary-light hover:border-primary/50'
+              : 'border-gold/30 text-gold hover:bg-gold/5 hover:border-gold/50'
+          )}
         >
-          <Plus className="w-5 h-5" />
-          Add Player ({4 - players.length} remaining)
+          {canAdd ? (
+            <>
+              <Plus className="w-5 h-5" />
+              Add Player ({maxPlayers - players.length} remaining)
+            </>
+          ) : (
+            <>
+              <Crown className="w-5 h-5" />
+              Upgrade for more players
+            </>
+          )}
+        </motion.button>
+      )}
+
+      {/* At free limit - show upgrade prompt */}
+      {atFreeLimit && (
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setShowPaywall(true)}
+          className="w-full py-4 px-6 rounded-xl bg-gold/10 border-2 border-gold/30 text-gold font-semibold flex items-center justify-center gap-2 hover:bg-gold/20 transition-all"
+        >
+          <Crown className="w-5 h-5" />
+          <span>Upgrade to Pro for up to 8 players</span>
+          <ProBadge size="sm" variant="default" />
         </motion.button>
       )}
 
@@ -173,9 +222,23 @@ export function PlayersStep({
       <QuickAddFriends
         friends={friends}
         addedFriendIds={addedFriendIds}
-        onAddFriend={onAddFriend}
+        onAddFriend={(friend) => {
+          if (canAddPlayer(validPlayers.length)) {
+            onAddFriend(friend);
+          } else {
+            setShowPaywall(true);
+          }
+        }}
         onOpenFriends={onNavigateToFriends}
         currentPlayerCount={validPlayers.length}
+        maxPlayers={maxPlayers}
+      />
+
+      {/* Paywall Modal */}
+      <PaywallModal
+        open={showPaywall}
+        onOpenChange={setShowPaywall}
+        feature="More Players"
       />
     </motion.div>
   );

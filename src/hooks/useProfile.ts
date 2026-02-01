@@ -114,7 +114,9 @@ export function useProfile() {
   }, [fetchProfile]);
 
   const updateProfile = async (updates: ProfileUpdate): Promise<boolean> => {
-    if (!user) return false;
+    if (!user) {
+      return false;
+    }
 
     // Validate handicap if provided (valid range: -5 to 54)
     if (updates.handicap !== undefined && updates.handicap !== null) {
@@ -134,7 +136,8 @@ export function useProfile() {
           ...updates,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select();
 
       if (updateError) throw updateError;
 
@@ -142,7 +145,7 @@ export function useProfile() {
       setProfile(prev => prev ? { ...prev, ...updates } : null);
       return true;
     } catch (err) {
-      // Error handled by toast
+      console.error('[useProfile] Update failed:', err);
       setError('Failed to update profile');
       return false;
     }

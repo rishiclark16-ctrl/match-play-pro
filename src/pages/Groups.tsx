@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Users, Trash2, Edit2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Users, Trash2, Edit2, Loader2, Crown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AppBackground } from '@/components/ui/app-background';
 import { useGroups, GolfGroup } from '@/hooks/useGroups';
+import { useSubscription } from '@/hooks/useSubscription';
 import { CreateGroupSheet } from '@/components/groups/CreateGroupSheet';
+import { PaywallModal, ProBadge } from '@/components/subscription';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -17,6 +19,22 @@ export default function Groups() {
   const [showCreateSheet, setShowCreateSheet] = useState(false);
   const [editingGroup, setEditingGroup] = useState<GolfGroup | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
+
+  // Subscription gating for group limits
+  const { isPro, canAddGroup, limits } = useSubscription();
+  const atGroupLimit = !canAddGroup(groups.length);
+  const maxGroups = limits.maxGroups;
+
+  const handleCreateGroup = () => {
+    if (atGroupLimit) {
+      setShowPaywall(true);
+      return;
+    }
+    hapticLight();
+    setEditingGroup(null);
+    setShowCreateSheet(true);
+  };
 
   const handleDelete = async (groupId: string) => {
     setDeletingId(groupId);
@@ -64,14 +82,21 @@ export default function Groups() {
           </div>
           <Button
             size="sm"
-            onClick={() => {
-              hapticLight();
-              setEditingGroup(null);
-              setShowCreateSheet(true);
-            }}
+            onClick={handleCreateGroup}
+            variant={atGroupLimit ? 'outline' : 'default'}
+            className={atGroupLimit ? 'border-gold text-gold hover:bg-gold/10' : ''}
           >
-            <Plus className="h-4 w-4 mr-1" />
-            New
+            {atGroupLimit ? (
+              <>
+                <Crown className="h-4 w-4 mr-1" />
+                Upgrade
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-1" />
+                New
+              </>
+            )}
           </Button>
         </div>
       </header>
@@ -95,12 +120,7 @@ export default function Groups() {
             <p className="text-muted-foreground max-w-[280px] mb-6">
               Create a group with your regular golf buddies for faster round setup.
             </p>
-            <Button
-              onClick={() => {
-                hapticLight();
-                setShowCreateSheet(true);
-              }}
-            >
+            <Button onClick={handleCreateGroup}>
               <Plus className="h-4 w-4 mr-2" />
               Create Your First Group
             </Button>
@@ -180,6 +200,13 @@ export default function Groups() {
         open={showCreateSheet}
         onOpenChange={setShowCreateSheet}
         editingGroup={editingGroup}
+      />
+
+      {/* Paywall Modal */}
+      <PaywallModal
+        open={showPaywall}
+        onOpenChange={setShowPaywall}
+        feature="Unlimited Groups"
       />
     </div>
   );

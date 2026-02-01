@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { setSentryUser } from '@/lib/sentry';
 import { Capacitor } from '@capacitor/core';
 import { SignInWithApple, SignInWithAppleOptions, SignInWithAppleResponse } from '@capacitor-community/apple-sign-in';
+import { initializePurchases } from '@/services/purchases';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -21,6 +22,11 @@ export function useAuth() {
         // Update Sentry user context for error tracking
         if (session?.user) {
           setSentryUser({ id: session.user.id, email: session.user.email });
+
+          // Initialize RevenueCat for in-app purchases on native platforms
+          if (Capacitor.isNativePlatform()) {
+            initializePurchases(session.user.id).catch(console.error);
+          }
         } else {
           setSentryUser(null);
         }
