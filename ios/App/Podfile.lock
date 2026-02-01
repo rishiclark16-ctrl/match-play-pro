@@ -16,6 +16,7 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (6.0.3):
     - Capacitor
+  - RevenueCat (4.43.2)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -27,6 +28,11 @@ DEPENDENCIES:
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
+  - RevenueCat (= 4.43.2)
+
+SPEC REPOS:
+  trunk:
+    - RevenueCat
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -58,7 +64,8 @@ SPEC CHECKSUMS:
   CapacitorHaptics: 40f83026feeee9cfe36e89e9c98a3baaaf20c450
   CapacitorSplashScreen: ef140a8b1ea7244e0c245ce2dd4ce5251e7ab86a
   CapacitorStatusBar: 149cde8f1328ec3aa6cbdd872a55137ae3f98b16
+  RevenueCat: 3d934653b7e8b09af88fd47e9e84cfaf5d0a89ba
 
-PODFILE CHECKSUM: b8086b378df8f08229bf904e491f2c4fba369ee7
+PODFILE CHECKSUM: 715728148b2cf8ac963557760cbe1981564b4086
 
 COCOAPODS: 1.16.2

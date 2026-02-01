@@ -18,6 +18,9 @@ def capacitor_pods
   pod 'CapacitorHaptics', :path => '../../node_modules/@capacitor/haptics'
   pod 'CapacitorSplashScreen', :path => '../../node_modules/@capacitor/splash-screen'
   pod 'CapacitorStatusBar', :path => '../../node_modules/@capacitor/status-bar'
+
+  # RevenueCat for subscriptions
+  pod 'RevenueCat', '4.43.2'
 end
 
 target 'App' do

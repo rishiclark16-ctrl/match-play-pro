@@ -72,5 +72,7 @@
 	<string>MATCH Golf needs photo access to set your profile picture</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>MATCH Golf uses speech recognition for voice-activated score entry</string>
+	<key>RevenueCatAPIKey</key>
+	<string>$(REVENUECAT_API_KEY)</string>
 </dict>
 </plist>
