@@ -12,6 +12,195 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  * but this ensures a good user experience.
  */
 
+// ============================================================================
+// Input Validation Utilities
+// ============================================================================
+
+interface ValidationError {
+  field: string;
+  message: string;
+}
+
+interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+}
+
+interface SyncSubscriptionPayload {
+  isPro: boolean;
+  activeSubscription?: string;
+  expirationDate?: string;
+  willRenew?: boolean;
+}
+
+/**
+ * Validates a boolean field
+ */
+function validateBoolean(
+  value: unknown,
+  fieldName: string,
+  options: { required?: boolean } = {}
+): ValidationError | null {
+  const { required = false } = options;
+
+  if (value === undefined || value === null) {
+    if (required) {
+      return { field: fieldName, message: `${fieldName} is required` };
+    }
+    return null;
+  }
+
+  if (typeof value !== 'boolean') {
+    return { field: fieldName, message: `${fieldName} must be a boolean` };
+  }
+
+  return null;
+}
+
+/**
+ * Validates a string field
+ */
+function validateString(
+  value: unknown,
+  fieldName: string,
+  options: { required?: boolean; minLength?: number; maxLength?: number; pattern?: RegExp } = {}
+): ValidationError | null {
+  const { required = false, minLength, maxLength, pattern } = options;
+
+  if (value === undefined || value === null || value === '') {
+    if (required) {
+      return { field: fieldName, message: `${fieldName} is required` };
+    }
+    return null;
+  }
+
+  if (typeof value !== 'string') {
+    return { field: fieldName, message: `${fieldName} must be a string` };
+  }
+
+  if (minLength !== undefined && value.length < minLength) {
+    return { field: fieldName, message: `${fieldName} must be at least ${minLength} characters` };
+  }
+
+  if (maxLength !== undefined && value.length > maxLength) {
+    return { field: fieldName, message: `${fieldName} must be at most ${maxLength} characters` };
+  }
+
+  if (pattern && !pattern.test(value)) {
+    return { field: fieldName, message: `${fieldName} has invalid format` };
+  }
+
+  return null;
+}
+
+/**
+ * Validates an ISO 8601 date string
+ */
+function validateISODateString(
+  value: unknown,
+  fieldName: string,
+  options: { required?: boolean } = {}
+): ValidationError | null {
+  const { required = false } = options;
+
+  if (value === undefined || value === null || value === '') {
+    if (required) {
+      return { field: fieldName, message: `${fieldName} is required` };
+    }
+    return null;
+  }
+
+  if (typeof value !== 'string') {
+    return { field: fieldName, message: `${fieldName} must be a string` };
+  }
+
+  // ISO 8601 date pattern (allows various valid formats)
+  const isoDatePattern = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{1,3})?(Z|[+-]\d{2}:?\d{2})?)?$/;
+
+  if (!isoDatePattern.test(value)) {
+    return { field: fieldName, message: `${fieldName} must be a valid ISO 8601 date string` };
+  }
+
+  // Also verify it parses to a valid date
+  const parsed = new Date(value);
+  if (isNaN(parsed.getTime())) {
+    return { field: fieldName, message: `${fieldName} must be a valid date` };
+  }
+
+  // Reasonable date range check (not before year 2000, not after year 3000)
+  const minDate = new Date('2000-01-01T00:00:00Z');
+  const maxDate = new Date('3000-01-01T00:00:00Z');
+  if (parsed < minDate || parsed > maxDate) {
+    return { field: fieldName, message: `${fieldName} is outside acceptable date range` };
+  }
+
+  return null;
+}
+
+/**
+ * Validates the sync subscription request payload
+ */
+function validateSyncSubscriptionPayload(payload: unknown): ValidationResult {
+  const errors: ValidationError[] = [];
+
+  if (!payload || typeof payload !== 'object') {
+    return {
+      valid: false,
+      errors: [{ field: 'payload', message: 'Request body must be a JSON object' }]
+    };
+  }
+
+  const data = payload as Record<string, unknown>;
+
+  // Validate isPro - required boolean
+  const isProError = validateBoolean(data.isPro, 'isPro', { required: true });
+  if (isProError) errors.push(isProError);
+
+  // Validate activeSubscription - optional string (product ID)
+  const activeSubscriptionError = validateString(data.activeSubscription, 'activeSubscription', {
+    maxLength: 255,
+  });
+  if (activeSubscriptionError) errors.push(activeSubscriptionError);
+
+  // Validate expirationDate - optional ISO date string
+  const expirationDateError = validateISODateString(data.expirationDate, 'expirationDate');
+  if (expirationDateError) errors.push(expirationDateError);
+
+  // Validate willRenew - optional boolean
+  const willRenewError = validateBoolean(data.willRenew, 'willRenew');
+  if (willRenewError) errors.push(willRenewError);
+
+  // Cross-field validation: if isPro is true, activeSubscription should be provided
+  if (data.isPro === true && !data.activeSubscription) {
+    errors.push({
+      field: 'activeSubscription',
+      message: 'activeSubscription is required when isPro is true'
+    });
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+/**
+ * Creates a validation error response
+ */
+function createValidationErrorResponse(errors: ValidationError[], corsHeaders: Record<string, string>): Response {
+  return new Response(
+    JSON.stringify({
+      error: 'Validation failed',
+      details: errors,
+    }),
+    {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    }
+  );
+}
+
+// ============================================================================
+// Main Handler
+// ============================================================================
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -49,7 +238,27 @@ serve(async (req) => {
       );
     }
 
-    const body = await req.json();
+    // Parse JSON body with error handling
+    let rawPayload: unknown;
+    try {
+      rawPayload = await req.json();
+    } catch (parseError) {
+      console.error('Failed to parse JSON body:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate the request payload
+    const validationResult = validateSyncSubscriptionPayload(rawPayload);
+    if (!validationResult.valid) {
+      console.error('Sync subscription validation failed:', validationResult.errors);
+      return createValidationErrorResponse(validationResult.errors, corsHeaders);
+    }
+
+    // Type-safe extraction after validation
+    const body = rawPayload as SyncSubscriptionPayload;
     const { isPro, activeSubscription, expirationDate, willRenew } = body;
 
     console.log(`Syncing subscription for user ${user.id}:`, { isPro, activeSubscription, expirationDate });

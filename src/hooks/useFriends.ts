@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import {
+  friendRequestRateLimiter,
+  searchRateLimiter,
+  formatResetTime,
+} from '@/lib/rateLimiter';
 
 export interface Friend {
   id: string;
@@ -264,6 +269,15 @@ export function useFriends() {
   const sendFriendRequest = async (friendCode: string): Promise<{ success: boolean; error?: string }> => {
     if (!user) return { success: false, error: 'Not authenticated' };
 
+    // Check rate limit
+    const rateLimitResult = friendRequestRateLimiter.checkAndRecord(user.id);
+    if (!rateLimitResult.allowed) {
+      return {
+        success: false,
+        error: `Too many friend requests. Please wait ${formatResetTime(rateLimitResult.resetInMs)} and try again.`,
+      };
+    }
+
     try {
       // Find user by friend code
       const { data: profile, error: profileError } = await supabase
@@ -286,10 +300,19 @@ export function useFriends() {
   const sendFriendRequestByEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
     if (!user) return { success: false, error: 'Not authenticated' };
 
+    // Check rate limit
+    const rateLimitResult = friendRequestRateLimiter.checkAndRecord(user.id);
+    if (!rateLimitResult.allowed) {
+      return {
+        success: false,
+        error: `Too many friend requests. Please wait ${formatResetTime(rateLimitResult.resetInMs)} and try again.`,
+      };
+    }
+
     try {
       // Normalize email to lowercase
       const normalizedEmail = email.toLowerCase().trim();
-      
+
       // Find user by email in profiles
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -298,7 +321,7 @@ export function useFriends() {
         .maybeSingle();
 
       if (profileError) throw profileError;
-      
+
       if (!profile) {
         return { success: false, error: 'No user found with that email' };
       }
@@ -313,10 +336,19 @@ export function useFriends() {
   const sendFriendRequestByPhone = async (phone: string): Promise<{ success: boolean; error?: string }> => {
     if (!user) return { success: false, error: 'Not authenticated' };
 
+    // Check rate limit
+    const rateLimitResult = friendRequestRateLimiter.checkAndRecord(user.id);
+    if (!rateLimitResult.allowed) {
+      return {
+        success: false,
+        error: `Too many friend requests. Please wait ${formatResetTime(rateLimitResult.resetInMs)} and try again.`,
+      };
+    }
+
     try {
       // Normalize phone - remove common formatting characters
       const normalizedPhone = phone.replace(/[\s\-()+ ]/g, '').trim();
-      
+
       // Find user by phone in profiles (try both with and without formatting)
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
@@ -324,15 +356,17 @@ export function useFriends() {
         .not('phone', 'is', null);
 
       if (profileError) throw profileError;
-      
+
       // Find matching phone (normalize stored phones too)
-      const matchingProfile = profiles?.find(p => {
+      const matchingProfile = profiles?.find((p) => {
         const storedPhone = p.phone?.replace(/[\s\-()+ ]/g, '') || '';
-        return storedPhone === normalizedPhone || 
-               storedPhone.endsWith(normalizedPhone) || 
-               normalizedPhone.endsWith(storedPhone);
+        return (
+          storedPhone === normalizedPhone ||
+          storedPhone.endsWith(normalizedPhone) ||
+          normalizedPhone.endsWith(storedPhone)
+        );
       });
-      
+
       if (!matchingProfile) {
         return { success: false, error: 'No user found with that phone number' };
       }
@@ -400,6 +434,15 @@ export function useFriends() {
 
   const searchByCode = async (code: string): Promise<SearchResult | null> => {
     if (!code || code.length < 3) return null;
+    if (!user) return null;
+
+    // Check rate limit for search operations
+    const rateLimitResult = searchRateLimiter.checkAndRecord(user.id);
+    if (!rateLimitResult.allowed) {
+      // For search, we silently fail to avoid disrupting UX
+      // The rate limit will reset automatically
+      return null;
+    }
 
     try {
       const { data, error } = await supabase
@@ -409,7 +452,7 @@ export function useFriends() {
         .single();
 
       if (error || !data) return null;
-      
+
       return {
         id: data.id,
         fullName: data.full_name,

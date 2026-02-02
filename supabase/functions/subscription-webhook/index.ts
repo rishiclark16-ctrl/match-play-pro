@@ -17,6 +17,260 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  * - PRODUCT_CHANGE: User changed subscription tier
  */
 
+// ============================================================================
+// Input Validation Utilities
+// ============================================================================
+
+interface ValidationError {
+  field: string;
+  message: string;
+}
+
+interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+}
+
+// Valid RevenueCat event types
+const VALID_EVENT_TYPES = [
+  'INITIAL_PURCHASE',
+  'RENEWAL',
+  'CANCELLATION',
+  'UNCANCELLATION',
+  'EXPIRATION',
+  'BILLING_ISSUE_DETECTED',
+  'PRODUCT_CHANGE',
+  'SUBSCRIBER_ALIAS',
+  'NON_RENEWING_PURCHASE',
+  'SUBSCRIPTION_PAUSED',
+  'SUBSCRIPTION_EXTENDED',
+  'TRANSFER',
+  'TEST',
+] as const;
+
+type EventType = typeof VALID_EVENT_TYPES[number];
+
+interface WebhookEventData {
+  type: string;
+  app_user_id: string;
+  product_id?: string;
+  expiration_at_ms?: number;
+  original_transaction_id?: string;
+  transaction_id?: string;
+  purchased_at_ms?: number;
+}
+
+interface WebhookPayload {
+  event?: WebhookEventData;
+  api_version?: string;
+}
+
+/**
+ * Validates a string field
+ */
+function validateString(
+  value: unknown,
+  fieldName: string,
+  options: { required?: boolean; minLength?: number; maxLength?: number; pattern?: RegExp } = {}
+): ValidationError | null {
+  const { required = false, minLength, maxLength, pattern } = options;
+
+  if (value === undefined || value === null || value === '') {
+    if (required) {
+      return { field: fieldName, message: `${fieldName} is required` };
+    }
+    return null;
+  }
+
+  if (typeof value !== 'string') {
+    return { field: fieldName, message: `${fieldName} must be a string` };
+  }
+
+  if (minLength !== undefined && value.length < minLength) {
+    return { field: fieldName, message: `${fieldName} must be at least ${minLength} characters` };
+  }
+
+  if (maxLength !== undefined && value.length > maxLength) {
+    return { field: fieldName, message: `${fieldName} must be at most ${maxLength} characters` };
+  }
+
+  if (pattern && !pattern.test(value)) {
+    return { field: fieldName, message: `${fieldName} has invalid format` };
+  }
+
+  return null;
+}
+
+/**
+ * Validates a number field (including timestamps)
+ */
+function validateNumber(
+  value: unknown,
+  fieldName: string,
+  options: { required?: boolean; min?: number; max?: number } = {}
+): ValidationError | null {
+  const { required = false, min, max } = options;
+
+  if (value === undefined || value === null) {
+    if (required) {
+      return { field: fieldName, message: `${fieldName} is required` };
+    }
+    return null;
+  }
+
+  if (typeof value !== 'number' || isNaN(value)) {
+    return { field: fieldName, message: `${fieldName} must be a valid number` };
+  }
+
+  if (min !== undefined && value < min) {
+    return { field: fieldName, message: `${fieldName} must be at least ${min}` };
+  }
+
+  if (max !== undefined && value > max) {
+    return { field: fieldName, message: `${fieldName} must be at most ${max}` };
+  }
+
+  return null;
+}
+
+/**
+ * Validates that a value is one of allowed values
+ */
+function validateEnum(
+  value: unknown,
+  fieldName: string,
+  allowedValues: readonly string[],
+  options: { required?: boolean } = {}
+): ValidationError | null {
+  const { required = false } = options;
+
+  if (value === undefined || value === null || value === '') {
+    if (required) {
+      return { field: fieldName, message: `${fieldName} is required` };
+    }
+    return null;
+  }
+
+  if (typeof value !== 'string') {
+    return { field: fieldName, message: `${fieldName} must be a string` };
+  }
+
+  if (!allowedValues.includes(value)) {
+    return {
+      field: fieldName,
+      message: `${fieldName} must be one of: ${allowedValues.join(', ')}`
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Validates the RevenueCat webhook event data
+ */
+function validateWebhookEventData(eventData: unknown): ValidationResult {
+  const errors: ValidationError[] = [];
+
+  if (!eventData || typeof eventData !== 'object') {
+    return { valid: false, errors: [{ field: 'event', message: 'event data must be an object' }] };
+  }
+
+  const data = eventData as Record<string, unknown>;
+
+  // Validate event type - required
+  const typeError = validateEnum(data.type, 'event.type', VALID_EVENT_TYPES, { required: true });
+  if (typeError) errors.push(typeError);
+
+  // Validate app_user_id - required, must be a valid UUID format
+  const userIdError = validateString(data.app_user_id, 'event.app_user_id', {
+    required: true,
+    minLength: 1,
+    maxLength: 255,
+  });
+  if (userIdError) errors.push(userIdError);
+
+  // Validate product_id - optional but if present must be valid
+  const productIdError = validateString(data.product_id, 'event.product_id', {
+    maxLength: 255,
+  });
+  if (productIdError) errors.push(productIdError);
+
+  // Validate timestamps - must be positive numbers if present
+  const expirationError = validateNumber(data.expiration_at_ms, 'event.expiration_at_ms', {
+    min: 0,
+    max: 32503680000000, // Year 3000 in ms - reasonable upper bound
+  });
+  if (expirationError) errors.push(expirationError);
+
+  const purchasedError = validateNumber(data.purchased_at_ms, 'event.purchased_at_ms', {
+    min: 0,
+    max: 32503680000000,
+  });
+  if (purchasedError) errors.push(purchasedError);
+
+  // Validate transaction IDs - optional strings with reasonable length
+  const transactionIdError = validateString(data.transaction_id, 'event.transaction_id', {
+    maxLength: 500,
+  });
+  if (transactionIdError) errors.push(transactionIdError);
+
+  const originalTransactionIdError = validateString(data.original_transaction_id, 'event.original_transaction_id', {
+    maxLength: 500,
+  });
+  if (originalTransactionIdError) errors.push(originalTransactionIdError);
+
+  return { valid: errors.length === 0, errors };
+}
+
+/**
+ * Validates the complete webhook payload
+ */
+function validateWebhookPayload(payload: unknown): ValidationResult {
+  const errors: ValidationError[] = [];
+
+  if (!payload || typeof payload !== 'object') {
+    return { valid: false, errors: [{ field: 'payload', message: 'Request body must be a JSON object' }] };
+  }
+
+  const data = payload as Record<string, unknown>;
+
+  // Validate api_version if present
+  const apiVersionError = validateString(data.api_version, 'api_version', {
+    maxLength: 50,
+  });
+  if (apiVersionError) errors.push(apiVersionError);
+
+  // Validate event data - required
+  if (!data.event) {
+    errors.push({ field: 'event', message: 'event is required' });
+  } else {
+    const eventValidation = validateWebhookEventData(data.event);
+    errors.push(...eventValidation.errors);
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+/**
+ * Creates a validation error response
+ */
+function createValidationErrorResponse(errors: ValidationError[], corsHeaders: Record<string, string>): Response {
+  return new Response(
+    JSON.stringify({
+      error: 'Validation failed',
+      details: errors,
+    }),
+    {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    }
+  );
+}
+
+// ============================================================================
+// Main Handler
+// ============================================================================
+
 // CORS headers - restrict to RevenueCat webhook requests only
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://api.revenuecat.com',
@@ -51,22 +305,30 @@ serve(async (req) => {
       );
     }
 
-    const event = await req.json();
-    console.log('Received RevenueCat webhook:', JSON.stringify(event, null, 2));
-
-    // Extract event data
-    const {
-      event: eventData,
-      api_version,
-    } = event;
-
-    if (!eventData) {
-      console.error('Missing event data');
+    // Parse JSON body with error handling
+    let rawPayload: unknown;
+    try {
+      rawPayload = await req.json();
+    } catch (parseError) {
+      console.error('Failed to parse JSON body:', parseError);
       return new Response(
-        JSON.stringify({ error: 'Missing event data' }),
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('Received RevenueCat webhook:', JSON.stringify(rawPayload, null, 2));
+
+    // Validate the complete webhook payload
+    const validationResult = validateWebhookPayload(rawPayload);
+    if (!validationResult.valid) {
+      console.error('Webhook payload validation failed:', validationResult.errors);
+      return createValidationErrorResponse(validationResult.errors, corsHeaders);
+    }
+
+    // Type-safe extraction after validation
+    const event = rawPayload as WebhookPayload;
+    const eventData = event.event as WebhookEventData;
 
     const {
       type: eventType,
