@@ -20,6 +20,9 @@ dist-ssr
 # Apple Sign In private key
 *.p8
 
+# Supabase temp files (contains connection strings)
+supabase/.temp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

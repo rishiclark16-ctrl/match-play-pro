@@ -198,6 +198,35 @@ function createValidationErrorResponse(errors: ValidationError[], corsHeaders: R
 }
 
 // ============================================================================
+// Rate Limiting
+// ============================================================================
+
+// Simple in-memory rate limiting (resets on cold start)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_MAX_REQUESTS = 10; // 10 requests per hour per user
+
+function checkRateLimit(userId: string): { allowed: boolean; remaining: number; resetInSeconds: number } {
+  const now = Date.now();
+  const record = rateLimitMap.get(userId);
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(userId, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1, resetInSeconds: 3600 };
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    const resetInSeconds = Math.ceil((record.resetTime - now) / 1000);
+    return { allowed: false, remaining: 0, resetInSeconds };
+  }
+
+  record.count++;
+  const remaining = RATE_LIMIT_MAX_REQUESTS - record.count;
+  const resetInSeconds = Math.ceil((record.resetTime - now) / 1000);
+  return { allowed: true, remaining, resetInSeconds };
+}
+
+// ============================================================================
 // Main Handler
 // ============================================================================
 
@@ -235,6 +264,29 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Invalid authorization' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check rate limit (per user)
+    const rateLimit = checkRateLimit(user.id);
+    const rateLimitHeaders = {
+      'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
+      'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+      'X-RateLimit-Reset': rateLimit.resetInSeconds.toString(),
+    };
+
+    if (!rateLimit.allowed) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            ...rateLimitHeaders,
+            'Content-Type': 'application/json',
+            'Retry-After': rateLimit.resetInSeconds.toString()
+          }
+        }
       );
     }
 

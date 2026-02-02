@@ -9,6 +9,32 @@ const corsHeaders = {
 const GOLFCOURSEAPI_KEY = Deno.env.get('GOLFCOURSEAPI_KEY');
 const BASE_URL = 'https://api.golfcourseapi.com';
 
+// Simple in-memory rate limiting (resets on cold start, but helps prevent abuse)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 30; // 30 requests per minute per IP
+
+function checkRateLimit(clientId: string): { allowed: boolean; remaining: number; resetInSeconds: number } {
+  const now = Date.now();
+  const record = rateLimitMap.get(clientId);
+
+  if (!record || now > record.resetTime) {
+    // New window
+    rateLimitMap.set(clientId, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1, resetInSeconds: 60 };
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    const resetInSeconds = Math.ceil((record.resetTime - now) / 1000);
+    return { allowed: false, remaining: 0, resetInSeconds };
+  }
+
+  record.count++;
+  const remaining = RATE_LIMIT_MAX_REQUESTS - record.count;
+  const resetInSeconds = Math.ceil((record.resetTime - now) / 1000);
+  return { allowed: true, remaining, resetInSeconds };
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -16,6 +42,33 @@ serve(async (req) => {
   }
 
   try {
+    // Get client identifier for rate limiting (prefer forwarded IP, fallback to connection info)
+    const forwardedFor = req.headers.get('x-forwarded-for');
+    const clientId = forwardedFor?.split(',')[0]?.trim() || 'unknown';
+
+    // Check rate limit
+    const rateLimit = checkRateLimit(clientId);
+    const rateLimitHeaders = {
+      'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
+      'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+      'X-RateLimit-Reset': rateLimit.resetInSeconds.toString(),
+    };
+
+    if (!rateLimit.allowed) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            ...rateLimitHeaders,
+            'Content-Type': 'application/json',
+            'Retry-After': rateLimit.resetInSeconds.toString()
+          }
+        }
+      );
+    }
+
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
     const query = url.searchParams.get('query');
@@ -68,7 +121,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(data),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error: unknown) {
