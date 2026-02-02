@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/react';
 
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 const IS_PRODUCTION = import.meta.env.PROD;
+const SENTRY_RELEASE = import.meta.env.VITE_SENTRY_RELEASE;
 
 /**
  * Initialize Sentry error tracking
@@ -17,6 +18,7 @@ export function initSentry() {
   Sentry.init({
     dsn: SENTRY_DSN,
     environment: IS_PRODUCTION ? 'production' : 'development',
+    release: SENTRY_RELEASE,
 
     // Performance monitoring
     tracesSampleRate: IS_PRODUCTION ? 0.1 : 1.0, // 10% in prod, 100% in dev

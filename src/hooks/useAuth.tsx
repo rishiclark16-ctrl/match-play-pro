@@ -5,6 +5,7 @@ import { setSentryUser } from '@/lib/sentry';
 import { Capacitor } from '@capacitor/core';
 import { SignInWithApple, SignInWithAppleOptions, SignInWithAppleResponse } from '@capacitor-community/apple-sign-in';
 import { initializePurchases } from '@/services/purchases';
+import { authRateLimiter, formatResetTime } from '@/lib/rateLimiter';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -44,8 +45,17 @@ export function useAuth() {
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
+    // Check rate limit using email as identifier (user not authenticated yet)
+    const rateLimitResult = authRateLimiter.checkAndRecord(email.toLowerCase());
+    if (!rateLimitResult.allowed) {
+      const resetTime = formatResetTime(rateLimitResult.resetInMs);
+      return {
+        error: new Error(`Too many sign up attempts. Please try again in ${resetTime}.`)
+      };
+    }
+
     const redirectUrl = `${window.location.origin}/`;
-    
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -58,9 +68,18 @@ export function useAuth() {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ 
-      email, 
-      password 
+    // Check rate limit using email as identifier (user not authenticated yet)
+    const rateLimitResult = authRateLimiter.checkAndRecord(email.toLowerCase());
+    if (!rateLimitResult.allowed) {
+      const resetTime = formatResetTime(rateLimitResult.resetInMs);
+      return {
+        error: new Error(`Too many sign in attempts. Please try again in ${resetTime}.`)
+      };
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
     });
     return { error };
   };
@@ -74,6 +93,17 @@ export function useAuth() {
     // Only available on native iOS
     if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'ios') {
       return { error: new Error('Sign in with Apple is only available on iOS devices') };
+    }
+
+    // Check rate limit using device identifier for Apple Sign In
+    // Since we don't have email upfront, use a device-based key
+    const deviceKey = 'apple-sign-in-device';
+    const rateLimitResult = authRateLimiter.checkAndRecord(deviceKey);
+    if (!rateLimitResult.allowed) {
+      const resetTime = formatResetTime(rateLimitResult.resetInMs);
+      return {
+        error: new Error(`Too many sign in attempts. Please try again in ${resetTime}.`)
+      };
     }
 
     try {

@@ -3,6 +3,10 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
+
+// Generate a release version based on git commit or timestamp
+const RELEASE_VERSION = process.env.SENTRY_RELEASE || `match-golf@${new Date().toISOString().split('T')[0]}-${Date.now()}`;
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -13,6 +17,21 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
+    // Sentry source map upload - only in production builds with auth token
+    mode === "production" && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      release: {
+        name: RELEASE_VERSION,
+      },
+      sourcemaps: {
+        // Upload source maps to Sentry
+        filesToDeleteAfterUpload: ["./dist/**/*.map"],
+      },
+      // Disable telemetry
+      telemetry: false,
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'favicon-512.png', 'splash.png', 'sw-custom.js'],
@@ -93,7 +112,13 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    // Pass the release version to the client for Sentry initialization
+    'import.meta.env.VITE_SENTRY_RELEASE': JSON.stringify(RELEASE_VERSION),
+  },
   build: {
+    // Generate source maps for Sentry uploads (will be deleted after upload)
+    sourcemap: mode === "production",
     rollupOptions: {
       output: {
         manualChunks: {

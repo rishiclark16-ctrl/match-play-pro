@@ -121,6 +121,7 @@ export function createRateLimiter(actionType: string, config: RateLimitConfig) {
 
 // Pre-configured rate limiters for common use cases
 const ONE_MINUTE_MS = 60 * 1000;
+const FIFTEEN_MINUTES_MS = 15 * ONE_MINUTE_MS;
 
 export const friendRequestRateLimiter = createRateLimiter('friend-request', {
   maxRequests: 10,
@@ -130,6 +131,19 @@ export const friendRequestRateLimiter = createRateLimiter('friend-request', {
 export const searchRateLimiter = createRateLimiter('search', {
   maxRequests: 20,
   windowMs: ONE_MINUTE_MS,
+});
+
+// Authentication rate limiter: 5 attempts per 15 minutes
+// Uses email as the key since user is not authenticated yet
+export const authRateLimiter = createRateLimiter('auth', {
+  maxRequests: 5,
+  windowMs: FIFTEEN_MINUTES_MS,
+});
+
+// Password reset rate limiter: 3 attempts per 15 minutes
+export const passwordResetRateLimiter = createRateLimiter('password-reset', {
+  maxRequests: 3,
+  windowMs: FIFTEEN_MINUTES_MS,
 });
 
 /**
