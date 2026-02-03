@@ -72,18 +72,13 @@ export class ErrorBoundary extends Component<Props, State> {
               </Button>
             </div>
 
-            {/* Always show error details for debugging */}
-            {this.state.error && (
-              <details className="mt-6 text-left p-4 bg-muted rounded-xl" open>
+            {/* Show error details in development only */}
+            {import.meta.env.DEV && this.state.error && (
+              <details className="mt-6 text-left p-4 bg-muted rounded-xl">
                 <summary className="text-sm font-medium text-muted-foreground cursor-pointer">
-                  Error Details (tap to copy)
+                  Error Details
                 </summary>
-                <pre
-                  className="mt-2 text-xs text-destructive overflow-auto whitespace-pre-wrap break-words"
-                  onClick={() => {
-                    navigator.clipboard?.writeText(this.state.error?.message || '');
-                  }}
-                >
+                <pre className="mt-2 text-xs text-destructive overflow-auto whitespace-pre-wrap break-words">
                   {this.state.error.message}
                 </pre>
               </details>
