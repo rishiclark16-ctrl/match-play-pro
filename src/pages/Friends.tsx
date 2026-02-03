@@ -192,12 +192,20 @@ export default function Friends() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="heading-lg">Friends</h1>
           <p className="text-xs text-muted-foreground font-mono">
             <span className="number-display">{friends.length}</span> connection{friends.length !== 1 ? 's' : ''}
           </p>
         </div>
+        <Button
+          variant="outline"
+          onClick={() => navigate('/groups')}
+          className="gap-2 border-2"
+        >
+          <Users className="h-4 w-4" />
+          Groups
+        </Button>
       </div>
     </div>
   );
