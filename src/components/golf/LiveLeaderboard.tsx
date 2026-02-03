@@ -13,13 +13,15 @@ interface LiveLeaderboardProps {
   scores?: Score[];
 }
 
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(n => n[0])
+function getInitials(name: string | null | undefined): string {
+  if (!name) return '??';
+  const parts = name.split(' ').filter(Boolean);
+  if (parts.length === 0) return '??';
+  return parts
+    .map(n => n[0] || '')
     .join('')
     .toUpperCase()
-    .slice(0, 2);
+    .slice(0, 2) || '??';
 }
 
 function formatRelativeToPar(score: number): string {
@@ -212,7 +214,7 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
                 )}
               </div>
               <div className="min-w-0">
-                <p className="font-bold text-foreground truncate">{player1.name.split(' ')[0]}</p>
+                <p className="font-bold text-foreground truncate">{(player1.name || 'Player').split(' ')[0]}</p>
                 <p className="text-xs text-muted-foreground">
                   {formatRelativeToPar(useNetScoring && player1.netRelativeToPar !== undefined 
                     ? player1.netRelativeToPar 
@@ -244,7 +246,7 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
             {/* Player 2 */}
             <div className="flex-1 flex items-center justify-end gap-3">
               <div className="min-w-0 text-right">
-                <p className="font-bold text-foreground truncate">{player2.name.split(' ')[0]}</p>
+                <p className="font-bold text-foreground truncate">{(player2.name || 'Player').split(' ')[0]}</p>
                 <p className="text-xs text-muted-foreground">
                   {formatRelativeToPar(useNetScoring && player2.netRelativeToPar !== undefined 
                     ? player2.netRelativeToPar 
@@ -349,7 +351,7 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
               <div className="flex items-center gap-2">
                 {isTied ? (
                   <p className="font-bold text-foreground truncate">
-                    {tiedLeaders.map(p => p.name.split(' ')[0]).join(' & ')}
+                    {tiedLeaders.map(p => (p.name || 'Player').split(' ')[0]).join(' & ')}
                   </p>
                 ) : (
                   <p className="font-bold text-foreground truncate">{leader.name}</p>
@@ -406,7 +408,7 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-sm font-medium truncate max-w-[60px]">
-                      {player.name.split(' ')[0]}
+                      {(player.name || 'Player').split(' ')[0]}
                     </span>
                     <span className={cn(
                       "text-sm font-bold tabular-nums",
@@ -434,7 +436,7 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-sm font-medium">
-                  {sortedPlayers[1].name.split(' ')[0]}
+                  {(sortedPlayers[1].name || 'Player').split(' ')[0]}
                 </span>
               </div>
               

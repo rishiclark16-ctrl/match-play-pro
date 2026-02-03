@@ -160,7 +160,7 @@ export function PlayoffMode({
                 const holeNum = holeIdx + 1;
                 const scores = players
                   .map(p => ({
-                    name: p.name.split(' ')[0],
+                    name: (p.name || 'Player').split(' ')[0],
                     score: getPlayoffScore(p.id, holeNum),
                   }))
                   .filter(s => s.score !== undefined);

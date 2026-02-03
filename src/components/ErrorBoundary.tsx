@@ -22,6 +22,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Log to console in all environments for debugging
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Component stack:', errorInfo.componentStack);
   }
 
   handleRefresh = (): void => {
@@ -68,13 +72,18 @@ export class ErrorBoundary extends Component<Props, State> {
               </Button>
             </div>
 
-            {/* Show error in development */}
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="mt-6 text-left p-4 bg-muted rounded-xl">
+            {/* Always show error details for debugging */}
+            {this.state.error && (
+              <details className="mt-6 text-left p-4 bg-muted rounded-xl" open>
                 <summary className="text-sm font-medium text-muted-foreground cursor-pointer">
-                  Error Details
+                  Error Details (tap to copy)
                 </summary>
-                <pre className="mt-2 text-xs text-danger overflow-auto">
+                <pre
+                  className="mt-2 text-xs text-destructive overflow-auto whitespace-pre-wrap break-words"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(this.state.error?.message || '');
+                  }}
+                >
                   {this.state.error.message}
                 </pre>
               </details>

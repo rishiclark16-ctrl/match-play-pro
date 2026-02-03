@@ -32,7 +32,7 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
       const strokes = player.strokesPerHole?.get(currentHole) || 0;
       return {
         playerId: player.id,
-        playerName: player.name.split(' ')[0],
+        playerName: (player.name || 'Player').split(' ')[0],
         strokes
       };
     }).filter(p => p.strokes > 0);
@@ -157,7 +157,7 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
       
       return {
         playerId: player.id,
-        playerName: player.name.split(' ')[0],
+        playerName: (player.name || 'Player').split(' ')[0],
         message,
         urgency
       };

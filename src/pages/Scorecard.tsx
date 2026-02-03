@@ -51,26 +51,6 @@ export default function Scorecard() {
     setStatusBarDefault();
   }, []);
 
-  // Show tutorial for first 3 rounds
-  useEffect(() => {
-    if (!settingsLoaded || !round || isSpectator) return;
-    if (settings.tutorialDismissed) return;
-    if (settings.tutorialViewCount >= 3) return;
-
-    // Delay to let scorecard render first
-    const timer = setTimeout(() => setShowTutorial(true), 800);
-    return () => clearTimeout(timer);
-  }, [settingsLoaded, round, isSpectator, settings.tutorialDismissed, settings.tutorialViewCount]);
-
-  // Handle tutorial completion
-  const handleTutorialComplete = useCallback((dontShowAgain: boolean) => {
-    setShowTutorial(false);
-    updateSettings({
-      tutorialViewCount: settings.tutorialViewCount + 1,
-      ...(dontShowAgain && { tutorialDismissed: true }),
-    });
-  }, [settings.tutorialViewCount, updateSettings]);
-
   // Use Supabase for live sync
   const {
     round: supabaseRound,
@@ -124,6 +104,26 @@ export default function Scorecard() {
   // Use Supabase round if available, otherwise fall back to local
   const localRound = getRoundById(id || '');
   const round = supabaseRound || localRound;
+
+  // Show tutorial for first 3 rounds (must be after round is defined)
+  useEffect(() => {
+    if (!settingsLoaded || !round || isSpectator) return;
+    if (settings.tutorialDismissed) return;
+    if (settings.tutorialViewCount >= 3) return;
+
+    // Delay to let scorecard render first
+    const timer = setTimeout(() => setShowTutorial(true), 800);
+    return () => clearTimeout(timer);
+  }, [settingsLoaded, round, isSpectator, settings.tutorialDismissed, settings.tutorialViewCount]);
+
+  // Handle tutorial completion
+  const handleTutorialComplete = useCallback((dontShowAgain: boolean) => {
+    setShowTutorial(false);
+    updateSettings({
+      tutorialViewCount: settings.tutorialViewCount + 1,
+      ...(dontShowAgain && { tutorialDismissed: true }),
+    });
+  }, [settings.tutorialViewCount, updateSettings]);
 
   // Get scores - prefer Supabase data
   const roundScores = supabaseScores.length > 0 ? supabaseScores : getScoresForRound(round?.id || '');
@@ -338,7 +338,7 @@ export default function Scorecard() {
       const pressingPlayer = playersWithScores.find(p => p.id === autoPress.initiatedBy);
       handleAddPress(autoPress);
       toast.info(
-        `Auto-Press! ${pressingPlayer?.name.split(' ')[0] || 'Player'} is 2 down`,
+        `Auto-Press! ${(pressingPlayer?.name || 'Player').split(' ')[0]} is 2 down`,
         {
           description: `Press $${nassauGame.stakes} starting hole ${autoPress.startHole}`,
           duration: 4000,
@@ -597,8 +597,8 @@ export default function Scorecard() {
             transition={{ delay: 0.5 }}
             className="text-center text-xs text-muted-foreground/70 mt-6 font-medium"
           >
-            💡 Tap mic: "{playersWithScores[0]?.name.split(' ')[0]} 5,{' '}
-            {playersWithScores[1]?.name.split(' ')[0] || 'Tim'} 4"
+            💡 Tap mic: "{(playersWithScores[0]?.name || 'Mike').split(' ')[0]} 5,{' '}
+            {(playersWithScores[1]?.name || 'Tim').split(' ')[0]} 4"
           </motion.p>
         )}
       </main>

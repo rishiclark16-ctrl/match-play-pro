@@ -33,11 +33,12 @@ export function PlayerCard({
 }: PlayerCardProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   
-  // Get initials
-  const nameParts = player.name.trim().split(' ');
-  const initials = nameParts.length > 1 
-    ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase()
-    : player.name.substring(0, 2).toUpperCase();
+  // Get initials - with defensive null check
+  const playerName = player.name || 'Player';
+  const nameParts = playerName.trim().split(' ').filter(Boolean);
+  const initials = nameParts.length > 1
+    ? `${nameParts[0][0] || ''}${nameParts[nameParts.length - 1][0] || ''}`.toUpperCase()
+    : playerName.substring(0, 2).toUpperCase();
 
   // Get handicap strokes for current hole
   const holeStrokes = player.strokesPerHole?.get(currentHoleNumber) || 0;
@@ -169,7 +170,7 @@ export function PlayerCard({
       <div className="flex-1 min-w-0" onClick={handleCardTap}>
         <div className="flex items-center gap-2">
           <h4 className="font-semibold text-base text-foreground truncate">
-            {player.name.split(' ')[0]}
+            {playerName.split(' ')[0] || playerName}
           </h4>
           {hasHandicap && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-semibold">

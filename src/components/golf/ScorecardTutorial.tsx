@@ -38,9 +38,9 @@ export function ScorecardTutorial({
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
 
-  // Build tutorial steps with player names
-  const player1 = playerNames[0]?.split(' ')[0] || 'Mike';
-  const player2 = playerNames[1]?.split(' ')[0] || 'Tim';
+  // Build tutorial steps with player names - with null safety
+  const player1 = (playerNames[0] || '').split(' ')[0] || 'Mike';
+  const player2 = (playerNames[1] || '').split(' ')[0] || 'Tim';
 
   const steps: TutorialStep[] = [
     {
