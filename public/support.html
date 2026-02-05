@@ -3,285 +3,220 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MATCH Golf - Help & Support</title>
+  <title>Support - MATCH Golf</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: #0a0a0a;
-      color: #fafafa;
-      line-height: 1.6;
-      padding: 20px;
-      max-width: 800px;
-      margin: 0 auto;
+      font-family: 'Inter', system-ui, sans-serif;
+      line-height: 1.7;
+      color: #1a1a1a;
+      background: #f8faf9;
+      min-height: 100vh;
     }
-    header {
-      text-align: center;
-      padding: 40px 0;
-      border-bottom: 1px solid #27272a;
-      margin-bottom: 40px;
-    }
-    .logo {
-      width: 80px;
-      height: 80px;
-      background: #22c55e;
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
-      font-size: 40px;
-      font-weight: 900;
+    .header {
+      background: #0A4D32;
       color: white;
+      padding: 60px 20px;
+      text-align: center;
     }
-    h1 {
-      font-size: 28px;
-      font-weight: 800;
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 900;
       margin-bottom: 8px;
     }
-    .subtitle {
-      color: #a1a1aa;
-      font-size: 16px;
+    .header p {
+      opacity: 0.9;
+      font-size: 1.1rem;
     }
-    section {
-      margin-bottom: 40px;
-    }
-    h2 {
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #71717a;
-      margin-bottom: 16px;
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
     }
     .card {
-      background: #18181b;
-      border: 1px solid #27272a;
-      border-radius: 12px;
-      overflow: hidden;
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border: 1px solid #e8eceb;
     }
-    .contact-item {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 16px;
-      border-bottom: 1px solid #27272a;
-      text-decoration: none;
-      color: inherit;
-      transition: background 0.2s;
-    }
-    .contact-item:last-child {
-      border-bottom: none;
-    }
-    .contact-item:hover {
-      background: #27272a;
-    }
-    .icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-    }
-    .icon-email { background: rgba(34, 197, 94, 0.1); }
-    .icon-bug { background: rgba(234, 179, 8, 0.1); }
-    .icon-feature { background: rgba(59, 130, 246, 0.1); }
-    .contact-info h3 {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 2px;
-    }
-    .contact-info p {
-      font-size: 14px;
-      color: #a1a1aa;
-    }
-    details {
-      border-bottom: 1px solid #27272a;
-    }
-    details:last-child {
-      border-bottom: none;
-    }
-    summary {
-      padding: 16px;
-      cursor: pointer;
-      font-weight: 500;
+    .card h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0A4D32;
+      margin-bottom: 16px;
       display: flex;
       align-items: center;
       gap: 12px;
-      list-style: none;
     }
-    summary::-webkit-details-marker {
-      display: none;
-    }
-    summary:hover {
-      background: #27272a;
-    }
-    summary::before {
-      content: "?";
-      width: 24px;
-      height: 24px;
-      background: rgba(34, 197, 94, 0.1);
-      color: #22c55e;
-      border-radius: 50%;
+    .card h2 .icon {
+      width: 40px;
+      height: 40px;
+      background: #E8F5EE;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
-      font-weight: 700;
-      flex-shrink: 0;
+      font-size: 1.2rem;
     }
-    details[open] summary {
-      border-bottom: 1px solid #27272a;
+    .card p {
+      color: #555;
+      margin-bottom: 16px;
     }
-    .answer {
-      padding: 16px;
-      padding-left: 52px;
-      color: #a1a1aa;
-      font-size: 14px;
-    }
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 16px;
-      border-bottom: 1px solid #27272a;
-    }
-    .info-row:last-child {
-      border-bottom: none;
-    }
-    .info-label {
-      color: #a1a1aa;
-    }
-    .info-value {
-      font-weight: 500;
-    }
-    .legal-link {
-      display: block;
-      padding: 16px;
-      border-bottom: 1px solid #27272a;
+    .card a {
+      color: #0A4D32;
+      font-weight: 600;
       text-decoration: none;
-      color: inherit;
-      font-weight: 500;
     }
-    .legal-link:last-child {
+    .card a:hover {
+      text-decoration: underline;
+    }
+    .btn {
+      display: inline-block;
+      background: #0A4D32;
+      color: white;
+      padding: 14px 28px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #0d5f3d;
+      text-decoration: none;
+    }
+    .faq-item {
+      border-bottom: 1px solid #e8eceb;
+      padding: 20px 0;
+    }
+    .faq-item:last-child {
       border-bottom: none;
+      padding-bottom: 0;
     }
-    .legal-link:hover {
-      background: #27272a;
+    .faq-item h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+    .faq-item p {
+      color: #555;
+      margin-bottom: 0;
     }
     footer {
       text-align: center;
-      padding: 40px 0;
-      color: #71717a;
-      font-size: 14px;
+      padding: 40px 20px;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    footer a {
+      color: #0A4D32;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="logo">M</div>
-    <h1>MATCH Golf</h1>
-    <p class="subtitle">Help & Support</p>
-  </header>
+  <div class="header">
+    <h1>MATCH Golf Support</h1>
+    <p>We're here to help you play better golf</p>
+  </div>
 
-  <section>
-    <h2>Contact Us</h2>
+  <div class="container">
+    <!-- Contact Card -->
     <div class="card">
-      <a href="mailto:support@matchgolf.dev" class="contact-item">
-        <div class="icon icon-email">&#9993;</div>
-        <div class="contact-info">
-          <h3>Email Support</h3>
-          <p>support@matchgolf.dev</p>
-        </div>
-      </a>
-      <a href="mailto:bugs@matchgolf.dev?subject=Bug%20Report" class="contact-item">
-        <div class="icon icon-bug">&#128027;</div>
-        <div class="contact-info">
-          <h3>Report a Bug</h3>
-          <p>Help us improve MATCH</p>
-        </div>
-      </a>
-      <a href="mailto:feedback@matchgolf.dev?subject=Feature%20Request" class="contact-item">
-        <div class="icon icon-feature">&#128172;</div>
-        <div class="contact-info">
-          <h3>Feature Request</h3>
-          <p>Share your ideas</p>
-        </div>
-      </a>
+      <h2><span class="icon">✉️</span> Contact Us</h2>
+      <p>Have a question, found a bug, or want to share feedback? We'd love to hear from you.</p>
+      <a href="mailto:support@matchgolf.info" class="btn">Email Support</a>
+      <p style="margin-top: 16px; font-size: 0.9rem; color: #888;">
+        We typically respond within 24-48 hours.
+      </p>
     </div>
-  </section>
 
-  <section>
-    <h2>Frequently Asked Questions</h2>
+    <!-- FAQ Card -->
     <div class="card">
-      <details>
-        <summary>How do I start a new round?</summary>
-        <div class="answer">
-          Tap the "+" button on the home screen, select a course, add players, and choose your games. You can then share the round code or QR code with other players.
-        </div>
-      </details>
-      <details>
-        <summary>How do I join someone else's round?</summary>
-        <div class="answer">
-          Go to the Join Round page and either scan the QR code or enter the 6-character round code shared by the round creator.
-        </div>
-      </details>
-      <details>
-        <summary>How does handicap scoring work?</summary>
-        <div class="answer">
-          Players receive strokes on holes based on their handicap and the hole's difficulty rating. In match play, the difference between handicaps determines stroke allocation.
-        </div>
-      </details>
-      <details>
-        <summary>Can I use the app offline?</summary>
-        <div class="answer">
-          Yes! Scores are saved locally and will sync automatically when you regain internet connection. A status indicator shows your online/offline status.
-        </div>
-      </details>
-      <details>
-        <summary>How do I add friends?</summary>
-        <div class="answer">
-          Go to the Friends page and share your friend code, or enter another player's friend code to send them a request.
-        </div>
-      </details>
-      <details>
-        <summary>What games are supported?</summary>
-        <div class="answer">
-          MATCH supports Nassau, Skins, Match Play, Best Ball, Wolf, and Stableford scoring formats. You can enable multiple games in a single round.
-        </div>
-      </details>
-    </div>
-  </section>
+      <h2><span class="icon">❓</span> Frequently Asked Questions</h2>
 
-  <section>
-    <h2>About</h2>
-    <div class="card">
-      <div class="info-row">
-        <span class="info-label">Version</span>
-        <span class="info-value">1.0.0</span>
+      <div class="faq-item">
+        <h3>How do I start a new round?</h3>
+        <p>Tap the "+" button on the home screen, select a course, add players, and choose your game format. You can share the round code with others to join.</p>
       </div>
-      <div class="info-row">
-        <span class="info-label">Developer</span>
-        <span class="info-value">MATCH Golf</span>
+
+      <div class="faq-item">
+        <h3>How do I add friends?</h3>
+        <p>Go to the Friends tab, then share your unique 6-character friend code or scan a friend's QR code. You can also search by email or phone number.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>How are handicap strokes calculated?</h3>
+        <p>MATCH Golf uses the course handicap and slope rating you provide to calculate strokes per hole based on the hole's difficulty index. Strokes are distributed starting from the hardest holes.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Can I use voice commands to enter scores?</h3>
+        <p>Yes! Tap the microphone button on the scorecard and say things like "Mike 5, Tim 4" or "birdie for Sarah". You can also say "next hole" to advance.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Can I use the app offline?</h3>
+        <p>Yes! Scores are saved locally and will sync automatically when you regain internet connection.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>How do I cancel my subscription?</h3>
+        <p>Subscriptions are managed through Apple. Go to Settings > [Your Name] > Subscriptions on your iPhone, find MATCH Golf, and tap Cancel Subscription.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>How do I delete my account?</h3>
+        <p>Open the app, go to Settings (gear icon), scroll down and tap "Delete Account". This will permanently remove your account and all associated data.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>My scores aren't syncing between devices</h3>
+        <p>Make sure you're signed in with the same account on both devices and have an internet connection. Try pulling down to refresh on the home screen.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>How do settlements work?</h3>
+        <p>MATCH Golf tracks who owes whom after matches, but we don't process any payments. Settlements are just for record-keeping - you handle the actual payment between friends however you prefer (Venmo, cash, etc.).</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>What game formats are supported?</h3>
+        <p>MATCH supports Nassau, Skins, Match Play, Best Ball, and Stroke Play formats. You can enable multiple games in a single round.</p>
       </div>
     </div>
-  </section>
 
-  <section>
-    <h2>Legal</h2>
+    <!-- App Info Card -->
     <div class="card">
-      <a href="/privacy-policy.html" class="legal-link">Privacy Policy</a>
-      <a href="/terms-of-service.html" class="legal-link">Terms of Service</a>
+      <h2><span class="icon">📱</span> App Information</h2>
+      <p><strong>Current Version:</strong> 1.0.0</p>
+      <p><strong>Platform:</strong> iOS</p>
+      <p><strong>Requires:</strong> iOS 15.0 or later</p>
+      <p style="margin-top: 20px;">
+        <a href="/privacy.html">Privacy Policy</a> ·
+        <a href="/terms.html">Terms of Service</a>
+      </p>
     </div>
-  </section>
+
+    <!-- Social/Updates Card -->
+    <div class="card">
+      <h2><span class="icon">📣</span> Stay Updated</h2>
+      <p>Follow us for updates, tips, and new features:</p>
+      <p>
+        <strong>Website:</strong> <a href="https://matchgolf.info">matchgolf.info</a>
+      </p>
+    </div>
+  </div>
 
   <footer>
     <p>&copy; 2026 MATCH Golf. All rights reserved.</p>
+    <p style="margin-top: 8px;">
+      <a href="/privacy.html">Privacy Policy</a> ·
+      <a href="/terms.html">Terms of Service</a>
+    </p>
   </footer>
 </body>
 </html>

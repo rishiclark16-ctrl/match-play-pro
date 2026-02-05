@@ -34,6 +34,8 @@ export default defineConfig(({ mode }) => ({
     }),
     VitePWA({
       registerType: 'autoUpdate',
+      // Disable auto-injection - we'll register manually only on web (not Capacitor)
+      injectRegister: null,
       includeAssets: ['favicon.ico', 'favicon-512.png', 'splash.png', 'sw-custom.js'],
       manifest: {
         name: 'MATCH Golf',
