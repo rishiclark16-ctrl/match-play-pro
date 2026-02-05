@@ -145,20 +145,17 @@ export function ScorecardTutorial({
   if (!isOpen) return null;
 
   // Calculate tooltip position based on spotlight
-  const getTooltipStyle = () => {
+  const getTooltipStyle = (): React.CSSProperties => {
     if (currentStepData.position === 'center' || !spotlightRect) {
-      return {
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-      };
+      // Centered on screen - use flexbox parent for true centering
+      return {};
     }
 
     const padding = 16;
-    const tooltipHeight = 280; // Approximate tooltip height
 
     if (currentStepData.position === 'above') {
       return {
+        position: 'absolute',
         bottom: `${window.innerHeight - spotlightRect.top + padding}px`,
         left: '50%',
         transform: 'translateX(-50%)',
@@ -167,11 +164,14 @@ export function ScorecardTutorial({
 
     // Below
     return {
+      position: 'absolute',
       top: `${spotlightRect.bottom + padding}px`,
       left: '50%',
       transform: 'translateX(-50%)',
     };
   };
+
+  const isCentered = currentStepData.position === 'center' || !spotlightRect;
 
   return (
     <AnimatePresence>
@@ -243,25 +243,36 @@ export function ScorecardTutorial({
             </motion.div>
           )}
 
-          {/* Close button */}
+          {/* Close button - positioned below notch/dynamic island */}
           <button
             onClick={handleSkip}
-            className="absolute top-4 right-4 z-50 p-2 rounded-full bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute top-[70px] right-4 z-50 p-2 rounded-full bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Skip tutorial"
           >
             <X className="w-5 h-5" />
           </button>
 
           {/* Tooltip card */}
-          <motion.div
-            key={currentStep}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="absolute z-50 w-[calc(100%-32px)] max-w-sm"
-            style={getTooltipStyle()}
+          <div
+            className={cn(
+              "z-50 pointer-events-none",
+              isCentered
+                ? "fixed inset-0 flex items-center justify-center p-4"
+                : "absolute inset-0"
+            )}
           >
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className={cn(
+                "w-[calc(100%-32px)] max-w-sm pointer-events-auto",
+                !isCentered && "absolute"
+              )}
+              style={!isCentered ? getTooltipStyle() : undefined}
+            >
             <div className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
               {/* Header */}
               <div className="p-4 bg-primary/5 border-b border-border flex items-center gap-3">
@@ -358,6 +369,7 @@ export function ScorecardTutorial({
               </div>
             </div>
           </motion.div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
