@@ -1,0 +1,8 @@
+# Fastlane gitignore
+report.xml
+Preview.html
+screenshots/**/*.png
+test_output/
+build/
+*.ipa
+*.dSYM.zip

@@ -1,0 +1,197 @@
+# MATCH Golf - Fastlane Configuration
+# https://docs.fastlane.tools
+
+default_platform(:ios)
+
+# Constants
+APP_IDENTIFIER = "dev.matchgolf.app"
+SCHEME = "App"
+WORKSPACE = "App.xcworkspace"
+
+platform :ios do
+
+  # ==========================================
+  # BETA - TestFlight Deployment
+  # ==========================================
+
+  desc "Build and upload to TestFlight"
+  desc "Usage: fastlane beta"
+  lane :beta do
+    # Ensure we're on a clean git state (optional, can comment out)
+    # ensure_git_status_clean
+
+    # Increment build number automatically
+    increment_build_number(
+      xcodeproj: "App.xcodeproj"
+    )
+
+    # Build the app
+    build_app(
+      workspace: WORKSPACE,
+      scheme: SCHEME,
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "MatchGolf.ipa",
+      clean: true
+    )
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      notify_external_testers: false
+    )
+
+    # Get the new build number
+    build_num = get_build_number(xcodeproj: "App.xcodeproj")
+
+    # Success notification
+    puts "✅ Build #{build_num} uploaded to TestFlight!"
+  end
+
+  # ==========================================
+  # RELEASE - App Store Deployment
+  # ==========================================
+
+  desc "Build and submit to App Store review"
+  desc "Usage: fastlane release"
+  lane :release do
+    # Ensure we're on a clean git state
+    # ensure_git_status_clean
+
+    # Increment build number
+    increment_build_number(
+      xcodeproj: "App.xcodeproj"
+    )
+
+    # Build the app
+    build_app(
+      workspace: WORKSPACE,
+      scheme: SCHEME,
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "MatchGolf.ipa",
+      clean: true
+    )
+
+    # Upload to App Store Connect and submit for review
+    upload_to_app_store(
+      submit_for_review: false,  # Set to true to auto-submit
+      automatic_release: false,  # Set to true to auto-release after approval
+      skip_screenshots: true,    # We'll upload screenshots separately
+      skip_metadata: true,       # We'll set metadata in App Store Connect
+      force: true                # Skip HTML preview
+    )
+
+    build_num = get_build_number(xcodeproj: "App.xcodeproj")
+    puts "✅ Build #{build_num} uploaded to App Store Connect!"
+  end
+
+  # ==========================================
+  # BUILD ONLY - No upload
+  # ==========================================
+
+  desc "Build the app without uploading"
+  desc "Usage: fastlane build"
+  lane :build do
+    build_app(
+      workspace: WORKSPACE,
+      scheme: SCHEME,
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "MatchGolf.ipa",
+      clean: true
+    )
+
+    puts "✅ Build complete! IPA saved to ./build/MatchGolf.ipa"
+  end
+
+  # ==========================================
+  # VERSION MANAGEMENT
+  # ==========================================
+
+  desc "Bump version number"
+  desc "Usage: fastlane bump_version type:patch (or minor, major)"
+  lane :bump_version do |options|
+    type = options[:type] || "patch"
+
+    increment_version_number(
+      xcodeproj: "App.xcodeproj",
+      bump_type: type
+    )
+
+    version = get_version_number(xcodeproj: "App.xcodeproj", target: "App")
+    puts "✅ Version bumped to #{version}"
+  end
+
+  desc "Bump build number only"
+  desc "Usage: fastlane bump_build"
+  lane :bump_build do
+    increment_build_number(
+      xcodeproj: "App.xcodeproj"
+    )
+
+    build_num = get_build_number(xcodeproj: "App.xcodeproj")
+    puts "✅ Build number bumped to #{build_num}"
+  end
+
+  # ==========================================
+  # SCREENSHOTS
+  # ==========================================
+
+  desc "Capture App Store screenshots"
+  desc "Usage: fastlane screenshots"
+  lane :screenshots do
+    capture_screenshots(
+      workspace: WORKSPACE,
+      scheme: SCHEME,
+      output_directory: "./fastlane/screenshots",
+      clear_previous_screenshots: true,
+      skip_open_summary: true
+    )
+  end
+
+  # ==========================================
+  # CERTIFICATES & PROVISIONING
+  # ==========================================
+
+  desc "Sync certificates and provisioning profiles"
+  desc "Usage: fastlane certs"
+  lane :certs do
+    # This uses match to sync certs from a git repo
+    # First time setup: fastlane match init
+    match(
+      type: "appstore",
+      readonly: true
+    )
+  end
+
+  # ==========================================
+  # UTILITY LANES
+  # ==========================================
+
+  desc "Run tests"
+  lane :test do
+    run_tests(
+      workspace: WORKSPACE,
+      scheme: SCHEME,
+      devices: ["iPhone 15 Pro"],
+      clean: true
+    )
+  end
+
+  desc "Get current version and build number"
+  lane :version do
+    version = get_version_number(xcodeproj: "App.xcodeproj", target: "App")
+    build = get_build_number(xcodeproj: "App.xcodeproj")
+    puts "📱 MATCH Golf v#{version} (#{build})"
+  end
+
+  # ==========================================
+  # ERROR HANDLING
+  # ==========================================
+
+  error do |lane, exception|
+    puts "❌ Error in lane #{lane}: #{exception.message}"
+  end
+
+end

@@ -1,0 +1,28 @@
+# Snapfile - Screenshot configuration for MATCH Golf
+
+# Devices to capture screenshots on (App Store requirements)
+devices([
+  "iPhone 15 Pro Max",  # 6.7" display - Required
+  "iPhone 11 Pro Max"   # 6.5" display - Required
+])
+
+# Languages (add more if you localize)
+languages([
+  "en-US"
+])
+
+# Scheme to use
+scheme("App")
+workspace("App.xcworkspace")
+
+# Output directory
+output_directory("./fastlane/screenshots")
+
+# Clear old screenshots before capturing
+clear_previous_screenshots(true)
+
+# Don't stop on first error
+stop_after_first_error(false)
+
+# Skip open summary
+skip_open_summary(true)
