@@ -5,7 +5,7 @@ PODS:
     - Capacitor
   - CapacitorCommunityAppleSignIn (6.0.0):
     - Capacitor
-  - CapacitorCommunityContacts (7.1.0):
+  - CapacitorCommunityContacts (6.1.1):
     - Capacitor
   - CapacitorCommunityKeepAwake (5.0.1):
     - Capacitor
@@ -16,7 +16,7 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (6.0.3):
     - Capacitor
-  - RevenueCat (4.43.2)
+  - RevenueCat (5.57.0)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -28,7 +28,7 @@ DEPENDENCIES:
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
-  - RevenueCat (= 4.43.2)
+  - RevenueCat (~> 5.0)
 
 SPEC REPOS:
   trunk:
@@ -58,14 +58,14 @@ SPEC CHECKSUMS:
   Capacitor: c95400d761e376be9da6be5a05f226c0e865cebf
   CapacitorApp: a19ccb4f5f32d2534be5c6f524d5a9b614a1e8a7
   CapacitorCommunityAppleSignIn: c9c2541ee7580618055a91b3516c3f0313fe2544
-  CapacitorCommunityContacts: 35c8d69a138c4019548682a2d4632350b5b94044
+  CapacitorCommunityContacts: 9cde99c2cd212f6594677aae542436e2174c4ef2
   CapacitorCommunityKeepAwake: 6ca8e4c8db46f0cf99e33f1ca1162fbc97c8611e
   CapacitorCordova: 8d93e14982f440181be7304aa9559ca631d77fff
   CapacitorHaptics: 40f83026feeee9cfe36e89e9c98a3baaaf20c450
   CapacitorSplashScreen: ef140a8b1ea7244e0c245ce2dd4ce5251e7ab86a
   CapacitorStatusBar: 149cde8f1328ec3aa6cbdd872a55137ae3f98b16
-  RevenueCat: 3d934653b7e8b09af88fd47e9e84cfaf5d0a89ba
+  RevenueCat: 2d8aa56c68fa8e92c0d669e5e797c4a93e284f20
 
-PODFILE CHECKSUM: 715728148b2cf8ac963557760cbe1981564b4086
+PODFILE CHECKSUM: a8ed3d0e7948fc9ed53727e17e03b483af3baf80
 
 COCOAPODS: 1.16.2

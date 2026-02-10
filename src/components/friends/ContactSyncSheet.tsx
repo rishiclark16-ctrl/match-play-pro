@@ -39,6 +39,7 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
   const { sendFriendRequest } = useFriends();
   const [sendingTo, setSendingTo] = useState<string | null>(null);
   const [recentlySent, setRecentlySent] = useState<Set<string>>(new Set());
+  const [hasConsented, setHasConsented] = useState(false);
 
   const handleSync = async () => {
     if (!user) return;
@@ -103,14 +104,55 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
           </SheetDescription>
         </SheetHeader>
 
-        {!contacts && !loading && (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
+        {!contacts && !loading && !hasConsented && (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 border-2 border-primary/20">
               <Users className="h-10 w-10 text-primary" />
             </div>
             <h3 className="font-bold text-lg mb-2">Find Your Golf Buddies</h3>
+            <p className="text-sm text-muted-foreground max-w-[300px] mb-4">
+              We'll check your contacts to see who's already on the app.
+            </p>
+
+            <div className="w-full max-w-[320px] p-4 rounded-xl bg-muted/50 border border-border text-left space-y-2 mb-6">
+              <p className="text-xs font-semibold text-foreground">How it works:</p>
+              <ul className="text-xs text-muted-foreground space-y-1.5">
+                <li className="flex gap-2">
+                  <span className="shrink-0">1.</span>
+                  <span>Your contacts' email addresses and phone numbers are sent to our server to find matches.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="shrink-0">2.</span>
+                  <span>We only check for existing MATCH Golf users — your contact data is <strong className="text-foreground">not stored</strong> on our servers.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="shrink-0">3.</span>
+                  <span>You can then send friend requests or invite others to join.</span>
+                </li>
+              </ul>
+            </div>
+
+            <Button onClick={() => { setHasConsented(true); handleSync(); }} size="lg" className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              I Agree — Find Friends
+            </Button>
+            <button
+              onClick={onClose}
+              className="mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              No thanks
+            </button>
+          </div>
+        )}
+
+        {!contacts && !loading && hasConsented && (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 border-2 border-primary/20">
+              <Users className="h-10 w-10 text-primary" />
+            </div>
+            <h3 className="font-bold text-lg mb-2">Ready to Sync</h3>
             <p className="text-sm text-muted-foreground max-w-[280px] mb-6">
-              We'll check your contacts to see who's already on the app. You can then add them as friends or invite others.
+              Tap below to check your contacts for friends on the app.
             </p>
             <Button onClick={handleSync} size="lg" className="gap-2">
               <RefreshCw className="h-4 w-4" />

@@ -46,9 +46,18 @@ export function ManageScorekeepersSheet({
 
   if (!isCreator) return null;
 
+  // Max 1 additional scorekeeper (creator + 1 = 2 total)
+  const MAX_ADDITIONAL_SCOREKEEPERS = 1;
+  const atLimit = scorekeeperIds.length >= MAX_ADDITIONAL_SCOREKEEPERS;
+
   const handleToggle = async (player: Player, enabled: boolean) => {
     if (!player.profile_id) {
       toast.error('Guest players cannot be scorekeepers');
+      return;
+    }
+
+    if (enabled && atLimit) {
+      toast.error('Maximum of 2 scorekeepers per round');
       return;
     }
 
@@ -101,8 +110,14 @@ export function ManageScorekeepersSheet({
 
         <div className="space-y-3 pb-6">
           <p className="text-sm text-muted-foreground">
-            Choose who can enter and edit scores during this round.
+            Choose who can enter and edit scores. Max 2 scorekeepers per round (including you).
           </p>
+          <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/50 border border-border">
+            <span className="text-xs text-muted-foreground">Additional scorekeepers</span>
+            <span className={cn("text-xs font-semibold", atLimit ? "text-amber-500" : "text-primary")}>
+              {scorekeeperIds.length}/{MAX_ADDITIONAL_SCOREKEEPERS}
+            </span>
+          </div>
 
           <div className="space-y-2">
             {players.map((player, index) => {
@@ -163,7 +178,7 @@ export function ManageScorekeepersSheet({
                     <Switch
                       checked={isScorekeeper}
                       onCheckedChange={(checked) => handleToggle(player, checked)}
-                      disabled={isGuest || isProcessing}
+                      disabled={isGuest || isProcessing || (atLimit && !isScorekeeper)}
                     />
                   )}
 
@@ -179,7 +194,7 @@ export function ManageScorekeepersSheet({
 
           <div className="pt-4 border-t border-border">
             <p className="text-xs text-muted-foreground text-center">
-              💡 Only logged-in players can be designated as scorekeepers
+              Only logged-in players can be scorekeepers. Remove one to add another.
             </p>
           </div>
         </div>

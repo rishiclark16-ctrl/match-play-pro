@@ -9,9 +9,10 @@ final class RevenueCatManager: NSObject, ObservableObject {
     static let shared = RevenueCatManager()
 
     // MARK: - Configuration
-    private var apiKey: String {
+    private var apiKey: String? {
         guard let key = Bundle.main.infoDictionary?["RevenueCatAPIKey"] as? String, !key.isEmpty, !key.hasPrefix("$(") else {
-            fatalError("RevenueCat API key not configured. Set REVENUECAT_API_KEY in build settings.")
+            print("[RevenueCat] ERROR: API key not configured. Set REVENUECAT_API_KEY in build settings.")
+            return nil
         }
         return key
     }
@@ -23,6 +24,9 @@ final class RevenueCatManager: NSObject, ObservableObject {
     @Published var isProUser: Bool = false
     @Published var isLoading: Bool = false
 
+    /// Whether the SDK has been configured
+    private(set) var isConfigured: Bool = false
+
     // MARK: - Initialization
     override init() {
         super.init()
@@ -30,16 +34,23 @@ final class RevenueCatManager: NSObject, ObservableObject {
 
     /// Configure RevenueCat SDK - call this on app launch
     func configure(userId: String? = nil) {
+        guard !isConfigured else { return }
+        guard let key = apiKey else {
+            print("[RevenueCat] Skipping configuration - no API key")
+            return
+        }
+
         Purchases.logLevel = .debug
 
         if let userId = userId {
-            Purchases.configure(withAPIKey: apiKey, appUserID: userId)
+            Purchases.configure(withAPIKey: key, appUserID: userId)
         } else {
-            Purchases.configure(withAPIKey: apiKey)
+            Purchases.configure(withAPIKey: key)
         }
 
         // Set delegate
         Purchases.shared.delegate = self
+        isConfigured = true
 
         // Fetch initial data
         Task {
@@ -48,34 +59,44 @@ final class RevenueCatManager: NSObject, ObservableObject {
         }
     }
 
+    /// Ensure SDK is configured before making calls
+    func ensureConfigured() -> Bool {
+        if !isConfigured {
+            configure()
+        }
+        return isConfigured
+    }
+
     /// Login user with their ID
     func login(userId: String) async throws {
-        let (customerInfo, _) = try await Purchases.shared.logIn(userId)
-        await MainActor.run {
-            self.customerInfo = customerInfo
-            self.isProUser = customerInfo.entitlements[Self.entitlementID]?.isActive == true
+        guard ensureConfigured() else {
+            throw RevenueCatError.notConfigured
         }
+
+        let (customerInfo, _) = try await Purchases.shared.logIn(userId)
+        self.customerInfo = customerInfo
+        self.isProUser = customerInfo.entitlements[Self.entitlementID]?.isActive == true
     }
 
     /// Logout current user
     func logout() async throws {
+        guard isConfigured else { return }
+
         let customerInfo = try await Purchases.shared.logOut()
-        await MainActor.run {
-            self.customerInfo = customerInfo
-            self.isProUser = false
-        }
+        self.customerInfo = customerInfo
+        self.isProUser = false
     }
 
     // MARK: - Customer Info
 
     /// Refresh customer info from RevenueCat
     func refreshCustomerInfo() async {
+        guard isConfigured else { return }
+
         do {
             let info = try await Purchases.shared.customerInfo()
-            await MainActor.run {
-                self.customerInfo = info
-                self.isProUser = info.entitlements[Self.entitlementID]?.isActive == true
-            }
+            self.customerInfo = info
+            self.isProUser = info.entitlements[Self.entitlementID]?.isActive == true
         } catch {
             print("[RevenueCat] Error fetching customer info: \(error)")
         }
@@ -91,19 +112,43 @@ final class RevenueCatManager: NSObject, ObservableObject {
 
     /// Fetch available offerings
     func fetchOfferings() async {
+        guard isConfigured else {
+            print("[RevenueCat] Cannot fetch offerings - not configured")
+            return
+        }
+
         do {
             let offerings = try await Purchases.shared.offerings()
-            await MainActor.run {
-                self.offerings = offerings
-            }
+            self.offerings = offerings
+            print("[RevenueCat] Fetched offerings. Current: \(offerings.current?.identifier ?? "nil"). All: \(offerings.all.keys.joined(separator: ", "))")
         } catch {
             print("[RevenueCat] Error fetching offerings: \(error)")
         }
     }
 
-    /// Get the current offering
+    /// Get the current offering, fetching if needed
+    func getCurrentOffering() async -> Offering? {
+        if let current = offerings?.current {
+            return current
+        }
+        // Offerings not loaded yet, try fetching
+        await fetchOfferings()
+
+        // Try .current first, then fall back to first available offering
+        if let current = offerings?.current {
+            return current
+        }
+        if let first = offerings?.all.values.first {
+            print("[RevenueCat] No current offering set, falling back to: \(first.identifier)")
+            return first
+        }
+        print("[RevenueCat] No offerings available at all")
+        return nil
+    }
+
+    /// Get the current offering (cached only)
     var currentOffering: Offering? {
-        offerings?.current
+        offerings?.current ?? offerings?.all.values.first
     }
 
     /// Get monthly package
@@ -120,15 +165,17 @@ final class RevenueCatManager: NSObject, ObservableObject {
 
     /// Purchase a package
     func purchase(package: Package) async throws -> CustomerInfo {
+        guard isConfigured else {
+            throw RevenueCatError.notConfigured
+        }
+
         isLoading = true
         defer { isLoading = false }
 
         let result = try await Purchases.shared.purchase(package: package)
 
-        await MainActor.run {
-            self.customerInfo = result.customerInfo
-            self.isProUser = result.customerInfo.entitlements[Self.entitlementID]?.isActive == true
-        }
+        self.customerInfo = result.customerInfo
+        self.isProUser = result.customerInfo.entitlements[Self.entitlementID]?.isActive == true
 
         return result.customerInfo
     }
@@ -151,15 +198,17 @@ final class RevenueCatManager: NSObject, ObservableObject {
 
     /// Restore purchases
     func restorePurchases() async throws -> CustomerInfo {
+        guard isConfigured else {
+            throw RevenueCatError.notConfigured
+        }
+
         isLoading = true
         defer { isLoading = false }
 
         let customerInfo = try await Purchases.shared.restorePurchases()
 
-        await MainActor.run {
-            self.customerInfo = customerInfo
-            self.isProUser = customerInfo.entitlements[Self.entitlementID]?.isActive == true
-        }
+        self.customerInfo = customerInfo
+        self.isProUser = customerInfo.entitlements[Self.entitlementID]?.isActive == true
 
         return customerInfo
     }
@@ -207,7 +256,10 @@ final class RevenueCatManager: NSObject, ObservableObject {
 
     /// Convert offerings to dictionary for JavaScript bridge
     func offeringsToDictionary() -> [String: Any]? {
-        guard let current = currentOffering else { return nil }
+        guard let current = currentOffering else {
+            print("[RevenueCat] offeringsToDictionary: no current offering. All offerings: \(offerings?.all.keys.joined(separator: ", ") ?? "none")")
+            return nil
+        }
 
         var result: [String: Any] = [
             "identifier": current.identifier,

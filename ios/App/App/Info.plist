@@ -19,7 +19,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<string>6</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -67,7 +67,7 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>MATCH Golf uses your microphone for voice-activated score entry</string>
 	<key>NSContactsUsageDescription</key>
-	<string>MATCH Golf can access your contacts to easily invite friends to rounds</string>
+	<string>MATCH Golf checks your contacts' email addresses and phone numbers against our server to find friends who already use the app. Contact data is not stored on our servers.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>MATCH Golf needs photo access to set your profile picture</string>
 	<key>NSSpeechRecognitionUsageDescription</key>

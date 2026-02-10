@@ -7,6 +7,7 @@ interface UseScorekeeperResult {
   isCreator: boolean;
   scorekeeperIds: string[];
   loading: boolean;
+  atScorekeeperLimit: boolean;
   addScorekeeper: (profileId: string) => Promise<void>;
   removeScorekeeper: (profileId: string) => Promise<void>;
 }
@@ -86,6 +87,10 @@ export function useScorekeeper(roundId: string | undefined, players: { id: strin
     return scorekeeperIds.includes(user.id);
   }, [user?.id, isCreator, scorekeeperIds]);
 
+  // Max additional scorekeepers (besides creator) = 1, so total max = 2
+  const MAX_ADDITIONAL_SCOREKEEPERS = 1;
+  const atScorekeeperLimit = scorekeeperIds.length >= MAX_ADDITIONAL_SCOREKEEPERS;
+
   // Add a scorekeeper (only creator can do this)
   const addScorekeeper = useCallback(async (profileId: string) => {
     if (!roundId || !isCreator) return;
@@ -99,6 +104,11 @@ export function useScorekeeper(roundId: string | undefined, players: { id: strin
     // Prevent duplicates
     if (scorekeeperIds.includes(profileId)) {
       return; // Already a scorekeeper
+    }
+
+    // Enforce max 2 scorekeepers (creator + 1 additional)
+    if (scorekeeperIds.length >= MAX_ADDITIONAL_SCOREKEEPERS) {
+      throw new Error('Maximum of 2 scorekeepers per round (including creator)');
     }
 
     const newIds = [...scorekeeperIds, profileId];
@@ -139,6 +149,7 @@ export function useScorekeeper(roundId: string | undefined, players: { id: strin
     isCreator,
     scorekeeperIds,
     loading,
+    atScorekeeperLimit,
     addScorekeeper,
     removeScorekeeper,
   };

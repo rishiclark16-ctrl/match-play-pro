@@ -6,10 +6,8 @@ import RevenueCat
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Configure RevenueCat on app launch
-        Task { @MainActor in
-            RevenueCatManager.shared.configure()
-        }
+        // Configure RevenueCat on app launch (synchronous to avoid race conditions with JS bridge)
+        RevenueCatManager.shared.configure()
         return true
     }
 

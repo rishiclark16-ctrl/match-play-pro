@@ -89,6 +89,16 @@ export function useAuth() {
     return { error };
   };
 
+  const deleteAccount = async () => {
+    const { error } = await supabase.functions.invoke('delete-account');
+    if (error) {
+      return { error };
+    }
+    // Sign out locally after server-side deletion
+    await supabase.auth.signOut();
+    return { error: null };
+  };
+
   const signInWithAppleAuth = async () => {
     // Only available on native iOS
     if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'ios') {
@@ -107,12 +117,15 @@ export function useAuth() {
     }
 
     try {
+      const rawNonce = generateNonce();
+      const hashedNonce = await sha256(rawNonce);
+
       const options: SignInWithAppleOptions = {
         clientId: 'dev.matchgolf.app',
         redirectURI: 'https://matchgolf.dev',
         scopes: 'email name',
         state: 'signIn',
-        nonce: generateNonce(),
+        nonce: hashedNonce,
       };
 
       const result: SignInWithAppleResponse = await SignInWithApple.authorize(options);
@@ -122,10 +135,11 @@ export function useAuth() {
       }
 
       // Sign in to Supabase with the Apple identity token
+      // Supabase needs the RAW nonce (it hashes internally to compare with Apple's token)
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: result.response.identityToken,
-        nonce: options.nonce,
+        nonce: rawNonce,
       });
 
       if (error) {
@@ -156,7 +170,7 @@ export function useAuth() {
     }
   };
 
-  return { user, session, loading, signUp, signIn, signOut, signInWithApple: signInWithAppleAuth };
+  return { user, session, loading, signUp, signIn, signOut, deleteAccount, signInWithApple: signInWithAppleAuth };
 }
 
 // Generate a random nonce for Apple Sign In security
@@ -169,4 +183,13 @@ function generateNonce(length = 32): string {
     result += chars[randomValues[i] % chars.length];
   }
   return result;
+}
+
+// SHA-256 hash for Apple Sign In nonce
+async function sha256(input: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }

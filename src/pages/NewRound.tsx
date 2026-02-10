@@ -325,6 +325,7 @@ export default function NewRound() {
             handicap: p.handicap,
             manualStrokes: p.manualStrokes ?? 0,
             teamId: bestBallTeams.find(t => t.playerIds.includes(p.id))?.id,
+            profileId: p.profileId,
           })),
       });
 

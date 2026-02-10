@@ -41,6 +41,12 @@ public class RevenueCatPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         Task { @MainActor in
+            // Ensure RevenueCat is configured before login
+            guard RevenueCatManager.shared.ensureConfigured() else {
+                call.reject("RevenueCat is not configured. Check that REVENUECAT_API_KEY is set in build settings.")
+                return
+            }
+
             do {
                 try await RevenueCatManager.shared.login(userId: userId)
                 call.resolve(RevenueCatManager.shared.customerInfoToDictionary())
@@ -99,13 +105,20 @@ public class RevenueCatPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         Task { @MainActor in
-            guard let offering = RevenueCatManager.shared.currentOffering else {
-                call.reject("No offering available")
+            guard RevenueCatManager.shared.isConfigured else {
+                call.reject("RevenueCat is not configured")
+                return
+            }
+
+            // Fetch offerings if not already loaded
+            guard let offering = await RevenueCatManager.shared.getCurrentOffering() else {
+                call.reject("No offering available. Please check your RevenueCat dashboard and App Store Connect product configuration.")
                 return
             }
 
             guard let package = offering.availablePackages.first(where: { $0.identifier == packageId }) else {
-                call.reject("Package not found: \(packageId)")
+                let available = offering.availablePackages.map { $0.identifier }.joined(separator: ", ")
+                call.reject("Package '\(packageId)' not found. Available: \(available)")
                 return
             }
 
@@ -116,7 +129,11 @@ public class RevenueCatPlugin: CAPPlugin, CAPBridgedPlugin {
                     "customerInfo": RevenueCatManager.shared.customerInfoToDictionary()
                 ])
             } catch {
-                if let error = error as NSError?, error.domain == "RevenueCat.ErrorCode" && error.code == 1 {
+                if let rcError = error as? RevenueCat.ErrorCode, rcError == .purchaseCancelledError {
+                    call.resolve(["success": false, "cancelled": true])
+                    return
+                }
+                if let nsError = error as NSError?, nsError.domain == "RevenueCat.ErrorCode" && nsError.code == 1 {
                     // User cancelled
                     call.resolve(["success": false, "cancelled": true])
                     return
@@ -128,6 +145,11 @@ public class RevenueCatPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func restorePurchases(_ call: CAPPluginCall) {
         Task { @MainActor in
+            guard RevenueCatManager.shared.isConfigured else {
+                call.reject("RevenueCat is not configured")
+                return
+            }
+
             do {
                 _ = try await RevenueCatManager.shared.restorePurchases()
                 call.resolve([

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Settings, HelpCircle, Mic, Crown, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Settings, HelpCircle, Mic, Crown, ExternalLink, Trash2, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,7 +35,7 @@ const TEE_OPTIONS = [
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, deleteAccount } = useAuth();
   const { profile, loading, updateProfile, uploadAvatar } = useProfile();
   const { friends } = useFriends();
   const { settings, updateSettings } = useSettings();
@@ -52,6 +52,9 @@ export default function Profile() {
   const [discoveryEmail, setDiscoveryEmail] = useState('');
   const [discoveryPhone, setDiscoveryPhone] = useState('');
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   
   // Track if initial load is complete to prevent auto-save on mount
   const isInitialized = useRef(false);
@@ -236,6 +239,29 @@ export default function Profile() {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('Failed to copy');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') return;
+
+    setIsDeletingAccount(true);
+    hapticLight();
+
+    try {
+      const { error } = await deleteAccount();
+      if (error) {
+        hapticError();
+        toast.error('Failed to delete account', { description: 'Please try again or contact support.' });
+        setIsDeletingAccount(false);
+      } else {
+        hapticSuccess();
+        toast.success('Account deleted');
+      }
+    } catch {
+      hapticError();
+      toast.error('Failed to delete account');
+      setIsDeletingAccount(false);
     }
   };
 
@@ -657,6 +683,103 @@ export default function Profile() {
             </span>
           </div>
         </motion.section>
+
+        {/* Delete Account Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.26 }}
+          className="space-y-3"
+        >
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-destructive" />
+            <span className="label-sm text-destructive">Danger Zone</span>
+          </div>
+
+          <TechCard>
+            <TechCardContent className="space-y-3">
+              <div>
+                <p className="text-sm font-semibold">Delete Account</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Permanently delete your account and all associated data. This action cannot be undone.
+                </p>
+              </div>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  hapticLight();
+                  setShowDeleteConfirm(true);
+                  setDeleteConfirmText('');
+                }}
+                className="w-full"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Account
+              </Button>
+            </TechCardContent>
+          </TechCard>
+        </motion.section>
+
+        {/* Delete Account Confirmation Dialog */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-card border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-xl"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">Delete Account?</h3>
+                  <p className="text-xs text-muted-foreground">This cannot be undone</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                This will permanently delete your account, rounds, scores, friends, and all other data. Any active subscriptions will need to be cancelled separately through the App Store.
+              </p>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">
+                  Type <span className="font-mono font-bold text-foreground">DELETE</span> to confirm
+                </Label>
+                <Input
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="DELETE"
+                  className="font-mono text-center"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeletingAccount}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteAccount}
+                  disabled={deleteConfirmText !== 'DELETE' || isDeletingAccount}
+                  className="flex-1"
+                >
+                  {isDeletingAccount ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    'Delete Forever'
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
 
         {/* Support & Legal Links */}
         <motion.div

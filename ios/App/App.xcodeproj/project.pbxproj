@@ -39,6 +39,7 @@
 		CD8EE7E72F2BD9C8006E8011 /* RevenueCatManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevenueCatManager.swift; sourceTree = "<group>"; };
 		CD8EE7E82F2BD9C8006E8011 /* RevenueCatPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevenueCatPlugin.swift; sourceTree = "<group>"; };
 		CD8EE7EC2F2BD9C8006E8011 /* RevenueCatPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RevenueCatPlugin.m; sourceTree = "<group>"; };
+		CD8EE7ED2F2BD9C8006E8011 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,6 +75,7 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				CD8EE7ED2F2BD9C8006E8011 /* Config.xcconfig */,
 				CD8EE7E72F2BD9C8006E8011 /* RevenueCatManager.swift */,
 				CD8EE7E82F2BD9C8006E8011 /* RevenueCatPlugin.swift */,
 				CD8EE7EC2F2BD9C8006E8011 /* RevenueCatPlugin.m */,
@@ -257,6 +259,7 @@
 /* Begin XCBuildConfiguration section */
 		504EC3141FED79650016851F /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CD8EE7ED2F2BD9C8006E8011 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -320,6 +323,7 @@
 		};
 		504EC3151FED79650016851F /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CD8EE7ED2F2BD9C8006E8011 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -382,7 +386,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 6;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -393,7 +397,7 @@
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.matchgolf.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REVENUECAT_API_KEY = "$(REVENUECAT_API_KEY)";
+				REVENUECAT_API_KEY = appl_xWFDfdKOsXHuszaTSfFxLzPiJGt;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -407,7 +411,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 6;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -417,7 +421,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.matchgolf.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REVENUECAT_API_KEY = "$(REVENUECAT_API_KEY)";
+				REVENUECAT_API_KEY = appl_xWFDfdKOsXHuszaTSfFxLzPiJGt;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

@@ -20,7 +20,7 @@ def capacitor_pods
   pod 'CapacitorStatusBar', :path => '../../node_modules/@capacitor/status-bar'
 
   # RevenueCat for subscriptions
-  pod 'RevenueCat', '4.43.2'
+  pod 'RevenueCat', '~> 5.0'
 end
 
 target 'App' do

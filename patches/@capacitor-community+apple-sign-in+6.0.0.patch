@@ -1,0 +1,30 @@
+diff --git a/node_modules/@capacitor-community/apple-sign-in/ios/Plugin/Plugin.swift b/node_modules/@capacitor-community/apple-sign-in/ios/Plugin/Plugin.swift
+index f273691..bd25c5e 100755
+--- a/node_modules/@capacitor-community/apple-sign-in/ios/Plugin/Plugin.swift
++++ b/node_modules/@capacitor-community/apple-sign-in/ios/Plugin/Plugin.swift
+@@ -19,7 +19,11 @@ public class SignInWithApple: CAPPlugin {
+ 
+         let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+         authorizationController.delegate = self
+-        authorizationController.performRequests()
++        authorizationController.presentationContextProvider = self
++
++        DispatchQueue.main.async {
++            authorizationController.performRequests()
++        }
+     }
+ 
+     func getRequestedScopes(from call: CAPPluginCall) -> [ASAuthorization.Scope]? {
+@@ -43,6 +47,12 @@ public class SignInWithApple: CAPPlugin {
+     }
+ }
+ 
++extension SignInWithApple: ASAuthorizationControllerPresentationContextProviding {
++    public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
++        return self.bridge?.webView?.window ?? UIWindow()
++    }
++}
++
+ extension SignInWithApple: ASAuthorizationControllerDelegate {
+     public func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+         guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else { return }
