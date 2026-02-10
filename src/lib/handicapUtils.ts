@@ -1,15 +1,19 @@
 import { HoleInfo, Player } from '@/types/golf';
 
 /**
- * Calculate Course Handicap from player's Handicap Index and course Slope Rating
- * Formula: Course Handicap = (Handicap Index × Slope Rating) / 113
- * 113 is the standard slope rating
+ * Calculate Course Handicap using the USGA WHS formula (2020+):
+ * Course Handicap = (Handicap Index × (Slope Rating / 113)) + (Course Rating – Par)
  */
 export function calculateCourseHandicap(
-  handicapIndex: number, 
-  slopeRating: number = 113
+  handicapIndex: number,
+  slopeRating: number = 113,
+  courseRating?: number,
+  par?: number
 ): number {
-  return Math.round((handicapIndex * slopeRating) / 113);
+  const base = (handicapIndex * slopeRating) / 113;
+  const ratingAdjustment = (courseRating !== undefined && par !== undefined)
+    ? (courseRating - par) : 0;
+  return Math.round(base + ratingAdjustment);
 }
 
 /**
@@ -19,9 +23,11 @@ export function calculateCourseHandicap(
 export function calculatePlayingHandicap(
   handicapIndex: number,
   slopeRating: number = 113,
-  holes: 9 | 18 = 18
+  holes: 9 | 18 = 18,
+  courseRating?: number,
+  par?: number
 ): number {
-  const courseHandicap = calculateCourseHandicap(handicapIndex, slopeRating);
+  const courseHandicap = calculateCourseHandicap(handicapIndex, slopeRating, courseRating, par);
   return holes === 9 ? Math.round(courseHandicap / 2) : courseHandicap;
 }
 
@@ -155,7 +161,9 @@ export function calculateMatchPlayStrokes(
   player2: { id: string; name: string; handicap?: number; manualStrokes?: number },
   slopeRating: number = 113,
   holes: 9 | 18 = 18,
-  handicapMode: 'auto' | 'manual' = 'auto'
+  handicapMode: 'auto' | 'manual' = 'auto',
+  courseRating?: number,
+  par?: number
 ): MatchPlayHandicapInfo {
   let p1CourseHcp: number;
   let p2CourseHcp: number;
@@ -166,11 +174,11 @@ export function calculateMatchPlayStrokes(
     p2CourseHcp = player2.manualStrokes ?? 0;
   } else {
     // In auto mode, calculate course handicap from handicap index
-    p1CourseHcp = player1.handicap !== undefined 
-      ? calculatePlayingHandicap(player1.handicap, slopeRating, holes) 
+    p1CourseHcp = player1.handicap !== undefined
+      ? calculatePlayingHandicap(player1.handicap, slopeRating, holes, courseRating, par)
       : 0;
-    p2CourseHcp = player2.handicap !== undefined 
-      ? calculatePlayingHandicap(player2.handicap, slopeRating, holes) 
+    p2CourseHcp = player2.handicap !== undefined
+      ? calculatePlayingHandicap(player2.handicap, slopeRating, holes, courseRating, par)
       : 0;
   }
 
@@ -232,18 +240,20 @@ export function buildStrokePlayStrokesMap(
   holeInfo: HoleInfo[],
   slopeRating: number = 113,
   holes: 9 | 18 = 18,
-  handicapMode: 'auto' | 'manual' = 'auto'
+  handicapMode: 'auto' | 'manual' = 'auto',
+  courseRating?: number,
+  par?: number
 ): Map<string, Map<number, number>> {
   const map = new Map<string, Map<number, number>>();
-  
+
   for (const player of players) {
     let courseHcp: number;
-    
+
     if (handicapMode === 'manual') {
       courseHcp = player.manualStrokes ?? 0;
     } else {
-      courseHcp = player.handicap !== undefined 
-        ? calculatePlayingHandicap(player.handicap, slopeRating, holes) 
+      courseHcp = player.handicap !== undefined
+        ? calculatePlayingHandicap(player.handicap, slopeRating, holes, courseRating, par)
         : 0;
     }
     

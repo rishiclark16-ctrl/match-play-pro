@@ -38,6 +38,9 @@ export function usePlayersWithScores({
     // For 2-player match play, calculate differential strokes
     let matchPlayStrokesMap: Map<string, Map<number, number>> | undefined;
 
+    // Compute total par for course rating adjustment
+    const totalPar = round.holeInfo.reduce((sum, h) => sum + h.par, 0);
+
     if (isTwoPlayerMatch) {
       const [p1, p2] = players;
       const matchInfo = calculateMatchPlayStrokes(
@@ -45,7 +48,9 @@ export function usePlayersWithScores({
         { id: p2.id, name: p2.name, handicap: p2.handicap, manualStrokes: p2.manualStrokes },
         round.slope || 113,
         round.holes,
-        isManualMode ? 'manual' : 'auto'
+        isManualMode ? 'manual' : 'auto',
+        round.rating,
+        totalPar
       );
       matchPlayStrokesMap = buildMatchPlayStrokesMap(matchInfo, round.holeInfo);
     }
@@ -88,7 +93,7 @@ export function usePlayersWithScores({
         netRelativeToPar = totalNetStrokes - totalPar;
       } else if (player.handicap !== undefined && player.handicap !== null) {
         // Auto mode for non-match-play: calculate from handicap index and course slope
-        playingHandicap = calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes);
+        playingHandicap = calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes, round.rating, totalPar);
         strokesPerHole = getStrokesPerHole(playingHandicap, round.holeInfo);
         totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
         const totalPar = playerScores.reduce((sum, s) => {

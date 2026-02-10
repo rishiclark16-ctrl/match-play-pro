@@ -102,10 +102,11 @@ export function useRounds() {
   }, [setScores]);
 
   const getPlayersWithScores = useCallback((
-    roundId: string, 
+    roundId: string,
     holeInfo: HoleInfo[],
     slope?: number,
-    holes: 9 | 18 = 18
+    holes: 9 | 18 = 18,
+    rating?: number
   ): PlayerWithScores[] => {
     const roundPlayers = getPlayersForRound(roundId);
     const roundScores = getScoresForRound(roundId);
@@ -126,7 +127,8 @@ export function useRounds() {
       let netRelativeToPar: number | undefined;
 
       if (player.handicap !== undefined && player.handicap !== null) {
-        playingHandicap = calculatePlayingHandicap(player.handicap, slope || 113, holes);
+        const coursePar = holeInfo.reduce((sum, h) => sum + h.par, 0);
+        playingHandicap = calculatePlayingHandicap(player.handicap, slope || 113, holes, rating, coursePar);
         strokesPerHole = getStrokesPerHole(playingHandicap, holeInfo);
         
         // Calculate net strokes

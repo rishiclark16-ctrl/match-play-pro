@@ -142,7 +142,7 @@ export default function Scorecard() {
   // Fall back to local storage if not using Supabase
   const localPlayersWithScores = useMemo(() => {
     if (!round || useSupabaseData) return [];
-    return getPlayersWithScores(round.id, round.holeInfo, round.slope, round.holes);
+    return getPlayersWithScores(round.id, round.holeInfo, round.slope, round.holes, round.rating);
   }, [round, useSupabaseData, getPlayersWithScores]);
 
   // Use appropriate players list

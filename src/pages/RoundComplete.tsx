@@ -105,9 +105,10 @@ export default function RoundComplete() {
       }, 0);
 
       // Calculate net scores
+      const parTotal = round.holeInfo.reduce((sum, h) => sum + h.par, 0);
       const playingHandicap =
         player.handicap !== undefined
-          ? calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes)
+          ? calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes, round.rating, parTotal)
           : 0;
       const totalNetStrokes = calculateTotalNetStrokes(
         totalStrokes,
@@ -115,7 +116,6 @@ export default function RoundComplete() {
         playerScores.length,
         round.holes
       );
-      const parTotal = round.holeInfo.reduce((sum, h) => sum + h.par, 0);
       const netRelativeToPar = totalNetStrokes - parTotal;
 
       return {
@@ -136,12 +136,15 @@ export default function RoundComplete() {
     if (!round || rawPlayers.length !== 2) return undefined;
 
     const [p1, p2] = rawPlayers;
+    const totalCoursePar = round.holeInfo.reduce((sum, h) => sum + h.par, 0);
     const matchInfo = calculateMatchPlayStrokes(
       { id: p1.id, name: p1.name, handicap: p1.handicap, manualStrokes: p1.manualStrokes },
       { id: p2.id, name: p2.name, handicap: p2.handicap, manualStrokes: p2.manualStrokes },
       round.slope || 113,
       round.holes,
-      round.handicapMode || 'auto'
+      round.handicapMode || 'auto',
+      round.rating,
+      totalCoursePar
     );
     return buildMatchPlayStrokesMap(matchInfo, round.holeInfo);
   }, [round, rawPlayers]);

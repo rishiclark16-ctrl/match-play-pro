@@ -46,7 +46,7 @@ export default function Leaderboard() {
     const useSupabase = supabasePlayers.length > 0 || supabaseLoading || supabaseRound !== null;
     
     if (!useSupabase) {
-      return getPlayersWithScores(round.id, round.holeInfo, round.slope, round.holes);
+      return getPlayersWithScores(round.id, round.holeInfo, round.slope, round.holes, round.rating);
     }
     
     if (supabaseLoading && supabasePlayers.length === 0) {
@@ -60,7 +60,8 @@ export default function Leaderboard() {
     
     // For 2-player match play, calculate differential strokes
     let matchPlayStrokesMap: Map<string, Map<number, number>> | undefined;
-    
+    const totalCoursePar = round.holeInfo.reduce((sum, h) => sum + h.par, 0);
+
     if (isTwoPlayerMatch) {
       const [p1, p2] = supabasePlayers;
       const matchInfo = calculateMatchPlayStrokes(
@@ -68,15 +69,17 @@ export default function Leaderboard() {
         { id: p2.id, name: p2.name, handicap: p2.handicap, manualStrokes: p2.manualStrokes },
         round.slope || 113,
         round.holes,
-        isManualMode ? 'manual' : 'auto'
+        isManualMode ? 'manual' : 'auto',
+        round.rating,
+        totalCoursePar
       );
       matchPlayStrokesMap = buildMatchPlayStrokesMap(matchInfo, round.holeInfo);
     }
-    
+
     return supabasePlayers.map(player => {
       const playerScores = supabaseScores.filter(s => s.playerId === player.id);
       const totalStrokes = playerScores.reduce((sum, s) => sum + s.strokes, 0);
-      
+
       const totalRelativeToPar = playerScores.reduce((sum, s) => {
         const hole = round.holeInfo.find(h => h.number === s.holeNumber);
         return sum + (s.strokes - (hole?.par || 4));
@@ -90,8 +93,8 @@ export default function Leaderboard() {
       // Use match play differential strokes if applicable
       if (matchPlayStrokesMap) {
         strokesPerHole = matchPlayStrokesMap.get(player.id);
-        playingHandicap = strokesPerHole 
-          ? Array.from(strokesPerHole.values()).reduce((sum, s) => sum + s, 0) 
+        playingHandicap = strokesPerHole
+          ? Array.from(strokesPerHole.values()).reduce((sum, s) => sum + s, 0)
           : 0;
         totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
         const totalPar = playerScores.reduce((sum, s) => {
@@ -111,7 +114,7 @@ export default function Leaderboard() {
         netRelativeToPar = totalNetStrokes - totalPar;
       } else if (player.handicap !== undefined && player.handicap !== null) {
         // Auto mode for non-match-play: calculate from handicap index and course slope
-        playingHandicap = calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes);
+        playingHandicap = calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes, round.rating, totalCoursePar);
         strokesPerHole = getStrokesPerHole(playingHandicap, round.holeInfo);
         totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
         const totalPar = playerScores.reduce((sum, s) => {

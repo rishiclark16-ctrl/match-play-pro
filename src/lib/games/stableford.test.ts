@@ -99,20 +99,20 @@ describe('getStablefordPoints', () => {
       expect(getStablefordPoints(2, 4, true)).toBe(5);
     });
 
-    it('should return 3 points for birdie', () => {
-      expect(getStablefordPoints(3, 4, true)).toBe(3);
+    it('should return 2 points for birdie', () => {
+      expect(getStablefordPoints(3, 4, true)).toBe(2);
     });
 
-    it('should return 1 point for par', () => {
-      expect(getStablefordPoints(4, 4, true)).toBe(1);
+    it('should return 0 points for par', () => {
+      expect(getStablefordPoints(4, 4, true)).toBe(0);
     });
 
-    it('should return 0 points for bogey', () => {
-      expect(getStablefordPoints(5, 4, true)).toBe(0);
+    it('should return -1 points for bogey', () => {
+      expect(getStablefordPoints(5, 4, true)).toBe(-1);
     });
 
-    it('should return -1 for double bogey', () => {
-      expect(getStablefordPoints(6, 4, true)).toBe(-1);
+    it('should return -3 for double bogey', () => {
+      expect(getStablefordPoints(6, 4, true)).toBe(-3);
     });
 
     it('should return -3 for triple bogey or worse', () => {
@@ -271,17 +271,17 @@ describe('calculateStableford', () => {
   describe('modified stableford', () => {
     it('should use modified point values', () => {
       const scores: Score[] = [
-        createScore('p1', 1, 4), // Par = 1 (modified)
-        createScore('p2', 1, 6), // Double bogey = -1 (modified)
+        createScore('p1', 1, 4), // Par = 0 (modified)
+        createScore('p2', 1, 6), // Double bogey = -3 (modified)
       ];
 
       const result = calculateStableford(scores, players, defaultHoles, true);
 
       expect(result.modified).toBe(true);
       const alice = result.standings.find(s => s.playerId === 'p1');
-      expect(alice?.totalPoints).toBe(1);
+      expect(alice?.totalPoints).toBe(0);
       const bob = result.standings.find(s => s.playerId === 'p2');
-      expect(bob?.totalPoints).toBe(-1);
+      expect(bob?.totalPoints).toBe(-3);
     });
 
     it('should handle negative total points', () => {

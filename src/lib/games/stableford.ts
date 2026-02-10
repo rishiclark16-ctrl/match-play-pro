@@ -27,14 +27,14 @@ const STANDARD_POINTS: StablefordPoints = {
   worse: 0
 };
 
-// Modified Stableford (more aggressive, used in some tournaments)
+// Modified Stableford (PGA Tour variant)
 const MODIFIED_POINTS: StablefordPoints = {
   albatross: 8,
   eagle: 5,
-  birdie: 3,
-  par: 1,
-  bogey: 0,
-  doubleBogey: -1,
+  birdie: 2,
+  par: 0,
+  bogey: -1,
+  doubleBogey: -3,
   worse: -3
 };
 
