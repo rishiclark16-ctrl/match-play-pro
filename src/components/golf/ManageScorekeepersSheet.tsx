@@ -120,11 +120,17 @@ export function ManageScorekeepersSheet({
           </div>
 
           <div className="space-y-2">
-            {players.map((player, index) => {
+            {players
+              .filter(player => {
+                // Hide the creator — they're always a scorekeeper
+                if (player.order_index === 0) return false;
+                // Hide guests — they can't be scorekeepers
+                if (!player.profile_id) return false;
+                return true;
+              })
+              .map((player, index) => {
               const role = getPlayerRole(player);
-              const isPlayerCreator = player.order_index === 0;
               const isScorekeeper = role === 'scorekeeper';
-              const isGuest = !player.profile_id;
               const isProcessing = loading === player.id;
 
               return (
@@ -135,66 +141,44 @@ export function ManageScorekeepersSheet({
                   transition={{ delay: index * 0.05 }}
                   className={cn(
                     "flex items-center justify-between p-3 rounded-xl border transition-colors",
-                    isPlayerCreator && "bg-primary/5 border-primary/20",
-                    isScorekeeper && !isPlayerCreator && "bg-accent/50 border-accent",
-                    !isPlayerCreator && !isScorekeeper && "bg-card border-border"
+                    isScorekeeper ? "bg-accent/50 border-accent" : "bg-card border-border"
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar className="w-10 h-10">
-                      <AvatarFallback className={cn(
-                        "text-sm font-bold",
-                        isPlayerCreator && "bg-primary text-primary-foreground"
-                      )}>
+                      <AvatarFallback className="text-sm font-bold">
                         {player.name.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold">{player.name}</span>
-                        {isPlayerCreator && (
-                          <span className="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
-                            <Crown className="w-3 h-3" />
-                            CREATOR
-                          </span>
-                        )}
-                        {isGuest && (
-                          <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                            GUEST
-                          </span>
-                        )}
-                      </div>
+                      <span className="font-semibold">{player.name}</span>
                       <p className="text-xs text-muted-foreground">
-                        {isPlayerCreator
-                          ? 'Always has scoring permission'
-                          : isScorekeeper
-                            ? 'Can enter scores'
-                            : 'View only'}
+                        {isScorekeeper ? 'Can enter scores' : 'View only'}
                       </p>
                     </div>
                   </div>
 
-                  {!isPlayerCreator && (
-                    <Switch
-                      checked={isScorekeeper}
-                      onCheckedChange={(checked) => handleToggle(player, checked)}
-                      disabled={isGuest || isProcessing || (atLimit && !isScorekeeper)}
-                    />
-                  )}
-
-                  {isPlayerCreator && (
-                    <div className="w-10 h-6 flex items-center justify-center">
-                      <Check className="w-5 h-5 text-primary" />
-                    </div>
-                  )}
+                  <Switch
+                    checked={isScorekeeper}
+                    onCheckedChange={(checked) => handleToggle(player, checked)}
+                    disabled={isProcessing || (atLimit && !isScorekeeper)}
+                  />
                 </motion.div>
               );
             })}
+
+            {/* Show message if no eligible players */}
+            {players.filter(p => p.order_index !== 0 && p.profile_id).length === 0 && (
+              <div className="text-center py-6 text-muted-foreground">
+                <p className="text-sm">No eligible players</p>
+                <p className="text-xs mt-1">Only friends with accounts can be added as scorekeepers.</p>
+              </div>
+            )}
           </div>
 
           <div className="pt-4 border-t border-border">
             <p className="text-xs text-muted-foreground text-center">
-              Only logged-in players can be scorekeepers. Remove one to add another.
+              Only friends with accounts can be scorekeepers. Remove one to add another.
             </p>
           </div>
         </div>

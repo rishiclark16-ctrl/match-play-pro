@@ -128,8 +128,8 @@ export function ScorecardHeader({
           players={playersWithScores.map(p => ({
             id: p.id,
             name: p.name,
-            profile_id: (p as unknown as { profile_id?: string }).profile_id,
-            order_index: (p as unknown as { order_index?: number }).order_index,
+            profile_id: p.profileId,
+            order_index: p.orderIndex,
           }))}
           scorekeeperIds={scorekeeperIds}
           isCreator={isCreator}
