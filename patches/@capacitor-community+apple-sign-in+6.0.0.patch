@@ -1,5 +1,5 @@
 diff --git a/node_modules/@capacitor-community/apple-sign-in/ios/Plugin/Plugin.swift b/node_modules/@capacitor-community/apple-sign-in/ios/Plugin/Plugin.swift
-index f273691..bd25c5e 100755
+index f273691..ac87194 100755
 --- a/node_modules/@capacitor-community/apple-sign-in/ios/Plugin/Plugin.swift
 +++ b/node_modules/@capacitor-community/apple-sign-in/ios/Plugin/Plugin.swift
 @@ -19,7 +19,11 @@ public class SignInWithApple: CAPPlugin {
@@ -15,13 +15,27 @@ index f273691..bd25c5e 100755
      }
  
      func getRequestedScopes(from call: CAPPluginCall) -> [ASAuthorization.Scope]? {
-@@ -43,6 +47,12 @@ public class SignInWithApple: CAPPlugin {
+@@ -43,6 +47,26 @@ public class SignInWithApple: CAPPlugin {
      }
  }
  
 +extension SignInWithApple: ASAuthorizationControllerPresentationContextProviding {
 +    public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-+        return self.bridge?.webView?.window ?? UIWindow()
++        // Primary: use the Capacitor bridge webView's window
++        if let window = self.bridge?.webView?.window {
++            return window
++        }
++        // Fallback for iPad scene-based lifecycle (iPadOS 13+)
++        let scenes = UIApplication.shared.connectedScenes
++        if let windowScene = scenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
++           let window = windowScene.windows.first(where: { $0.isKeyWindow }) {
++            return window
++        }
++        if let windowScene = scenes.first as? UIWindowScene,
++           let window = windowScene.windows.first {
++            return window
++        }
++        return UIWindow()
 +    }
 +}
 +

@@ -23,6 +23,16 @@ vi.mock('./useAuth', () => ({
   useAuth: vi.fn(() => ({ user: mockUser })),
 }));
 
+vi.mock('@capacitor/core', () => ({
+  Capacitor: { isNativePlatform: () => false },
+}));
+
+vi.mock('@/services/purchases', () => ({
+  checkProStatus: vi.fn().mockResolvedValue(false),
+  getCustomerInfo: vi.fn().mockResolvedValue(null),
+  syncSubscriptionToSupabase: vi.fn().mockResolvedValue(false),
+}));
+
 describe('useSubscription', () => {
   beforeEach(() => {
     vi.clearAllMocks();

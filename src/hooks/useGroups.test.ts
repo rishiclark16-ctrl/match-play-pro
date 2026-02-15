@@ -315,7 +315,7 @@ describe('useGroups', () => {
     it('should return null if user not authenticated', async () => {
       // Override useAuth mock for this test
       const useAuthMock = await import('./useAuth');
-      vi.mocked(useAuthMock.useAuth).mockReturnValue({ user: null } as any);
+      vi.mocked(useAuthMock.useAuth).mockReturnValue({ user: null } as ReturnType<typeof useAuthMock.useAuth>);
 
       mockSupabaseClient.from.mockImplementation(() => ({
         select: vi.fn().mockReturnValue({
@@ -338,7 +338,7 @@ describe('useGroups', () => {
       expect(newGroup).toBeNull();
 
       // Restore mock
-      vi.mocked(useAuthMock.useAuth).mockReturnValue({ user: mockUser } as any);
+      vi.mocked(useAuthMock.useAuth).mockReturnValue({ user: mockUser } as ReturnType<typeof useAuthMock.useAuth>);
     });
   });
 

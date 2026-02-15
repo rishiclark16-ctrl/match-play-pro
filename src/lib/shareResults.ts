@@ -174,31 +174,26 @@ export async function shareResults(
   players: Player[],
   scores: Score[]
 ): Promise<void> {
-  try {
-    const imageBlob = await generateShareImage(round, players, scores);
-    const file = new File([imageBlob], 'match-results.png', { type: 'image/png' });
+  const imageBlob = await generateShareImage(round, players, scores);
+  const file = new File([imageBlob], 'match-results.png', { type: 'image/png' });
 
-    if (navigator.canShare?.({ files: [file] })) {
-      // Native share (mobile)
-      await navigator.share({
-        title: `Golf Round at ${round.courseName}`,
-        text: `Check out our round at ${round.courseName}!`,
-        files: [file]
-      });
-    } else {
-      // Fallback: download image
-      const url = URL.createObjectURL(imageBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'match-results.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-  } catch (err) {
-    // Share error handled
-    throw err;
+  if (navigator.canShare?.({ files: [file] })) {
+    // Native share (mobile)
+    await navigator.share({
+      title: `Golf Round at ${round.courseName}`,
+      text: `Check out our round at ${round.courseName}!`,
+      files: [file]
+    });
+  } else {
+    // Fallback: download image
+    const url = URL.createObjectURL(imageBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'match-results.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 }
 

@@ -79,17 +79,18 @@ export function useGroups() {
         .filter(m => m.profile_id)
         .map(m => m.profile_id as string);
 
-      let profilesMap: Record<string, any> = {};
+      type ProfileData = { id: string; full_name: string | null; handicap: number | null; avatar_url: string | null };
+      let profilesMap: Record<string, ProfileData> = {};
       if (profileIds.length > 0) {
         const { data: profiles } = await supabase
           .from('profiles')
           .select('id, full_name, handicap, avatar_url')
           .in('id', profileIds);
-        
+
         profilesMap = (profiles || []).reduce((acc, p) => {
           acc[p.id] = p;
           return acc;
-        }, {} as Record<string, any>);
+        }, {} as Record<string, ProfileData>);
       }
 
       // Build groups with members

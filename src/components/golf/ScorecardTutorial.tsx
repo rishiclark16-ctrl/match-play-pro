@@ -144,34 +144,7 @@ export function ScorecardTutorial({
 
   if (!isOpen) return null;
 
-  // Calculate tooltip position based on spotlight
-  const getTooltipStyle = (): React.CSSProperties => {
-    if (currentStepData.position === 'center' || !spotlightRect) {
-      // Centered on screen - use flexbox parent for true centering
-      return {};
-    }
-
-    const padding = 16;
-
-    if (currentStepData.position === 'above') {
-      return {
-        position: 'absolute',
-        bottom: `${window.innerHeight - spotlightRect.top + padding}px`,
-        left: '50%',
-        transform: 'translateX(-50%)',
-      };
-    }
-
-    // Below
-    return {
-      position: 'absolute',
-      top: `${spotlightRect.bottom + padding}px`,
-      left: '50%',
-      transform: 'translateX(-50%)',
-    };
-  };
-
-  const isCentered = currentStepData.position === 'center' || !spotlightRect;
+  // Always center the tooltip - simpler and works on all screen sizes
 
   return (
     <AnimatePresence>
@@ -252,26 +225,15 @@ export function ScorecardTutorial({
             <X className="w-5 h-5" />
           </button>
 
-          {/* Tooltip card */}
-          <div
-            className={cn(
-              "z-50 pointer-events-none",
-              isCentered
-                ? "fixed inset-0 flex items-center justify-center p-4"
-                : "absolute inset-0"
-            )}
-          >
+          {/* Tooltip card - always centered */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none">
             <motion.div
               key={currentStep}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className={cn(
-                "w-[calc(100%-32px)] max-w-sm pointer-events-auto",
-                !isCentered && "absolute"
-              )}
-              style={!isCentered ? getTooltipStyle() : undefined}
+              className="w-full max-w-sm pointer-events-auto"
             >
             <div className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
               {/* Header */}

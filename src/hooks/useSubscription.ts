@@ -1,7 +1,14 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { PropBetType } from '@/types/betting';
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
+import {
+  checkProStatus,
+  getCustomerInfo,
+  syncSubscriptionToSupabase,
+} from '@/services/purchases';
 
 // Subscription status types
 export type SubscriptionStatus = 'free' | 'active' | 'expired' | 'cancelled' | 'grace_period';
@@ -78,6 +85,8 @@ export function useSubscription(): UseSubscriptionReturn {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [nativeIsPro, setNativeIsPro] = useState(false);
+  const nativeCheckDone = useRef(false);
 
   // Fetch subscription from database
   const fetchSubscription = useCallback(async () => {
@@ -96,7 +105,6 @@ export function useSubscription(): UseSubscriptionReturn {
 
       if (error) {
         console.error('Error fetching subscription:', error);
-        // Default to free tier on error
         setSubscription(null);
       } else {
         setSubscription(data as Subscription | null);
@@ -109,10 +117,45 @@ export function useSubscription(): UseSubscriptionReturn {
     }
   }, [user]);
 
+  // Check RevenueCat native status as fallback (iOS only)
+  const checkNativeStatus = useCallback(async () => {
+    if (!Capacitor.isNativePlatform() || !user) return;
+
+    try {
+      const rcIsPro = await checkProStatus();
+      console.log('[Subscription] RevenueCat pro status:', rcIsPro);
+      setNativeIsPro(rcIsPro);
+
+      // If RevenueCat says pro, try to sync to database
+      if (rcIsPro) {
+        const info = await getCustomerInfo();
+        if (info) {
+          console.log('[Subscription] Syncing RevenueCat status to database:', info);
+          const synced = await syncSubscriptionToSupabase(info);
+          if (synced) {
+            // Re-fetch from DB to pick up the synced data
+            await fetchSubscription();
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[Subscription] Native status check failed:', err);
+    }
+  }, [user, fetchSubscription]);
+
   // Fetch on mount and user change
   useEffect(() => {
     fetchSubscription();
   }, [fetchSubscription]);
+
+  // After initial DB load, check RevenueCat as fallback on native
+  useEffect(() => {
+    if (isLoading || !user) return;
+    if (nativeCheckDone.current) return;
+    nativeCheckDone.current = true;
+
+    checkNativeStatus();
+  }, [isLoading, user, checkNativeStatus]);
 
   // Subscribe to realtime changes
   useEffect(() => {
@@ -139,15 +182,32 @@ export function useSubscription(): UseSubscriptionReturn {
     };
   }, [user, fetchSubscription]);
 
-  // Determine if user has Pro access
-  const isPro = useMemo(() => {
+  // Refresh subscription when app resumes from background (native only)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !user) return;
+
+    let listener: { remove: () => void } | null = null;
+
+    App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        console.log('[Subscription] App resumed — refreshing subscription status');
+        fetchSubscription();
+        checkNativeStatus();
+      }
+    }).then(l => { listener = l; });
+
+    return () => {
+      listener?.remove();
+    };
+  }, [user, fetchSubscription, checkNativeStatus]);
+
+  // Determine if user has Pro access from database
+  const dbIsPro = useMemo(() => {
     if (!subscription) return false;
 
-    // Check for active or grace period status
     if (subscription.tier !== 'pro') return false;
     if (!['active', 'grace_period'].includes(subscription.status)) return false;
 
-    // Check expiration if set
     if (subscription.expires_at) {
       const expiresAt = new Date(subscription.expires_at);
       if (expiresAt < new Date()) return false;
@@ -155,6 +215,9 @@ export function useSubscription(): UseSubscriptionReturn {
 
     return true;
   }, [subscription]);
+
+  // Combine database + native RevenueCat check
+  const isPro = dbIsPro || nativeIsPro;
 
   // Get current tier limits
   const limits = useMemo(() => {
@@ -192,6 +255,12 @@ export function useSubscription(): UseSubscriptionReturn {
     [limits.skinsCarryover]
   );
 
+  // Refresh checks both database and native RevenueCat
+  const refreshSubscription = useCallback(async () => {
+    await fetchSubscription();
+    await checkNativeStatus();
+  }, [fetchSubscription, checkNativeStatus]);
+
   return {
     isPro,
     isLoading,
@@ -203,6 +272,6 @@ export function useSubscription(): UseSubscriptionReturn {
     canUseGame,
     canUsePropBet,
     canUseSkinsCarryover,
-    refreshSubscription: fetchSubscription,
+    refreshSubscription,
   };
 }

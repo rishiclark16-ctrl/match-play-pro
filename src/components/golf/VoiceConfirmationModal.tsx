@@ -57,7 +57,7 @@ export function VoiceConfirmationModal({
   const [editedScores, setEditedScores] = useState<Map<string, number>>(new Map());
   const [isVoiceListening, setIsVoiceListening] = useState(false);
   const [voiceHint, setVoiceHint] = useState<string | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const listenTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check if voice recognition is supported

@@ -39,7 +39,7 @@ export default function Profile() {
   const { profile, loading, updateProfile, uploadAvatar } = useProfile();
   const { friends } = useFriends();
   const { settings, updateSettings } = useSettings();
-  const { isPro, tier, refreshSubscription } = useSubscription();
+  const { isPro, subscription, refreshSubscription } = useSubscription();
   const [copied, setCopied] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
@@ -535,7 +535,9 @@ export default function Profile() {
                   "text-sm font-bold",
                   isPro ? "text-primary" : "text-muted-foreground"
                 )}>
-                  {isPro ? 'Pro' : 'Free'}
+                  {isPro
+                    ? subscription?.product_id?.includes('annual') ? 'Pro (Annual)' : 'Pro (Monthly)'
+                    : 'Free'}
                 </span>
               </div>
 

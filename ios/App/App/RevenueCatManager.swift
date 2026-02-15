@@ -16,7 +16,7 @@ final class RevenueCatManager: NSObject, ObservableObject {
         }
         return key
     }
-    static let entitlementID = "MATCH Golf"
+    static let entitlementID = "Pro"
 
     // MARK: - Published Properties
     @Published var customerInfo: CustomerInfo?
@@ -75,7 +75,7 @@ final class RevenueCatManager: NSObject, ObservableObject {
 
         let (customerInfo, _) = try await Purchases.shared.logIn(userId)
         self.customerInfo = customerInfo
-        self.isProUser = customerInfo.entitlements[Self.entitlementID]?.isActive == true
+        self.isProUser = checkIsPro(customerInfo)
     }
 
     /// Logout current user
@@ -96,7 +96,7 @@ final class RevenueCatManager: NSObject, ObservableObject {
         do {
             let info = try await Purchases.shared.customerInfo()
             self.customerInfo = info
-            self.isProUser = info.entitlements[Self.entitlementID]?.isActive == true
+            self.isProUser = checkIsPro(info)
         } catch {
             print("[RevenueCat] Error fetching customer info: \(error)")
         }
@@ -175,7 +175,9 @@ final class RevenueCatManager: NSObject, ObservableObject {
         let result = try await Purchases.shared.purchase(package: package)
 
         self.customerInfo = result.customerInfo
-        self.isProUser = result.customerInfo.entitlements[Self.entitlementID]?.isActive == true
+        self.isProUser = checkIsPro(result.customerInfo)
+
+        print("[RevenueCat] Purchase complete. isProUser: \(self.isProUser)")
 
         return result.customerInfo
     }
@@ -208,26 +210,76 @@ final class RevenueCatManager: NSObject, ObservableObject {
         let customerInfo = try await Purchases.shared.restorePurchases()
 
         self.customerInfo = customerInfo
-        self.isProUser = customerInfo.entitlements[Self.entitlementID]?.isActive == true
+        self.isProUser = checkIsPro(customerInfo)
 
         return customerInfo
+    }
+
+    // MARK: - Pro Status Check
+
+    /// Check if a CustomerInfo object indicates pro access.
+    /// First checks the named entitlement, then falls back to checking activeSubscriptions.
+    private func checkIsPro(_ info: CustomerInfo) -> Bool {
+        // 1. Check the named entitlement (preferred)
+        if info.entitlements[Self.entitlementID]?.isActive == true {
+            return true
+        }
+
+        // 2. Check ANY active entitlement (handles entitlement name mismatch)
+        for (_, entitlement) in info.entitlements.all {
+            if entitlement.isActive {
+                print("[RevenueCat] Pro via entitlement '\(entitlement.identifier)' (not '\(Self.entitlementID)')")
+                return true
+            }
+        }
+
+        // 3. Fallback: check activeSubscriptions directly (handles missing entitlement config)
+        if !info.activeSubscriptions.isEmpty {
+            print("[RevenueCat] Pro via activeSubscriptions fallback: \(info.activeSubscriptions)")
+            return true
+        }
+
+        return false
     }
 
     // MARK: - Subscription Info
 
     /// Get active subscription product ID
     var activeSubscriptionProductId: String? {
-        customerInfo?.entitlements[Self.entitlementID]?.productIdentifier
+        guard let info = customerInfo else { return nil }
+        // Try entitlement first, then activeSubscriptions
+        if let productId = info.entitlements[Self.entitlementID]?.productIdentifier {
+            return productId
+        }
+        // Fallback: first active entitlement or first active subscription
+        for (_, ent) in info.entitlements.all where ent.isActive {
+            return ent.productIdentifier
+        }
+        return info.activeSubscriptions.first
     }
 
     /// Get subscription expiration date
     var expirationDate: Date? {
-        customerInfo?.entitlements[Self.entitlementID]?.expirationDate
+        guard let info = customerInfo else { return nil }
+        if let date = info.entitlements[Self.entitlementID]?.expirationDate {
+            return date
+        }
+        for (_, ent) in info.entitlements.all where ent.isActive {
+            return ent.expirationDate
+        }
+        return nil
     }
 
     /// Check if subscription will renew
     var willRenew: Bool {
-        customerInfo?.entitlements[Self.entitlementID]?.willRenew ?? false
+        guard let info = customerInfo else { return false }
+        if let ent = info.entitlements[Self.entitlementID] {
+            return ent.willRenew
+        }
+        for (_, ent) in info.entitlements.all where ent.isActive {
+            return ent.willRenew
+        }
+        return false
     }
 
     /// Get management URL
@@ -240,16 +292,22 @@ final class RevenueCatManager: NSObject, ObservableObject {
     /// Convert customer info to dictionary for JavaScript bridge
     func customerInfoToDictionary() -> [String: Any] {
         guard let info = customerInfo else {
+            print("[RevenueCat] customerInfoToDictionary: no customerInfo available")
             return ["isPro": false]
         }
 
-        let entitlement = info.entitlements[Self.entitlementID]
+        // Debug logging
+        let allEntitlementIDs = info.entitlements.all.map { "\($0.key)(\($0.value.isActive ? "active" : "inactive"))" }.joined(separator: ", ")
+        let activeSubIds = info.activeSubscriptions.joined(separator: ", ")
+        print("[RevenueCat] Entitlements: [\(allEntitlementIDs)], Active subs: [\(activeSubIds)]")
+
+        let isPro = checkIsPro(info)
 
         return [
-            "isPro": entitlement?.isActive == true,
-            "activeSubscription": entitlement?.productIdentifier ?? NSNull(),
-            "expirationDate": entitlement?.expirationDate?.iso8601String ?? NSNull(),
-            "willRenew": entitlement?.willRenew ?? false,
+            "isPro": isPro,
+            "activeSubscription": activeSubscriptionProductId ?? NSNull(),
+            "expirationDate": expirationDate?.iso8601String ?? NSNull(),
+            "willRenew": willRenew,
             "managementUrl": info.managementURL?.absoluteString ?? NSNull()
         ]
     }
@@ -294,7 +352,7 @@ extension RevenueCatManager: PurchasesDelegate {
     nonisolated func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
         Task { @MainActor in
             self.customerInfo = customerInfo
-            self.isProUser = customerInfo.entitlements[Self.entitlementID]?.isActive == true
+            self.isProUser = checkIsPro(customerInfo)
         }
     }
 }

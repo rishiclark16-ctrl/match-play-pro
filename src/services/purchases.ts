@@ -59,7 +59,7 @@ interface PurchaseResponse {
 const RevenueCat = registerPlugin<RevenueCatPlugin>('RevenueCat');
 
 // Entitlement ID in RevenueCat
-export const ENTITLEMENT_ID = 'MATCH Golf';
+export const ENTITLEMENT_ID = 'Pro';
 
 export interface PurchasePackage {
   identifier: string;
@@ -185,13 +185,20 @@ export async function purchasePackage(packageIdentifier: string): Promise<Purcha
       return { success: false, cancelled: true };
     }
 
+    console.log('[Purchases] Purchase response:', JSON.stringify(response));
+
     const customerInfo = response.customerInfo
       ? parseCustomerInfo(response.customerInfo)
       : undefined;
 
+    console.log('[Purchases] Parsed customerInfo:', JSON.stringify(customerInfo));
+
     // Sync to Supabase
     if (customerInfo) {
-      await syncSubscriptionToSupabase(customerInfo);
+      const synced = await syncSubscriptionToSupabase(customerInfo);
+      console.log('[Purchases] Sync result:', synced);
+    } else {
+      console.warn('[Purchases] No customerInfo returned from purchase');
     }
 
     return { success: response.success, customerInfo };
@@ -278,9 +285,15 @@ function parseCustomerInfo(response: CustomerInfoResponse): CustomerInfo {
 /**
  * Sync subscription status to Supabase via Edge Function
  */
-async function syncSubscriptionToSupabase(customerInfo: CustomerInfo): Promise<void> {
+export async function syncSubscriptionToSupabase(customerInfo: CustomerInfo): Promise<boolean> {
   try {
-    const { error } = await supabase.functions.invoke('sync-subscription', {
+    console.log('[Purchases] Syncing to Supabase:', {
+      isPro: customerInfo.isPro,
+      activeSubscription: customerInfo.activeSubscription,
+      expirationDate: customerInfo.expirationDate,
+    });
+
+    const { data, error } = await supabase.functions.invoke('sync-subscription', {
       body: {
         isPro: customerInfo.isPro,
         activeSubscription: customerInfo.activeSubscription,
@@ -291,9 +304,14 @@ async function syncSubscriptionToSupabase(customerInfo: CustomerInfo): Promise<v
 
     if (error) {
       console.error('[Purchases] Failed to sync to Supabase:', error);
+      return false;
     }
+
+    console.log('[Purchases] Sync successful:', data);
+    return true;
   } catch (error) {
     console.error('[Purchases] Sync error:', error);
+    return false;
   }
 }
 
