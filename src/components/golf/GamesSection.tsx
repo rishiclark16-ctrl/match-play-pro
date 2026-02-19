@@ -566,20 +566,25 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
                           </div>
                           
                           {/* Show top contributor */}
-                          {standing.playerContributions.length > 0 && (
+                          {standing.playerContributions?.length > 0 && (
                             <div className="mt-1 text-xs text-muted-foreground">
                               Top: {standing.playerContributions
                                 .sort((a, b) => b.holesContributed - a.holesContributed)[0]?.playerName} 
                               ({standing.playerContributions
                                 .sort((a, b) => b.holesContributed - a.holesContributed)[0]?.holesContributed} holes)
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-                
+
                 {/* Divider before Wolf */}
                 {(skinsGame || nassauGame || stablefordGame || bestBallGame) && wolfGame && (
                   <div className="border-t border-border/50" />
                 )}
-                
+
                 {/* Wolf Section */}
                 {wolfGame && wolfResult && (
                   <div className="space-y-2">
@@ -597,7 +602,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
                         Thru {wolfResult.holesPlayed}
                       </span>
                     </div>
-                    
+
                     <div className="space-y-1">
                       {wolfResult.standings.map((standing, index) => (
                         <div
@@ -608,7 +613,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
                             {index === 0 && wolfResult.holesPlayed > 0 && (
                               <Trophy className="w-3 h-3 text-warning" />
                             )}
-                            <span>{standing.playerName.split(' ')[0]}</span>
+                            <span>{standing.playerName?.split(' ')[0] || standing.playerName}</span>
                             {standing.loneWolfWins > 0 && (
                               <span className="text-xs text-warning">
                                 🐺{standing.loneWolfWins}
@@ -626,7 +631,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
                         </div>
                       ))}
                     </div>
-                    
+
                     {wolfResult.carryover > 0 && (
                       <div className="text-xs text-warning px-2 py-1 bg-warning/10 rounded-lg">
                         {wolfResult.carryover} points carrying over
@@ -664,7 +669,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
                             className="flex items-center justify-between text-sm"
                           >
                             <div className="flex items-center gap-2">
-                              <span>{player.name.split(' ')[0]}:</span>
+                              <span>{player.name?.split(' ')[0] || player.name}:</span>
                               <div className="flex gap-0.5">
                                 {stats.types.slice(0, 4).map((type, i) => (
                                   <span key={i} className="text-xs" title={getPropBetLabel(type as PropBet['type'])}>
@@ -685,11 +690,6 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
                           </div>
                         );
                       })}
-                    </div>
-                  </div>
-                )}
-              </div>
-                      ))}
                     </div>
                   </div>
                 )}

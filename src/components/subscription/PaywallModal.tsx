@@ -244,6 +244,11 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
             <p className="text-[10px] text-center text-muted-foreground leading-relaxed">
               Cancel anytime. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.
             </p>
+            <p className="text-[10px] text-center text-muted-foreground">
+              <a href="https://matchgolf.info/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy Policy</a>
+              {' · '}
+              <a href="https://matchgolf.info/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms of Use</a>
+            </p>
           </div>
         </div>
       </SheetContent>

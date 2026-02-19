@@ -76,31 +76,31 @@ export function usePlayersWithScores({
           ? Array.from(strokesPerHole.values()).reduce((sum, s) => sum + s, 0)
           : 0;
         totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
-        const totalPar = playerScores.reduce((sum, s) => {
+        const playedPar1 = playerScores.reduce((sum, s) => {
           const hole = round.holeInfo.find(h => h.number === s.holeNumber);
           return sum + (hole?.par || 4);
         }, 0);
-        netRelativeToPar = totalNetStrokes - totalPar;
+        netRelativeToPar = totalNetStrokes - playedPar1;
       } else if (isManualMode) {
         // Manual mode for non-match-play: use manually entered strokes
         playingHandicap = player.manualStrokes ?? 0;
         strokesPerHole = getManualStrokesPerHole(playingHandicap, round.holeInfo);
         totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
-        const totalPar = playerScores.reduce((sum, s) => {
+        const playedPar2 = playerScores.reduce((sum, s) => {
           const hole = round.holeInfo.find(h => h.number === s.holeNumber);
           return sum + (hole?.par || 4);
         }, 0);
-        netRelativeToPar = totalNetStrokes - totalPar;
+        netRelativeToPar = totalNetStrokes - playedPar2;
       } else if (player.handicap !== undefined && player.handicap !== null) {
         // Auto mode for non-match-play: calculate from handicap index and course slope
         playingHandicap = calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes, round.rating, totalPar);
         strokesPerHole = getStrokesPerHole(playingHandicap, round.holeInfo);
         totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
-        const totalPar = playerScores.reduce((sum, s) => {
+        const playedPar3 = playerScores.reduce((sum, s) => {
           const hole = round.holeInfo.find(h => h.number === s.holeNumber);
           return sum + (hole?.par || 4);
         }, 0);
-        netRelativeToPar = totalNetStrokes - totalPar;
+        netRelativeToPar = totalNetStrokes - playedPar3;
       }
 
       return {
