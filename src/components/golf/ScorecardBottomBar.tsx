@@ -1,6 +1,5 @@
-import { motion } from 'framer-motion';
-import { BarChart3, Trophy, Flag } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BarChart3, Trophy, Flag, CheckCircle2, Mic, Share2, DollarSign } from 'lucide-react';
 import { VoiceButton } from '@/components/golf/VoiceButton';
 import { PropBetSheet } from '@/components/golf/PropBetSheet';
 import { cn } from '@/lib/utils';
@@ -24,13 +23,17 @@ interface ScorecardBottomBarProps {
   isProcessing: boolean;
   isSupported: boolean;
   propBets: PropBet[];
+  autoAdvanceCountdown?: number | null;
+  allCurrentHoleScored?: boolean;
   voiceButtonRef?: React.RefObject<HTMLDivElement>;
   onNavigateToLeaderboard: () => void;
   onVoicePress: () => void;
   onShowFinishOptions: () => void;
   onFinishRound: () => void;
+  onNextHole?: () => void;
   onPropBetAdded: (bet: PropBet) => Promise<{ success: boolean; error?: string }>;
   onPropBetUpdated: (bet: PropBet) => Promise<{ success: boolean; error?: string }>;
+  onShowShare?: () => void;
 }
 
 export function ScorecardBottomBar({
@@ -50,106 +53,254 @@ export function ScorecardBottomBar({
   isProcessing,
   isSupported,
   propBets,
+  autoAdvanceCountdown,
+  allCurrentHoleScored,
   voiceButtonRef,
   onNavigateToLeaderboard,
   onVoicePress,
   onShowFinishOptions,
   onFinishRound,
+  onNextHole,
   onPropBetAdded,
   onPropBetUpdated,
+  onShowShare,
 }: ScorecardBottomBarProps) {
+  const isLastHole = currentHole === totalHoles;
+  const isFinishState = (canFinish || hole18FullyScored) && !isSpectator && playoffHole === 0;
+  const isPlayoffState = playoffHole > 0;
+
+  // Determine what the main action button does
+  const showNextHole = !isSpectator && !isLastHole && playoffHole === 0 && allCurrentHoleScored;
+  const showFinishButton = isFinishState;
+  const showPlayoffEnd = isPlayoffState && !isSpectator;
+
   return (
     <div
       className={cn(
-        'fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border transition-opacity',
+        'fixed bottom-0 left-0 right-0 z-40 transition-all duration-300',
+        'bg-[#F8F8F6] border-t border-border/30',
         showFinishOptions && 'opacity-0 pointer-events-none'
       )}
       style={{
-        paddingBottom: '8px',
+        paddingBottom: 'env(safe-area-inset-bottom, 8px)',
       }}
     >
-      <div className="px-4 py-2 flex items-center justify-between gap-3">
-        {/* Leaderboard Button */}
+      {/* Secondary Actions Row */}
+      <div className="flex items-center justify-between px-4 pt-3 pb-2 gap-2">
+        {/* Leaderboard */}
         <motion.button
-          whileTap={{ scale: 0.95 }}
+          whileTap={{ scale: 0.93 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
           onClick={onNavigateToLeaderboard}
           aria-label="View leaderboard"
-          className="flex items-center gap-2 px-4 h-12 min-h-[48px] rounded-xl bg-card border border-border shadow-sm touch-manipulation"
+          className="bg-white rounded-xl shadow-sm px-3.5 py-2 flex items-center gap-1.5 touch-manipulation"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
-          <BarChart3 className="w-5 h-5 text-muted-foreground" />
-          <span className="font-semibold text-sm hidden xs:inline">Board</span>
+          <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="text-xs font-bold text-foreground uppercase tracking-[0.06em]">Board</span>
         </motion.button>
 
-        {/* Voice Button - centered, only for scorekeepers */}
-        {canEditScores ? (
-          <div ref={voiceButtonRef}>
-            <VoiceButton
-              isListening={isListening}
-              isProcessing={isProcessing}
-              isSupported={isSupported}
-              onPress={onVoicePress}
-            />
-          </div>
-        ) : (
-          <div className="w-16" />
-        )}
+        {/* Center: progress indicator */}
+        <div className="flex-1 flex items-center justify-center">
+          <span className="text-xs text-muted-foreground font-mono tabular-nums">
+            {completedHoles}/{totalHoles}
+          </span>
+        </div>
 
-        {/* Finish / Progress / Playoff */}
-        {playoffHole > 0 ? (
-          <div className="flex items-center gap-2">
-            <div className="px-3 h-12 min-h-[48px] flex items-center rounded-xl bg-primary/10 border-2 border-primary">
-              <span className="font-bold text-sm text-primary">Playoff #{playoffHole}</span>
+        {/* Right group: Prop Bets + Share */}
+        <div className="flex items-center gap-2">
+          {/* Prop Bets — only for non-spectators on regular holes */}
+          {!isSpectator && playoffHole === 0 && (
+            <div className="bg-white rounded-xl shadow-sm">
+              <PropBetSheet
+                roundId={roundId}
+                players={players}
+                currentHole={currentHole}
+                holeInfo={holeInfo}
+                propBets={propBets}
+                onPropBetAdded={onPropBetAdded}
+                onPropBetUpdated={onPropBetUpdated}
+              />
             </div>
-            <Button
-              onClick={onFinishRound}
-              size="sm"
-              aria-label="End playoff and finish round"
-              className="px-4 h-12 min-h-[48px] rounded-xl font-bold text-sm touch-manipulation shadow-sm"
+          )}
+
+          {/* Share */}
+          {onShowShare && (
+            <motion.button
+              whileTap={{ scale: 0.93 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              onClick={onShowShare}
+              aria-label="Share round"
+              className="bg-white rounded-xl shadow-sm px-3.5 py-2 flex items-center gap-1.5 touch-manipulation"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <Trophy className="w-4 h-4 mr-1.5" />
-              End
-            </Button>
+              <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs font-bold text-foreground uppercase tracking-[0.06em]">Share</span>
+            </motion.button>
+          )}
+
+          {/* Playoff indicator */}
+          {isPlayoffState && (
+            <div className="px-3 py-2 flex items-center rounded-xl bg-primary/10 border border-primary/30">
+              <span className="font-bold text-xs text-primary">Playoff #{playoffHole}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main Action Row */}
+      <div className="flex items-center gap-3 px-4 pb-2">
+        {/* Voice Button */}
+        {canEditScores ? (
+          <div ref={voiceButtonRef} className="flex-shrink-0">
+            <motion.div
+              animate={{
+                scale: isListening ? [1, 1.05, 1] : 1,
+              }}
+              transition={{ duration: 0.8, repeat: isListening ? Infinity : 0 }}
+            >
+              <button
+                onClick={onVoicePress}
+                aria-label={isListening ? 'Stop listening' : 'Start voice scoring'}
+                className={cn(
+                  'w-12 h-12 rounded-full flex items-center justify-center touch-manipulation transition-colors duration-200',
+                  isListening
+                    ? 'bg-[#F0EE3A] shadow-md'
+                    : isProcessing
+                    ? 'bg-[#F0EE3A]/60 shadow-sm'
+                    : 'bg-muted'
+                )}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                <Mic
+                  className={cn(
+                    'w-5 h-5 transition-colors',
+                    isListening || isProcessing ? 'text-[#0A0A0A]' : 'text-muted-foreground'
+                  )}
+                />
+              </button>
+            </motion.div>
           </div>
-        ) : canFinish && !isSpectator ? (
-          <Button
-            onClick={onShowFinishOptions}
-            aria-label="Finish round"
-            className="px-5 h-12 min-h-[48px] rounded-xl font-bold text-sm touch-manipulation shadow-sm"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-          >
-            <Trophy className="w-4 h-4 mr-1.5" />
-            Finish
-          </Button>
-        ) : hole18FullyScored && !isSpectator ? (
-          <Button
-            onClick={onShowFinishOptions}
-            variant="outline"
-            aria-label="Show finish options"
-            className="px-5 h-12 min-h-[48px] rounded-xl font-bold text-sm border-2 border-primary text-primary touch-manipulation"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-          >
-            <Flag className="w-4 h-4 mr-1.5" />
-            Done?
-          </Button>
-        ) : !isSpectator && playoffHole === 0 ? (
-          <PropBetSheet
-            roundId={roundId}
-            players={players}
-            currentHole={currentHole}
-            holeInfo={holeInfo}
-            propBets={propBets}
-            onPropBetAdded={onPropBetAdded}
-            onPropBetUpdated={onPropBetUpdated}
-          />
         ) : (
-          <div className="px-4 h-12 min-h-[48px] flex items-center rounded-xl bg-card border border-border shadow-sm">
-            <span className="font-bold tabular-nums text-sm">
-              {completedHoles}/{totalHoles}
-            </span>
-          </div>
+          <div className="w-12 flex-shrink-0" />
         )}
+
+        {/* Main CTA Button */}
+        <div className="flex-1">
+          <AnimatePresence mode="wait">
+            {/* Playoff End button */}
+            {showPlayoffEnd && (
+              <motion.button
+                key="playoff-end"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={onFinishRound}
+                aria-label="End playoff and finish round"
+                className="w-full h-12 bg-foreground text-background font-black rounded-2xl flex items-center justify-center gap-2 touch-manipulation relative overflow-hidden"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                <Trophy className="w-4 h-4" />
+                <span>End Playoff</span>
+              </motion.button>
+            )}
+
+            {/* Finish Round button (hole 18 done) */}
+            {!showPlayoffEnd && showFinishButton && (
+              <motion.button
+                key="finish-round"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  boxShadow: canFinish
+                    ? [
+                        '0 0 0 0 rgba(240,238,58,0.5)',
+                        '0 0 0 8px rgba(240,238,58,0)',
+                        '0 0 0 0 rgba(240,238,58,0)',
+                      ]
+                    : '0 0 0 0 rgba(0,0,0,0)',
+                }}
+                exit={{ opacity: 0, y: -8 }}
+                // @ts-ignore — framer keyframe transition
+                transition={{ duration: canFinish ? 2 : 0.3, repeat: canFinish ? Infinity : 0, type: canFinish ? undefined : 'spring', stiffness: 400, damping: 30 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={onShowFinishOptions}
+                aria-label="Finish round"
+                className={cn(
+                  'w-full h-12 font-black rounded-2xl flex items-center justify-center gap-2 touch-manipulation relative overflow-hidden',
+                  canFinish
+                    ? 'bg-[#F0EE3A] text-[#0A0A0A]'
+                    : 'border-2 border-foreground bg-transparent text-foreground'
+                )}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                {canFinish ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Finish Round</span>
+                  </>
+                ) : (
+                  <>
+                    <Flag className="w-4 h-4" />
+                    <span>Done?</span>
+                  </>
+                )}
+              </motion.button>
+            )}
+
+            {/* Next Hole button (with optional auto-advance progress) */}
+            {!showPlayoffEnd && !showFinishButton && showNextHole && (
+              <motion.button
+                key="next-hole"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={onNextHole}
+                aria-label={`Go to hole ${currentHole + 1}`}
+                className="w-full h-12 bg-foreground text-background font-black rounded-2xl flex items-center justify-center gap-2 touch-manipulation relative overflow-hidden"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                {/* Auto-advance countdown background fill */}
+                {autoAdvanceCountdown !== null && autoAdvanceCountdown !== undefined && (
+                  <motion.div
+                    className="absolute inset-0 bg-white/10 origin-left"
+                    initial={{ scaleX: 1 }}
+                    animate={{ scaleX: autoAdvanceCountdown / 20 }}
+                    transition={{ duration: 1, ease: 'linear' }}
+                    style={{ transformOrigin: 'left center' }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  <span>Hole {currentHole + 1}</span>
+                  <span className="opacity-60">→</span>
+                  {autoAdvanceCountdown !== null && autoAdvanceCountdown !== undefined && (
+                    <span className="text-xs font-mono opacity-70">({autoAdvanceCountdown}s)</span>
+                  )}
+                </span>
+              </motion.button>
+            )}
+
+            {/* Idle state — no main action available */}
+            {!showPlayoffEnd && !showFinishButton && !showNextHole && (
+              <motion.div
+                key="idle"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="w-full h-12 rounded-2xl bg-muted/40 flex items-center justify-center"
+              >
+                <span className="text-xs text-muted-foreground font-medium">
+                  {isSpectator ? 'Spectating' : `Hole ${currentHole} of ${totalHoles}`}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );

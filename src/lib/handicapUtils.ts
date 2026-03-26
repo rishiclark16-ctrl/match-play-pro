@@ -76,6 +76,23 @@ export function getStrokesPerHole(
 }
 
 /**
+ * Returns the hole numbers (sorted ascending) where a player receives a stroke,
+ * based on their playing handicap and the course stroke index (SI).
+ * e.g. a 5-handicap gets strokes on the 5 holes with SI 1–5.
+ */
+export function getStrokeHoles(
+  playingHandicap: number,
+  holeInfo: HoleInfo[]
+): number[] {
+  if (playingHandicap <= 0) return [];
+  const strokesMap = getStrokesPerHole(playingHandicap, holeInfo);
+  return Array.from(strokesMap.entries())
+    .filter(([, strokes]) => strokes > 0)
+    .map(([holeNumber]) => holeNumber)
+    .sort((a, b) => a - b);
+}
+
+/**
  * Calculate net score for a single hole
  */
 export function calculateNetScore(

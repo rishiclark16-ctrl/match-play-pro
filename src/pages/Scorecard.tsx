@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
-import { Flag } from 'lucide-react';
+import { Mic } from 'lucide-react';
 import { HoleNavigator } from '@/components/golf/HoleNavigator';
 import { PlayerCard } from '@/components/golf/PlayerCard';
 import { GamesSection } from '@/components/golf/GamesSection';
@@ -13,8 +13,8 @@ import { PlayoffMode } from '@/components/golf/PlayoffMode';
 import { FinishOptionsOverlay } from '@/components/golf/FinishOptionsOverlay';
 import { ScorecardBottomBar } from '@/components/golf/ScorecardBottomBar';
 import { ScorecardHeader } from '@/components/golf/ScorecardHeader';
-import { AppBackground } from '@/components/ui/app-background';
 import { ScorecardModals } from '@/components/golf/ScorecardModals';
+import { HandicapStrokesSheet } from '@/components/golf/HandicapStrokesSheet';
 import { ScorecardTutorial } from '@/components/golf/ScorecardTutorial';
 import { useRounds } from '@/hooks/useRounds';
 import { useSupabaseRound } from '@/hooks/useSupabaseRound';
@@ -32,7 +32,9 @@ import { checkAutoPress } from '@/lib/games/nassau';
 import { toast } from 'sonner';
 import { hapticSuccess } from '@/lib/haptics';
 import { setStatusBarDefault } from '@/lib/statusBar';
-import { Button } from '@/components/ui/button';
+
+// MATCH logo M path
+const MATCH_M_PATH = 'M16 58 L16 22 L40 46 L64 22 L64 58';
 
 export default function Scorecard() {
   const { id } = useParams<{ id: string }>();
@@ -94,6 +96,7 @@ export default function Scorecard() {
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showHandicapSheet, setShowHandicapSheet] = useState(false);
 
   // Tutorial refs
   const voiceButtonRef = useRef<HTMLDivElement>(null);
@@ -353,43 +356,92 @@ export default function Scorecard() {
     }
   }, [round, updateGamesSupabase]);
 
-  // Loading state
+  // Loading state — full-screen with MATCH M logo
   if (supabaseLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center px-6">
-          <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <Flag className="w-7 h-7 text-muted-foreground" />
-          </div>
-          <p className="text-muted-foreground text-sm">Loading round...</p>
-        </div>
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          className="flex flex-col items-center gap-5"
+        >
+          <svg
+            width="80"
+            height="80"
+            viewBox="0 0 80 80"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-label="MATCH logo"
+          >
+            <motion.path
+              d={MATCH_M_PATH}
+              stroke="#F0EE3A"
+              strokeWidth="6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{ duration: 0.8, ease: 'easeInOut' }}
+            />
+          </svg>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-white/50 text-sm font-medium tracking-wider uppercase"
+          >
+            Loading round...
+          </motion.p>
+        </motion.div>
       </div>
     );
   }
 
-  // Round not found
+  // Round not found — clean error card
   if (!round) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center px-6">
-          <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
-            <Flag className="w-7 h-7 text-muted-foreground" />
+      <div className="min-h-screen bg-[#F8F8F6] flex items-center justify-center px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+          className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-border/30 p-8 text-center"
+        >
+          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
+            <svg width="28" height="28" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d={MATCH_M_PATH}
+                stroke="currentColor"
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+                className="text-muted-foreground"
+              />
+            </svg>
           </div>
-          <h2 className="text-lg font-bold mb-2">Round not found</h2>
-          <p className="text-muted-foreground text-sm mb-4">This round may have been deleted.</p>
-          <Button onClick={() => navigate('/')} className="rounded-lg">
+          <h2 className="text-lg font-bold mb-1">Round not found</h2>
+          <p className="text-muted-foreground text-sm mb-6">
+            This round may have been deleted or the link is invalid.
+          </p>
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            onClick={() => navigate('/')}
+            className="w-full bg-foreground text-background font-bold py-3 rounded-xl touch-manipulation"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+          >
             Go Home
-          </Button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
-      {/* Technical Grid Background */}
-      <AppBackground />
-
+    <div className="bg-[#F8F8F6] h-screen flex flex-col overflow-hidden relative">
       {/* Spectator/View-Only Banner */}
       {(isSpectator || !isScorekeeper) && (
         <SpectatorBanner isSpectator={isSpectator} isScorekeeper={isScorekeeper} />
@@ -411,20 +463,32 @@ export default function Scorecard() {
         onUpdateGames={handleUpdateGames}
       />
 
-      {/* Hole Navigator - Fixed, hide during playoff */}
+      {/* Hole Navigator — hide during playoff */}
       {playoffHole === 0 && (
         <div
           className="flex-shrink-0"
           style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
         >
-          <HoleNavigator
-            ref={holeNavRef}
-            currentHole={currentHole}
-            totalHoles={round.holes}
-            holeInfo={currentHoleInfo}
-            onPrevious={() => setCurrentHole(h => Math.max(1, h - 1))}
-            onNext={() => setCurrentHole(h => Math.min(round.holes, h + 1))}
-          />
+          <div className="relative">
+            <HoleNavigator
+              ref={holeNavRef}
+              currentHole={currentHole}
+              totalHoles={round.holes}
+              holeInfo={currentHoleInfo}
+              onPrevious={() => setCurrentHole(h => Math.max(1, h - 1))}
+              onNext={() => setCurrentHole(h => Math.min(round.holes, h + 1))}
+            />
+            {/* Stroke allocation button — only when handicaps are active */}
+            {playersWithScores.some(p => p.strokesPerHole && Array.from(p.strokesPerHole.values()).some(s => s > 0)) && (
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowHandicapSheet(true)}
+                className="absolute right-14 top-1/2 -translate-y-1/2 bg-[#F0EE3A] rounded-lg px-2 py-1 flex items-center gap-1"
+              >
+                <span className="text-[10px] font-black text-[#0A0A0A] tracking-[0.05em]">HCP</span>
+              </motion.button>
+            )}
+          </div>
         </div>
       )}
 
@@ -451,15 +515,13 @@ export default function Scorecard() {
           scrollBehavior: 'smooth',
         }}
       >
-        {/* Live Leaderboard - hide during playoff */}
+        {/* Live Leaderboard — hide during playoff */}
         {playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && (
           <div className="mb-4">
             <LiveLeaderboard
               ref={leaderboardRef}
               players={playersWithScores}
               useNetScoring={
-                // Match play always uses net scoring (differential strokes)
-                // Also enable if any game explicitly has useNet
                 round.matchPlay || round.games?.some(g => g.useNet) || false
               }
               isMatchPlay={round.matchPlay}
@@ -485,7 +547,7 @@ export default function Scorecard() {
         )}
 
         <div className="space-y-4 mt-3">
-          {/* Hole Summary - hide during playoff */}
+          {/* Hole Summary — hide during playoff */}
           {playoffHole === 0 &&
             (round.games?.length > 0 || playersWithScores.some(p => p.handicap !== undefined)) && (
               <HoleSummary
@@ -500,6 +562,11 @@ export default function Scorecard() {
           {/* Regular scoring mode */}
           {playoffHole === 0 && (
             <>
+              {/* PLAYERS section label */}
+              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1">
+                Players
+              </p>
+
               <LayoutGroup>
                 <AnimatePresence mode="popLayout">
                   {playersWithScores.map((player, index) => {
@@ -513,8 +580,8 @@ export default function Scorecard() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{
-                          layout: { type: "spring", stiffness: 300, damping: 30 },
-                          opacity: { duration: 0.2 }
+                          layout: { type: 'spring', stiffness: 300, damping: 30 },
+                          opacity: { duration: 0.2 },
                         }}
                       >
                         <PlayerCard
@@ -534,72 +601,41 @@ export default function Scorecard() {
                   })}
                 </AnimatePresence>
               </LayoutGroup>
-
-              {/* Next Hole Button */}
-              <AnimatePresence>
-                {allCurrentHoleScored && currentHole < round.holes && !isSpectator && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="mt-4"
-                  >
-                    <Button
-                      onClick={advanceToNextHole}
-                      className="w-full py-6 text-lg font-bold rounded-xl relative overflow-hidden shadow-lg"
-                      size="lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Flag className="w-5 h-5" />
-                        <span>Next Hole</span>
-                        {autoAdvanceCountdown !== null && (
-                          <span className="text-sm font-mono opacity-80">({autoAdvanceCountdown}s)</span>
-                        )}
-                      </div>
-
-                      {/* Countdown progress bar */}
-                      {autoAdvanceCountdown !== null && (
-                        <motion.div
-                          className="absolute bottom-0 left-0 h-1.5 bg-primary-foreground/50"
-                          initial={{ width: '100%' }}
-                          animate={{ width: `${(autoAdvanceCountdown / 20) * 100}%` }}
-                          transition={{ duration: 1, ease: 'linear' }}
-                        />
-                      )}
-                    </Button>
-                    <p className="text-sm text-center text-muted-foreground/70 mt-2">
-                      Tap to continue or wait for auto-advance
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </>
           )}
 
-          {/* Games Section - hide during playoff */}
+          {/* LIVE GAMES section label + Games Section — hide during playoff */}
           {playoffHole === 0 && (round.games?.length > 0 || propBets.length > 0) && (
-            <GamesSection
-              round={round}
-              players={playersWithScores}
-              scores={roundScores}
-              currentHole={currentHole}
-              onAddPress={handleAddPress}
-              propBets={propBets}
-            />
+            <>
+              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1 mt-2">
+                Live Games
+              </p>
+              <GamesSection
+                round={round}
+                players={playersWithScores}
+                scores={roundScores}
+                currentHole={currentHole}
+                onAddPress={handleAddPress}
+                propBets={propBets}
+              />
+            </>
           )}
         </div>
 
-        {/* Voice hint */}
+        {/* Voice hint — clean, no emoji */}
         {playoffHole === 0 && !isSpectator && isSupported && playersWithScores.length > 0 && (
-          <motion.p
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="text-center text-xs text-muted-foreground/70 mt-6 font-medium"
+            className="flex items-center justify-center gap-1.5 mt-6"
           >
-            💡 Tap mic: "{(playersWithScores[0]?.name || 'Mike').split(' ')[0]} 5,{' '}
-            {(playersWithScores[1]?.name || 'Tim').split(' ')[0]} 4"
-          </motion.p>
+            <Mic className="w-3 h-3 text-muted-foreground/50" />
+            <p className="text-xs text-muted-foreground/60 font-medium">
+              Say "{(playersWithScores[0]?.name || 'Mike').split(' ')[0]} 5,{' '}
+              {(playersWithScores[1]?.name || 'Tim').split(' ')[0]} 4" to score
+            </p>
+          </motion.div>
         )}
       </main>
 
@@ -635,13 +671,17 @@ export default function Scorecard() {
         isProcessing={isProcessing}
         isSupported={isSupported}
         propBets={propBets}
+        autoAdvanceCountdown={autoAdvanceCountdown}
+        allCurrentHoleScored={allCurrentHoleScored}
         voiceButtonRef={voiceButtonRef}
         onNavigateToLeaderboard={() => navigate(`/round/${round.id}/leaderboard`)}
         onVoicePress={handleVoicePress}
         onShowFinishOptions={() => setShowFinishOptions(true)}
         onFinishRound={handleFinishRound}
+        onNextHole={advanceToNextHole}
         onPropBetAdded={addPropBet}
         onPropBetUpdated={updatePropBet}
+        onShowShare={() => setShowShareModal(true)}
       />
 
       {/* Tutorial Overlay */}
@@ -656,6 +696,16 @@ export default function Scorecard() {
       />
 
       {/* All Modals and Dialogs */}
+      {/* Handicap Stroke Allocation Sheet */}
+      <HandicapStrokesSheet
+        open={showHandicapSheet}
+        onClose={() => setShowHandicapSheet(false)}
+        players={playersWithScores}
+        holeInfo={round.holeInfo}
+        totalHoles={round.holes}
+        handicapMode={round.handicapMode ?? 'auto'}
+      />
+
       <ScorecardModals
         selectedPlayerId={selectedPlayerId}
         selectedPlayer={selectedPlayer ? {
