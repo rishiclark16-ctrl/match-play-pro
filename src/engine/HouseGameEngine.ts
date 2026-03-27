@@ -164,7 +164,7 @@ export function buildConfig(activePrimitives: ActivePrimitive[]): ScoringConfig 
   // ── Handicap ───────────────────────────────────────────────────────────────
   // IMPLEMENTED: percentage (100/90/80/75/0), useStrokeIndex, ghostPlayer
   // STUB: mixedTees, bumpAndRun
-  if (c.handicapMixedTees)  console.warn('[HouseGame STUB] handicap_mixed_tees not yet wired');
+  // handicap_mixed_tees is handled via per-player TeeSet in usePlayersWithScores
   if (c.handicapBumpAndRun) console.warn('[HouseGame STUB] handicap_bump_and_run not yet wired');
 
   // ── Garbage bets ───────────────────────────────────────────────────────────

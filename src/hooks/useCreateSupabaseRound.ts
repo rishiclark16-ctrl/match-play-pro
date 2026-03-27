@@ -1,8 +1,9 @@
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Round, HoleInfo, GameConfig, generateJoinCode } from '@/types/golf';
+import { Round, HoleInfo, GameConfig, TeeSet, generateJoinCode } from '@/types/golf';
 import { Json } from '@/integrations/supabase/types';
 import { captureException } from '@/lib/sentry';
+import { calculatePlayingHandicap, getStrokesPerHole } from '@/lib/handicapUtils';
 
 interface CreateRoundInput {
   courseId: string;
@@ -16,7 +17,9 @@ interface CreateRoundInput {
   rating?: number;
   handicapMode?: 'auto' | 'manual';
   games: GameConfig[];
-  players: { name: string; handicap?: number; manualStrokes?: number; teamId?: string; profileId?: string }[];
+  teeSets?: TeeSet[];
+  mixedTees?: boolean;
+  players: { name: string; handicap?: number; manualStrokes?: number; teamId?: string; profileId?: string; isGhost?: boolean; teeSetId?: string }[];
 }
 
 export interface CreateRoundError {
@@ -79,6 +82,8 @@ export function useCreateSupabaseRound() {
           games: input.games as unknown as Json,
           teams: input.games.find(g => g.type === 'bestball')?.teams as unknown as Json || null,
           hole_info: input.holeInfo as unknown as Json,
+          tee_sets: input.teeSets as unknown as Json || null,
+          mixed_tees: input.mixedTees || false,
           status: 'active'
         });
 
@@ -106,7 +111,9 @@ export function useCreateSupabaseRound() {
         manual_strokes: p.manualStrokes ?? 0,
         team_id: p.teamId || null,
         order_index: index,
-        profile_id: index === 0 ? userId : (p.profileId || null)
+        profile_id: index === 0 && !p.isGhost ? userId : (p.profileId || null),
+        is_ghost: p.isGhost ?? false,
+        tee_set_id: p.teeSetId || null,
       }));
 
       const { error: playersError } = await supabase
@@ -148,6 +155,43 @@ export function useCreateSupabaseRound() {
         };
       }
 
+      // Auto-populate scores for ghost players (gross = par + handicap_strokes → net par)
+      const ghostPlayers = input.players.filter(p => p.isGhost);
+      if (ghostPlayers.length > 0) {
+        const { data: insertedPlayers } = await supabase
+          .from('players')
+          .select('id, name, handicap, order_index')
+          .eq('round_id', roundId)
+          .eq('is_ghost', true);
+
+        if (insertedPlayers && insertedPlayers.length > 0) {
+          const slope = input.slope ?? 113;
+          const ghostScores: { round_id: string; player_id: string; hole_number: number; strokes: number }[] = [];
+
+          for (const gp of insertedPlayers) {
+            const playingHcp = gp.handicap
+              ? calculatePlayingHandicap(gp.handicap, slope, input.holes)
+              : 0;
+            const strokesMap = getStrokesPerHole(playingHcp, input.holeInfo);
+
+            for (const hole of input.holeInfo) {
+              const handicapStrokes = strokesMap.get(hole.number) ?? 0;
+              // Gross score = par + handicap strokes → net = par (net par)
+              ghostScores.push({
+                round_id: roundId,
+                player_id: gp.id,
+                hole_number: hole.number,
+                strokes: hole.par + handicapStrokes,
+              });
+            }
+          }
+
+          if (ghostScores.length > 0) {
+            await supabase.from('scores').insert(ghostScores);
+          }
+        }
+      }
+
       // Build Round object from inputs (no need to fetch back from DB)
       const round: Round = {
         id: roundId,
@@ -166,6 +210,8 @@ export function useCreateSupabaseRound() {
         joinCode,
         createdAt: new Date(),
         presses: [],
+        teeSets: input.teeSets,
+        mixedTees: input.mixedTees || false,
       };
 
       return { round };

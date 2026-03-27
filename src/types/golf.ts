@@ -17,6 +17,14 @@ export interface Team {
   color: string;  // For visual distinction
 }
 
+// Bingo Bango Bongo per-hole result
+export interface BingoBangoHoleResult {
+  holeNumber: number;
+  bingoPlayerId: string | null;  // first ball on green
+  bangoPlayerId: string | null;  // closest to pin when all are on green
+  bongoPlayerId: string | null;  // first to hole out
+}
+
 // Betting game configuration
 export interface GameConfig {
   id: string;
@@ -32,6 +40,7 @@ export interface GameConfig {
   // House Game extras (type === 'house' only)
   activePrimitives?: Array<{ id: string; value: any }>;
   houseGameId?: string;
+  bbbResults?: BingoBangoHoleResult[]; // House Game: Bingo Bango Bongo results
 }
 
 // Wolf hole result (imported from wolf.ts but defined here for type)
@@ -88,6 +97,15 @@ export interface Settlement {
   description: string;
 }
 
+export interface TeeSet {
+  id: string;      // e.g. 'blue', 'red', 'white', 'gold'
+  name: string;    // e.g. 'Blue', 'Red'
+  gender: 'mens' | 'womens' | 'unisex';
+  slope: number;       // 55–155
+  courseRating: number;
+  par: number;
+}
+
 export interface HoleInfo {
   number: number;
   par: number;
@@ -115,6 +133,9 @@ export interface Round {
   // Betting games
   games: GameConfig[];
   presses: Press[];
+  // Mixed tees support
+  teeSets?: TeeSet[];
+  mixedTees?: boolean;
 }
 
 export interface Player {
@@ -127,6 +148,10 @@ export interface Player {
   avatarUrl?: string;
   // Manual strokes received (for manual handicap mode)
   manualStrokes?: number;
+  // Ghost player: receives net-par scores automatically, no real account
+  isGhost?: boolean;
+  // Mixed tees: which tee set this player is playing from
+  teeSetId?: string;
 }
 
 export interface Score {

@@ -14,7 +14,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useFriends, Friend } from '@/hooks/useFriends';
 import { useGroups, GolfGroup } from '@/hooks/useGroups';
 import { useHouseGame } from '@/hooks/useHouseGame';
-import { Course, HoleInfo, GameConfig, Team, generateId } from '@/types/golf';
+import { Course, HoleInfo, GameConfig, Team, TeeSet, generateId } from '@/types/golf';
 import { createDefaultTeams } from '@/lib/games/bestball';
 import { buildConfig, summarizeScoringConfig } from '@/engine/HouseGameEngine';
 import { cn } from '@/lib/utils';
@@ -28,6 +28,8 @@ interface PlayerData {
   handicap?: number;
   manualStrokes?: number;
   profileId?: string;
+  isGhost?: boolean;
+  teeSetId?: string;
 }
 
 export default function NewRound() {
@@ -85,6 +87,22 @@ export default function NewRound() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [houseGameEnabled, setHouseGameEnabled] = useState(true);
   const { houseGame } = useHouseGame(selectedGroupId);
+
+  // Ghost player — active when house game has handicap_ghost_player primitive
+  const ghostPrimitiveActive = houseGame?.activePrimitives?.some(p => p.id === 'handicap_ghost_player') ?? false;
+  const [ghostName, setGhostName] = useState('Ghost');
+  const [ghostHandicap, setGhostHandicap] = useState<number | undefined>(undefined);
+
+  // Mixed tees
+  const [mixedTees, setMixedTees] = useState(false);
+  const [roundTeeSets, setRoundTeeSets] = useState<TeeSet[]>([
+    { id: 'blue', name: 'Blue', gender: 'mens', slope: 130, courseRating: 71.5, par: 72 },
+    { id: 'red', name: 'Red', gender: 'womens', slope: 113, courseRating: 68.2, par: 72 },
+  ]);
+  const [playerTeeIds, setPlayerTeeIds] = useState<Map<string, string>>(new Map());
+
+  // Auto-enable mixed tees when house game has the primitive active
+  const mixedTeesPrimitiveActive = houseGame?.activePrimitives?.some(p => p.id === 'handicap_mixed_tees') ?? false;
 
   // Auto-fill first player from profile
   useEffect(() => {
@@ -245,6 +263,18 @@ export default function NewRound() {
     toast.success(`Loaded ${group.name}`);
   };
 
+  const handleUpdatePlayerTee = (playerId: string, teeSetId: string | undefined) => {
+    setPlayerTeeIds(prev => {
+      const next = new Map(prev);
+      if (teeSetId) {
+        next.set(playerId, teeSetId);
+      } else {
+        next.delete(playerId);
+      }
+      return next;
+    });
+  };
+
   // Start round handler
   const handleStartRound = async () => {
     if (!selectedCourse || isCreating) return;
@@ -327,6 +357,30 @@ export default function NewRound() {
         });
       }
 
+      // Build player list, appending ghost if active
+      const roundPlayers = players
+        .filter(p => p.name.trim())
+        .map(p => ({
+          name: p.name.trim(),
+          handicap: p.handicap,
+          manualStrokes: p.manualStrokes ?? 0,
+          teamId: bestBallTeams.find(t => t.playerIds.includes(p.id))?.id,
+          profileId: p.profileId,
+          isGhost: false,
+          teeSetId: mixedTees ? (playerTeeIds.get(p.id)) : undefined,
+        }));
+
+      if (ghostPrimitiveActive && houseGameEnabled) {
+        roundPlayers.push({
+          name: ghostName.trim() || 'Ghost',
+          handicap: ghostHandicap,
+          manualStrokes: 0,
+          teamId: undefined,
+          profileId: undefined,
+          isGhost: true,
+        });
+      }
+
       const result = await createRound({
         courseId: selectedCourse.id,
         courseName: selectedCourse.name,
@@ -339,15 +393,9 @@ export default function NewRound() {
         rating: selectedCourse.rating,
         handicapMode,
         games,
-        players: players
-          .filter(p => p.name.trim())
-          .map(p => ({
-            name: p.name.trim(),
-            handicap: p.handicap,
-            manualStrokes: p.manualStrokes ?? 0,
-            teamId: bestBallTeams.find(t => t.playerIds.includes(p.id))?.id,
-            profileId: p.profileId,
-          })),
+        teeSets: mixedTees ? roundTeeSets : undefined,
+        mixedTees,
+        players: roundPlayers,
       });
 
       if (result.round) {
@@ -458,6 +506,12 @@ export default function NewRound() {
               onSelectGroup={handleSelectGroup}
               onNavigateToFriends={() => navigate('/friends')}
               onNavigateToGroups={() => navigate('/groups')}
+              mixedTees={mixedTees || mixedTeesPrimitiveActive}
+              roundTeeSets={roundTeeSets}
+              playerTeeIds={playerTeeIds}
+              onMixedTeesChange={setMixedTees}
+              onUpdateTeeSets={setRoundTeeSets}
+              onUpdatePlayerTee={handleUpdatePlayerTee}
             />
           )}
           {step === 'format' && (
@@ -518,6 +572,48 @@ export default function NewRound() {
                   )}
                 </motion.div>
               )}
+
+              {/* Ghost Player card — shown when house game has the ghost primitive active */}
+              {ghostPrimitiveActive && houseGameEnabled && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-3"
+                >
+                  <div className="bg-white rounded-2xl border-2 border-border/40 px-4 py-3">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg">👻</span>
+                      <p className="text-[13px] font-bold text-foreground">Ghost Player</p>
+                      <p className="text-[11px] text-muted-foreground">Scores net par every hole</p>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-1">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-1">Name</p>
+                        <input
+                          type="text"
+                          value={ghostName}
+                          onChange={e => setGhostName(e.target.value)}
+                          placeholder="Ghost"
+                          className="w-full bg-muted rounded-xl px-3 py-2 text-[13px] font-bold text-foreground outline-none"
+                        />
+                      </div>
+                      <div className="w-28">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-1">Handicap</p>
+                        <input
+                          type="number"
+                          value={ghostHandicap ?? ''}
+                          onChange={e => setGhostHandicap(e.target.value ? Number(e.target.value) : undefined)}
+                          placeholder="0"
+                          min="0"
+                          max="54"
+                          className="w-full bg-muted rounded-xl px-3 py-2 text-[13px] font-bold text-foreground outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
             <FormatStep
               players={players}
               strokePlay={strokePlay}

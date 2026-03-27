@@ -3,7 +3,7 @@
  * Supabase database records to application domain types.
  */
 
-import { Round, Player, Score, Press, HoleInfo, GameConfig } from '@/types/golf';
+import { Round, Player, Score, Press, HoleInfo, GameConfig, TeeSet } from '@/types/golf';
 
 /**
  * Database record types (snake_case from Supabase)
@@ -25,6 +25,8 @@ export interface DbRound {
   hole_info?: unknown | null;
   join_code: string;
   created_at: string | null;
+  tee_sets?: unknown | null;
+  mixed_tees?: boolean | null;
 }
 
 export interface DbPlayer {
@@ -35,6 +37,8 @@ export interface DbPlayer {
   order_index: number;
   profile_id?: string | null;
   manual_strokes?: number | null;
+  is_ghost?: boolean | null;
+  tee_set_id?: string | null;
   profiles?: {
     avatar_url?: string | null;
   } | null;
@@ -77,6 +81,8 @@ export function transformRound(db: DbRound): Round {
     joinCode: db.join_code,
     createdAt: db.created_at ? new Date(db.created_at) : new Date(),
     presses: [],
+    teeSets: (db.tee_sets as TeeSet[] | undefined) ?? undefined,
+    mixedTees: db.mixed_tees ?? false,
   };
 }
 
@@ -93,6 +99,8 @@ export function transformPlayer(db: DbPlayer): Player {
     profileId: db.profile_id ?? undefined,
     avatarUrl: db.profiles?.avatar_url ?? undefined,
     manualStrokes: db.manual_strokes ?? undefined,
+    isGhost: db.is_ghost ?? false,
+    teeSetId: db.tee_set_id ?? undefined,
   };
 }
 

@@ -248,6 +248,25 @@ export function buildMatchPlayStrokesMap(
   return map;
 }
 
+// ============================================================================
+// MIXED TEES
+// ============================================================================
+
+/**
+ * Convenience wrapper for per-player adjusted handicap with their specific tee.
+ * Formula: (handicapIndex × teeSlope / 113) + (teeRating − teePar)
+ * This is identical to calculatePlayingHandicap — provided for semantic clarity.
+ */
+export function calculateAdjustedHandicap(
+  handicapIndex: number,
+  teeSlope: number,
+  teeRating: number,
+  teePar: number,
+  holes: 9 | 18 = 18
+): number {
+  return calculatePlayingHandicap(handicapIndex, teeSlope, holes, teeRating, teePar);
+}
+
 /**
  * Build strokes map for stroke play (each player uses their full course handicap)
  * This is for net stroke play competitions where everyone's net is compared

@@ -41,18 +41,56 @@ export function usePlayersWithScores({
     // Compute total par for course rating adjustment
     const totalPar = round.holeInfo.reduce((sum, h) => sum + h.par, 0);
 
+    // Helper: get a player's tee set (only relevant in mixedTees mode)
+    const getPlayerTee = (player: Player) =>
+      (round.mixedTees && round.teeSets)
+        ? round.teeSets.find(t => t.id === player.teeSetId)
+        : undefined;
+
     if (isTwoPlayerMatch) {
       const [p1, p2] = players;
-      const matchInfo = calculateMatchPlayStrokes(
-        { id: p1.id, name: p1.name, handicap: p1.handicap, manualStrokes: p1.manualStrokes },
-        { id: p2.id, name: p2.name, handicap: p2.handicap, manualStrokes: p2.manualStrokes },
-        round.slope || 113,
-        round.holes,
-        isManualMode ? 'manual' : 'auto',
-        round.rating,
-        totalPar
-      );
-      matchPlayStrokesMap = buildMatchPlayStrokesMap(matchInfo, round.holeInfo);
+      if (round.mixedTees && round.teeSets) {
+        // Mixed tees: compute adjusted handicap per player using their own tee
+        const p1Tee = getPlayerTee(p1);
+        const p2Tee = getPlayerTee(p2);
+        const p1Slope = p1Tee?.slope ?? round.slope ?? 113;
+        const p1Rating = p1Tee?.courseRating ?? round.rating;
+        const p1Par = p1Tee?.par ?? totalPar;
+        const p2Slope = p2Tee?.slope ?? round.slope ?? 113;
+        const p2Rating = p2Tee?.courseRating ?? round.rating;
+        const p2Par = p2Tee?.par ?? totalPar;
+
+        const p1AdjHcp = (p1.handicap !== undefined && !isManualMode)
+          ? calculatePlayingHandicap(p1.handicap, p1Slope, round.holes, p1Rating, p1Par)
+          : (p1.manualStrokes ?? 0);
+        const p2AdjHcp = (p2.handicap !== undefined && !isManualMode)
+          ? calculatePlayingHandicap(p2.handicap, p2Slope, round.holes, p2Rating, p2Par)
+          : (p2.manualStrokes ?? 0);
+
+        const diff = Math.abs(p1AdjHcp - p2AdjHcp);
+        const higherPlayer = p1AdjHcp >= p2AdjHcp ? p1 : p2;
+        const lowerPlayer = p1AdjHcp >= p2AdjHcp ? p2 : p1;
+
+        const lowerMap = new Map<number, number>();
+        round.holeInfo.forEach(h => lowerMap.set(h.number, 0));
+
+        matchPlayStrokesMap = new Map([
+          [higherPlayer.id, getStrokesPerHole(diff, round.holeInfo)],
+          [lowerPlayer.id, lowerMap],
+        ]);
+      } else {
+        // Standard single-tee match play (existing code)
+        const matchInfo = calculateMatchPlayStrokes(
+          { id: p1.id, name: p1.name, handicap: p1.handicap, manualStrokes: p1.manualStrokes },
+          { id: p2.id, name: p2.name, handicap: p2.handicap, manualStrokes: p2.manualStrokes },
+          round.slope || 113,
+          round.holes,
+          isManualMode ? 'manual' : 'auto',
+          round.rating,
+          totalPar
+        );
+        matchPlayStrokesMap = buildMatchPlayStrokesMap(matchInfo, round.holeInfo);
+      }
     }
 
     return players.map(player => {
@@ -92,8 +130,13 @@ export function usePlayersWithScores({
         }, 0);
         netRelativeToPar = totalNetStrokes - playedPar2;
       } else if (player.handicap !== undefined && player.handicap !== null) {
-        // Auto mode for non-match-play: calculate from handicap index and course slope
-        playingHandicap = calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes, round.rating, totalPar);
+        // Auto mode: check for per-player tee (mixed tees) or use round defaults
+        const playerTee = getPlayerTee(player);
+        const slope = playerTee?.slope ?? round.slope ?? 113;
+        const rating = playerTee?.courseRating ?? round.rating;
+        const par = playerTee?.par ?? totalPar;
+
+        playingHandicap = calculatePlayingHandicap(player.handicap, slope, round.holes, rating, par);
         strokesPerHole = getStrokesPerHole(playingHandicap, round.holeInfo);
         totalNetStrokes = calculateTotalNetStrokes(totalStrokes, playingHandicap, playerScores.length, round.holes);
         const playedPar3 = playerScores.reduce((sum, s) => {
