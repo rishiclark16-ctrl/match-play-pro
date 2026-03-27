@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronDown,
@@ -12,6 +12,8 @@ import {
   Swords,
   Dices,
   DollarSign,
+  Sparkles,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Round, Player, Score, Press, PlayerWithScores } from '@/types/golf';
@@ -22,7 +24,11 @@ import { calculateStableford, StablefordResult, getStablefordPointsColor } from 
 import { calculateBestBall, BestBallResult, formatBestBallStatus } from '@/lib/games/bestball';
 import { calculateWolf, WolfResult, getWolfForHole } from '@/lib/games/wolf';
 import { calculateMatchPlay, MatchPlayResult, getMatchPlayStatusColor } from '@/lib/games/matchPlay';
+import { calculateHouseGame, HouseGameResult } from '@/lib/games/houseGame';
+import { buildScoringConfig } from '@/lib/houseGame/engine';
+import { buildConfig } from '@/engine/HouseGameEngine';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1089,6 +1095,116 @@ function Divider() {
   return <div className="border-t border-slate-100" />;
 }
 
+// ─── HOUSE GAME ──────────────────────────────────────────────────────────────
+
+function HouseGameSection({
+  result,
+  players,
+  holeInfo,
+  currentHole,
+  pressThreshold,
+  onAutoPress,
+}: {
+  result: HouseGameResult;
+  players: PlayerWithScores[];
+  holeInfo: Round['holeInfo'];
+  currentHole: number;
+  pressThreshold: number | null;
+  onAutoPress: (press: Press) => void;
+}) {
+  const leader = result.standings[0];
+  const autoPressTriggeredRef = useRef<Set<number>>(new Set());
+
+  // Auto-press detection: when a player is X down in nassau, fire a press
+  useEffect(() => {
+    if (!pressThreshold || !result.nassauResult) return;
+    const nassau = result.nassauResult;
+    if (nassau.overall.margin >= pressThreshold && nassau.overall.winnerId) {
+      const key = currentHole;
+      if (!autoPressTriggeredRef.current.has(key)) {
+        autoPressTriggeredRef.current.add(key);
+        const loser = players.find(p => p.id !== nassau.overall.winnerId);
+        if (loser) {
+          const press = createPress(loser.id, currentHole, 1);
+          onAutoPress(press);
+          toast.success(`Auto-press triggered — new sub-match started on hole ${currentHole}`, {
+            icon: '⚡',
+          });
+        }
+      }
+    }
+  }, [result.nassauResult, currentHole, pressThreshold, players, onAutoPress]);
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-lg bg-[#F0EE3A] flex items-center justify-center">
+            <Sparkles className="w-3.5 h-3.5 text-[#0A0A0A]" />
+          </div>
+          <span className="text-[13px] font-bold text-foreground">House Game</span>
+        </div>
+        {leader && leader.netEarnings !== 0 && (
+          <span className={cn(
+            'text-[12px] font-black',
+            leader.netEarnings > 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'
+          )}>
+            {leader.playerName.split(' ')[0]} {leader.netEarnings > 0 ? '+' : ''}${leader.netEarnings.toFixed(0)}
+          </span>
+        )}
+      </div>
+
+      {/* Standings */}
+      <div className="space-y-1.5">
+        {result.standings.map(standing => (
+          <div key={standing.playerId} className="flex items-center justify-between">
+            <span className="text-[13px] text-foreground">{standing.playerName.split(' ')[0]}</span>
+            <div className="flex items-center gap-3">
+              {standing.birdies > 0 && (
+                <span className="text-[11px] text-[#22C55E] font-bold">{standing.birdies}🐦</span>
+              )}
+              <span className={cn(
+                'text-[13px] font-black tabular-nums',
+                standing.netEarnings > 0 ? 'text-[#22C55E]' :
+                standing.netEarnings < 0 ? 'text-[#EF4444]' :
+                'text-muted-foreground'
+              )}>
+                {standing.netEarnings > 0 ? '+' : ''}{standing.netEarnings === 0 ? 'E' : `$${standing.netEarnings.toFixed(0)}`}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Active bonus this hole */}
+      {(() => {
+        const hole = holeInfo.find(h => h.number === currentHole);
+        const active = result.holeResults.find(r => r.holeNumber === currentHole);
+        if (!active) return null;
+        const bonuses = active.activeBonuses.filter(b => b !== 'bonus_birdie_unit' && b !== 'bonus_eagle_unit');
+        if (bonuses.length === 0 && !(hole?.par === 5 && result.stubbedPrimitives.length === 0)) return null;
+        return (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {bonuses.map(b => (
+              <span key={b} className="text-[10px] font-bold bg-[#F0EE3A] text-[#0A0A0A] px-2 py-0.5 rounded-full">
+                {b === 'bonus_par5_double' ? '2× Par 5' : b}
+              </span>
+            ))}
+          </div>
+        );
+      })()}
+
+      {/* Stubs notice */}
+      {result.stubbedPrimitives.length > 0 && (
+        <p className="text-[10px] text-muted-foreground mt-2">
+          {result.stubbedPrimitives.length} rule{result.stubbedPrimitives.length > 1 ? 's' : ''} coming soon
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 
 export function GamesSection({ round, players, scores, currentHole, onAddPress, propBets = [] }: GamesSectionProps) {
@@ -1114,6 +1230,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
   const bestBallGame = round.games?.find(g => g.type === 'bestball');
   const wolfGame = round.games?.find(g => g.type === 'wolf');
   const matchGame = round.games?.find(g => g.type === 'match');
+  const houseGameEntry = round.games?.find(g => g.type === 'house');
 
   // Also check round.matchPlay for legacy support
   const hasMatchPlay = matchGame || round.matchPlay;
@@ -1229,6 +1346,34 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
     return null;
   }, [nassauResult, players, currentHole, round.presses, round.holes]);
 
+  // Calculate House Game results
+  const houseGameResult: HouseGameResult | null = useMemo(() => {
+    if (!houseGameEntry?.activePrimitives?.length || players.length < 2) return null;
+    try {
+      const config = buildScoringConfig(houseGameEntry.activePrimitives);
+      return calculateHouseGame(
+        scores,
+        players,
+        round.holeInfo,
+        config,
+        round.slope ?? 113,
+        round.holes as 9 | 18,
+      );
+    } catch {
+      return null;
+    }
+  }, [houseGameEntry, scores, players, round.holeInfo, round.slope, round.holes]);
+
+  // Derive auto-press threshold from house game config
+  const autoPressThreshold: number | null = useMemo(() => {
+    if (!houseGameEntry?.activePrimitives?.length) return null;
+    const config = buildConfig(houseGameEntry.activePrimitives);
+    if (config.pressRules.trigger === 'x_down' && config.pressRules.threshold) {
+      return config.pressRules.threshold;
+    }
+    return null;
+  }, [houseGameEntry]);
+
   // Calculate prop bets summary (junk bets)
   const propBetsSummary = useMemo(() => {
     if (!propBets || propBets.length === 0) return null;
@@ -1264,7 +1409,8 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
     !wolfGame &&
     !hasMatchPlay &&
     !hasPropBets &&
-    !hasStrokePlay
+    !hasStrokePlay &&
+    !houseGameEntry
   )
     return null;
 
@@ -1351,6 +1497,20 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
 
   if (hasStrokePlay && players.length > 0) {
     sections.push(<StrokePlaySection key="stroke" players={players} />);
+  }
+
+  if (houseGameEntry && houseGameResult) {
+    sections.push(
+      <HouseGameSection
+        key="house"
+        result={houseGameResult}
+        players={players}
+        holeInfo={round.holeInfo}
+        currentHole={currentHole}
+        pressThreshold={autoPressThreshold}
+        onAutoPress={onAddPress}
+      />
+    );
   }
 
   if (hasPropBets && propBetsSummary) {

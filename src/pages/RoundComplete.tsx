@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CloudRain, Shuffle, Coins } from 'lucide-react';
 import { useRounds } from '@/hooks/useRounds';
 import { useRoundSharing } from '@/hooks/useRoundSharing';
 import { useSettings } from '@/hooks/useSettings';
@@ -17,9 +17,9 @@ import { shareResults, shareText } from '@/lib/shareResults';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { supabase } from '@/integrations/supabase/client';
 import { StrokesPerHoleMap } from '@/lib/games/skins';
-import { calculateSettlement } from '@/lib/games/settlement';
+import { calculateSettlement, NetSettlement } from '@/lib/games/settlement';
 import { calculateMatchPlay, MatchPlayResult } from '@/lib/games/matchPlay';
-import { TechCard, TechCardContent } from '@/components/ui/tech-card';
+import { buildConfig } from '@/engine/HouseGameEngine';
 import { ShareRoundResultsSheet } from '@/components/golf/ShareRoundResultsSheet';
 import {
   calculateMatchPlayStrokes,
@@ -218,6 +218,53 @@ export default function RoundComplete() {
     );
   }, [round, playersWithScores, rawPlayers, gameResults, matchPlayResult, propBets]);
 
+  // House game derived state
+  const houseGameEntry = round?.games?.find(g => g.type === 'house');
+  const houseGameConfig = useMemo(() => {
+    if (!houseGameEntry?.activePrimitives?.length) return null;
+    return buildConfig(houseGameEntry.activePrimitives);
+  }, [houseGameEntry]);
+
+  // House game settlements from standings
+  const houseGameSettlements = useMemo((): NetSettlement[] => {
+    const result = gameResults?.houseGameResult;
+    if (!result) return [];
+    const { standings } = result;
+    const winners = standings.filter(s => s.netEarnings > 0);
+    const losers  = standings.filter(s => s.netEarnings < 0);
+    if (winners.length === 0 || losers.length === 0) return [];
+    const totalWinnings = winners.reduce((sum, w) => sum + w.netEarnings, 0);
+    const out: NetSettlement[] = [];
+    losers.forEach(loser => {
+      winners.forEach(winner => {
+        const proportion = totalWinnings > 0 ? winner.netEarnings / totalWinnings : 1 / winners.length;
+        const amount = Math.round(proportion * Math.abs(loser.netEarnings) * 100) / 100;
+        if (amount > 0.01) {
+          out.push({
+            fromPlayerId: loser.playerId,
+            fromPlayerName: loser.playerName,
+            toPlayerId: winner.playerId,
+            toPlayerName: winner.playerName,
+            amount,
+          });
+        }
+      });
+    });
+    return out;
+  }, [gameResults?.houseGameResult]);
+
+  // Rain-shortened: did the round end early (< holes played for back 9)?
+  const isRainShortened = useMemo(() => {
+    if (!houseGameConfig?.settlementConfig.rainShortened) return false;
+    const holesPlayed = Math.max(0, ...rawPlayers.map(p =>
+      rawScores.filter(s => s.playerId === p.id).length
+    ));
+    return holesPlayed < (round?.holes ?? 18);
+  }, [houseGameConfig, rawPlayers, rawScores, round]);
+
+  // Active garbage bets list
+  const activeGarbageBets = houseGameConfig?.garbageBets ?? [];
+
   // Settlement payment tracking
   const {
     trackedSettlements,
@@ -355,16 +402,43 @@ export default function RoundComplete() {
             transition={{ delay: 0.35 }}
             className="mx-4 mb-4"
           >
-            <TechCard>
-              <TechCardContent className="p-3">
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     Match Play
                   </span>
                   <span className="font-bold text-sm">{matchPlayResult.statusText}</span>
                 </div>
-              </TechCardContent>
-            </TechCard>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Rain-shortened banner */}
+        {isRainShortened && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mx-4 mb-3 bg-[#1E3A5F] rounded-2xl px-4 py-3 flex items-center gap-3"
+          >
+            <CloudRain className="w-5 h-5 text-[#60A5FA] flex-shrink-0" />
+            <div>
+              <p className="text-white text-[13px] font-bold">Rain-shortened settlement applied</p>
+              <p className="text-white/60 text-[11px]">Front 9 settled normally · Back 9 and overall not scored</p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Net-out banner */}
+        {houseGameConfig?.settlementConfig.netOut && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.32 }}
+            className="mx-4 mb-3 bg-[#F0EE3A] rounded-2xl px-4 py-2.5 flex items-center gap-3"
+          >
+            <Shuffle className="w-4 h-4 text-[#0A0A0A] flex-shrink-0" />
+            <p className="text-[#0A0A0A] text-[12px] font-bold">Net-out applied — all debts combined into minimum payments</p>
           </motion.div>
         )}
 
@@ -378,6 +452,58 @@ export default function RoundComplete() {
           markAsForgiven={markAsForgiven}
           markAsPending={markAsPending}
         />
+
+        {/* House Game Settlement */}
+        {houseGameSettlements.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.38 }}
+            className="mx-4 mb-4"
+          >
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
+                <div className="w-5 h-5 rounded-md bg-[#F0EE3A] flex items-center justify-center">
+                  <Coins className="w-3 h-3 text-[#0A0A0A]" />
+                </div>
+                <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-foreground">House Game</span>
+              </div>
+              {houseGameSettlements.map((s, i) => (
+                <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-border/10 last:border-b-0">
+                  <span className="text-[13px] font-semibold text-foreground">
+                    {s.fromPlayerName.split(' ')[0]} → {s.toPlayerName.split(' ')[0]}
+                  </span>
+                  <span className="text-[14px] font-black text-foreground">${s.amount.toFixed(0)}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Garbage / Junk Bets Section */}
+        {activeGarbageBets.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.42 }}
+            className="mx-4 mb-4"
+          >
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
+                <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-foreground">Junk Bets</span>
+                <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-bold">Coming Soon</span>
+              </div>
+              <div className="px-4 py-3">
+                <p className="text-[12px] text-muted-foreground">
+                  Active: {activeGarbageBets.map(b => b.charAt(0).toUpperCase() + b.slice(1)).join(', ')}
+                </p>
+                <p className="text-[11px] text-muted-foreground/60 mt-1">
+                  Hole-by-hole junk bet tracking coming in a future update.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Game Results */}
         {gameResults && (

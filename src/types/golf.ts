@@ -20,7 +20,7 @@ export interface Team {
 // Betting game configuration
 export interface GameConfig {
   id: string;
-  type: 'skins' | 'nassau' | 'match' | 'stableford' | 'bestball' | 'wolf';
+  type: 'skins' | 'nassau' | 'match' | 'stableford' | 'bestball' | 'wolf' | 'house';
   stakes: number;
   carryover?: boolean;           // Skins/Wolf: ties carry to next hole
   autoPress?: boolean;           // Nassau: auto-press when 2 down
@@ -29,6 +29,9 @@ export interface GameConfig {
   useNet?: boolean;              // Use handicap strokes for this game
   blindWolfMultiplier?: number;  // Wolf: Blind Wolf point multiplier (default 2x)
   wolfResults?: WolfHoleResult[]; // Wolf: Results for each hole
+  // House Game extras (type === 'house' only)
+  activePrimitives?: Array<{ id: string; value: any }>;
+  houseGameId?: string;
 }
 
 // Wolf hole result (imported from wolf.ts but defined here for type)

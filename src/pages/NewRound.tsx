@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Loader2, Flag, Users, Gamepad2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, Flag, Users, Gamepad2, Sparkles, ToggleLeft, ToggleRight, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TeeSelector } from '@/components/golf/TeeSelector';
 import { CourseStep } from '@/components/golf/CourseStep';
@@ -13,8 +13,10 @@ import { useCreateSupabaseRound } from '@/hooks/useCreateSupabaseRound';
 import { useProfile } from '@/hooks/useProfile';
 import { useFriends, Friend } from '@/hooks/useFriends';
 import { useGroups, GolfGroup } from '@/hooks/useGroups';
+import { useHouseGame } from '@/hooks/useHouseGame';
 import { Course, HoleInfo, GameConfig, Team, generateId } from '@/types/golf';
 import { createDefaultTeams } from '@/lib/games/bestball';
+import { buildConfig, summarizeScoringConfig } from '@/engine/HouseGameEngine';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -78,6 +80,11 @@ export default function NewRound() {
   const [wolfEnabled, setWolfEnabled] = useState(false);
   const [wolfStakes, setWolfStakes] = useState('2');
   const [wolfCarryover, setWolfCarryover] = useState(true);
+
+  // Group + house game
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [houseGameEnabled, setHouseGameEnabled] = useState(true);
+  const { houseGame } = useHouseGame(selectedGroupId);
 
   // Auto-fill first player from profile
   useEffect(() => {
@@ -214,6 +221,8 @@ export default function NewRound() {
   };
 
   const handleSelectGroup = (group: GolfGroup) => {
+    setSelectedGroupId(group.id);
+    setHouseGameEnabled(true); // reset toggle whenever group changes
     const newPlayers: PlayerData[] = group.members.slice(0, 4).map(member => ({
       id: member.id,
       name: member.name,
@@ -298,6 +307,18 @@ export default function NewRound() {
         });
       }
 
+      // House game — add as a single 'house' entry containing all primitives
+      if (houseGame && houseGameEnabled && houseGame.activePrimitives.length > 0) {
+        const hgConfig = buildConfig(houseGame.activePrimitives);
+        games.push({
+          id: generateId(),
+          type: 'house',
+          stakes: hgConfig.settlementConfig.unitValue,
+          activePrimitives: houseGame.activePrimitives,
+          houseGameId: houseGame.id,
+        });
+      }
+
       if (matchPlay && stakes) {
         games.push({
           id: generateId(),
@@ -357,39 +378,40 @@ export default function NewRound() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background relative">
-      {/* Technical Grid Background */}
-      <div className="absolute inset-0 tech-grid-subtle opacity-40 pointer-events-none" />
-
       {/* Fixed Header */}
-      <header className="flex-shrink-0 relative z-10 px-4 pt-safe-content pb-4">
-        <div className="flex items-center gap-4">
+      <header className="flex-shrink-0 relative z-10 px-6 pb-3 pt-safe-content border-b-2 border-foreground">
+        <div className="flex items-center gap-3">
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() =>
               currentStepIndex > 0 ? setStep(steps[currentStepIndex - 1]) : navigate('/')
             }
-            className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center shadow-sm"
+            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4" />
           </motion.button>
 
           <div className="flex-1">
-            <h1 className="headline-sm">{stepConfig[step].title}</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
               Step {currentStepIndex + 1} of {steps.length}
             </p>
+            <h1 className="text-[22px] font-black tracking-[-0.04em] leading-tight text-foreground">{stepConfig[step].title}</h1>
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-[3px] mt-2">
           {steps.map((s, i) => (
-            <div
+            <motion.div
               key={s}
               className={cn(
-                'h-1.5 flex-1 rounded-full transition-all',
-                i <= currentStepIndex ? 'bg-primary' : 'bg-border'
+                'h-[3px] flex-1 rounded-full',
+                i < currentStepIndex ? 'bg-foreground' : i === currentStepIndex ? 'bg-foreground/35' : 'bg-border'
               )}
+              initial={i < currentStepIndex ? { scaleX: 0 } : false}
+              animate={i < currentStepIndex ? { scaleX: 1 } : {}}
+              style={{ transformOrigin: 'left' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             />
           ))}
         </div>
@@ -397,7 +419,7 @@ export default function NewRound() {
 
       {/* Scrollable Content */}
       <main
-        className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-32"
+        className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-32 bg-background"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <AnimatePresence mode="wait">
@@ -439,8 +461,64 @@ export default function NewRound() {
             />
           )}
           {step === 'format' && (
-            <FormatStep
+            <motion.div
               key="format"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+            >
+              {/* House Game active card — only shows if this group has a saved House Game */}
+              {houseGame && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 mb-2"
+                >
+                  <div className={cn(
+                    'rounded-2xl border-2 px-4 py-3 flex items-center gap-3 transition-colors',
+                    houseGameEnabled
+                      ? 'bg-[#0A0A0A] border-[#0A0A0A]'
+                      : 'bg-white border-border/40'
+                  )}>
+                    <div className={cn(
+                      'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
+                      houseGameEnabled ? 'bg-[#F0EE3A]' : 'bg-muted'
+                    )}>
+                      <Sparkles className={cn('w-4 h-4', houseGameEnabled ? 'text-[#0A0A0A]' : 'text-muted-foreground')} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={cn('text-[13px] font-bold truncate', houseGameEnabled ? 'text-white' : 'text-foreground')}>
+                        {houseGame.name || 'House Game'}
+                      </p>
+                      {(() => {
+                        const cfg = buildConfig(houseGame.activePrimitives);
+                        const lines = summarizeScoringConfig(cfg, 2);
+                        return lines.length > 0 ? (
+                          <p className={cn('text-[11px] truncate', houseGameEnabled ? 'text-white/50' : 'text-muted-foreground')}>
+                            {lines.join(' · ')}
+                          </p>
+                        ) : null;
+                      })()}
+                    </div>
+                    <button
+                      onClick={() => setHouseGameEnabled(v => !v)}
+                      className="flex-shrink-0"
+                    >
+                      {houseGameEnabled
+                        ? <ToggleRight className="w-7 h-7 text-[#F0EE3A]" />
+                        : <ToggleLeft className="w-7 h-7 text-muted-foreground" />
+                      }
+                    </button>
+                  </div>
+                  {houseGameEnabled && (
+                    <p className="text-[11px] text-muted-foreground text-center mt-1.5">
+                      House Game is active for this round
+                    </p>
+                  )}
+                </motion.div>
+              )}
+            <FormatStep
               players={players}
               strokePlay={strokePlay}
               matchPlay={matchPlay}
@@ -473,43 +551,46 @@ export default function NewRound() {
               onWolfStakesChange={setWolfStakes}
               onWolfCarryoverChange={setWolfCarryover}
             />
+            </motion.div>
           )}
         </AnimatePresence>
       </main>
 
-      {/* Bottom Button */}
+      {/* Bottom CTA Area */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-20 p-4 bg-gradient-to-t from-background via-background to-transparent"
-        style={{ paddingBottom: '1rem' }}
+        className="fixed bottom-0 left-0 right-0 z-20 border-t border-[rgba(0,0,0,0.06)] bg-background px-6 py-4"
+        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
       >
         {step !== 'format' ? (
-          <motion.div whileTap={{ scale: 0.98 }}>
-            <Button
-              onClick={() => setStep(steps[currentStepIndex + 1])}
-              disabled={step === 'course' ? !canProceedCourse : !canProceedPlayers}
-              className="w-full py-6 text-lg font-bold rounded-xl"
-            >
-              Next Step
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </motion.div>
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setStep(steps[currentStepIndex + 1])}
+            disabled={step === 'course' ? !canProceedCourse : !canProceedPlayers}
+            animate={{ opacity: (step === 'course' ? !canProceedCourse : !canProceedPlayers) ? 0.4 : 1 }}
+            transition={{ duration: 0.2 }}
+            className="w-full bg-foreground text-background rounded-2xl h-[52px] font-bold text-[15px] flex items-center justify-center gap-2"
+          >
+            Next
+            <ArrowRight className="w-5 h-5" />
+          </motion.button>
         ) : (
-          <motion.div whileTap={{ scale: 0.98 }}>
-            <Button
-              onClick={handleStartRound}
-              disabled={(!strokePlay && !matchPlay) || isCreating}
-              className="w-full py-6 text-lg font-bold rounded-xl"
-            >
-              {isCreating ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Creating Round...
-                </>
-              ) : (
-                'Start Round'
-              )}
-            </Button>
-          </motion.div>
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={handleStartRound}
+            disabled={(!strokePlay && !matchPlay) || isCreating}
+            animate={{ opacity: ((!strokePlay && !matchPlay) || isCreating) ? 0.4 : 1 }}
+            transition={{ duration: 0.2 }}
+            className="w-full bg-foreground text-background rounded-2xl h-[52px] font-bold text-[15px] flex items-center justify-center gap-2"
+          >
+            {isCreating ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Creating Round...
+              </>
+            ) : (
+              'Start Round'
+            )}
+          </motion.button>
         )}
       </div>
 

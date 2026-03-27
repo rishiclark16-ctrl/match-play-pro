@@ -3,11 +3,14 @@ import { Round, Player, Score, Press, PlayerWithScores } from '@/types/golf';
 import { calculateSkins, SkinsResult } from '@/lib/games/skins';
 import { calculateNassau, NassauResult } from '@/lib/games/nassau';
 import { calculateWolfStandings, WolfStanding } from '@/lib/games/wolf';
+import { calculateHouseGame, HouseGameResult } from '@/lib/games/houseGame';
+import { buildScoringConfig } from '@/lib/houseGame/engine';
 
 export interface GameResults {
   skinsResult?: SkinsResult;
   nassauResult?: NassauResult;
   wolfStandings?: WolfStanding[];
+  houseGameResult?: HouseGameResult;
 }
 
 interface UseGameResultsOptions {
@@ -19,7 +22,7 @@ interface UseGameResultsOptions {
 }
 
 /**
- * Hook to calculate all game results (skins, nassau, wolf)
+ * Hook to calculate all game results (skins, nassau, wolf, house game).
  */
 export function useGameResults({
   round,
@@ -31,13 +34,15 @@ export function useGameResults({
   return useMemo(() => {
     if (!round || playersWithScores.length === 0) return null;
 
-    const skinsGame = round.games?.find(g => g.type === 'skins');
+    const skinsGame  = round.games?.find(g => g.type === 'skins');
     const nassauGame = round.games?.find(g => g.type === 'nassau');
-    const wolfGame = round.games?.find(g => g.type === 'wolf');
+    const wolfGame   = round.games?.find(g => g.type === 'wolf');
+    const houseGame  = round.games?.find(g => g.type === 'house');
 
     let skinsResult: SkinsResult | undefined;
     let nassauResult: NassauResult | undefined;
     let wolfStandings: WolfStanding[] | undefined;
+    let houseGameResult: HouseGameResult | undefined;
 
     const holesPlayed = Math.max(...playersWithScores.map(p => p.holesPlayed));
 
@@ -65,6 +70,23 @@ export function useGameResults({
       wolfStandings = calculateWolfStandings(wolfGame.wolfResults || [], players, wolfGame.stakes || 1);
     }
 
-    return { skinsResult, nassauResult, wolfStandings };
+    // House game — uses its own all-in-one calculator
+    if (houseGame?.activePrimitives && houseGame.activePrimitives.length > 0 && round.holeInfo.length > 0) {
+      try {
+        const config = buildScoringConfig(houseGame.activePrimitives);
+        houseGameResult = calculateHouseGame(
+          scores,
+          players,
+          round.holeInfo,
+          config,
+          round.slope ?? 113,
+          round.holes as 9 | 18,
+        );
+      } catch (err) {
+        console.error('[useGameResults] calculateHouseGame failed:', err);
+      }
+    }
+
+    return { skinsResult, nassauResult, wolfStandings, houseGameResult };
   }, [round, playersWithScores, scores, players, presses]);
 }
