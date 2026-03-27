@@ -27,6 +27,9 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Friends = lazy(() => import("./pages/Friends"));
 const Groups = lazy(() => import("./pages/Groups"));
 const Stats = lazy(() => import("./pages/Stats"));
+const HouseGameBuilder = lazy(() => import("./pages/HouseGameBuilder"));
+const HouseGameConfirm = lazy(() => import("./pages/HouseGameConfirm"));
+const HouseGameEdit = lazy(() => import("./pages/HouseGameEdit"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Support = lazy(() => import("./pages/Support"));
@@ -196,6 +199,37 @@ function AppContent() {
             <Suspense fallback={<PageSkeleton variant="default" />}>
               <Support />
             </Suspense>
+          }
+        />
+        {/* House Game Builder routes */}
+        <Route
+          path="/groups/:groupId/house-game/new"
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <HouseGameBuilder />
+              </Suspense>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/groups/:groupId/house-game/confirm"
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <HouseGameConfirm />
+              </Suspense>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/groups/:groupId/house-game/edit"
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <HouseGameEdit />
+              </Suspense>
+            </AuthGuard>
           }
         />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
