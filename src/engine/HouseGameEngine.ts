@@ -64,6 +64,31 @@ export interface ScoringConfig {
   garbageBets: string[];
 }
 
+// ─── validateConfig ───────────────────────────────────────────────────────────
+
+export interface ConfigValidationResult {
+  valid: boolean;
+  errors: string[];
+}
+
+/**
+ * Validate that the selected primitives don't contain incompatible combinations.
+ * Call before saving a House Game to surface user-facing errors.
+ */
+export function validateConfig(activePrimitives: ActivePrimitive[]): ConfigValidationResult {
+  const c = buildScoringConfig(activePrimitives);
+  const errors: string[] = [];
+
+  if (c.nassau && c.stableford) {
+    errors.push("Nassau and Stableford can't run together — pick one.");
+  }
+  if (c.matchPlay && c.stableford) {
+    errors.push("Match Play and Stableford can't run together — pick one.");
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
 // ─── buildConfig ─────────────────────────────────────────────────────────────
 
 /**
@@ -92,7 +117,7 @@ export function buildConfig(activePrimitives: ActivePrimitive[]): ScoringConfig 
   if (c.wolf)           { activeFormats.push('wolf');             console.warn('[HouseGame STUB] format_wolf not yet implemented'); }
   if (c.vegas)          { console.warn('[HouseGame STUB] format_vegas not yet implemented'); }
   if (c.hammer)         { console.warn('[HouseGame STUB] format_hammer not yet implemented'); }
-  if (c.bingoBangoBongo){ console.warn('[HouseGame STUB] format_bingo_bango_bongo not yet implemented'); }
+  if (c.bingoBangoBongo){ activeFormats.push('bingo_bango_bongo'); }
   if (c.rabbit)         { console.warn('[HouseGame STUB] format_rabbit not yet implemented'); }
   if (c.quota)          { console.warn('[HouseGame STUB] format_quota not yet implemented'); }
   if (c.defender)       { console.warn('[HouseGame STUB] format_defender not yet implemented'); }
@@ -108,8 +133,6 @@ export function buildConfig(activePrimitives: ActivePrimitive[]): ScoringConfig 
     pressThreshold = c.pressAutoXDown;
   } else if (c.pressAutoBirdie) {
     pressTrigger = 'birdie';
-    // STUB: press_auto_birdie — trigger detected but real-time creation not yet wired
-    console.warn('[HouseGame STUB] press_auto_birdie real-time trigger not yet wired');
   } else if (c.pressBack9Auto) {
     pressTrigger = 'back9';
     // STUB: press_back9_auto
@@ -167,7 +190,7 @@ export function buildConfig(activePrimitives: ActivePrimitive[]): ScoringConfig 
   // STUB: remaining settlement options
   if (c.payPerHole)   console.warn('[HouseGame STUB] settlement_pay_per_hole not yet wired');
   if (c.runningTab)   console.warn('[HouseGame STUB] settlement_running_tab not yet wired');
-  if (c.maxLossCap !== null) console.warn('[HouseGame STUB] settlement_max_loss_cap not yet wired');
+  // settlement_max_loss_cap — implemented in calculateHouseGame
   if (c.tiesCarryover) console.warn('[HouseGame STUB] settlement_ties_carryover not yet wired');
 
   // ── Group rules ────────────────────────────────────────────────────────────
@@ -175,7 +198,7 @@ export function buildConfig(activePrimitives: ActivePrimitive[]): ScoringConfig 
   if (c.teamsFixed)    console.warn('[HouseGame STUB] group_teams_fixed not yet wired');
   if (c.teamsRotating) console.warn('[HouseGame STUB] group_teams_rotating not yet wired');
   if (c.pointBank)     console.warn('[HouseGame STUB] group_point_bank not yet wired');
-  if (c.pickupRule)    console.warn('[HouseGame STUB] group_pickup_rule not yet wired');
+  // group_pickup_rule — handled at score entry (pickup = par + 2 + handicap strokes)
   if (c.subIn !== null) console.warn('[HouseGame STUB] group_sub_in not yet wired');
 
   return {
@@ -231,6 +254,8 @@ export function summarizeScoringConfig(config: ScoringConfig, limit = 5): string
   if (config.activeFormats.includes('nassau')) lines.push('Nassau (front / back / overall)');
   if (config.activeFormats.includes('skins'))  lines.push(`Skins${config.carryoverRules.skinsCarry ? ' with carryover' : ''}`);
   if (config.activeFormats.includes('match'))  lines.push('Match Play');
+  if (config.activeFormats.includes('stableford')) lines.push('Stableford');
+  if (config.activeFormats.includes('bingo_bango_bongo')) lines.push('Bingo Bango Bongo');
   if (config.pressRules.trigger === 'x_down' && config.pressRules.threshold) {
     lines.push(`Auto-press when ${config.pressRules.threshold} down`);
   }

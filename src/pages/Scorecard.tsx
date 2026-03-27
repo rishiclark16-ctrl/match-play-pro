@@ -16,6 +16,7 @@ import { ScorecardHeader } from '@/components/golf/ScorecardHeader';
 import { ScorecardModals } from '@/components/golf/ScorecardModals';
 import { HandicapStrokesSheet } from '@/components/golf/HandicapStrokesSheet';
 import { ScorecardTutorial } from '@/components/golf/ScorecardTutorial';
+import { BingoBangoSheet } from '@/components/golf/BingoBangoSheet';
 import { useRounds } from '@/hooks/useRounds';
 import { useSupabaseRound } from '@/hooks/useSupabaseRound';
 import { useKeepAwake } from '@/hooks/useKeepAwake';
@@ -27,8 +28,10 @@ import { useVoiceScoring } from '@/hooks/useVoiceScoring';
 import { useSettings } from '@/hooks/useSettings';
 import { usePlayersWithScores } from '@/hooks/usePlayersWithScores';
 import { useSettlementPreview } from '@/hooks/useSettlementPreview';
-import { Press, PlayerWithScores, GameConfig } from '@/types/golf';
-import { checkAutoPress } from '@/lib/games/nassau';
+import { Press, PlayerWithScores, GameConfig, BingoBangoHoleResult } from '@/types/golf';
+import { checkAutoPress, createPress } from '@/lib/games/nassau';
+import { buildConfig } from '@/engine/HouseGameEngine';
+import { buildScoringConfig } from '@/lib/houseGame/engine';
 import { toast } from 'sonner';
 import { hapticSuccess } from '@/lib/haptics';
 import { setStatusBarDefault } from '@/lib/statusBar';
@@ -97,6 +100,9 @@ export default function Scorecard() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showHandicapSheet, setShowHandicapSheet] = useState(false);
+  const [preferredLiesDismissed, setPreferredLiesDismissed] = useState(false);
+  const [showBBBSheet, setShowBBBSheet] = useState(false);
+  const [bbbHole, setBBBHole] = useState(1);
 
   // Tutorial refs
   const voiceButtonRef = useRef<HTMLDivElement>(null);
@@ -356,6 +362,93 @@ export default function Scorecard() {
     }
   }, [round, updateGamesSupabase]);
 
+  // House game config (memoized)
+  const houseGameEntry = useMemo(
+    () => round?.games?.find(g => g.type === 'house'),
+    [round?.games]
+  );
+  const houseGameConfig = useMemo(() => {
+    if (!houseGameEntry?.activePrimitives?.length) return null;
+    try {
+      return buildConfig(houseGameEntry.activePrimitives);
+    } catch {
+      return null;
+    }
+  }, [houseGameEntry?.activePrimitives]);
+
+  // Pickup score for selected player (par + 2 + handicap strokes on current hole)
+  const pickupScore = useMemo(() => {
+    if (!houseGameConfig?.casualRules || !selectedPlayerId) return undefined;
+    const rawConfig = houseGameEntry?.activePrimitives
+      ? buildScoringConfig(houseGameEntry.activePrimitives)
+      : null;
+    if (!rawConfig?.pickupRule) return undefined;
+    const player = playersWithScores.find(p => p.id === selectedPlayerId);
+    const handicapStrokes = player?.strokesPerHole?.get(currentHole) ?? 0;
+    return currentHoleInfo.par + 2 + handicapStrokes;
+  }, [houseGameConfig, houseGameEntry, selectedPlayerId, playersWithScores, currentHole, currentHoleInfo.par]);
+
+  const handlePickup = useCallback(() => {
+    if (!selectedPlayerId || !round || pickupScore === undefined) return;
+    hapticSuccess();
+    saveScoreToSupabase(selectedPlayerId, currentHole, pickupScore);
+    setPlayerScore(round.id, selectedPlayerId, currentHole, pickupScore);
+    setSelectedPlayerId(null);
+    toast.success('Pickup recorded', { duration: 1500 });
+  }, [selectedPlayerId, round, pickupScore, currentHole, saveScoreToSupabase, setPlayerScore]);
+
+  // Auto-press on net birdie (press_auto_birdie)
+  useEffect(() => {
+    if (!round || !houseGameConfig) return;
+    if (houseGameConfig.pressRules.trigger !== 'birdie') return;
+    const houseGame = round.games?.find(g => g.type === 'house');
+    if (!houseGame) return;
+    const stakes = houseGame.stakes || 1;
+    const existingPresses = round.presses || [];
+    if (existingPresses.length >= 3) return; // max 3 presses guard
+
+    for (const player of playersWithScores) {
+      const score = player.scores.find(s => s.holeNumber === currentHole);
+      if (!score) continue;
+      const handicapStrokes = player.strokesPerHole?.get(currentHole) ?? 0;
+      const netDiff = score.strokes - handicapStrokes - currentHoleInfo.par;
+      if (netDiff !== -1) continue; // only net birdie
+
+      // Check if a press starting on next hole already exists for this player
+      const nextHole = currentHole + 1;
+      if (nextHole > round.holes) continue;
+      const alreadyPressed = existingPresses.some(
+        p => p.startHole === nextHole && p.initiatedBy === player.id
+      );
+      if (alreadyPressed) continue;
+
+      const press = createPress(player.id, nextHole, stakes);
+      handleAddPress(press);
+      toast.info(
+        `Birdie Press! ${player.name.split(' ')[0]} nets a birdie`,
+        { description: `Press $${stakes} starting hole ${nextHole}`, duration: 4000 }
+      );
+    }
+  }, [roundScores, currentHole, round]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Trigger BBB sheet when all players have scored current hole + BBB is active
+  useEffect(() => {
+    if (!houseGameConfig) return;
+    const rawConfig = houseGameEntry?.activePrimitives
+      ? buildScoringConfig(houseGameEntry.activePrimitives)
+      : null;
+    if (!rawConfig?.bingoBangoBongo) return;
+    if (!allCurrentHoleScored) return;
+
+    // Only show if no BBB result recorded for this hole yet
+    const existing = houseGameEntry?.bbbResults ?? [];
+    const alreadyRecorded = existing.some(r => r.holeNumber === currentHole);
+    if (alreadyRecorded) return;
+
+    setBBBHole(currentHole);
+    setShowBBBSheet(true);
+  }, [allCurrentHoleScored, currentHole]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Loading state — full-screen with MATCH M logo
   if (supabaseLoading) {
     return (
@@ -445,6 +538,24 @@ export default function Scorecard() {
       {/* Spectator/View-Only Banner */}
       {(isSpectator || !isScorekeeper) && (
         <SpectatorBanner isSpectator={isSpectator} isScorekeeper={isScorekeeper} />
+      )}
+
+      {/* Preferred Lies Banner */}
+      {houseGameConfig && (() => {
+        const rawConfig = houseGameEntry?.activePrimitives
+          ? buildScoringConfig(houseGameEntry.activePrimitives)
+          : null;
+        return rawConfig?.preferredLies && !preferredLiesDismissed;
+      })() && (
+        <div className="flex-shrink-0 bg-[#F0EE3A] px-4 py-2 flex items-center justify-between">
+          <span className="text-[12px] font-bold text-[#0A0A0A]">Preferred lies in effect</span>
+          <button
+            onClick={() => setPreferredLiesDismissed(true)}
+            className="text-[11px] font-bold text-[#0A0A0A]/60 ml-4"
+          >
+            Dismiss
+          </button>
+        </div>
       )}
 
       {/* Fixed Header */}
@@ -590,11 +701,12 @@ export default function Scorecard() {
                           currentHolePar={currentHoleInfo.par}
                           currentHoleNumber={currentHole}
                           isLeading={player.id === leadingPlayerId}
-                          onScoreTap={canEditScores ? () => setSelectedPlayerId(player.id) : undefined}
-                          onQuickScore={canEditScores ? score => handleQuickScore(player.id, score) : undefined}
+                          onScoreTap={canEditScores && !player.isGhost ? () => setSelectedPlayerId(player.id) : undefined}
+                          onQuickScore={canEditScores && !player.isGhost ? score => handleQuickScore(player.id, score) : undefined}
                           showNetScores={true}
                           voiceHighlight={isListening}
                           voiceSuccess={voiceSuccessPlayerIds.has(player.id)}
+                          isGhost={player.isGhost}
                         />
                       </motion.div>
                     );
@@ -706,6 +818,28 @@ export default function Scorecard() {
         handicapMode={round.handicapMode ?? 'auto'}
       />
 
+      {/* Bingo Bango Bongo Sheet */}
+      {showBBBSheet && round && (
+        <BingoBangoSheet
+          isOpen={showBBBSheet}
+          onClose={() => setShowBBBSheet(false)}
+          holeNumber={bbbHole}
+          players={playersWithScores}
+          existingResults={houseGameEntry?.bbbResults ?? []}
+          onSave={async (result: BingoBangoHoleResult) => {
+            const games = round.games.map(g => {
+              if (g.type !== 'house') return g;
+              return {
+                ...g,
+                bbbResults: [...(g.bbbResults ?? []).filter(r => r.holeNumber !== result.holeNumber), result],
+              };
+            });
+            await handleUpdateGames(games);
+            setShowBBBSheet(false);
+          }}
+        />
+      )}
+
       <ScorecardModals
         selectedPlayerId={selectedPlayerId}
         selectedPlayer={selectedPlayer ? {
@@ -716,6 +850,8 @@ export default function Scorecard() {
         currentHolePar={currentHoleInfo.par}
         onCloseScoreInput={() => setSelectedPlayerId(null)}
         onSelectScore={handleScoreSelect}
+        pickupScore={pickupScore}
+        onPickup={handlePickup}
         showVoiceModal={showVoiceModal}
         parseResult={parseResult}
         players={playersWithScores}

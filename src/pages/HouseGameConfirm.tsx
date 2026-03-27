@@ -5,6 +5,7 @@ import { ArrowLeft, Check, ChevronDown, ChevronUp, AlertTriangle, Sparkles, Minu
 import { useHouseGame } from '@/hooks/useHouseGame';
 import { ParsedPrimitive, ActivePrimitive, HouseGamePrimitive } from '@/types/houseGame';
 import { PRIMITIVE_MAP, PRIMITIVES_BY_CATEGORY, CATEGORY_LABELS, CATEGORY_ORDER } from '@/lib/houseGame/primitives';
+import { validateConfig } from '@/engine/HouseGameEngine';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -238,6 +239,15 @@ export default function HouseGameConfirm() {
 
   const { saving, saveHouseGame } = useHouseGame(groupId ?? null);
 
+  // Game name — auto-generated from description, user can edit
+  const [gameName, setGameName] = useState<string>(() => {
+    if (!description) return 'House Game';
+    const firstSentence = description.split(/[.!?]/)[0].trim();
+    return firstSentence.length > 0 && firstSentence.length <= 30
+      ? firstSentence
+      : description.slice(0, 28).trim() + (description.length > 28 ? '…' : '');
+  });
+
   // Initialize checked set from parsed results
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => {
     return new Set(parsedPrimitives.map(p => p.id));
@@ -299,14 +309,15 @@ export default function HouseGameConfirm() {
       value: valueMap.get(id) ?? PRIMITIVE_MAP[id]?.defaultValue ?? null,
     }));
 
-    // Derive a game name from the description (first sentence or truncated)
-    const gameName = description.length > 40
-      ? description.slice(0, 40).trim() + '…'
-      : description || 'House Game';
+    const validation = validateConfig(activePrimitives);
+    if (!validation.valid) {
+      toast.error(validation.errors[0]);
+      return;
+    }
 
     const ok = await saveHouseGame({
       groupId: groupId!,
-      name: gameName,
+      name: gameName.trim() || 'House Game',
       description,
       activePrimitives,
     });
@@ -351,6 +362,42 @@ export default function HouseGameConfirm() {
       </header>
 
       <main className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5 pb-32">
+
+        {/* Game name field */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...spring, delay: 0.03 }}
+        >
+          <label className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground block mb-1.5">
+            Game Name
+          </label>
+          <input
+            type="text"
+            value={gameName}
+            onChange={e => setGameName(e.target.value)}
+            maxLength={40}
+            placeholder="House Game"
+            className="w-full bg-white border-2 border-foreground/20 focus:border-foreground rounded-xl px-4 py-3 text-[15px] font-bold text-foreground placeholder:text-muted-foreground/50 outline-none transition-colors"
+          />
+        </motion.div>
+
+        {/* 0-match warning */}
+        {parsedPrimitives.length === 0 && description && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.04 }}
+            className="bg-[#FFF3CD] border border-[#F0BB3A] rounded-2xl px-4 py-3"
+          >
+            <p className="text-[#7D4E0F] font-bold text-[13px]">
+              We couldn't identify any rules from that description.
+            </p>
+            <p className="text-[#7D4E0F]/70 text-[12px] mt-0.5 leading-snug">
+              Try being more specific, or select rules manually from the categories below.
+            </p>
+          </motion.div>
+        )}
 
         {/* AI summary card */}
         <motion.div

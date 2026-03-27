@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Loader2, CloudRain, Shuffle, Coins } from 'lucide-react';
+import { Loader2, CloudRain, Shuffle, Coins, Zap, Plus, Share2 } from 'lucide-react';
 import { useRounds } from '@/hooks/useRounds';
 import { useRoundSharing } from '@/hooks/useRoundSharing';
 import { useSettings } from '@/hooks/useSettings';
@@ -20,6 +20,9 @@ import { StrokesPerHoleMap } from '@/lib/games/skins';
 import { calculateSettlement, NetSettlement } from '@/lib/games/settlement';
 import { calculateMatchPlay, MatchPlayResult } from '@/lib/games/matchPlay';
 import { buildConfig } from '@/engine/HouseGameEngine';
+import { getPropBetLabel, getPropBetIcon } from '@/types/betting';
+import { useGroups } from '@/hooks/useGroups';
+import { useRoundLedgerSync } from '@/hooks/useRoundLedgerSync';
 import { ShareRoundResultsSheet } from '@/components/golf/ShareRoundResultsSheet';
 import {
   calculateMatchPlayStrokes,
@@ -53,9 +56,14 @@ export default function RoundComplete() {
   const [showHighlights, setShowHighlights] = useState(false);
   const [showGames, setShowGames] = useState(true);
   const [showShareSheet, setShowShareSheet] = useState(false);
+  const [showGroupPicker, setShowGroupPicker] = useState(false);
+  const [addedToGroupId, setAddedToGroupId] = useState<string | null>(null);
+  const [addingToTab, setAddingToTab] = useState(false);
 
   // Fetch round data
   const { round, players: rawPlayers, scores: rawScores, presses, loading, isLocalData } = useRoundData(id);
+  const { groups } = useGroups();
+  const { syncRoundToLedger } = useRoundLedgerSync();
 
   // Ensure round is marked complete and share with friends
   useEffect(() => {
@@ -218,6 +226,29 @@ export default function RoundComplete() {
     );
   }, [round, playersWithScores, rawPlayers, gameResults, matchPlayResult, propBets]);
 
+  // Ghost player settlement handling
+  const ghostPlayerIds = useMemo(
+    () => new Set(rawPlayers.filter(p => p.isGhost).map(p => p.id)),
+    [rawPlayers]
+  );
+
+  // Ghost pot: amounts that would flow TO ghost players — real players owe this to the pot
+  const ghostPotEntries = useMemo(
+    () => settlements.filter(s => ghostPlayerIds.has(s.toPlayerId)),
+    [settlements, ghostPlayerIds]
+  );
+
+  const ghostPotAmount = useMemo(
+    () => ghostPotEntries.reduce((sum, s) => sum + s.amount, 0),
+    [ghostPotEntries]
+  );
+
+  // Exclude all ghost-involving settlements from regular settlement tracking
+  const nonGhostSettlements = useMemo(
+    () => settlements.filter(s => !ghostPlayerIds.has(s.fromPlayerId) && !ghostPlayerIds.has(s.toPlayerId)),
+    [settlements, ghostPlayerIds]
+  );
+
   // House game derived state
   const houseGameEntry = round?.games?.find(g => g.type === 'house');
   const houseGameConfig = useMemo(() => {
@@ -262,8 +293,28 @@ export default function RoundComplete() {
     return holesPlayed < (round?.holes ?? 18);
   }, [houseGameConfig, rawPlayers, rawScores, round]);
 
-  // Active garbage bets list
+  // Active garbage bets list (from house game config)
   const activeGarbageBets = houseGameConfig?.garbageBets ?? [];
+
+  // Won junk bets (greenie/sandie/barkie/oozle/chippy) from prop_bets table
+  const JUNK_TYPES = new Set(['greenie', 'sandie', 'barkie', 'oozle', 'chippy']);
+  const wonJunkBets = propBets.filter(b => JUNK_TYPES.has(b.type) && !!b.winnerId);
+
+  // Per-player junk summary: net earnings (won bets - paid bets)
+  const junkSummary = useMemo(() => {
+    const map = new Map<string, { name: string; won: number; net: number }>();
+    rawPlayers.forEach(p => map.set(p.id, { name: p.name, won: 0, net: 0 }));
+    wonJunkBets.forEach(bet => {
+      if (!bet.winnerId) return;
+      const winner = map.get(bet.winnerId);
+      if (winner) { winner.won++; winner.net += bet.stakes * (rawPlayers.length - 1); }
+      rawPlayers.filter(p => p.id !== bet.winnerId).forEach(p => {
+        const entry = map.get(p.id);
+        if (entry) entry.net -= bet.stakes;
+      });
+    });
+    return Array.from(map.values()).filter(e => e.won > 0 || e.net !== 0);
+  }, [wonJunkBets, rawPlayers]);
 
   // Settlement payment tracking
   const {
@@ -272,7 +323,7 @@ export default function RoundComplete() {
     markAsForgiven,
     markAsPending,
     stats: settlementStats,
-  } = useSettlementTracking(id, settlements);
+  } = useSettlementTracking(id, nonGhostSettlements);
 
   // Calculate highlights
   const highlights = useRoundHighlights({
@@ -281,6 +332,45 @@ export default function RoundComplete() {
     scores: rawScores,
     gameResults,
   });
+
+  // Add round results to a group's running tab
+  const handleAddToTab = async (groupId: string) => {
+    if (!round || !id) return;
+    setAddingToTab(true);
+    hapticLight();
+    try {
+      // Build per-player net amounts from settlements
+      const netByPlayer = new Map<string, number>();
+      settlements.forEach(s => {
+        netByPlayer.set(s.fromPlayerId, (netByPlayer.get(s.fromPlayerId) ?? 0) - s.amount);
+        netByPlayer.set(s.toPlayerId, (netByPlayer.get(s.toPlayerId) ?? 0) + s.amount);
+      });
+
+      const entries = rawPlayers
+        .filter(p => p.profileId)
+        .map(p => ({
+          profileId: p.profileId!,
+          amount: netByPlayer.get(p.id) ?? 0,
+          gameBreakdown: { round: netByPlayer.get(p.id) ?? 0 },
+        }));
+
+      if (entries.length === 0) {
+        toast.error('No linked profiles — players must have accounts to add to tab');
+        return;
+      }
+
+      await syncRoundToLedger(id, groupId, entries);
+      hapticSuccess();
+      setAddedToGroupId(groupId);
+      setShowGroupPicker(false);
+      toast.success('Round added to group tab!');
+    } catch {
+      hapticError();
+      toast.error('Failed to add to tab — try again');
+    } finally {
+      setAddingToTab(false);
+    }
+  };
 
   // Share handlers
   const handleShareImage = async () => {
@@ -331,6 +421,42 @@ export default function RoundComplete() {
     } finally {
       setIsSharing(false);
       setShareMode(null);
+    }
+  };
+
+  const handleShareHouseGame = async () => {
+    if (!round) return;
+    hapticLight();
+
+    const standings = gameResults?.houseGameResult?.standings ?? [];
+    const dateStr = new Date(round.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const courseLine = `${round.courseName} — ${dateStr}`;
+
+    const standingsLines = standings
+      .slice()
+      .sort((a, b) => b.netEarnings - a.netEarnings)
+      .map(s => {
+        const sign = s.netEarnings >= 0 ? '+' : '';
+        return `  ${s.playerName.split(' ')[0]}: ${sign}$${s.netEarnings.toFixed(0)}`;
+      });
+
+    const junkLine = junkSummary.length > 0
+      ? `\nJunk: ${junkSummary.map(e => `${e.name.split(' ')[0]} ${e.net >= 0 ? '+' : ''}$${e.net.toFixed(0)}`).join(', ')}`
+      : '';
+
+    const text = [courseLine, 'House Game Results:', ...standingsLines, junkLine].filter(Boolean).join('\n');
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        toast.success('Results copied to clipboard!');
+      }
+      hapticSuccess();
+    } catch {
+      hapticError();
+      toast.error('Could not share results');
     }
   };
 
@@ -453,6 +579,32 @@ export default function RoundComplete() {
           markAsPending={markAsPending}
         />
 
+        {/* Ghost Pot */}
+        {ghostPotAmount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.36 }}
+            className="mx-4 mb-4"
+          >
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
+                <span className="text-base leading-none">👻</span>
+                <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-foreground">Ghost Pot</span>
+                <span className="ml-auto text-[14px] font-black text-foreground">${ghostPotAmount.toFixed(0)}</span>
+              </div>
+              {ghostPotEntries.map((s, i) => (
+                <div key={i} className="flex items-center justify-between px-4 py-2.5 border-b border-border/10 last:border-b-0">
+                  <span className="text-[13px] text-muted-foreground">
+                    {s.fromPlayerName.split(' ')[0]} → pot
+                  </span>
+                  <span className="text-[13px] font-bold text-foreground">${s.amount.toFixed(0)}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* House Game Settlement */}
         {houseGameSettlements.length > 0 && (
           <motion.div
@@ -476,12 +628,19 @@ export default function RoundComplete() {
                   <span className="text-[14px] font-black text-foreground">${s.amount.toFixed(0)}</span>
                 </div>
               ))}
+              <button
+                onClick={handleShareHouseGame}
+                className="w-full flex items-center justify-center gap-1.5 py-3 text-[12px] font-bold text-muted-foreground"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                Share House Game Results
+              </button>
             </div>
           </motion.div>
         )}
 
-        {/* Garbage / Junk Bets Section */}
-        {activeGarbageBets.length > 0 && (
+        {/* Junk Bets Settlement */}
+        {wonJunkBets.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -490,17 +649,44 @@ export default function RoundComplete() {
           >
             <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
+                <div className="w-5 h-5 rounded-md bg-[#F0EE3A] flex items-center justify-center">
+                  <Zap className="w-3 h-3 text-[#0A0A0A]" />
+                </div>
                 <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-foreground">Junk Bets</span>
-                <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-bold">Coming Soon</span>
+                <span className="ml-auto text-[11px] font-bold text-muted-foreground">{wonJunkBets.length} logged</span>
               </div>
-              <div className="px-4 py-3">
-                <p className="text-[12px] text-muted-foreground">
-                  Active: {activeGarbageBets.map(b => b.charAt(0).toUpperCase() + b.slice(1)).join(', ')}
-                </p>
-                <p className="text-[11px] text-muted-foreground/60 mt-1">
-                  Hole-by-hole junk bet tracking coming in a future update.
-                </p>
-              </div>
+              {/* Per-hole line items */}
+              {wonJunkBets.map((bet, i) => {
+                const winner = rawPlayers.find(p => p.id === bet.winnerId);
+                return (
+                  <div key={bet.id} className="flex items-center justify-between px-4 py-2.5 border-b border-border/10 last:border-b-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">{getPropBetIcon(bet.type)}</span>
+                      <div>
+                        <span className="text-[13px] font-semibold text-foreground">{getPropBetLabel(bet.type)}</span>
+                        <span className="text-[11px] text-muted-foreground ml-1.5">H{bet.holeNumber}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[12px] text-muted-foreground">{winner?.name.split(' ')[0]}</span>
+                      <span className="text-[13px] font-black text-[#22C55E]">+${bet.stakes}</span>
+                    </div>
+                  </div>
+                );
+              })}
+              {/* Net summary */}
+              {junkSummary.length > 0 && (
+                <div className="px-4 py-3 bg-muted/30 space-y-1">
+                  {junkSummary.map(entry => (
+                    <div key={entry.name} className="flex items-center justify-between">
+                      <span className="text-[12px] text-muted-foreground">{entry.name.split(' ')[0]}</span>
+                      <span className={`text-[12px] font-black ${entry.net >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                        {entry.net >= 0 ? '+' : ''}${entry.net.toFixed(0)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -529,6 +715,68 @@ export default function RoundComplete() {
           useNetScoring={settings.useNetScoring}
         />
       </main>
+
+      {/* Add to Group Tab */}
+      {groups.length > 0 && settlements.length > 0 && (
+        <div className="mx-4 mb-4">
+          {!addedToGroupId ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              {!showGroupPicker ? (
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => { hapticLight(); groups.length === 1 ? handleAddToTab(groups[0].id) : setShowGroupPicker(true); }}
+                  disabled={addingToTab}
+                  className="w-full bg-white border-2 border-foreground/10 rounded-2xl py-3.5 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {addingToTab ? (
+                    <span className="text-[13px] font-bold text-muted-foreground animate-pulse">Adding…</span>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 text-foreground" />
+                      <span className="text-[13px] font-bold text-foreground">Add to Group Tab</span>
+                    </>
+                  )}
+                </motion.button>
+              ) : (
+                <div className="bg-white border-2 border-foreground/10 rounded-2xl p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-3">Select group</p>
+                  <div className="space-y-2">
+                    {groups.map(g => (
+                      <motion.button
+                        key={g.id}
+                        whileTap={{ scale: 0.97 }}
+                        disabled={addingToTab}
+                        onClick={() => handleAddToTab(g.id)}
+                        className="w-full flex items-center justify-between bg-muted rounded-xl px-4 py-3 disabled:opacity-50"
+                      >
+                        <span className="text-[13px] font-bold text-foreground">{g.name}</span>
+                        <span className="text-[11px] text-muted-foreground">{g.members.length} members</span>
+                      </motion.button>
+                    ))}
+                  </div>
+                  <button onClick={() => setShowGroupPicker(false)} className="mt-3 w-full text-[12px] text-muted-foreground font-bold py-1">Cancel</button>
+                </div>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-[#F0FFF4] border border-[#22C55E]/30 rounded-2xl px-4 py-3 flex items-center gap-3"
+            >
+              <span className="text-base">✓</span>
+              <div>
+                <p className="text-[13px] font-bold text-[#15803D]">Added to {groups.find(g => g.id === addedToGroupId)?.name} tab</p>
+                <p className="text-[11px] text-[#15803D]/70">Visible in group ledger</p>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      )}
 
       {/* Bottom Buttons */}
       <RoundCompleteActions

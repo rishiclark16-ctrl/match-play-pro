@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Check, ChevronDown, ChevronUp, Minus, Plus, Trash2 } from 'lucide-react';
 import { useHouseGame } from '@/hooks/useHouseGame';
+import { useAuth } from '@/hooks/useAuth';
 import { ActivePrimitive, HouseGamePrimitive } from '@/types/houseGame';
 import { PRIMITIVE_MAP, PRIMITIVES_BY_CATEGORY, CATEGORY_LABELS, CATEGORY_ORDER } from '@/lib/houseGame/primitives';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
@@ -209,12 +210,15 @@ function CategorySection({
 export default function HouseGameEdit() {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { houseGame, loading, saving, saveHouseGame } = useHouseGame(groupId ?? null);
   const [deleting, setDeleting] = useState(false);
+  const [hasActiveRound, setHasActiveRound] = useState(false);
 
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [valueMap, setValueMap] = useState<Map<string, any>>(new Map());
   const [initialized, setInitialized] = useState(false);
+  const [gameName, setGameName] = useState<string>('');
 
   // Pre-load existing primitives once house game data arrives
   useEffect(() => {
@@ -226,9 +230,35 @@ export default function HouseGameEdit() {
       }
       setCheckedIds(ids);
       setValueMap(vals);
+      setGameName(houseGame.name ?? 'House Game');
       setInitialized(true);
     }
   }, [houseGame, initialized]);
+
+  // Check if the user is currently in any active (non-complete) round
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data: playerRows } = await supabase
+        .from('players')
+        .select('round_id')
+        .eq('profile_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (!playerRows?.length) { setHasActiveRound(false); return; }
+
+      const roundIds = playerRows.map(r => r.round_id).filter(Boolean);
+      const { data: activeRounds } = await supabase
+        .from('rounds')
+        .select('id')
+        .in('id', roundIds)
+        .neq('status', 'complete')
+        .limit(1);
+
+      setHasActiveRound((activeRounds?.length ?? 0) > 0);
+    })();
+  }, [user]);
 
   const handleToggle = useCallback((id: string) => {
     setCheckedIds(prev => {
@@ -273,7 +303,7 @@ export default function HouseGameEdit() {
 
     const ok = await saveHouseGame({
       groupId: groupId!,
-      name: houseGame?.name ?? 'House Game',
+      name: gameName.trim() || houseGame?.name || 'House Game',
       description: houseGame?.description ?? '',
       activePrimitives,
     });
@@ -367,7 +397,36 @@ export default function HouseGameEdit() {
         </motion.div>
       )}
 
-      <main className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-2 pb-32 mt-3">
+      {hasActiveRound && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-6 mt-3 bg-[#FFF3CD] border border-[#F0BB3A] rounded-2xl px-4 py-3"
+        >
+          <p className="text-[#7D4E0F] font-bold text-[13px]">Round in progress</p>
+          <p className="text-[#7D4E0F]/70 text-[12px] mt-0.5 leading-snug">
+            Changes will apply to your next round, not the current one.
+          </p>
+        </motion.div>
+      )}
+
+      <main className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4 pb-32 mt-3">
+        {/* Game name */}
+        <div>
+          <label className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground block mb-1.5">
+            Game Name
+          </label>
+          <input
+            type="text"
+            value={gameName}
+            onChange={e => setGameName(e.target.value)}
+            maxLength={40}
+            placeholder="House Game"
+            className="w-full bg-white border-2 border-foreground/20 focus:border-foreground rounded-xl px-4 py-3 text-[15px] font-bold text-foreground placeholder:text-muted-foreground/50 outline-none transition-colors"
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
         {CATEGORY_ORDER.map((catId, i) => {
           const prims = PRIMITIVES_BY_CATEGORY[catId];
           if (!prims?.length) return null;
@@ -392,6 +451,7 @@ export default function HouseGameEdit() {
             </motion.div>
           );
         })}
+        </div>
       </main>
 
       {/* CTA */}

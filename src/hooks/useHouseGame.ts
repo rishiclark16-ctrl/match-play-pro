@@ -94,7 +94,7 @@ export function useHouseGame(groupId: string | null) {
     }
   }, [user, houseGame]);
 
-  const parseDescription = useCallback(async (description: string): Promise<ParsedPrimitive[]> => {
+  const parseDescription = useCallback(async (description: string): Promise<ParsedPrimitive[] | null> => {
     setParsing(true);
     setError(null);
 
@@ -108,7 +108,7 @@ export function useHouseGame(groupId: string | null) {
       return data.primitives as ParsedPrimitive[];
     } catch (err: any) {
       setError(err.message ?? 'Failed to parse game description');
-      return [];
+      return null;
     } finally {
       setParsing(false);
     }
