@@ -139,7 +139,7 @@ export default function HouseGameBuilder() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">
+      <main className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
         {/* Free tier notice */}
         {isPersonal && !isPro && (
           <motion.div
@@ -246,47 +246,52 @@ export default function HouseGameBuilder() {
             ))}
           </div>
         </motion.div>
-      </main>
 
-      {/* CTA */}
-      <div className="flex-shrink-0 px-6 pb-safe pt-4 border-t border-border/30 bg-[#F8F8F6]">
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={handleParse}
-          disabled={description.trim().length < 10 || parsing}
-          className="w-full bg-foreground text-background rounded-2xl h-[54px] font-bold text-[15px] flex items-center justify-center gap-2 disabled:opacity-40"
+        {/* CTA — inside scroll so it's always reachable above the keyboard */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...spring, delay: 0.2 }}
+          className="pt-2"
         >
-          <AnimatePresence mode="wait">
-            {parsing ? (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center gap-2"
-              >
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={handleParse}
+            disabled={description.trim().length < 10 || parsing}
+            className="w-full bg-foreground text-background rounded-2xl h-[54px] font-bold text-[15px] flex items-center justify-center gap-2 disabled:opacity-40"
+          >
+            <AnimatePresence mode="wait">
+              {parsing ? (
                 <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                  className="w-5 h-5 rounded-full border-2 border-background border-t-transparent"
-                />
-                <span>Reading your game rules...</span>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="idle"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center gap-2"
-              >
-                <Sparkles className="w-5 h-5" />
-                <span>Parse My Game</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.button>
-      </div>
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center gap-2"
+                >
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                    className="w-5 h-5 rounded-full border-2 border-background border-t-transparent"
+                  />
+                  <span>Reading your game rules...</span>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="idle"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center gap-2"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  <span>Parse My Game</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.button>
+        </motion.div>
+      </main>
     </div>
   );
 }
