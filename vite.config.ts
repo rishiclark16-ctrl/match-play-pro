@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => ({
       injectRegister: null,
       includeAssets: ['favicon.ico', 'favicon-512.png', 'splash.png', 'sw-custom.js'],
       manifest: {
-        name: 'MATCH Golf',
+        name: 'MATCH',
         short_name: 'MATCH',
         description: 'Live golf scoring with skins, Nassau, match play and more',
         theme_color: '#0A2F23',

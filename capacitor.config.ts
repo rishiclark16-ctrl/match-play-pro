@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'dev.matchgolf.app',
-  appName: 'MATCH Golf',
+  appName: 'MATCH',
   webDir: 'dist',
   plugins: {
     StatusBar: {
