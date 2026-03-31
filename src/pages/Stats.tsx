@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, useInView, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import {
   MapPin,
@@ -143,6 +144,7 @@ const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
 
 export default function Stats() {
   const { user } = useAuth();
+  const location = useLocation();
   const [stats, setStats] = useState<GolfStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -332,15 +334,17 @@ export default function Stats() {
           longestWinStreak,
           bestRound, bestPayout, mostSkins, scoreTrend,
         });
-      } catch {
-        // silent
+      } catch (err) {
+        console.error('Stats fetch error:', err);
+        setLoading(false);
       } finally {
         setLoading(false);
       }
     }
 
+    setLoading(true);
     fetchStats();
-  }, [user]);
+  }, [user, location.key]);
 
   if (loading) {
     return (
