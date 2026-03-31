@@ -176,7 +176,7 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] bg-[#F8F8F6] rounded-t-3xl border-0 p-0">
+      <SheetContent side="bottom" className="h-[90vh] bg-[#F8F8F6] rounded-t-3xl border-0 p-0 [&>button]:hidden">
         {/* Handle */}
         <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
 

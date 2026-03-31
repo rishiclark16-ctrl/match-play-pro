@@ -84,11 +84,11 @@ export function AvatarUpload({
         type="button"
         onClick={handleClick}
         disabled={isUploading}
-        className="relative group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full"
+        className="relative group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-2xl"
       >
-        <Avatar className={cn(sizeClasses[size], 'border-4 border-background shadow-lg')}>
-          <AvatarImage src={displayUrl || undefined} alt={fullName || 'Profile'} />
-          <AvatarFallback className="text-xl font-semibold bg-primary text-primary-foreground">
+        <Avatar className={cn(sizeClasses[size], 'border-4 border-background shadow-lg rounded-2xl')}>
+          <AvatarImage src={displayUrl || undefined} alt={fullName || 'Profile'} className="rounded-2xl" />
+          <AvatarFallback className="text-xl font-semibold bg-primary text-primary-foreground rounded-2xl">
             {getInitials(fullName)}
           </AvatarFallback>
         </Avatar>
@@ -96,7 +96,7 @@ export function AvatarUpload({
         {/* Overlay */}
         <div
           className={cn(
-            'absolute inset-0 rounded-full flex items-center justify-center transition-all',
+            'absolute inset-0 rounded-2xl flex items-center justify-center transition-all',
             'bg-black/0 group-hover:bg-black/40',
             isUploading && 'bg-black/40'
           )}

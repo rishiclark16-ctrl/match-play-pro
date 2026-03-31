@@ -94,7 +94,7 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <SheetContent side="bottom" className="h-[85vh] bg-[#F8F8F6] rounded-t-3xl border-0 p-0">
+      <SheetContent side="bottom" className="h-[85vh] bg-[#F8F8F6] rounded-t-3xl border-0 p-0 [&>button]:hidden">
         {/* Handle */}
         <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
 

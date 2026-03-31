@@ -112,7 +112,7 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] bg-[#F8F8F6] rounded-t-3xl p-0 overflow-hidden">
+      <SheetContent side="bottom" className="h-[90vh] bg-[#F8F8F6] rounded-t-3xl p-0 overflow-hidden [&>button]:hidden">
         <div className="h-full flex flex-col overflow-y-auto">
           {/* Sheet handle */}
           <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />

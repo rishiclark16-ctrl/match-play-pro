@@ -101,7 +101,7 @@ export function ManageScorekeepersSheet({
 
       <SheetContent
         side="bottom"
-        className="bg-[#F8F8F6] rounded-t-3xl p-0 border-0 shadow-none focus:outline-none"
+        className="bg-[#F8F8F6] rounded-t-3xl p-0 border-0 shadow-none focus:outline-none [&>button]:hidden"
       >
         {/* Handle */}
         <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />

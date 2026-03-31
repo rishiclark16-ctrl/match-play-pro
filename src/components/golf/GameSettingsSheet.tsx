@@ -116,7 +116,7 @@ export function GameSettingsSheet({
         </SheetTrigger>
       )}
 
-      <SheetContent side="bottom" className="h-[85vh] bg-[#F8F8F6] rounded-t-3xl p-0 border-0">
+      <SheetContent side="bottom" className="h-[85vh] bg-[#F8F8F6] rounded-t-3xl p-0 border-0 [&>button]:hidden">
         {/* Drag handle */}
         <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
 
