@@ -27,13 +27,13 @@ function transformFormat(db: any): PersonalGameFormat {
 export function usePersonalGameFormats() {
   const { user } = useAuth();
   const [formats, setFormats] = useState<PersonalGameFormat[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // true until first fetch resolves
   const [saving, setSaving] = useState(false);
   const [parsing, setParsing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchFormats = useCallback(async () => {
-    if (!user) { setFormats([]); return; }
+    if (!user) { setFormats([]); setLoading(false); return; }
     setLoading(true);
     setError(null);
     try {
