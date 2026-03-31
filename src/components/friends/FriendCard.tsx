@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { UserMinus, MapPin } from 'lucide-react';
+import { UserMinus, MapPin, Swords } from 'lucide-react';
 import type { Friend } from '@/hooks/useFriends';
+import { useHeadToHead } from '@/hooks/useHeadToHead';
 
 interface FriendCardProps {
   friend: Friend;
@@ -10,6 +11,8 @@ interface FriendCardProps {
 }
 
 export function FriendCard({ friend, onRemove, isRemoving }: FriendCardProps) {
+  const { record } = useHeadToHead(friend.id);
+
   const getInitials = (name: string | null) => {
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -39,6 +42,16 @@ export function FriendCard({ friend, onRemove, isRemoving }: FriendCardProps) {
               </span>
             )}
           </div>
+          {record && record.roundCount > 0 && (
+            <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5">
+              <Swords className="w-3 h-3 shrink-0" />
+              <span>{record.wins}W · {record.losses}L</span>
+              <span className="mx-0.5">·</span>
+              <span className={record.netAmount >= 0 ? 'text-emerald-600' : 'text-red-500'}>
+                {record.netAmount >= 0 ? `+$${record.netAmount}` : `-$${Math.abs(record.netAmount)}`}
+              </span>
+            </div>
+          )}
         </div>
       </div>
       <motion.button

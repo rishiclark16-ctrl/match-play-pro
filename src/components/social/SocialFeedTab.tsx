@@ -5,6 +5,7 @@ import { useSocialFeed } from '@/hooks/useSocialFeed';
 import { FeedItem } from './FeedItem';
 import { FeedItemSkeleton } from './FeedItemSkeleton';
 import { RoundDetailSheet } from './RoundDetailSheet';
+import { SeasonLeaderboard } from './SeasonLeaderboard';
 
 export function SocialFeedTab() {
   const { items, loading, error, refetch } = useSocialFeed();
@@ -13,6 +14,9 @@ export function SocialFeedTab() {
 
   return (
     <div className="px-4 pt-4 pb-4 space-y-3">
+      {/* Season standings — always shown at top */}
+      <SeasonLeaderboard />
+
       {loading ? (
         <>
           <FeedItemSkeleton />

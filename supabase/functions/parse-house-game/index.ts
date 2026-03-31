@@ -91,17 +91,48 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2048,
+        max_tokens: 1024,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: description.trim() }],
       }),
     });
 
     if (!anthropicRes.ok) {
-      console.error('Anthropic error:', await anthropicRes.text());
+      const errText = await anthropicRes.text();
+      console.error('Anthropic error status:', anthropicRes.status, errText);
+      // Fall back to claude-3-haiku if 4.x model not available
+      const fallbackRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 1024,
+          system: SYSTEM_PROMPT,
+          messages: [{ role: 'user', content: description.trim() }],
+        }),
+      });
+      if (!fallbackRes.ok) {
+        const fallbackErr = await fallbackRes.text();
+        console.error('Fallback Anthropic error:', fallbackRes.status, fallbackErr);
+        return new Response(
+          JSON.stringify({ error: 'Failed to parse game rules. Please try again.' }),
+          { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      const fallbackData = await fallbackRes.json();
+      const fallbackText = fallbackData.content?.[0]?.text ?? '[]';
+      let fallbackParsed: any[] = [];
+      try { const r = JSON.parse(fallbackText); fallbackParsed = Array.isArray(r) ? r : []; } catch { /* ignore */ }
+      const fallbackSanitized = fallbackParsed
+        .filter(item => item && typeof item.id === 'string' && VALID_IDS.has(item.id) && ['high','medium','low'].includes(item.confidence))
+        .map(item => ({ id: item.id, value: item.value ?? null, confidence: item.confidence }));
       return new Response(
-        JSON.stringify({ error: 'Failed to parse game rules. Please try again.' }),
-        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ primitives: fallbackSanitized }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
