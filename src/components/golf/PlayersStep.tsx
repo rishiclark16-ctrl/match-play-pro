@@ -10,6 +10,7 @@ import { useSubscription, TIER_LIMITS } from '@/hooks/useSubscription';
 import { PaywallModal, ProBadge } from '@/components/subscription';
 import { TeeSet } from '@/types/golf';
 import { MixedTeesSheet, getTeeVisual } from '@/components/golf/MixedTeesSheet';
+import { GolfCourseDetails } from '@/hooks/useGolfCourseSearch';
 import { hapticLight } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 
@@ -39,6 +40,7 @@ interface PlayersStepProps {
   mixedTees: boolean;
   roundTeeSets: TeeSet[];
   playerTeeIds: Map<string, string>;
+  courseApiDetails?: GolfCourseDetails | null;
   onMixedTeesChange: (v: boolean) => void;
   onUpdateTeeSets: (teeSets: TeeSet[]) => void;
   onUpdatePlayerTee: (playerId: string, teeSetId: string | undefined) => void;
@@ -61,10 +63,14 @@ export function PlayersStep({
   mixedTees,
   roundTeeSets,
   playerTeeIds,
+  courseApiDetails,
   onMixedTeesChange,
   onUpdateTeeSets,
   onUpdatePlayerTee,
 }: PlayersStepProps) {
+  // When API course details are available, use actual course tees
+  const hasApiTees = !!(courseApiDetails && ((courseApiDetails.tees?.male?.length ?? 0) + (courseApiDetails.tees?.female?.length ?? 0) > 0));
+
   const validPlayers = players.filter(p => p.name.trim());
 
   // Subscription gating for player limits
@@ -132,8 +138,8 @@ export function PlayersStep({
         </motion.button>
       </div>
 
-      {/* Configure Tees button (only shown when mixedTees active) */}
-      {mixedTees && (
+      {/* Configure Tees — only for manual courses (no API tee data) */}
+      {mixedTees && !hasApiTees && (
         <motion.button
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
@@ -159,6 +165,29 @@ export function PlayersStep({
         </motion.button>
       )}
 
+      {/* API course: show tee legend with all available tees */}
+      {mixedTees && hasApiTees && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white border border-border/40 rounded-2xl px-4 py-3 mb-4"
+        >
+          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground mb-2.5">Course Tees</p>
+          <div className="flex flex-wrap gap-2">
+            {roundTeeSets.map(t => {
+              const v = getTeeVisual(t.name);
+              return (
+                <div key={t.id} className="flex items-center gap-1.5 bg-muted/40 rounded-lg px-2.5 py-1.5">
+                  <div className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', v.dot)} />
+                  <span className="text-[11px] font-bold text-foreground">{t.name}</span>
+                  <span className="text-[10px] text-muted-foreground">{t.slope}/{t.courseRating}</span>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
       <AnimatePresence>
         {players.map((player, index) => (
           <motion.div
@@ -180,9 +209,9 @@ export function PlayersStep({
               onRemove={() => onRemovePlayer(player.id)}
               canRemove={players.length > 2}
             />
-            {/* Per-player tee selector (only when mixed tees active and tees configured) */}
+            {/* Per-player tee selector */}
             {mixedTees && roundTeeSets.length > 0 && (
-              <div className="flex gap-2 mt-1.5 mb-2 pl-1">
+              <div className="flex flex-wrap gap-2 mt-1.5 mb-3 pl-1">
                 {roundTeeSets.map(tee => {
                   const selected = playerTeeIds.get(player.id) === tee.id;
                   const visual = getTeeVisual(tee.name);
@@ -195,11 +224,19 @@ export function PlayersStep({
                         onUpdatePlayerTee(player.id, selected ? undefined : tee.id);
                       }}
                       className={cn(
-                        'px-3 py-1 rounded-lg text-[11px] font-bold border transition-all',
-                        selected ? cn(visual.badge, 'border-transparent') : 'bg-white border-border text-muted-foreground'
+                        'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold border transition-all',
+                        selected
+                          ? 'bg-[#0A0A0A] border-[#0A0A0A] text-white'
+                          : 'bg-white border-border/60 text-foreground'
                       )}
                     >
-                      {tee.name}
+                      <div className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', visual.dot)} />
+                      <span>{tee.name}</span>
+                      {hasApiTees && (
+                        <span className={cn('text-[10px] font-normal', selected ? 'text-white/60' : 'text-muted-foreground')}>
+                          {tee.slope}/{tee.courseRating}
+                        </span>
+                      )}
                     </motion.button>
                   );
                 })}

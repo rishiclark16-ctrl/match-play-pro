@@ -103,11 +103,37 @@ export default function NewRound() {
 
   // Mixed tees
   const [mixedTees, setMixedTees] = useState(false);
+  const [courseApiDetails, setCourseApiDetails] = useState<GolfCourseDetails | null>(null);
   const [roundTeeSets, setRoundTeeSets] = useState<TeeSet[]>([
     { id: 'blue', name: 'Blue', gender: 'mens', slope: 130, courseRating: 71.5, par: 72 },
     { id: 'red', name: 'Red', gender: 'womens', slope: 113, courseRating: 68.2, par: 72 },
   ]);
   const [playerTeeIds, setPlayerTeeIds] = useState<Map<string, string>>(new Map());
+
+  // When mixed tees is toggled on with an API course, populate teeSets from course data
+  const handleMixedTeesChange = (v: boolean) => {
+    setMixedTees(v);
+    if (v && courseApiDetails) {
+      const maleTees: TeeSet[] = (courseApiDetails.tees?.male ?? []).map(t => ({
+        id: `male-${t.tee_name.toLowerCase().replace(/\s+/g, '-')}`,
+        name: t.tee_name,
+        gender: 'mens' as const,
+        slope: t.slope_rating,
+        courseRating: t.course_rating,
+        par: t.par_total,
+      }));
+      const femaleTees: TeeSet[] = (courseApiDetails.tees?.female ?? []).map(t => ({
+        id: `female-${t.tee_name.toLowerCase().replace(/\s+/g, '-')}`,
+        name: t.tee_name,
+        gender: 'womens' as const,
+        slope: t.slope_rating,
+        courseRating: t.course_rating,
+        par: t.par_total,
+      }));
+      const allTees = [...maleTees, ...femaleTees];
+      if (allTees.length > 0) setRoundTeeSets(allTees);
+    }
+  };
 
   // Auto-enable mixed tees when house game has the primitive active
   const mixedTeesPrimitiveActive = houseGame?.activePrimitives?.some(p => p.id === 'handicap_mixed_tees') ?? false;
@@ -201,6 +227,7 @@ export default function NewRound() {
 
     setSelectedCourse(course);
     setHoleCount(holes.length === 9 ? 9 : 18);
+    setCourseApiDetails(details);
     toast.success(`Loaded ${displayName} with real par data!`);
   };
 
@@ -529,7 +556,8 @@ export default function NewRound() {
               mixedTees={mixedTees || mixedTeesPrimitiveActive}
               roundTeeSets={roundTeeSets}
               playerTeeIds={playerTeeIds}
-              onMixedTeesChange={setMixedTees}
+              courseApiDetails={courseApiDetails}
+              onMixedTeesChange={handleMixedTeesChange}
               onUpdateTeeSets={setRoundTeeSets}
               onUpdatePlayerTee={handleUpdatePlayerTee}
             />
