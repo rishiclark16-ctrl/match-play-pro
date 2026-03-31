@@ -1,9 +1,9 @@
-import { X, MapPin, Users, Calendar } from 'lucide-react';
+import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { CommentsSection } from './CommentsSection';
 import { useRoundDetailForSheet } from '@/hooks/useRoundDetailForSheet';
-import { AvatarStack } from './AvatarStack';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface RoundDetailSheetProps {
   roundId: string | null;
@@ -18,83 +18,75 @@ export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailS
     <Sheet open={!!roundId} onOpenChange={(open) => { if (!open) onClose(); }}>
       <SheetContent
         side="bottom"
-        className="[&>button]:hidden rounded-t-3xl p-0 max-h-[90vh] overflow-y-auto"
+        className="[&>button]:hidden rounded-t-3xl p-0 max-h-[92vh] overflow-y-auto bg-[#F8F8F6]"
       >
-        {/* Handle bar */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-muted rounded-full" />
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-0">
+          <div className="w-9 h-1 bg-foreground/15 rounded-full" />
         </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-border">
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              Round Details
-            </p>
-            <h2 className="text-[18px] font-black tracking-[-0.03em] text-foreground leading-none mt-0.5">
-              {loading ? 'Loading...' : (detail?.courseName ?? creatorName ?? 'Round')}
-            </h2>
-          </div>
+        {/* Dark hero header */}
+        <div className="bg-[#0A0A0A] mx-4 mt-3 rounded-2xl p-5 relative overflow-hidden">
+          {/* Close button */}
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={onClose}
-            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+            className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center"
           >
-            <X className="w-4 h-4 text-foreground" />
+            <X className="w-3.5 h-3.5 text-white/70" />
           </motion.button>
-        </div>
 
-        <div className="px-6 py-4">
           {loading ? (
-            <div className="space-y-3">
-              {[1,2,3].map(i => (
-                <div key={i} className="h-4 bg-muted rounded animate-pulse" />
-              ))}
+            <div className="space-y-2">
+              <div className="h-5 bg-white/10 rounded w-3/4 animate-pulse" />
+              <div className="h-3 bg-white/10 rounded w-1/3 animate-pulse" />
             </div>
           ) : detail ? (
             <>
-              {/* Meta info */}
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-[13px] font-semibold text-foreground">{detail.courseName}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-muted-foreground" />
-                  <AvatarStack
-                    names={detail.participants.map(p => p.name)}
-                    avatarUrls={detail.participants.map(p => p.avatarUrl)}
-                    max={5}
-                    size="sm"
-                  />
-                  <span className="text-[12px] text-muted-foreground ml-1">
-                    {detail.participants.map(p => p.name.split(' ')[0]).join(', ')}
-                  </span>
-                </div>
-                {detail.completedAt && (
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-[12px] text-muted-foreground">
-                      {new Date(detail.completedAt).toLocaleDateString('en-US', {
-                        weekday: 'short', month: 'short', day: 'numeric'
-                      })}
-                    </span>
-                  </div>
-                )}
-              </div>
+              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/40 mb-1">Round Recap</p>
+              <h2 className="text-[20px] font-black tracking-[-0.03em] text-white leading-tight pr-10 mb-1">
+                {detail.courseName}
+              </h2>
+              {detail.completedAt && (
+                <p className="text-[11px] text-white/40 font-medium">
+                  {new Date(detail.completedAt).toLocaleDateString('en-US', {
+                    weekday: 'long', month: 'long', day: 'numeric',
+                  })}
+                </p>
+              )}
 
-              {/* Comments */}
-              <CommentsSection roundId={detail.id} />
+              {/* Players row */}
+              {detail.participants.length > 0 && (
+                <div className="mt-4 flex items-center gap-2 flex-wrap">
+                  {detail.participants.map((p, i) => (
+                    <div key={i} className="flex items-center gap-1.5 bg-white/[0.08] rounded-xl px-2.5 py-1.5">
+                      <Avatar className="w-5 h-5 rounded-full flex-shrink-0">
+                        <AvatarImage src={p.avatarUrl ?? undefined} />
+                        <AvatarFallback className="rounded-full text-[8px] font-black bg-white/20 text-white">
+                          {p.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-[11px] font-bold text-white/80">
+                        {p.name.split(' ')[0]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           ) : (
-            <p className="text-[13px] text-muted-foreground text-center py-6">
-              Could not load round details.
-            </p>
+            <p className="text-white/40 text-[13px]">Loading...</p>
           )}
         </div>
 
-        {/* Safe area bottom padding */}
-        <div style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }} />
+        {/* Comments section */}
+        {detail && (
+          <div className="px-4 pt-4 pb-0">
+            <CommentsSection roundId={detail.id} />
+          </div>
+        )}
+
+        <div style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }} />
       </SheetContent>
     </Sheet>
   );

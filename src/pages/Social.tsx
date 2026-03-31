@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Rss, Users, UserPlus, Hash, AtSign, Phone, ScanLine, Contact, Crown, QrCode } from 'lucide-react';
+import { Rss, Users, UserPlus, Hash, AtSign, Phone, ScanLine, Contact, Crown, QrCode, ChevronDown } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useProfile } from '@/hooks/useProfile';
 import { useFriends } from '@/hooks/useFriends';
@@ -44,6 +44,7 @@ export default function Social() {
   const [contactSyncOpen, setContactSyncOpen] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showCode, setShowCode] = useState(false);
 
   const { isPro, canAddFriend, limits } = useSubscription();
   const atFriendLimit = !canAddFriend(friends.length);
@@ -164,24 +165,27 @@ export default function Social() {
         </div>
       </div>
 
-      {/* Tab switcher */}
-      <div className="bg-muted rounded-xl p-1 flex gap-1">
+      {/* Tab switcher — underline style */}
+      <div className="flex gap-0 border-b border-border/0 -mx-6 px-6">
         {([
-          { id: 'feed' as Tab, label: 'Feed', icon: Rss },
-          { id: 'friends' as Tab, label: `Friends${friends.length > 0 ? ` (${friends.length})` : ''}`, icon: Users },
-        ] as const).map(({ id, label, icon: Icon }) => (
+          { id: 'feed' as Tab, label: 'Feed' },
+          { id: 'friends' as Tab, label: friends.length > 0 ? `Friends · ${friends.length}` : 'Friends' },
+        ] as const).map(({ id, label }) => (
           <button
             key={id}
             onClick={() => { setActiveTab(id); hapticLight(); }}
             className={cn(
-              'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-bold transition-all',
-              activeTab === id
-                ? 'bg-foreground text-background shadow-sm'
-                : 'text-muted-foreground'
+              'flex-1 py-2.5 text-[13px] font-bold transition-colors relative',
+              activeTab === id ? 'text-foreground' : 'text-muted-foreground'
             )}
           >
-            <Icon className="w-3.5 h-3.5" />
             {label}
+            {activeTab === id && (
+              <motion.div
+                layoutId="social-tab-indicator"
+                className="absolute bottom-0 left-4 right-4 h-[2px] bg-foreground rounded-full"
+              />
+            )}
           </button>
         ))}
       </div>
@@ -210,32 +214,33 @@ export default function Social() {
             transition={{ duration: 0.15 }}
             className="pt-4"
           >
-            {/* Your Friend Code */}
-            <section className="mb-4">
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-6 mb-2">Your Friend Code</p>
-              <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5 mx-6">
-                <div className="font-mono text-3xl font-black tracking-[0.25em] text-foreground text-center py-4 bg-muted/30 rounded-xl mb-3">
-                  {friendCode || '------'}
+            {/* Pending Requests — most urgent, shown first */}
+            {pendingRequests.length > 0 && (
+              <section className="mb-4">
+                <div className="flex items-center gap-2 px-6 mb-2">
+                  <motion.div
+                    animate={{ opacity: [1, 0.4, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    className="w-1.5 h-1.5 rounded-full bg-[#22C55E]"
+                  />
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Pending</p>
+                  <span className="text-[11px] font-bold text-muted-foreground ml-auto">{pendingRequests.length}</span>
                 </div>
-                {friendCode && <ShareFriendCode friendCode={friendCode} userName={userName} />}
-                {friendCode && (
-                  <button
-                    onClick={() => setScannerOpen(true)}
-                    className="w-full border-2 border-border rounded-2xl py-3 font-semibold text-sm flex items-center justify-center gap-2 mt-2"
-                  >
-                    <QrCode className="w-4 h-4" />
-                    Show QR Code
-                  </button>
-                )}
-                {friendCode && (
-                  <div className="shrink-0 mt-3 flex justify-center">
-                    <FriendCodeQR friendCode={friendCode} />
-                  </div>
-                )}
-              </div>
-            </section>
+                <div className="space-y-2">
+                  {pendingRequests.map((request) => (
+                    <FriendRequestCard
+                      key={request.id}
+                      request={request}
+                      onAccept={handleAccept}
+                      onDecline={handleDecline}
+                      isProcessing={processingId === request.id}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
-            {/* Add Friend */}
+            {/* Add Friend — primary action */}
             <section className="mb-4">
               <div className="flex items-center justify-between px-6 mb-2">
                 <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Add a Friend</p>
@@ -299,31 +304,51 @@ export default function Social() {
               </div>
             </section>
 
-            {/* Pending Requests */}
-            {pendingRequests.length > 0 && (
-              <section className="mb-4">
-                <div className="flex items-center gap-2 px-6 mb-2">
+            {/* Friend Code — compact by default */}
+            <section className="mb-4">
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => { setShowCode(v => !v); hapticLight(); }}
+                className="w-full flex items-center justify-between bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-4 py-3 mx-0"
+                style={{ marginLeft: 0 }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-foreground flex items-center justify-center flex-shrink-0">
+                    <QrCode className="w-4 h-4 text-[#F0EE3A]" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[12px] font-bold text-foreground leading-none">Your Friend Code</p>
+                    <p className="font-mono text-[13px] font-black tracking-[0.2em] text-foreground/60 mt-0.5">
+                      {friendCode || '------'}
+                    </p>
+                  </div>
+                </div>
+                <ChevronDown className={cn('w-4 h-4 text-muted-foreground transition-transform', showCode && 'rotate-180')} />
+              </motion.button>
+
+              <AnimatePresence>
+                {showCode && (
                   <motion.div
-                    animate={{ opacity: [1, 0.4, 1] }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
-                    className="w-1.5 h-1.5 rounded-full bg-[#22C55E]"
-                  />
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Pending</p>
-                  <span className="text-[11px] font-bold text-muted-foreground ml-auto">{pendingRequests.length}</span>
-                </div>
-                <div className="space-y-2">
-                  {pendingRequests.map((request) => (
-                    <FriendRequestCard
-                      key={request.id}
-                      request={request}
-                      onAccept={handleAccept}
-                      onDecline={handleDecline}
-                      isProcessing={processingId === request.id}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5 mt-2">
+                      <div className="font-mono text-3xl font-black tracking-[0.25em] text-foreground text-center py-4 bg-muted/30 rounded-xl mb-3">
+                        {friendCode || '------'}
+                      </div>
+                      {friendCode && <ShareFriendCode friendCode={friendCode} userName={userName} />}
+                      {friendCode && (
+                        <div className="shrink-0 mt-3 flex justify-center">
+                          <FriendCodeQR friendCode={friendCode} />
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </section>
 
             {/* Friends List */}
             <section className="pb-8">
