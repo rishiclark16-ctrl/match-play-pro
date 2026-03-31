@@ -6,10 +6,14 @@ export async function parseHouseGameDescription(description: string): Promise<Pa
     const { data, error } = await supabase.functions.invoke('parse-house-game', {
       body: { description },
     });
-    if (error) throw error;
+    if (error) {
+      console.error('parse-house-game invoke error:', error);
+      throw error;
+    }
     if (!data?.primitives || !Array.isArray(data.primitives)) return [];
     return data.primitives as ParsedPrimitive[];
-  } catch {
+  } catch (err) {
+    console.error('parseHouseGameDescription failed:', err);
     return null;
   }
 }
