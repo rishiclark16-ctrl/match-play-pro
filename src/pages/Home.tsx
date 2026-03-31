@@ -175,6 +175,26 @@ function SectionLabel({ children, live }: { children: React.ReactNode; live?: bo
   );
 }
 
+// ─── Animated Logo ────────────────────────────────────────────────────────────
+function AnimatedLogo() {
+  return (
+    <div className="w-10 h-10 rounded-[12px] bg-foreground flex items-center justify-center flex-shrink-0">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" overflow="visible">
+        {/* Stick */}
+        <line x1="7" y1="2.5" x2="7" y2="20" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+        {/* Animated flag pennant */}
+        <motion.polygon
+          points="7,2.5 17,6.5 7,10.5"
+          fill="#F0EE3A"
+          style={{ transformOrigin: '7px 6.5px' }}
+          animate={{ scaleX: [1, 0.82, 1], skewY: [0, 4, 0] }}
+          transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </svg>
+    </div>
+  );
+}
+
 // ─── Home ─────────────────────────────────────────────────────────────────────
 export default function Home() {
   const navigate = useNavigate();
@@ -259,11 +279,7 @@ export default function Home() {
     <div className="px-6 pb-4 flex items-center justify-between pt-safe-content">
       {/* Logo */}
       <div className="flex items-center gap-[10px]">
-        <div className="w-10 h-10 rounded-[12px] bg-foreground flex items-center justify-center flex-shrink-0">
-          <svg width="20" height="20" viewBox="0 0 80 80" fill="none">
-            <path d="M16 58 L16 22 L40 46 L64 22 L64 58" stroke="white" strokeWidth="7.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </div>
+        <AnimatedLogo />
         <div>
           <h1 className="text-[22px] font-extrabold tracking-[-0.04em] leading-none text-foreground">MATCH</h1>
         </div>

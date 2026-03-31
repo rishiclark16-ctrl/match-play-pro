@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Trash2, Loader2, ChevronRight } from 'lucide-react';
 import { Round } from '@/types/golf';
 import { cn } from '@/lib/utils';
+import { SwingAnimation } from './SwingAnimation';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,6 +70,7 @@ export const RoundCard = forwardRef<HTMLDivElement, RoundCardProps>(
                   : 'Live'
                 : 'Complete'}
             </span>
+            {isActive && <SwingAnimation />}
             <div className={cn(
               "flex-1 h-px opacity-20",
               isActive ? "bg-success" : "bg-muted-foreground"
