@@ -163,7 +163,8 @@ export function AIBuilderTutorial({ onDismiss }: Props) {
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        className="relative w-full bg-[#F8F8F6] rounded-t-3xl px-6 pt-6 pb-safe"
+        className="relative w-full bg-[#F8F8F6] rounded-t-3xl px-6 pt-6"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 80px)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Progress dots */}
