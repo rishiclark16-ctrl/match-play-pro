@@ -28,6 +28,7 @@ const RoundComplete = lazy(() => import("./pages/RoundComplete"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Friends = lazy(() => import("./pages/Friends"));
+const Social = lazy(() => import("./pages/Social"));
 const Groups = lazy(() => import("./pages/Groups"));
 const Stats = lazy(() => import("./pages/Stats"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
@@ -177,6 +178,16 @@ function AppContent() {
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="list" />}>
                 <Friends />
+              </Suspense>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/social"
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="list" />}>
+                <Social />
               </Suspense>
             </AuthGuard>
           }
