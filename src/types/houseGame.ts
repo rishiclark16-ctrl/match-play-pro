@@ -27,6 +27,7 @@ export interface PersonalGameFormat {
   name: string;
   description: string;
   activePrimitives: ActivePrimitive[];
+  isPublic: boolean;
   version: number;
   createdAt: string;
   updatedAt: string;

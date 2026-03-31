@@ -10,8 +10,11 @@ import { PlayerLedgerSheet } from './PlayerLedgerSheet';
 import { useAuth } from '@/hooks/useAuth';
 import { useGroupLedger, PlayerBalance, LedgerEntry } from '@/hooks/useGroupLedger';
 import { useHouseGame } from '@/hooks/useHouseGame';
+import { useGroupFormats } from '@/hooks/useGroupFormats';
+import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PaywallModal } from '@/components/subscription/PaywallModal';
+import { GroupFormatPickerSheet } from './GroupFormatPickerSheet';
 import { summarizeConfig, buildScoringConfig } from '@/lib/houseGame/engine';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
@@ -44,6 +47,12 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
   const { isPro } = useSubscription();
   const { balances, entries, settlements, loading, settle } = useGroupLedger(group.id);
   const { houseGame, loading: houseLoading } = useHouseGame(group.id);
+  const { assignment: groupFormatAssignment, assignFormat, removeAssignment } = useGroupFormats(group?.id ?? null);
+  const { formats: myFormats } = usePersonalGameFormats();
+  const publicFormats = myFormats.filter(f => f.isPublic);
+  const [showFormatPicker, setShowFormatPicker] = useState(false);
+
+  const isOwner = user?.id === group.ownerId;
 
   const [showPaywall, setShowPaywall] = useState(false);
 
@@ -341,6 +350,67 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
               </motion.button>
             )}
           </motion.div>
+        )}
+
+        {/* Group Format Assignment — owner only */}
+        {isOwner && (
+          <div className="mt-4 pb-2">
+            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-muted-foreground mb-2">Group Format</p>
+            <div className="bg-white rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)] border border-border/30">
+              {groupFormatAssignment ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#F0EE3A]/15 flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-4 h-4 text-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-bold text-foreground truncate">{groupFormatAssignment.format.name}</p>
+                    <p className="text-[11px] text-muted-foreground">Shared with group members</p>
+                  </div>
+                  <div className="flex flex-col gap-1 items-end">
+                    <button
+                      onClick={() => { hapticLight(); setShowFormatPicker(true); }}
+                      className="text-[11px] font-bold text-foreground"
+                    >
+                      Change
+                    </button>
+                    <button
+                      onClick={() => { hapticLight(); removeAssignment(); }}
+                      className="text-[11px] text-destructive"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-[13px] font-bold text-foreground">No format assigned</p>
+                      <p className="text-[11px] text-muted-foreground">Share an AI game with your group</p>
+                    </div>
+                  </div>
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => { hapticLight(); setShowFormatPicker(true); }}
+                    className="bg-foreground text-background text-[11px] font-bold px-3 py-1.5 rounded-xl"
+                  >
+                    Assign
+                  </motion.button>
+                </div>
+              )}
+            </div>
+            <GroupFormatPickerSheet
+              isOpen={showFormatPicker}
+              onClose={() => setShowFormatPicker(false)}
+              formats={publicFormats}
+              currentFormatId={groupFormatAssignment?.formatId ?? null}
+              onSelect={async (formatId) => {
+                await assignFormat(formatId);
+                setShowFormatPicker(false);
+              }}
+            />
+          </div>
         )}
 
         {/* Running Tab */}

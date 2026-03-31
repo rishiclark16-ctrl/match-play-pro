@@ -15,11 +15,16 @@ import { useFriends, Friend } from '@/hooks/useFriends';
 import { useGroups, GolfGroup } from '@/hooks/useGroups';
 import { useHouseGame } from '@/hooks/useHouseGame';
 import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
+import { useGroupFormats } from '@/hooks/useGroupFormats';
+import { useSubscription } from '@/hooks/useSubscription';
 import { Course, HoleInfo, GameConfig, Team, TeeSet, generateId } from '@/types/golf';
+import { PersonalGameFormat } from '@/types/houseGame';
 import { createDefaultTeams } from '@/lib/games/bestball';
 import { buildConfig, summarizeScoringConfig } from '@/engine/HouseGameEngine';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
+import { PaywallModal } from '@/components/subscription/PaywallModal';
 
 type Step = 'course' | 'players' | 'format';
 
@@ -35,6 +40,7 @@ interface PlayerData {
 
 export default function NewRound() {
   const navigate = useNavigate();
+  const { isPro } = useSubscription();
   const { createRound } = useCreateSupabaseRound();
   const { courses, createCourse, getDefaultHoles } = useCourses();
   const { getCourseDetails, convertToHoleInfo, getTeeInfo } = useGolfCourseSearch();
@@ -45,6 +51,7 @@ export default function NewRound() {
   // UI state
   const [isCreating, setIsCreating] = useState(false);
   const [step, setStep] = useState<Step>('course');
+  const [showPaywall, setShowPaywall] = useState(false);
   const [isLoadingApiCourse, setIsLoadingApiCourse] = useState(false);
   const [showTeeSelector, setShowTeeSelector] = useState(false);
   const [pendingCourseDetails, setPendingCourseDetails] = useState<GolfCourseDetails | null>(null);
@@ -88,16 +95,22 @@ export default function NewRound() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [houseGameEnabled, setHouseGameEnabled] = useState(true);
   const { houseGame } = useHouseGame(selectedGroupId);
+  const { assignment: groupFormatAssignment } = useGroupFormats(selectedGroupId ?? null);
+  const groupAssignedFormat = groupFormatAssignment?.format ?? null;
 
   // Personal saved formats
-  const { formats: personalFormats } = usePersonalGameFormats();
+  const { formats: personalFormats, cloneFormat } = usePersonalGameFormats();
   const [selectedPersonalFormatId, setSelectedPersonalFormatId] = useState<string | null>(null);
-  const selectedPersonalFormat = personalFormats.find(f => f.id === selectedPersonalFormatId) ?? null;
+  const selectedPersonalFormat =
+    personalFormats.find(f => f.id === selectedPersonalFormatId)
+    ?? (groupAssignedFormat?.id === selectedPersonalFormatId ? groupAssignedFormat : null)
+    ?? null;
 
   // Ghost player — active when house game or personal format has handicap_ghost_player primitive
   const ghostPrimitiveActive =
     (houseGame?.activePrimitives?.some(p => p.id === 'handicap_ghost_player') && houseGameEnabled) ||
-    (selectedPersonalFormat?.activePrimitives?.some(p => p.id === 'handicap_ghost_player') ?? false);
+    (selectedPersonalFormat?.activePrimitives?.some(p => p.id === 'handicap_ghost_player') ?? false) ||
+    (groupAssignedFormat?.activePrimitives?.some(p => p.id === 'handicap_ghost_player') ?? false);
   const [ghostName, setGhostName] = useState('Ghost');
   const [ghostHandicap, setGhostHandicap] = useState<number | undefined>(undefined);
 
@@ -463,6 +476,22 @@ export default function NewRound() {
     }
   };
 
+  const handleUseThisGame = async (format: PersonalGameFormat) => {
+    if (!isPro) {
+      setShowPaywall(true);
+      return;
+    }
+    hapticLight();
+    const newId = await cloneFormat(format.id);
+    if (newId) {
+      toast.success(`"${format.name}" saved to your formats`);
+      hapticSuccess();
+    } else {
+      toast.error('Failed to save format');
+      hapticError();
+    }
+  };
+
   const steps: Step[] = ['course', 'players', 'format'];
   const currentStepIndex = steps.indexOf(step);
   const stepConfig = {
@@ -698,6 +727,10 @@ export default function NewRound() {
               selectedPersonalFormatId={selectedPersonalFormatId}
               onPersonalFormatSelect={setSelectedPersonalFormatId}
               onBuildNewFormat={() => navigate('/my-formats/new', { state: { returnTo: '/new-round' } })}
+              groupAssignedFormat={groupAssignedFormat}
+              onUseThisGame={handleUseThisGame}
+              isPro={isPro}
+              onPaywall={() => setShowPaywall(true)}
             />
             </motion.div>
           )}
@@ -752,6 +785,12 @@ export default function NewRound() {
           setPendingCourseDetails(null);
           setPendingApiCourse(null);
         }}
+      />
+
+      <PaywallModal
+        open={showPaywall}
+        onOpenChange={setShowPaywall}
+        feature="Save Game Formats"
       />
     </div>
   );

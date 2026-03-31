@@ -9,6 +9,8 @@ import { ProBadge, PaywallModal } from '@/components/subscription';
 import { cn } from '@/lib/utils';
 import { PersonalGameFormat } from '@/types/houseGame';
 import { buildConfig, summarizeScoringConfig } from '@/engine/HouseGameEngine';
+import { UseThisGameButton } from './UseThisGameButton';
+import { hapticLight } from '@/lib/haptics';
 
 interface PlayerData {
   id: string;
@@ -60,6 +62,10 @@ interface FormatStepProps {
   selectedPersonalFormatId?: string | null;
   onPersonalFormatSelect?: (id: string | null) => void;
   onBuildNewFormat?: () => void;
+  groupAssignedFormat?: PersonalGameFormat | null;
+  onUseThisGame?: (format: PersonalGameFormat) => void;
+  isPro?: boolean;
+  onPaywall?: () => void;
 }
 
 const springTransition = { type: 'spring', stiffness: 300, damping: 28 };
@@ -100,6 +106,10 @@ export function FormatStep({
   selectedPersonalFormatId,
   onPersonalFormatSelect,
   onBuildNewFormat,
+  groupAssignedFormat,
+  onUseThisGame,
+  isPro: isPropPro,
+  onPaywall,
 }: FormatStepProps) {
   const validPlayers = players.filter(p => p.name.trim());
   const playerCount = validPlayers.length;
@@ -150,6 +160,56 @@ export function FormatStep({
       exit={{ opacity: 0, x: -20 }}
       className="pt-4"
     >
+      {/* Group-assigned format */}
+      {groupAssignedFormat && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4"
+        >
+          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-muted-foreground mb-2">Group Format</p>
+          <motion.div
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              hapticLight();
+              const newId = selectedPersonalFormatId === groupAssignedFormat.id ? null : groupAssignedFormat.id;
+              onPersonalFormatSelect?.(newId);
+            }}
+            className={cn(
+              'w-full rounded-2xl p-4 border-2 cursor-pointer transition-all',
+              selectedPersonalFormatId === groupAssignedFormat.id
+                ? 'bg-[#0A0A0A] border-[#0A0A0A]'
+                : 'bg-white border-border/40'
+            )}
+          >
+            <div className="flex items-start gap-3">
+              <div className={cn(
+                'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
+                selectedPersonalFormatId === groupAssignedFormat.id ? 'bg-[#F0EE3A]/20' : 'bg-muted'
+              )}>
+                <Sparkles className={cn('w-4 h-4', selectedPersonalFormatId === groupAssignedFormat.id ? 'text-[#F0EE3A]' : 'text-muted-foreground')} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={cn('font-black text-[14px] leading-tight', selectedPersonalFormatId === groupAssignedFormat.id ? 'text-white' : 'text-foreground')}>
+                  {groupAssignedFormat.name}
+                </p>
+                <p className={cn('text-[11px] mt-0.5 leading-snug', selectedPersonalFormatId === groupAssignedFormat.id ? 'text-white/50' : 'text-muted-foreground')}>
+                  {groupAssignedFormat.description.slice(0, 80)}{groupAssignedFormat.description.length > 80 ? '…' : ''}
+                </p>
+              </div>
+            </div>
+            {/* Use This Game button — only for non-owners */}
+            {onUseThisGame && (
+              <UseThisGameButton
+                isPro={isPropPro ?? false}
+                onUse={() => onUseThisGame(groupAssignedFormat)}
+                onPaywall={() => onPaywall?.()}
+              />
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+
       {/* My Saved Formats section */}
       {personalFormats !== undefined && (
         <>

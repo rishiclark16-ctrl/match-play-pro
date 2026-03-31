@@ -1,13 +1,14 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, Trash2, Globe, Lock } from 'lucide-react';
 import { useHouseGame } from '@/hooks/useHouseGame';
 import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { useAuth } from '@/hooks/useAuth';
 import { ActivePrimitive } from '@/types/houseGame';
 import { PRIMITIVE_MAP, PRIMITIVES_BY_CATEGORY, CATEGORY_LABELS, CATEGORY_ORDER } from '@/lib/houseGame/primitives';
 import { CategorySection } from '@/components/golf/HouseGamePrimitives';
+import { Switch } from '@/components/ui/switch';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,7 +24,7 @@ export default function HouseGameEdit() {
   const { houseGame, loading: groupLoading, saving: groupSaving, saveHouseGame } = useHouseGame(isPersonal ? null : groupId ?? null);
 
   // Personal mode hooks
-  const { formats, loading: personalLoading, saving: personalSaving, saveFormat, deleteFormat } = usePersonalGameFormats();
+  const { formats, loading: personalLoading, saving: personalSaving, saveFormat, deleteFormat, togglePublic } = usePersonalGameFormats();
   const personalFormat = isPersonal ? (formats.find(f => f.id === formatId) ?? null) : null;
 
   const loading = isPersonal ? personalLoading : groupLoading;
@@ -276,6 +277,33 @@ export default function HouseGameEdit() {
             className="w-full bg-white border-2 border-foreground/20 focus:border-foreground rounded-xl px-4 py-3 text-[15px] font-bold text-foreground placeholder:text-muted-foreground/50 outline-none transition-colors"
           />
         </div>
+
+        {isPersonal && personalFormat && (
+          <div className="flex items-center justify-between bg-white rounded-2xl px-4 py-3 mb-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)] border border-border/30">
+            <div className="flex items-center gap-2.5">
+              {personalFormat.isPublic
+                ? <Globe className="w-4 h-4 text-foreground" />
+                : <Lock className="w-4 h-4 text-muted-foreground" />}
+              <div>
+                <p className="text-[13px] font-bold text-foreground">
+                  {personalFormat.isPublic ? 'Public' : 'Private'}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {personalFormat.isPublic
+                    ? 'Friends in your group can use this format'
+                    : 'Only visible to you'}
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={personalFormat.isPublic ?? false}
+              onCheckedChange={async (checked) => {
+                hapticLight();
+                if (personalFormat?.id) await togglePublic(personalFormat.id, checked);
+              }}
+            />
+          </div>
+        )}
 
         <div className="flex flex-col gap-2">
         {CATEGORY_ORDER.map((catId, i) => {

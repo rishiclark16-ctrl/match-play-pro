@@ -9,6 +9,7 @@ interface SaveFormatInput {
   name: string;
   description: string;
   activePrimitives: ActivePrimitive[];
+  isPublic?: boolean;
 }
 
 function transformFormat(db: any): PersonalGameFormat {
@@ -18,6 +19,7 @@ function transformFormat(db: any): PersonalGameFormat {
     name: db.name,
     description: db.description,
     activePrimitives: (db.active_primitives as ActivePrimitive[]) ?? [],
+    isPublic: db.is_public ?? false,
     version: db.version,
     createdAt: db.created_at,
     updatedAt: db.updated_at,
@@ -67,6 +69,7 @@ export function usePersonalGameFormats() {
             name: input.name,
             description: input.description,
             active_primitives: input.activePrimitives,
+            is_public: input.isPublic ?? existing?.isPublic ?? false,
             version: (existing?.version ?? 0) + 1,
           })
           .eq('id', input.id)
@@ -86,6 +89,7 @@ export function usePersonalGameFormats() {
             name: input.name,
             description: input.description,
             active_primitives: input.activePrimitives,
+            is_public: input.isPublic ?? false,
           })
           .select()
           .single();
@@ -122,6 +126,52 @@ export function usePersonalGameFormats() {
     }
   }, [user]);
 
+  const togglePublic = useCallback(async (id: string, isPublic: boolean): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const { error } = await supabase
+        .from('personal_game_formats')
+        .update({ is_public: isPublic })
+        .eq('id', id)
+        .eq('owner_id', user.id);
+      if (error) throw error;
+      setFormats(prev => prev.map(f => f.id === id ? { ...f, isPublic } : f));
+      return true;
+    } catch (err: any) {
+      setError(err.message ?? 'Failed to update format');
+      return false;
+    }
+  }, [user]);
+
+  const cloneFormat = useCallback(async (sourceId: string): Promise<string | null> => {
+    if (!user) return null;
+    try {
+      const { data: src, error: fetchErr } = await supabase
+        .from('personal_game_formats')
+        .select('*')
+        .eq('id', sourceId)
+        .single();
+      if (fetchErr || !src) return null;
+      const { data, error: insertErr } = await supabase
+        .from('personal_game_formats')
+        .insert({
+          owner_id: user.id,
+          name: src.name,
+          description: src.description,
+          active_primitives: src.active_primitives,
+          is_public: false,
+        })
+        .select()
+        .single();
+      if (insertErr || !data) return null;
+      const newFormat = transformFormat(data);
+      setFormats(prev => [newFormat, ...prev]);
+      return newFormat.id;
+    } catch {
+      return null;
+    }
+  }, [user]);
+
   const parseDescription = useCallback(async (description: string): Promise<ParsedPrimitive[] | null> => {
     setParsing(true);
     try {
@@ -131,5 +181,5 @@ export function usePersonalGameFormats() {
     }
   }, []);
 
-  return { formats, loading, saving, parsing, error, saveFormat, deleteFormat, parseDescription, refetch: fetchFormats };
+  return { formats, loading, saving, parsing, error, saveFormat, deleteFormat, togglePublic, cloneFormat, parseDescription, refetch: fetchFormats };
 }

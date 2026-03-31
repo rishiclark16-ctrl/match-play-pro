@@ -34,6 +34,7 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const HouseGameBuilder = lazy(() => import("./pages/HouseGameBuilder"));
 const HouseGameConfirm = lazy(() => import("./pages/HouseGameConfirm"));
 const HouseGameEdit = lazy(() => import("./pages/HouseGameEdit"));
+const MyFormatsList = lazy(() => import("./pages/MyFormatsList"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Support = lazy(() => import("./pages/Support"));
@@ -268,6 +269,16 @@ function AppContent() {
           }
         />
         {/* Personal Game Format routes */}
+        <Route
+          path="/my-formats"
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <MyFormatsList />
+              </Suspense>
+            </AuthGuard>
+          }
+        />
         <Route
           path="/my-formats/new"
           element={

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Mic, Crown, ExternalLink, Trash2, AlertTriangle, Bell, ChevronRight, Settings } from 'lucide-react';
+import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Mic, Crown, ExternalLink, Trash2, AlertTriangle, Bell, ChevronRight, Settings, Sparkles, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import { shouldPromptForPush, requestPushPermission, checkPushPermission } from 
 import { useFriends } from '@/hooks/useFriends';
 import { useSettings } from '@/hooks/useSettings';
 import { useSubscription } from '@/hooks/useSubscription';
+import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { PaywallModal } from '@/components/subscription/PaywallModal';
 import { restorePurchases, openManagementUrl } from '@/services/purchases';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
@@ -33,11 +34,22 @@ const TEE_OPTIONS = [
 
 // ─── Row primitives ───────────────────────────────────────────────────────────
 
-function RowLabel({ children }: { children: React.ReactNode }) {
-  return <span className="text-[14px] font-medium text-foreground">{children}</span>;
+function RowLabel({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <span className={cn('text-[14px] font-medium text-foreground', className)}>{children}</span>;
 }
 
-function Row({ children, last }: { children: React.ReactNode; last?: boolean }) {
+function Row({ children, last, onClick }: { children: React.ReactNode; last?: boolean; onClick?: () => void }) {
+  if (onClick) {
+    return (
+      <motion.button
+        whileTap={{ scale: 0.98 }}
+        onClick={onClick}
+        className={cn('w-full px-5 py-4 flex items-center justify-between gap-4 text-left', !last && 'border-b border-border/30')}
+      >
+        {children}
+      </motion.button>
+    );
+  }
   return (
     <div className={cn('px-5 py-4 flex items-center justify-between gap-4', !last && 'border-b border-border/30')}>
       {children}
@@ -70,6 +82,8 @@ export default function Profile() {
   const { friends } = useFriends();
   const { settings, updateSettings } = useSettings();
   const { isPro, subscription, refreshSubscription } = useSubscription();
+  const { formats: myFormats } = usePersonalGameFormats();
+  const publicFormats = myFormats.filter(f => f.isPublic);
   const [copied, setCopied] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
@@ -464,6 +478,53 @@ export default function Profile() {
                 ))}
               </div>
             </Row>
+          </Card>
+        </motion.div>
+
+        {/* ── MY GAME FORMATS ──────────────────────────────────────── */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.09 }}>
+          <SectionLabel>My Game Formats</SectionLabel>
+          <Card className="mb-5">
+            {myFormats.length === 0 ? (
+              <Row last onClick={() => navigate('/my-formats/new')}>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-muted-foreground" />
+                  <RowLabel>Build your first AI game</RowLabel>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </Row>
+            ) : (
+              <>
+                {myFormats.slice(0, 3).map((fmt, i) => (
+                  <Row
+                    key={fmt.id}
+                    last={i === Math.min(myFormats.length, 3) - 1}
+                    onClick={() => navigate(`/my-formats/${fmt.id}/edit`)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                      <RowLabel>{fmt.name}</RowLabel>
+                      {fmt.isPublic && (
+                        <span className="text-[10px] font-bold text-[#22C55E] bg-[#22C55E]/10 px-1.5 py-0.5 rounded-md">PUBLIC</span>
+                      )}
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </Row>
+                ))}
+                {myFormats.length > 3 && (
+                  <Row last onClick={() => navigate('/my-formats/new')}>
+                    <RowLabel className="text-muted-foreground">+{myFormats.length - 3} more formats</RowLabel>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </Row>
+                )}
+                {myFormats.length <= 3 && (
+                  <Row last onClick={() => navigate('/my-formats/new')}>
+                    <RowLabel className="text-muted-foreground">Build new format</RowLabel>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </Row>
+                )}
+              </>
+            )}
           </Card>
         </motion.div>
 
