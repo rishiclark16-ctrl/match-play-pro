@@ -125,6 +125,8 @@ export function ScoreInputSheet({
   const [showNumpad, setShowNumpad] = useState(false);
   const customScores = Array.from({ length: 12 }, (_, i) => i + 1);
   const namedScores = buildNamedScores(par);
+  // Default to par when no score has been entered yet
+  const effectiveScore = currentScore ?? par;
 
   const handleSelectScore = (score: number) => {
     hapticSuccess();
@@ -206,7 +208,7 @@ export function ScoreInputSheet({
             {/* Named Score Buttons */}
             <div className="flex flex-col gap-2 px-5 pb-3">
               {namedScores.map((item, index) => {
-                const isSelected = currentScore === item.score;
+                const isSelected = effectiveScore === item.score;
 
                 return (
                   <motion.button
@@ -282,7 +284,7 @@ export function ScoreInputSheet({
                 >
                   <div className="grid grid-cols-6 gap-1.5 pt-1">
                     {customScores.map((score) => {
-                      const isSelected = currentScore === score;
+                      const isSelected = effectiveScore === score;
                       return (
                         <motion.button
                           key={score}
