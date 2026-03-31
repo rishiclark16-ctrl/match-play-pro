@@ -139,7 +139,7 @@ export default function HouseGameBuilder() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+      <main className="flex-1 overflow-y-auto px-6 pt-5 pb-nav flex flex-col gap-5">
         {/* Free tier notice */}
         {isPersonal && !isPro && (
           <motion.div
