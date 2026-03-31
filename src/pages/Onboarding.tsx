@@ -70,18 +70,13 @@ export default function Onboarding() {
     }
   };
 
-  const handleSkipStep = () => {
+  const handleSkip = () => {
     hapticLight();
     if (isLastStep) {
       finish();
     } else {
       setCurrentStep(s => s + 1);
     }
-  };
-
-  const handleSkipAll = () => {
-    hapticLight();
-    finish();
   };
 
   const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
@@ -103,10 +98,10 @@ export default function Onboarding() {
             ))}
           </div>
           <button
-            onClick={handleSkipAll}
+            onClick={handleSkip}
             className="text-[13px] font-bold text-muted-foreground py-1 px-2"
           >
-            Skip all
+            Skip
           </button>
         </div>
       </header>
@@ -301,7 +296,7 @@ export default function Onboarding() {
 
       {/* Bottom CTA */}
       <div className="flex-shrink-0 px-6 pb-safe pt-4 border-t border-border/20 bg-[#F8F8F6]">
-        <div className="flex gap-3 mb-3">
+        <div className="flex gap-3 pb-2">
           {/* Back button */}
           {currentStep > 0 && (
             <motion.button
@@ -333,20 +328,13 @@ export default function Onboarding() {
               </>
             ) : (
               <>
-                <span>Continue</span>
+                <span>Next</span>
                 <ChevronRight className="w-5 h-5" />
               </>
             )}
           </motion.button>
         </div>
 
-        {/* Skip this step */}
-        <button
-          onClick={handleSkipStep}
-          className="w-full text-center text-[13px] font-bold text-muted-foreground py-1"
-        >
-          Skip this step
-        </button>
       </div>
     </div>
   );
