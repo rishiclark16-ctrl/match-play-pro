@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Flag, Swords, DollarSign, Trophy, BarChart3, Users, Crown } from 'lucide-react';
+import { Lock, Flag, Swords, DollarSign, Trophy, BarChart3, Users, Crown, Sparkles, ToggleLeft, ToggleRight, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useSubscription } from '@/hooks/useSubscription';
 import { ProBadge, PaywallModal } from '@/components/subscription';
 import { cn } from '@/lib/utils';
+import { PersonalGameFormat } from '@/types/houseGame';
+import { buildConfig, summarizeScoringConfig } from '@/engine/HouseGameEngine';
 
 interface PlayerData {
   id: string;
@@ -53,6 +55,11 @@ interface FormatStepProps {
   onWolfEnabledChange: (enabled: boolean) => void;
   onWolfStakesChange: (stakes: string) => void;
   onWolfCarryoverChange: (carryover: boolean) => void;
+  // Personal saved formats (optional)
+  personalFormats?: PersonalGameFormat[];
+  selectedPersonalFormatId?: string | null;
+  onPersonalFormatSelect?: (id: string | null) => void;
+  onBuildNewFormat?: () => void;
 }
 
 const springTransition = { type: 'spring', stiffness: 300, damping: 28 };
@@ -89,6 +96,10 @@ export function FormatStep({
   onWolfEnabledChange,
   onWolfStakesChange,
   onWolfCarryoverChange,
+  personalFormats,
+  selectedPersonalFormatId,
+  onPersonalFormatSelect,
+  onBuildNewFormat,
 }: FormatStepProps) {
   const validPlayers = players.filter(p => p.name.trim());
   const playerCount = validPlayers.length;
@@ -139,6 +150,69 @@ export function FormatStep({
       exit={{ opacity: 0, x: -20 }}
       className="pt-4"
     >
+      {/* My Saved Formats section */}
+      {personalFormats !== undefined && (
+        <>
+          <p className={sectionLabel}>My Saved Formats</p>
+          {personalFormats.length === 0 ? null : personalFormats.map(fmt => {
+            const isSelected = selectedPersonalFormatId === fmt.id;
+            const cfg = buildConfig(fmt.activePrimitives);
+            const lines = summarizeScoringConfig(cfg, 2);
+            return (
+              <motion.div
+                key={fmt.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={springTransition}
+                className={cn(
+                  'rounded-2xl border-2 px-4 py-3 flex items-center gap-3 transition-colors mb-2',
+                  isSelected ? 'bg-[#0A0A0A] border-[#0A0A0A]' : 'bg-white border-border/40'
+                )}
+              >
+                <div className={cn(
+                  'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
+                  isSelected ? 'bg-[#F0EE3A]' : 'bg-muted'
+                )}>
+                  <Sparkles className={cn('w-4 h-4', isSelected ? 'text-[#0A0A0A]' : 'text-muted-foreground')} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={cn('text-[13px] font-bold truncate', isSelected ? 'text-white' : 'text-foreground')}>
+                    {fmt.name}
+                  </p>
+                  {lines.length > 0 && (
+                    <p className={cn('text-[11px] truncate', isSelected ? 'text-white/50' : 'text-muted-foreground')}>
+                      {lines.join(' · ')}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => onPersonalFormatSelect?.(isSelected ? null : fmt.id)}
+                  className="flex-shrink-0"
+                >
+                  {isSelected
+                    ? <ToggleRight className="w-7 h-7 text-[#F0EE3A]" />
+                    : <ToggleLeft className="w-7 h-7 text-muted-foreground" />
+                  }
+                </button>
+              </motion.div>
+            );
+          })}
+          {onBuildNewFormat && (
+            <motion.button
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={springTransition}
+              whileTap={{ scale: 0.97 }}
+              onClick={onBuildNewFormat}
+              className="w-full flex items-center justify-center gap-2 py-2.5 mb-2 text-[13px] font-bold text-foreground"
+            >
+              <Plus className="w-4 h-4" />
+              Build New Format
+            </motion.button>
+          )}
+        </>
+      )}
+
       {/* Scoring Section */}
       <p className={sectionLabel}>Scoring Format</p>
 

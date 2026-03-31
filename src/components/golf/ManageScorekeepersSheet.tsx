@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { UserCog, Check, X, Shield, Crown } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
+import { UserCog, X, Shield, Info } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
@@ -92,34 +90,44 @@ export function ManageScorekeepersSheet({
       {!isControlled && (
         <SheetTrigger asChild>
           <motion.button
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+            whileTap={{ scale: 0.97 }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-muted hover:bg-muted/80 transition-colors"
           >
             <UserCog className="w-4 h-4 text-muted-foreground" />
             <span className="text-xs font-medium">Scorekeepers</span>
           </motion.button>
         </SheetTrigger>
       )}
-      <SheetContent side="bottom" className="rounded-t-2xl">
-        <SheetHeader className="pb-4">
-          <SheetTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-primary" />
+
+      <SheetContent
+        side="bottom"
+        className="bg-[#F8F8F6] rounded-t-3xl p-0 border-0 shadow-none focus:outline-none"
+      >
+        {/* Handle */}
+        <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pb-4">
+          <h2 className="text-[20px] font-black tracking-[-0.04em] text-[#0A0A0A]">
             Manage Scorekeepers
-          </SheetTitle>
-        </SheetHeader>
+          </h2>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setOpen(false)}
+            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+          >
+            <X className="w-4 h-4 text-muted-foreground" />
+          </motion.button>
+        </div>
 
-        <div className="space-y-3 pb-6">
-          <p className="text-sm text-muted-foreground">
-            Choose who can enter and edit scores. Max 2 scorekeepers per round (including you).
-          </p>
-          <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/50 border border-border">
-            <span className="text-xs text-muted-foreground">Additional scorekeepers</span>
-            <span className={cn("text-xs font-semibold", atLimit ? "text-amber-500" : "text-primary")}>
-              {scorekeeperIds.length}/{MAX_ADDITIONAL_SCOREKEEPERS}
-            </span>
-          </div>
+        {/* Section label */}
+        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-6 mb-3">
+          Players ({scorekeeperIds.length}/{MAX_ADDITIONAL_SCOREKEEPERS} additional scorekeepers)
+        </p>
 
-          <div className="space-y-2">
+        <div className="pb-6">
+          {/* Player list */}
+          <div className="space-y-0">
             {players
               .filter(player => {
                 // Hide the creator — they're always a scorekeeper
@@ -129,55 +137,70 @@ export function ManageScorekeepersSheet({
                 return true;
               })
               .map((player, index) => {
-              const role = getPlayerRole(player);
-              const isScorekeeper = role === 'scorekeeper';
-              const isProcessing = loading === player.id;
+                const role = getPlayerRole(player);
+                const isScorekeeper = role === 'scorekeeper';
+                const isProcessing = loading === player.id;
 
-              return (
-                <motion.div
-                  key={player.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={cn(
-                    "flex items-center justify-between p-3 rounded-xl border transition-colors",
-                    isScorekeeper ? "bg-accent/50 border-accent" : "bg-card border-border"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10">
-                      <AvatarFallback className="text-sm font-bold">
-                        {player.name.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <span className="font-semibold">{player.name}</span>
-                      <p className="text-xs text-muted-foreground">
-                        {isScorekeeper ? 'Can enter scores' : 'View only'}
-                      </p>
+                return (
+                  <motion.div
+                    key={player.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05, type: 'spring', stiffness: 300, damping: 28 }}
+                    className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-2 px-4 py-3 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-10 h-10 rounded-xl overflow-hidden bg-muted">
+                        <AvatarFallback className="text-sm font-bold rounded-xl bg-muted">
+                          {player.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <span className="font-semibold text-foreground">{player.name}</span>
+                        <div className="mt-0.5">
+                          {isScorekeeper ? (
+                            <span className="bg-[#F0EE3A] text-[#0A0A0A] rounded-full px-2.5 py-0.5 text-[11px] font-bold">
+                              Scorekeeper
+                            </span>
+                          ) : (
+                            <span className="bg-muted text-muted-foreground rounded-full px-2.5 py-0.5 text-[11px] font-bold">
+                              Player
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  <Switch
-                    checked={isScorekeeper}
-                    onCheckedChange={(checked) => handleToggle(player, checked)}
-                    disabled={isProcessing || (atLimit && !isScorekeeper)}
-                  />
-                </motion.div>
-              );
-            })}
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleToggle(player, !isScorekeeper)}
+                      disabled={isProcessing || (atLimit && !isScorekeeper)}
+                      className={cn(
+                        'bg-foreground text-background rounded-xl px-3 py-1.5 text-[12px] font-bold transition-opacity',
+                        (isProcessing || (atLimit && !isScorekeeper)) && 'opacity-40'
+                      )}
+                    >
+                      {isProcessing ? '...' : isScorekeeper ? 'Remove' : 'Promote'}
+                    </motion.button>
+                  </motion.div>
+                );
+              })}
 
             {/* Show message if no eligible players */}
             {players.filter(p => p.order_index !== 0 && p.profile_id).length === 0 && (
-              <div className="text-center py-6 text-muted-foreground">
+              <div className="text-center py-6 text-muted-foreground mx-6">
                 <p className="text-sm">No eligible players</p>
                 <p className="text-xs mt-1">Only friends with accounts can be added as scorekeepers.</p>
               </div>
             )}
           </div>
 
-          <div className="pt-4 border-t border-border">
-            <p className="text-xs text-muted-foreground text-center">
+          {/* Info note */}
+          <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mt-3 p-4 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center shrink-0">
+              <Info className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <p className="text-[13px] text-muted-foreground leading-relaxed">
               Only friends with accounts can be scorekeepers. Remove one to add another.
             </p>
           </div>

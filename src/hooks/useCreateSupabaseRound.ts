@@ -4,6 +4,7 @@ import { Round, HoleInfo, GameConfig, TeeSet, generateJoinCode } from '@/types/g
 import { Json } from '@/integrations/supabase/types';
 import { captureException } from '@/lib/sentry';
 import { calculatePlayingHandicap, getStrokesPerHole } from '@/lib/handicapUtils';
+import { sendPushToProfiles } from '@/lib/pushUtils';
 
 interface CreateRoundInput {
   courseId: string;
@@ -190,6 +191,21 @@ export function useCreateSupabaseRound() {
             await supabase.from('scores').insert(ghostScores);
           }
         }
+      }
+
+      // Notify other players with accounts that a round has been created
+      const inviteeProfileIds = input.players
+        .slice(1) // skip creator (index 0)
+        .filter(p => p.profileId && !p.isGhost)
+        .map(p => p.profileId as string);
+      if (inviteeProfileIds.length > 0) {
+        sendPushToProfiles({
+          profileIds: inviteeProfileIds,
+          title: 'Round Started',
+          body: `You've been added to a round at ${input.courseName}`,
+          data: { roundId, route: `/round/${roundId}` },
+          type: 'roundInvites',
+        });
       }
 
       // Build Round object from inputs (no need to fetch back from DB)

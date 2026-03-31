@@ -16,6 +16,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
+import { computeAllTimeStats } from '@/lib/statCalculations';
 
 interface ScoreDistribution {
   eagles: number;
@@ -38,6 +39,10 @@ interface GolfStats {
   scoreDistribution: ScoreDistribution;
   avgScore: number | null;
   longestWinStreak: number;
+  bestRound: { score: number; courseName: string } | null;
+  bestPayout: { amount: number; courseName: string } | null;
+  mostSkins: { count: number; courseName: string } | null;
+  scoreTrend: { delta: number; improving: boolean } | null;
 }
 
 // Animated counter that counts up from 0
@@ -157,6 +162,7 @@ export default function Stats() {
             totalMoneyWon: 0, bestCourse: null, hotHole: null, roundsPlayed: 0,
             scoreDistribution: { eagles: 0, birdies: 0, pars: 0, bogeys: 0, doubles: 0, total: 0 },
             avgScore: null, longestWinStreak: 0,
+            bestRound: null, bestPayout: null, mostSkins: null, scoreTrend: null,
           });
           setLoading(false);
           return;
@@ -250,6 +256,40 @@ export default function Stats() {
         let longestWinStreak = 0;
         let currentStreak = 0;
 
+        // Build rounds data for pure stat computation
+        const completedRoundsForStats = roundsData
+          ? roundsData.filter(r => r.status === 'complete').map(round => {
+              const userPlayerId = playerData.find(p => p.round_id === round.id)?.id ?? '';
+              const roundScores = allScoresData
+                ? allScoresData
+                    .filter(s => s.round_id === round.id)
+                    .map(s => ({
+                      player_id: s.player_id ?? '',
+                      hole_number: s.hole_number,
+                      strokes: s.strokes,
+                      par: s.par ?? 0,
+                    }))
+                : [];
+              return {
+                id: round.id,
+                course_name: round.course_name,
+                games: Array.isArray(round.games)
+                  ? (round.games as Array<{ type: string }>)
+                  : [],
+                stakes: round.stakes as number | null,
+                user_player_id: userPlayerId,
+                scores: roundScores,
+              };
+            })
+          : [];
+
+        const {
+          bestRound,
+          bestPayout,
+          mostSkins,
+          scoreTrend,
+        } = computeAllTimeStats(completedRoundsForStats, user.id);
+
         if (roundsData && allScoresData) {
           const completedRounds = roundsData.filter(r => r.status === 'complete');
 
@@ -275,7 +315,8 @@ export default function Stats() {
               longestWinStreak = Math.max(longestWinStreak, currentStreak);
               if (round.stakes) {
                 const otherPlayers = Object.keys(playerTotals).length - 1;
-                totalMoneyWon += (round.stakes as number) * otherPlayers;
+                const payout = (round.stakes as number) * otherPlayers;
+                totalMoneyWon += payout;
               }
             } else {
               currentStreak = 0;
@@ -289,6 +330,7 @@ export default function Stats() {
           scoreDistribution,
           avgScore: scoredHoles > 0 ? totalStrokesVsPar / scoredHoles : null,
           longestWinStreak,
+          bestRound, bestPayout, mostSkins, scoreTrend,
         });
       } catch {
         // silent
@@ -374,20 +416,20 @@ export default function Stats() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...spring, delay: 0.05 }}
-              className="bg-[#0A0A0A] rounded-3xl overflow-hidden p-6"
+              className="bg-[#0A0A0A] overflow-hidden px-6 pt-6 pb-7 -mx-6 rounded-b-3xl"
             >
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-6">
                 {/* Ring */}
                 <div className="relative flex-shrink-0">
-                  <RingProgress value={winRate} max={100} size={110} strokeWidth={9} />
+                  <RingProgress value={winRate} max={100} size={152} strokeWidth={11} />
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <CountUp
                       value={winRate}
                       suffix="%"
-                      className="text-[22px] font-black text-white leading-none"
+                      className="text-[52px] font-black text-white leading-none tracking-[-0.04em]"
                     />
-                    <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-white/50 mt-0.5">
-                      win rate
+                    <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/50 mt-1">
+                      WIN RATE
                     </span>
                   </div>
                 </div>
@@ -395,13 +437,13 @@ export default function Stats() {
                 {/* Key numbers */}
                 <div className="flex-1 space-y-3">
                   <div>
-                    <p className="text-[9px] font-bold uppercase tracking-[0.1em] text-white/50 mb-0.5">Holes Won</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/50 mb-0.5">Holes Won</p>
                     <div className="flex items-baseline gap-1.5">
                       <CountUp
                         value={stats?.holesWon ?? 0}
-                        className="text-[28px] font-black text-[#F0EE3A] leading-none"
+                        className="text-[32px] font-black text-[#F0EE3A] leading-none"
                       />
-                      <span className="text-[13px] font-bold text-white/40">
+                      <span className="text-[14px] font-bold text-white/40">
                         / {stats?.holesPlayed ?? 0}
                       </span>
                     </div>
@@ -409,18 +451,18 @@ export default function Stats() {
                   <div className="h-px bg-white/10" />
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <p className="text-[9px] font-bold uppercase tracking-[0.1em] text-white/50 mb-0.5">Rounds Won</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/50 mb-0.5">Rounds Won</p>
                       <CountUp
                         value={stats?.matchesWon ?? 0}
-                        className="text-[20px] font-black text-white leading-none"
+                        className="text-[22px] font-black text-white leading-none"
                       />
                     </div>
                     <div>
-                      <p className="text-[9px] font-bold uppercase tracking-[0.1em] text-white/50 mb-0.5">Win Streak</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/50 mb-0.5">Win Streak</p>
                       <div className="flex items-baseline gap-1">
                         <CountUp
                           value={stats?.longestWinStreak ?? 0}
-                          className="text-[20px] font-black text-white leading-none"
+                          className="text-[22px] font-black text-white leading-none"
                         />
                         {(stats?.longestWinStreak ?? 0) >= 3 && (
                           <Zap className="w-4 h-4 text-[#F0EE3A]" />
@@ -441,17 +483,27 @@ export default function Stats() {
             >
               <div className="flex items-center justify-between mb-4">
                 <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Scoring Breakdown</p>
-                {stats?.avgScore != null && (
-                  <div className={cn(
-                    "text-[12px] font-black px-2 py-0.5 rounded-lg",
-                    stats.avgScore < 0 ? "bg-[#DCFCE7] text-[#15803D]" :
-                    stats.avgScore === 0 ? "bg-muted text-foreground" :
-                    stats.avgScore <= 1 ? "bg-[#FFFBEB] text-[#92400E]" :
-                    "bg-[#FEF2F2] text-[#991B1B]"
-                  )}>
-                    {stats.avgScore > 0 ? '+' : ''}{stats.avgScore.toFixed(1)} avg
-                  </div>
-                )}
+                <div className="flex items-center gap-1.5">
+                  {stats?.scoreTrend != null && (
+                    <div className={cn(
+                      "text-[13px] font-black px-2.5 py-1 rounded-xl",
+                      stats.scoreTrend.improving ? "bg-[#DCFCE7] text-[#15803D]" : "bg-[#FEF2F2] text-[#DC2626]"
+                    )}>
+                      {stats.scoreTrend.improving ? '▲' : '▼'} {stats.scoreTrend.delta} {stats.scoreTrend.improving ? 'improving' : 'declining'}
+                    </div>
+                  )}
+                  {stats?.avgScore != null && (
+                    <div className={cn(
+                      "text-[12px] font-black px-2 py-0.5 rounded-lg",
+                      stats.avgScore < 0 ? "bg-[#DCFCE7] text-[#15803D]" :
+                      stats.avgScore === 0 ? "bg-muted text-foreground" :
+                      stats.avgScore <= 1 ? "bg-[#FFFBEB] text-[#92400E]" :
+                      "bg-[#FEF2F2] text-[#991B1B]"
+                    )}>
+                      {stats.avgScore > 0 ? '+' : ''}{stats.avgScore.toFixed(1)} avg
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -698,6 +750,51 @@ export default function Stats() {
                     </div>
                   );
                 })()}
+              </motion.div>
+            )}
+
+            {/* ── All-time Records ── */}
+            {(stats?.bestRound != null || stats?.bestPayout != null || stats?.mostSkins != null) && (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...spring, delay: 0.35 }}
+              >
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                    All-time Records
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {stats?.bestRound != null && (
+                    <div className="bg-[#0A0A0A] rounded-2xl p-3 flex flex-col gap-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 leading-tight">Best Round</p>
+                      <p className="text-[28px] font-black text-[#F0EE3A] leading-none tabular-nums">
+                        {stats.bestRound.score > 0 ? '+' : ''}{stats.bestRound.score}
+                      </p>
+                      <p className="text-[12px] text-white/70 truncate leading-tight">{stats.bestRound.courseName}</p>
+                    </div>
+                  )}
+                  {stats?.bestPayout != null && (
+                    <div className="bg-[#0A0A0A] rounded-2xl p-3 flex flex-col gap-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 leading-tight">Best Payout</p>
+                      <p className="text-[28px] font-black text-[#F0EE3A] leading-none tabular-nums">
+                        ${stats.bestPayout.amount}
+                      </p>
+                      <p className="text-[12px] text-white/70 truncate leading-tight">{stats.bestPayout.courseName}</p>
+                    </div>
+                  )}
+                  {stats?.mostSkins != null && (
+                    <div className="bg-[#0A0A0A] rounded-2xl p-3 flex flex-col gap-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 leading-tight">Most Skins</p>
+                      <p className="text-[28px] font-black text-[#F0EE3A] leading-none tabular-nums">
+                        {stats.mostSkins.count}
+                      </p>
+                      <p className="text-[12px] text-white/70 truncate leading-tight">{stats.mostSkins.courseName}</p>
+                    </div>
+                  )}
+                </div>
               </motion.div>
             )}
 

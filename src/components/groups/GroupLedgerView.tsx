@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Sparkles, Pencil, Plus } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ChevronDown, Sparkles, Pencil, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -8,10 +8,14 @@ import { GolfGroup } from '@/hooks/useGroups';
 import { SettleUpSheet } from './SettleUpSheet';
 import { PlayerLedgerSheet } from './PlayerLedgerSheet';
 import { useAuth } from '@/hooks/useAuth';
-import { useGroupLedger, PlayerBalance, Settlement, LedgerEntry } from '@/hooks/useGroupLedger';
+import { useGroupLedger, PlayerBalance, LedgerEntry } from '@/hooks/useGroupLedger';
 import { useHouseGame } from '@/hooks/useHouseGame';
+import { useSubscription } from '@/hooks/useSubscription';
+import { PaywallModal } from '@/components/subscription/PaywallModal';
 import { summarizeConfig, buildScoringConfig } from '@/lib/houseGame/engine';
-import { hapticLight } from '@/lib/haptics';
+import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
+import { toast } from 'sonner';
+import { sendPushToProfiles } from '@/lib/pushUtils';
 
 interface GroupLedgerViewProps {
   group: GolfGroup;
@@ -37,8 +41,11 @@ function formatDate(dateStr?: string): string {
 export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isPro } = useSubscription();
   const { balances, entries, settlements, loading, settle } = useGroupLedger(group.id);
   const { houseGame, loading: houseLoading } = useHouseGame(group.id);
+
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const [settleFromPlayer, setSettleFromPlayer] = useState<PlayerBalance | null>(null);
   const [settleToPlayer, setSettleToPlayer] = useState<PlayerBalance | null>(null);
@@ -48,8 +55,13 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerBalance | null>(null);
   const [showPlayerSheet, setShowPlayerSheet] = useState(false);
 
+  const [showSettleAllConfirm, setShowSettleAllConfirm] = useState(false);
+  const [settlingAll, setSettlingAll] = useState(false);
+  const [expandedRoundId, setExpandedRoundId] = useState<string | null>(null);
+
   const negativePlayers = balances.filter(p => p.netBalance < 0);
   const positivePlayers = balances.filter(p => p.netBalance > 0);
+  const allSettledUp = !loading && balances.length > 0 && balances.every(p => Math.abs(p.netBalance) < 0.01);
 
   // Derive season stats from entries
   const uniqueRounds = new Set(entries.map(e => e.roundId));
@@ -61,27 +73,104 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
     ? entries.reduce((oldest, e) => e.createdAt < oldest.createdAt ? e : oldest, entries[0])
     : null;
 
-  // Recent entries — last 6 unique rounds, show one entry per round (first found)
-  const recentRoundMap = new Map<string, LedgerEntry>();
-  for (const entry of entries) {
-    if (!recentRoundMap.has(entry.roundId)) {
-      recentRoundMap.set(entry.roundId, entry);
+  // Group entries by round for the history section
+  const roundsGrouped = useMemo(() => {
+    const roundMap = new Map<string, {
+      roundId: string;
+      courseName: string;
+      roundDate: string;
+      entries: LedgerEntry[];
+      myAmount: number;
+    }>();
+    for (const entry of entries) {
+      if (!roundMap.has(entry.roundId)) {
+        roundMap.set(entry.roundId, {
+          roundId: entry.roundId,
+          courseName: entry.courseName ?? 'Unknown Course',
+          roundDate: entry.roundDate ?? entry.createdAt,
+          entries: [],
+          myAmount: 0,
+        });
+      }
+      const round = roundMap.get(entry.roundId)!;
+      round.entries.push(entry);
+      if (entry.profileId === user?.id) {
+        round.myAmount += entry.amount;
+      }
     }
-    if (recentRoundMap.size >= 6) break;
-  }
-  const recentEntries = Array.from(recentRoundMap.values());
+    return Array.from(roundMap.values()).slice(0, 6);
+  }, [entries, user?.id]);
 
-  const handleSettle = (debtor: PlayerBalance) => {
-    const creditor = positivePlayers[0] ?? null;
-    setSettleFromPlayer(debtor);
-    setSettleToPlayer(creditor);
-    setSettleAmount(Math.abs(debtor.netBalance));
-    setShowSettleSheet(true);
+  // Build profile name map for history display
+  const profileNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    balances.forEach(b => map.set(b.profileId, b.name));
+    return map;
+  }, [balances]);
+
+  // Compute minimum set of payments to zero all balances
+  const computeMinimumSettlements = () => {
+    const debtors = balances
+      .filter(p => p.netBalance < 0)
+      .map(p => ({ id: p.profileId, amount: Math.abs(p.netBalance) }))
+      .sort((a, b) => b.amount - a.amount);
+    const creditors = balances
+      .filter(p => p.netBalance > 0)
+      .map(p => ({ id: p.profileId, amount: p.netBalance }))
+      .sort((a, b) => b.amount - a.amount);
+
+    const payments: { fromProfileId: string; toProfileId: string; amount: number }[] = [];
+    let di = 0, ci = 0;
+    while (di < debtors.length && ci < creditors.length) {
+      const payment = Math.min(debtors[di].amount, creditors[ci].amount);
+      if (payment > 0.005) {
+        payments.push({
+          fromProfileId: debtors[di].id,
+          toProfileId: creditors[ci].id,
+          amount: Math.round(payment * 100) / 100,
+        });
+      }
+      debtors[di].amount -= payment;
+      creditors[ci].amount -= payment;
+      if (debtors[di].amount < 0.005) di++;
+      if (creditors[ci].amount < 0.005) ci++;
+    }
+    return payments;
   };
 
-  const handleSettleAll = () => {
-    if (negativePlayers.length === 0) return;
-    const debtor = negativePlayers[0];
+  const handleSettleAllConfirm = async () => {
+    setSettlingAll(true);
+    const payments = computeMinimumSettlements();
+    let success = true;
+    for (const payment of payments) {
+      const ok = await settle(payment.fromProfileId, payment.toProfileId, payment.amount, 'cash');
+      if (!ok) { success = false; break; }
+    }
+    setSettlingAll(false);
+    setShowSettleAllConfirm(false);
+    if (success) {
+      hapticSuccess();
+      toast.success('All settled up!');
+      // Notify all group members except the current user
+      const otherProfileIds = balances
+        .map(b => b.profileId)
+        .filter(id => id !== user?.id);
+      if (otherProfileIds.length > 0) {
+        sendPushToProfiles({
+          profileIds: otherProfileIds,
+          title: 'Tab Settled',
+          body: `${group.name} tab has been settled`,
+          data: { route: '/groups' },
+          type: 'tabSettled',
+        });
+      }
+    } else {
+      hapticError();
+      toast.error('Failed to settle — try again');
+    }
+  };
+
+  const handleSettle = (debtor: PlayerBalance) => {
     const creditor = positivePlayers[0] ?? null;
     setSettleFromPlayer(debtor);
     setSettleToPlayer(creditor);
@@ -101,7 +190,7 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-[#F8F8F6]">
+    <div className="h-full flex flex-col overflow-hidden bg-[#F8F8F6] relative">
       {/* Header */}
       <header className="flex-shrink-0 px-4 pb-3 pt-safe-content border-b border-black/10">
         <div className="flex items-center gap-3">
@@ -231,7 +320,11 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
             ) : (
               <motion.button
                 whileTap={{ scale: 0.98 }}
-                onClick={() => { hapticLight(); navigate(`/groups/${group.id}/house-game/new`); }}
+                onClick={() => {
+                  hapticLight();
+                  if (!isPro) { setShowPaywall(true); return; }
+                  navigate(`/groups/${group.id}/house-game/new`);
+                }}
                 className="w-full bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 flex items-center gap-3 text-left"
               >
                 <div className="w-10 h-10 rounded-xl bg-[#F0EE3A] flex items-center justify-center flex-shrink-0">
@@ -281,9 +374,15 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-foreground truncate">{player.name}</p>
+                    <p className="font-bold text-sm text-foreground truncate">
+                      {player.profileId === user?.id ? 'You' : player.name.split(' ')[0]}
+                    </p>
                     <p className="text-xs text-black/40 mt-0.5">
-                      {player.roundsWon} of {player.roundsPlayed} rounds up
+                      {player.netBalance > 0.005
+                        ? `up ${formatAmount(player.netBalance)}`
+                        : player.netBalance < -0.005
+                        ? `down ${formatAmount(player.netBalance)}`
+                        : 'all even'}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -317,6 +416,27 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
           </div>
         </div>
 
+        {/* All Settled Up state */}
+        <AnimatePresence>
+          {allSettledUp && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={springTransition}
+              className="mt-4 bg-[#F0FFF4] border border-[#22C55E]/30 rounded-2xl p-4 flex items-center gap-3"
+            >
+              <div className="w-8 h-8 rounded-full bg-[#22C55E] flex items-center justify-center flex-shrink-0">
+                <Check className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="text-[#15803D] font-bold text-sm">All settled up</p>
+                <p className="text-[#15803D]/60 text-xs mt-0.5">Everyone's balances are zeroed out</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Settle Up All Banner */}
         <AnimatePresence>
           {!loading && negativePlayers.length > 0 && (
@@ -335,52 +455,154 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
               </div>
               <motion.button
                 whileTap={{ scale: 0.92 }}
-                onClick={handleSettleAll}
+                onClick={() => { hapticLight(); setShowSettleAllConfirm(true); }}
                 className="bg-[#CBFF4D] text-black text-sm font-black rounded-xl px-4 py-2.5"
               >
-                Send
+                Settle All
               </motion.button>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Recent Rounds */}
-        {!loading && recentEntries.length > 0 && (
+        {!loading && roundsGrouped.length > 0 && (
           <div className="mt-5 mb-4">
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-black/40 mb-3 px-1">
-              Recent Rounds
+              History
             </p>
             <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
-              {recentEntries.map((entry, i) => (
+              {roundsGrouped.map((round, i) => (
                 <motion.div
-                  key={entry.id}
+                  key={round.roundId}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ ...springTransition, delay: i * 0.05 }}
-                  className="flex items-center gap-3 px-4 py-3 border-b border-black/5 last:border-b-0"
+                  className="border-b border-black/5 last:border-b-0"
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-foreground truncate">
-                      {entry.courseName ?? 'Unknown Course'}
-                    </p>
-                    <p className="text-xs text-black/40 mt-0.5">
-                      {formatDate(entry.roundDate ?? entry.createdAt)}
-                    </p>
-                  </div>
-                  <span
-                    className={cn(
-                      'font-black text-sm',
-                      entry.amount >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'
-                    )}
+                  {/* Round header row — tap to expand */}
+                  <button
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-black/5"
+                    onClick={() => {
+                      hapticLight();
+                      setExpandedRoundId(expandedRoundId === round.roundId ? null : round.roundId);
+                    }}
                   >
-                    {entry.amount >= 0 ? '+' : '-'}{formatAmount(entry.amount)}
-                  </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-foreground truncate">
+                        {round.courseName}
+                      </p>
+                      <p className="text-xs text-black/40 mt-0.5">
+                        {formatDate(round.roundDate)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span
+                        className={cn(
+                          'font-black text-sm',
+                          round.myAmount > 0 ? 'text-[#22C55E]' : round.myAmount < 0 ? 'text-[#EF4444]' : 'text-black/40'
+                        )}
+                      >
+                        {round.myAmount > 0 ? '+' : round.myAmount < 0 ? '-' : ''}{formatAmount(round.myAmount)}
+                      </span>
+                      <motion.div
+                        animate={{ rotate: expandedRoundId === round.roundId ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <ChevronDown className="w-4 h-4 text-black/25" />
+                      </motion.div>
+                    </div>
+                  </button>
+
+                  {/* Expanded per-player breakdown */}
+                  <AnimatePresence>
+                    {expandedRoundId === round.roundId && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.22 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-4 pb-3 pt-1 bg-black/[0.02] border-t border-black/5">
+                          {round.entries
+                            .sort((a, b) => b.amount - a.amount)
+                            .map(entry => (
+                              <div
+                                key={entry.id}
+                                className="flex items-center justify-between py-1.5"
+                              >
+                                <span className="text-xs text-black/60 font-medium">
+                                  {entry.profileId === user?.id
+                                    ? 'You'
+                                    : (profileNameMap.get(entry.profileId) ?? 'Player').split(' ')[0]}
+                                </span>
+                                <span
+                                  className={cn(
+                                    'text-xs font-bold',
+                                    entry.amount > 0 ? 'text-[#22C55E]' : entry.amount < 0 ? 'text-[#EF4444]' : 'text-black/40'
+                                  )}
+                                >
+                                  {entry.amount > 0 ? '+' : entry.amount < 0 ? '-' : ''}{formatAmount(entry.amount)}
+                                </span>
+                              </div>
+                            ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               ))}
             </div>
           </div>
         )}
       </div>
+
+      {/* Settle All Confirmation Dialog */}
+      <AnimatePresence>
+        {showSettleAllConfirm && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40 z-40"
+              onClick={() => !settlingAll && setShowSettleAllConfirm(false)}
+            />
+            {/* Sheet */}
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={springTransition}
+              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 px-5 pt-5 pb-safe-content"
+            >
+              <div className="w-10 h-1 rounded-full bg-black/10 mx-auto mb-5" />
+              <p className="text-[18px] font-black text-foreground mb-1">Settle all debts?</p>
+              <p className="text-sm text-muted-foreground mb-5">
+                This will zero out all balances in this group. Each player's running tab will reset.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  disabled={settlingAll}
+                  onClick={() => setShowSettleAllConfirm(false)}
+                  className="flex-1 py-3.5 rounded-2xl border border-border text-sm font-bold text-foreground"
+                >
+                  Cancel
+                </button>
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  disabled={settlingAll}
+                  onClick={handleSettleAllConfirm}
+                  className="flex-1 py-3.5 rounded-2xl bg-[#0A0A0A] text-sm font-black text-white disabled:opacity-50"
+                >
+                  {settlingAll ? 'Settling...' : 'Settle All'}
+                </motion.button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Settle Up Sheet */}
       <SettleUpSheet
@@ -392,6 +614,13 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
         onClose={() => setShowSettleSheet(false)}
         onSettled={handleSettled}
         settle={settle}
+      />
+
+      {/* Paywall Modal */}
+      <PaywallModal
+        open={showPaywall}
+        onOpenChange={setShowPaywall}
+        feature="House Game"
       />
 
       {/* Player Ledger Sheet */}

@@ -11,5 +11,7 @@
         <string>applinks:matchgolf.dev</string>
         <string>webcredentials:matchgolf.dev</string>
     </array>
+    <key>aps-environment</key>
+    <string>production</string>
 </dict>
 </plist>

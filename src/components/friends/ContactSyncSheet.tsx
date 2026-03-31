@@ -1,26 +1,27 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetDescription 
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Users, 
-  UserPlus, 
-  Mail, 
-  MessageSquare, 
-  Check, 
-  Clock, 
+import {
+  Users,
+  UserPlus,
+  Mail,
+  MessageSquare,
+  Check,
+  Clock,
   RefreshCw,
   AlertCircle,
-  Contact
+  Contact,
+  X
 } from 'lucide-react';
 import { useContacts, MatchedContact, DeviceContact } from '@/hooks/useContacts';
 import { useFriends } from '@/hooks/useFriends';
@@ -53,7 +54,7 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
 
   const handleSendRequest = async (contact: MatchedContact) => {
     if (!contact.friendCode) return;
-    
+
     setSendingTo(contact.profileId);
     const result = await sendFriendRequest(contact.friendCode);
     setSendingTo(null);
@@ -93,52 +94,66 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
-        <SheetHeader className="text-left pb-4">
-          <SheetTitle className="flex items-center gap-2">
-            <Contact className="h-5 w-5 text-primary" />
-            Sync Contacts
-          </SheetTitle>
-          <SheetDescription>
-            Find friends from your contacts who are already using the app
-          </SheetDescription>
-        </SheetHeader>
+      <SheetContent side="bottom" className="h-[85vh] bg-[#F8F8F6] rounded-t-3xl border-0 p-0">
+        {/* Handle */}
+        <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 mb-4">
+          <h2 className="text-[20px] font-black tracking-[-0.04em] text-[#0A0A0A]">Sync Contacts</h2>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
         {!contacts && !loading && !hasConsented && (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 border-2 border-primary/20">
-              <Users className="h-10 w-10 text-primary" />
+          <div className="flex flex-col h-[calc(100%-80px)] overflow-y-auto">
+            {/* Permission card */}
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-4 p-5 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#F0EE3A] flex items-center justify-center mx-auto mb-3 text-[#0A0A0A]">
+                <Users className="h-7 w-7" />
+              </div>
+              <h3 className="font-black text-[18px] tracking-[-0.03em] text-[#0A0A0A]">Find Your Golf Buddies</h3>
+              <p className="text-[14px] text-muted-foreground mt-1 leading-relaxed">
+                We'll check your contacts to see who's already on the app.
+              </p>
             </div>
-            <h3 className="font-bold text-lg mb-2">Find Your Golf Buddies</h3>
-            <p className="text-sm text-muted-foreground max-w-[300px] mb-4">
-              We'll check your contacts to see who's already on the app.
-            </p>
 
-            <div className="w-full max-w-[320px] p-4 rounded-xl bg-muted/50 border border-border text-left space-y-2 mb-6">
-              <p className="text-xs font-semibold text-foreground">How it works:</p>
-              <ul className="text-xs text-muted-foreground space-y-1.5">
-                <li className="flex gap-2">
-                  <span className="shrink-0">1.</span>
+            {/* How it works card */}
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-4 p-5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-3">How it works</p>
+              <ul className="space-y-2.5">
+                <li className="flex gap-2 text-[13px] text-muted-foreground">
+                  <span className="shrink-0 font-bold text-[#0A0A0A]">1.</span>
                   <span>Your contacts' email addresses and phone numbers are sent to our server to find matches.</span>
                 </li>
-                <li className="flex gap-2">
-                  <span className="shrink-0">2.</span>
-                  <span>We only check for existing MATCH Golf users — your contact data is <strong className="text-foreground">not stored</strong> on our servers.</span>
+                <li className="flex gap-2 text-[13px] text-muted-foreground">
+                  <span className="shrink-0 font-bold text-[#0A0A0A]">2.</span>
+                  <span>We only check for existing MATCH Golf users — your contact data is <strong className="text-[#0A0A0A]">not stored</strong> on our servers.</span>
                 </li>
-                <li className="flex gap-2">
-                  <span className="shrink-0">3.</span>
+                <li className="flex gap-2 text-[13px] text-muted-foreground">
+                  <span className="shrink-0 font-bold text-[#0A0A0A]">3.</span>
                   <span>You can then send friend requests or invite others to join.</span>
                 </li>
               </ul>
             </div>
 
-            <Button onClick={() => { setHasConsented(true); handleSync(); }} size="lg" className="gap-2">
+            {/* Enable button */}
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              onClick={() => { setHasConsented(true); handleSync(); }}
+              className="bg-foreground text-background rounded-2xl h-[52px] font-bold mx-6 flex items-center justify-center gap-2"
+            >
               <RefreshCw className="h-4 w-4" />
               I Agree — Find Friends
-            </Button>
+            </motion.button>
             <button
               onClick={onClose}
-              className="mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="mt-3 text-[13px] text-muted-foreground mx-auto block"
             >
               No thanks
             </button>
@@ -146,59 +161,71 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
         )}
 
         {!contacts && !loading && hasConsented && (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 border-2 border-primary/20">
-              <Users className="h-10 w-10 text-primary" />
+          <div className="flex flex-col items-center px-6">
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] w-full p-5 text-center mb-4">
+              <div className="w-14 h-14 rounded-2xl bg-[#F0EE3A] flex items-center justify-center mx-auto mb-3 text-[#0A0A0A]">
+                <Users className="h-7 w-7" />
+              </div>
+              <h3 className="font-black text-[18px] tracking-[-0.03em] text-[#0A0A0A]">Ready to Sync</h3>
+              <p className="text-[14px] text-muted-foreground mt-1 leading-relaxed">
+                Tap below to check your contacts for friends on the app.
+              </p>
             </div>
-            <h3 className="font-bold text-lg mb-2">Ready to Sync</h3>
-            <p className="text-sm text-muted-foreground max-w-[280px] mb-6">
-              Tap below to check your contacts for friends on the app.
-            </p>
-            <Button onClick={handleSync} size="lg" className="gap-2">
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              onClick={handleSync}
+              className="bg-foreground text-background rounded-2xl h-[52px] font-bold w-full flex items-center justify-center gap-2"
+            >
               <RefreshCw className="h-4 w-4" />
               Sync Contacts
-            </Button>
+            </motion.button>
           </div>
         )}
 
         {loading && (
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full mb-4" />
-            <p className="text-muted-foreground">Syncing contacts...</p>
+            <div className="animate-spin h-10 w-10 border-4 border-[#0A0A0A] border-t-transparent rounded-full mb-4" />
+            <p className="text-[14px] text-muted-foreground">Syncing contacts...</p>
           </div>
         )}
 
         {error && (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="w-16 h-16 rounded-xl bg-destructive/10 flex items-center justify-center mb-4">
-              <AlertCircle className="h-8 w-8 text-destructive" />
+          <div className="flex flex-col items-center px-6">
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] w-full p-5 text-center mb-4">
+              <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-3">
+                <AlertCircle className="h-7 w-7 text-destructive" />
+              </div>
+              <h3 className="font-black text-[18px] tracking-[-0.03em] text-[#0A0A0A]">Unable to Access Contacts</h3>
+              <p className="text-[14px] text-muted-foreground mt-1 leading-relaxed">{error}</p>
             </div>
-            <h3 className="font-bold mb-2">Unable to Access Contacts</h3>
-            <p className="text-sm text-muted-foreground max-w-[280px] mb-4">
-              {error}
-            </p>
-            <Button variant="outline" onClick={handleSync}>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              onClick={handleSync}
+              className="bg-foreground text-background rounded-2xl h-[52px] font-bold w-full flex items-center justify-center gap-2"
+            >
               Try Again
-            </Button>
+            </motion.button>
           </div>
         )}
 
         {contacts && !loading && (
           <div className="flex flex-col h-[calc(100%-80px)]">
             {/* Summary */}
-            <div className="flex gap-3 mb-4">
-              <div className="flex-1 p-3 rounded-xl bg-primary/10 border border-primary/20 text-center">
-                <div className="text-2xl font-bold text-primary">{contacts.matched.length}</div>
-                <div className="text-xs text-muted-foreground">On the app</div>
+            <div className="flex gap-3 mb-4 px-6">
+              <div className="flex-1 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-3 text-center">
+                <div className="text-2xl font-black tracking-[-0.04em] text-[#0A0A0A]">{contacts.matched.length}</div>
+                <div className="text-[11px] text-muted-foreground">On the app</div>
               </div>
-              <div className="flex-1 p-3 rounded-xl bg-muted border border-border text-center">
-                <div className="text-2xl font-bold">{contacts.unmatched.length}</div>
-                <div className="text-xs text-muted-foreground">To invite</div>
+              <div className="flex-1 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-3 text-center">
+                <div className="text-2xl font-black tracking-[-0.04em] text-[#0A0A0A]">{contacts.unmatched.length}</div>
+                <div className="text-[11px] text-muted-foreground">To invite</div>
               </div>
             </div>
 
             <Tabs defaultValue="matched" className="flex-1 flex flex-col">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-2 mx-6" style={{ width: 'calc(100% - 3rem)' }}>
                 <TabsTrigger value="matched" className="gap-1.5">
                   <Users className="h-3.5 w-3.5" />
                   On App ({contacts.matched.length})
@@ -212,12 +239,12 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
               <TabsContent value="matched" className="flex-1 overflow-auto mt-3">
                 <AnimatePresence mode="popLayout">
                   {contacts.matched.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>No contacts found on the app yet.</p>
-                      <p className="text-xs mt-1">Invite your friends to join!</p>
+                    <div className="text-center py-8 text-muted-foreground px-6">
+                      <p className="text-[14px]">No contacts found on the app yet.</p>
+                      <p className="text-[12px] mt-1">Invite your friends to join!</p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div>
                       {contacts.matched.map((contact, index) => (
                         <motion.div
                           key={contact.profileId}
@@ -225,50 +252,47 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           transition={{ delay: index * 0.03 }}
-                          className="flex items-center gap-3 p-3 rounded-xl border-2 border-border bg-card"
+                          className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-2 px-4 py-3 flex items-center gap-3"
                         >
-                          <Avatar className="h-12 w-12 border-2 border-border">
-                            <AvatarImage src={contact.avatarUrl} />
-                            <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                              {getInitials(contact.name)}
-                            </AvatarFallback>
-                          </Avatar>
+                          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center font-bold text-foreground shrink-0 overflow-hidden">
+                            {contact.avatarUrl ? (
+                              <img src={contact.avatarUrl} alt={contact.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-[13px]">{getInitials(contact.name)}</span>
+                            )}
+                          </div>
 
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold truncate">{contact.name}</div>
+                            <div className="font-semibold text-foreground truncate">{contact.name}</div>
                             {contact.handicap !== undefined && (
-                              <div className="text-xs text-muted-foreground">
+                              <div className="text-[12px] text-muted-foreground">
                                 Handicap: {contact.handicap}
                               </div>
                             )}
                           </div>
 
                           {contact.isAlreadyFriend ? (
-                            <Badge variant="secondary" className="gap-1 shrink-0">
-                              <Check className="h-3 w-3" />
+                            <span className="bg-[#F0FFF4] text-[#22C55E] rounded-full px-2.5 py-0.5 text-[11px] font-bold shrink-0">
                               Friends
-                            </Badge>
+                            </span>
                           ) : contact.isPendingRequest || recentlySent.has(contact.profileId) ? (
-                            <Badge variant="outline" className="gap-1 shrink-0">
-                              <Clock className="h-3 w-3" />
+                            <span className="bg-muted text-muted-foreground rounded-full px-2.5 py-0.5 text-[11px] font-bold shrink-0">
                               Pending
-                            </Badge>
+                            </span>
                           ) : (
-                            <Button
-                              size="sm"
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
                               onClick={() => handleSendRequest(contact)}
                               disabled={sendingTo === contact.profileId}
-                              className="shrink-0"
+                              className="bg-foreground text-background rounded-xl px-3 py-1.5 text-[12px] font-bold shrink-0 disabled:opacity-40"
                             >
                               {sendingTo === contact.profileId ? (
-                                <RefreshCw className="h-4 w-4 animate-spin" />
+                                <RefreshCw className="h-3 w-3 animate-spin" />
                               ) : (
-                                <>
-                                  <UserPlus className="h-4 w-4 mr-1" />
-                                  Add
-                                </>
+                                'Add'
                               )}
-                            </Button>
+                            </motion.button>
                           )}
                         </motion.div>
                       ))}
@@ -280,11 +304,11 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
               <TabsContent value="invite" className="flex-1 overflow-auto mt-3">
                 <AnimatePresence mode="popLayout">
                   {contacts.unmatched.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>All your contacts are already on the app!</p>
+                    <div className="text-center py-8 text-muted-foreground px-6">
+                      <p className="text-[14px]">All your contacts are already on the app!</p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div>
                       {contacts.unmatched.slice(0, 50).map((contact, index) => (
                         <motion.div
                           key={contact.id}
@@ -292,47 +316,45 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           transition={{ delay: index * 0.02 }}
-                          className="flex items-center gap-3 p-3 rounded-xl border-2 border-border bg-card"
+                          className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-2 px-4 py-3 flex items-center gap-3"
                         >
-                          <Avatar className="h-12 w-12 border-2 border-border">
-                            <AvatarFallback className="bg-muted">
-                              {getInitials(contact.name)}
-                            </AvatarFallback>
-                          </Avatar>
+                          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center font-bold text-foreground shrink-0">
+                            <span className="text-[13px]">{getInitials(contact.name)}</span>
+                          </div>
 
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold truncate">{contact.name}</div>
-                            <div className="text-xs text-muted-foreground truncate">
+                            <div className="font-semibold text-foreground truncate">{contact.name}</div>
+                            <div className="text-[12px] text-muted-foreground truncate">
                               {contact.emails[0] || contact.phones[0] || 'No contact info'}
                             </div>
                           </div>
 
                           <div className="flex gap-1.5 shrink-0">
                             {contact.phones.length > 0 && (
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                className="h-8 w-8"
+                              <motion.button
+                                whileTap={{ scale: 0.97 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center text-muted-foreground"
                                 onClick={() => handleInvite(contact, 'sms')}
                               >
                                 <MessageSquare className="h-4 w-4" />
-                              </Button>
+                              </motion.button>
                             )}
                             {contact.emails.length > 0 && (
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                className="h-8 w-8"
+                              <motion.button
+                                whileTap={{ scale: 0.97 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center text-muted-foreground"
                                 onClick={() => handleInvite(contact, 'email')}
                               >
                                 <Mail className="h-4 w-4" />
-                              </Button>
+                              </motion.button>
                             )}
                           </div>
                         </motion.div>
                       ))}
                       {contacts.unmatched.length > 50 && (
-                        <p className="text-center text-xs text-muted-foreground py-2">
+                        <p className="text-center text-[12px] text-muted-foreground py-2">
                           Showing first 50 contacts
                         </p>
                       )}
@@ -343,16 +365,17 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
             </Tabs>
 
             {/* Refresh button */}
-            <div className="pt-4 border-t mt-4">
-              <Button 
-                variant="outline" 
-                onClick={handleSync} 
-                className="w-full gap-2"
+            <div className="pt-4 px-6 pb-4">
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                onClick={handleSync}
                 disabled={loading}
+                className="bg-foreground text-background rounded-2xl h-[52px] font-bold w-full flex items-center justify-center gap-2 disabled:opacity-40"
               >
                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                 Refresh Contacts
-              </Button>
+              </motion.button>
             </div>
           </div>
         )}

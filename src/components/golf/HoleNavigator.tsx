@@ -69,25 +69,21 @@ export const HoleNavigator = forwardRef<HTMLDivElement, HoleNavigatorProps>(func
   };
 
   return (
-    <div ref={ref} className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
+    <div ref={ref} className="bg-background border-b-2 border-foreground px-4 py-3 flex items-center justify-between">
       {/* Previous Button */}
       <motion.button
-        whileTap={{ scale: 0.92 }}
+        whileTap={{ scale: 0.9 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
         onClick={handlePrevious}
         disabled={!canGoPrevious}
-        className={cn(
-          "w-12 h-12 min-w-[48px] min-h-[48px] rounded-lg flex items-center justify-center transition-colors border touch-manipulation cursor-pointer select-none",
-          canGoPrevious
-            ? "bg-card border-border text-foreground hover:bg-muted active:bg-muted"
-            : "opacity-0 pointer-events-none border-transparent"
-        )}
+        className="w-12 h-12 rounded-full bg-muted flex items-center justify-center disabled:opacity-0 disabled:pointer-events-none touch-manipulation cursor-pointer select-none"
         style={{ WebkitTapHighlightColor: 'transparent' }}
         aria-label="Previous hole"
       >
         <ChevronLeft className="w-6 h-6" strokeWidth={2.5} />
       </motion.button>
 
-      {/* Hole Display - Technical style */}
+      {/* Hole Display */}
       <motion.div
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
@@ -107,33 +103,41 @@ export const HoleNavigator = forwardRef<HTMLDivElement, HoleNavigatorProps>(func
               transition={{ type: 'spring', stiffness: 400, damping: 35 }}
               className="flex items-center justify-center gap-5"
             >
-              {/* Hole Number - Big and bold */}
-              <div className="text-center">
-                <p className="data-label mb-0.5">HOLE</p>
-                <span className="text-5xl font-black tracking-tight text-foreground tabular-nums leading-none">
-                  {String(currentHole).padStart(2, '0')}
-                </span>
+              {/* Hole Number — dominant element */}
+              <div className="text-center flex flex-col items-center">
+                <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-0">HOLE</p>
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={currentHole}
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                    className="text-[72px] font-black tracking-[-0.04em] text-foreground tabular-nums leading-none"
+                  >
+                    {String(currentHole).padStart(2, '0')}
+                  </motion.span>
+                </AnimatePresence>
               </div>
 
               {/* Divider */}
-              <div className="w-px h-12 bg-border" />
+              <div className="w-px h-16 bg-border" />
 
               {/* Par & Yardage & Handicap */}
               <div className="text-center">
-                <div className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-primary text-primary-foreground">
-                  <span className="text-sm font-bold tracking-wide">PAR {holeInfo.par}</span>
+                <div className="inline-flex items-center justify-center">
+                  <span className="bg-[#F0EE3A] text-[#0A0A0A] text-[13px] font-bold px-3 py-1 rounded-full">
+                    PAR {holeInfo.par}
+                  </span>
                 </div>
-                <div className="flex items-center justify-center gap-2 mt-1.5">
+                <div className="flex flex-col items-center gap-0.5 mt-1.5">
                   {holeInfo.yardage && (
-                    <span className="text-xs font-semibold text-muted-foreground tabular-nums">
-                      {holeInfo.yardage} YDS
+                    <span className="text-[11px] text-muted-foreground font-medium tabular-nums">
+                      {holeInfo.yardage}y
                     </span>
                   )}
-                  {holeInfo.yardage && holeInfo.handicap && (
-                    <span className="text-muted-foreground/40">•</span>
-                  )}
                   {holeInfo.handicap && (
-                    <span className="text-xs font-semibold text-muted-foreground tabular-nums">
+                    <span className="text-[11px] text-muted-foreground tabular-nums">
                       HDCP {holeInfo.handicap}
                     </span>
                   )}
@@ -146,15 +150,11 @@ export const HoleNavigator = forwardRef<HTMLDivElement, HoleNavigatorProps>(func
 
       {/* Next Button */}
       <motion.button
-        whileTap={{ scale: 0.92 }}
+        whileTap={{ scale: 0.9 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
         onClick={handleNext}
         disabled={!canGoNext}
-        className={cn(
-          "w-12 h-12 min-w-[48px] min-h-[48px] rounded-lg flex items-center justify-center transition-colors border touch-manipulation cursor-pointer select-none",
-          canGoNext
-            ? "bg-card border-border text-foreground hover:bg-muted active:bg-muted"
-            : "opacity-0 pointer-events-none border-transparent"
-        )}
+        className="w-12 h-12 rounded-full bg-muted flex items-center justify-center disabled:opacity-0 disabled:pointer-events-none touch-manipulation cursor-pointer select-none"
         style={{ WebkitTapHighlightColor: 'transparent' }}
         aria-label="Next hole"
       >

@@ -1,5 +1,6 @@
 import { useState, ReactNode } from 'react';
-import { Lock } from 'lucide-react';
+import { Lock, Crown } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useSubscription, GameType } from '@/hooks/useSubscription';
 import { PropBetType } from '@/types/betting';
 import { PaywallModal } from './PaywallModal';
@@ -110,6 +111,38 @@ export function FeatureGate({
         feature={featureLabel}
       />
     </>
+  );
+}
+
+/**
+ * UpgradePrompt - Inline paywall teaser card for gated features
+ */
+interface UpgradePromptProps {
+  featureName: string;
+  description?: string;
+  onUpgrade: () => void;
+}
+
+export function UpgradePrompt({ featureName, description, onUpgrade }: UpgradePromptProps) {
+  return (
+    <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 flex items-center gap-3">
+      <div className="w-9 h-9 rounded-xl bg-[#F0EE3A] flex items-center justify-center text-[#0A0A0A] flex-shrink-0">
+        <Crown className="w-4 h-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-black text-[16px] tracking-[-0.02em] text-foreground">{featureName}</p>
+        {description && (
+          <p className="text-[13px] text-muted-foreground">{description}</p>
+        )}
+      </div>
+      <motion.button
+        whileTap={{ scale: 0.97 }}
+        onClick={onUpgrade}
+        className="bg-foreground text-background rounded-xl px-4 py-2 text-[13px] font-bold flex-shrink-0"
+      >
+        Upgrade
+      </motion.button>
+    </div>
   );
 }
 

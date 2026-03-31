@@ -13,25 +13,24 @@ export function RoundCompleteHeader({ round }: RoundCompleteHeaderProps) {
 
   return (
     <header className="flex-shrink-0 relative z-10 pt-safe-content pb-4 px-4">
-      {/* Corner Accents */}
-      <div className="absolute top-4 left-4 w-6 h-6 border-l-2 border-t-2 border-primary/30" />
-      <div className="absolute top-4 right-4 w-6 h-6 border-r-2 border-t-2 border-primary/20" />
-
       <div className="text-center">
         <motion.div
           initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 300, delay: 0.1 }}
-          className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center mx-auto mb-3"
+          animate={{ scale: 1, y: [0, -4, 0] }}
+          transition={{
+            scale: { type: 'spring', stiffness: 300, delay: 0.1 },
+            y: { repeat: Infinity, duration: 3, ease: 'easeInOut' },
+          }}
+          className="w-16 h-16 rounded-2xl bg-[#F0EE3A] flex items-center justify-center mx-auto mb-3"
         >
-          <Trophy className="w-7 h-7 text-primary-foreground" />
+          <Trophy className="w-8 h-8 text-[#0A0A0A]" />
         </motion.div>
 
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.15 }}
-          className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-1"
+          className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#F0EE3A] mb-1"
         >
           Round Complete
         </motion.p>
@@ -40,7 +39,7 @@ export function RoundCompleteHeader({ round }: RoundCompleteHeaderProps) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-lg font-bold tracking-tight"
+          className="text-[22px] font-black tracking-[-0.04em] text-foreground text-center"
         >
           {round.courseName}
         </motion.h1>
@@ -49,7 +48,7 @@ export function RoundCompleteHeader({ round }: RoundCompleteHeaderProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.25 }}
-          className="flex items-center justify-center gap-2 mt-1 text-xs text-muted-foreground"
+          className="flex items-center justify-center gap-2 mt-1 text-[12px] text-muted-foreground text-center"
         >
           <span>{round.holes} holes</span>
           <span>•</span>

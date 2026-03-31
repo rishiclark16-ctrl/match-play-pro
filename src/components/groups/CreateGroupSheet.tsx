@@ -12,6 +12,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface MemberEntry {
   id: string;
@@ -33,7 +34,7 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
   const { createGroup, updateGroup, updateMembers } = useGroups();
   const { friends } = useFriends();
   const { profile } = useProfile();
-  
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [members, setMembers] = useState<MemberEntry[]>([]);
@@ -84,7 +85,7 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
       toast.error('Already added');
       return;
     }
-    
+
     hapticLight();
     setMembers(prev => [...prev, {
       id: `friend-${friend.id}`,
@@ -98,7 +99,7 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
 
   const handleAddGuest = () => {
     if (!guestName.trim()) return;
-    
+
     hapticLight();
     setMembers(prev => [...prev, {
       id: `guest-${Date.now()}`,
@@ -121,7 +122,7 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
       toast.error('Please enter a group name');
       return;
     }
-    
+
     if (members.length < 2) {
       toast.error('Add at least 2 members');
       return;
@@ -171,170 +172,211 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
   // Friends not yet added
   const availableFriends = friends.filter(f => !members.some(m => m.profileId === f.id));
 
+  const isDisabled = isSaving || !name.trim() || members.length < 2;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl">
-        <SheetHeader className="pb-4">
-          <SheetTitle>{editingGroup ? 'Edit Group' : 'Create Group'}</SheetTitle>
-        </SheetHeader>
+      <SheetContent side="bottom" className="h-[90vh] bg-[#F8F8F6] rounded-t-3xl border-0 p-0">
+        {/* Handle */}
+        <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
 
-        <div className="space-y-6 overflow-y-auto pb-24">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 mb-4">
+          <h2 className="text-[20px] font-black tracking-[-0.04em] text-[#0A0A0A]">
+            {editingGroup ? 'Edit Group' : 'Create Group'}
+          </h2>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto pb-28" style={{ height: 'calc(100% - 80px)' }}>
           {/* Group Name */}
-          <div className="space-y-2">
-            <Label htmlFor="groupName">Group Name</Label>
-            <Input
+          <div className="mx-6 mb-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">
+              Group Name
+            </p>
+            <input
               id="groupName"
               placeholder="e.g. Saturday Foursome"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="py-6"
+              className="bg-muted/50 rounded-xl border-0 py-3 px-4 w-full text-foreground placeholder:text-muted-foreground outline-none text-[15px]"
             />
           </div>
 
           {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
-            <Input
+          <div className="mx-6 mb-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">
+              Description (optional)
+            </p>
+            <input
               id="description"
               placeholder="e.g. Weekly game at Pine Valley"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className="bg-muted/50 rounded-xl border-0 py-3 px-4 w-full text-foreground placeholder:text-muted-foreground outline-none text-[15px]"
             />
           </div>
 
           {/* Current Members */}
-          <div className="space-y-3">
-            <Label>Members ({members.length})</Label>
-            <div className="space-y-2">
-              {members.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={member.avatarUrl || undefined} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                      {getInitials(member.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{member.name}</p>
-                    {member.handicap !== null && (
-                      <p className="text-xs text-muted-foreground">HCP: {member.handicap}</p>
+          <div className="mx-6 mb-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">
+              Members ({members.length})
+            </p>
+            {members.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]">
+                {members.map((member) => (
+                  <div
+                    key={member.id}
+                    className="px-4 py-3 flex items-center gap-3 border-b border-border/40 last:border-b-0"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-muted overflow-hidden shrink-0 flex items-center justify-center">
+                      {member.avatarUrl ? (
+                        <img src={member.avatarUrl} alt={member.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-[12px] font-bold text-foreground">{getInitials(member.name)}</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground text-[14px] truncate">{member.name}</p>
+                      {member.handicap !== null && (
+                        <p className="text-[12px] text-muted-foreground">HCP: {member.handicap}</p>
+                      )}
+                    </div>
+                    {member.id !== 'self' && (
+                      <button
+                        onClick={() => handleRemoveMember(member.id)}
+                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground ml-auto"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
                     )}
                   </div>
-                  {member.id !== 'self' && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveMember(member.id)}
-                      className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Add from Friends */}
           {availableFriends.length > 0 && (
-            <div className="space-y-3">
-              <Label>Add from Friends</Label>
+            <div className="mx-6 mb-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">
+                Add from Friends
+              </p>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {availableFriends.slice(0, 8).map((friend) => (
-                  <button
+                  <motion.button
                     key={friend.id}
                     type="button"
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 28 }}
                     onClick={() => handleAddFriend(friend)}
-                    className="flex flex-col items-center gap-1 p-2 rounded-lg border border-border min-w-[70px] hover:border-primary hover:bg-primary/5 transition-colors"
+                    className="flex flex-col items-center gap-1.5 p-3 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] min-w-[68px]"
                   >
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={friend.avatarUrl || undefined} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                        {getInitials(friend.fullName || '')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-xs font-medium truncate max-w-[60px]">
+                    <div className="w-9 h-9 rounded-xl bg-muted overflow-hidden flex items-center justify-center">
+                      {friend.avatarUrl ? (
+                        <img src={friend.avatarUrl} alt={friend.fullName || ''} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-[12px] font-bold text-foreground">{getInitials(friend.fullName || '')}</span>
+                      )}
+                    </div>
+                    <span className="text-[11px] font-semibold text-foreground truncate max-w-[60px]">
                       {friend.fullName?.split(' ')[0]}
                     </span>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
           )}
 
           {/* Add Guest */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Add Guest (non-app user)</Label>
+          <div className="mx-6 mb-4">
+            <div className="flex items-center justify-between px-1 mb-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                Add Guest (non-app user)
+              </p>
               {!showAddGuest && (
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   onClick={() => setShowAddGuest(true)}
+                  className="text-[12px] font-bold text-foreground flex items-center gap-1"
                 >
-                  <UserPlus className="h-4 w-4 mr-1" />
+                  <UserPlus className="h-3.5 w-3.5" />
                   Add
-                </Button>
+                </button>
               )}
             </div>
-            
+
             {showAddGuest && (
               <div className="flex gap-2">
-                <Input
+                <input
                   placeholder="Name"
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
-                  className="flex-1"
+                  className="bg-muted/50 rounded-xl border-0 py-3 px-4 flex-1 text-foreground placeholder:text-muted-foreground outline-none text-[15px]"
                 />
-                <Input
+                <input
                   placeholder="HCP"
                   type="number"
                   value={guestHandicap}
                   onChange={(e) => setGuestHandicap(e.target.value)}
-                  className="w-20"
+                  className="bg-muted/50 rounded-xl border-0 py-3 px-4 w-20 text-foreground placeholder:text-muted-foreground outline-none text-[15px]"
                 />
-                <Button onClick={handleAddGuest} disabled={!guestName.trim()}>
+                <button
+                  onClick={handleAddGuest}
+                  disabled={!guestName.trim()}
+                  className="w-11 h-11 rounded-xl bg-foreground flex items-center justify-center text-background disabled:opacity-40"
+                >
                   <Plus className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" onClick={() => setShowAddGuest(false)}>
+                </button>
+                <button
+                  onClick={() => setShowAddGuest(false)}
+                  className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center text-muted-foreground"
+                >
                   <X className="h-4 w-4" />
-                </Button>
+                </button>
               </div>
             )}
           </div>
 
           {/* No friends? */}
           {friends.length === 0 && (
-            <div className="text-center py-4">
-              <p className="text-sm text-muted-foreground mb-2">
+            <div className="text-center py-4 mx-6">
+              <p className="text-[13px] text-muted-foreground mb-3">
                 No friends yet? Add some to quickly build groups.
               </p>
-              <Button
-                variant="outline"
-                size="sm"
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 28 }}
                 onClick={() => {
                   onOpenChange(false);
                   navigate('/friends');
                 }}
+                className="bg-foreground text-background rounded-2xl px-5 py-2.5 text-[13px] font-bold"
               >
                 Add Friends
-              </Button>
+              </motion.button>
             </div>
           )}
         </div>
 
         {/* Save Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 pb-4 bg-background border-t border-border">
-          <Button
+        <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 pt-3 bg-[#F8F8F6]">
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             onClick={handleSave}
-            disabled={isSaving || !name.trim() || members.length < 2}
-            className="w-full py-6"
+            disabled={isDisabled}
+            className={cn(
+              'bg-foreground text-background rounded-2xl h-[52px] font-bold w-full flex items-center justify-center',
+              isDisabled && 'opacity-40'
+            )}
           >
             {isSaving ? 'Saving...' : editingGroup ? 'Save Changes' : 'Create Group'}
-          </Button>
+          </motion.button>
         </div>
       </SheetContent>
     </Sheet>

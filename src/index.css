@@ -2,124 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
-/* MATCH Golf App Design System v3.0
-   Precision Tech - Clean, bold, sunlight-readable
-   High contrast with geometric accents
+/* MATCH Golf App Design System v4.0
+   Direction B — Clean & Modern
+   Near-black primary, warm off-white backgrounds, chartreuse yellow accent
    All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    /* Core Backgrounds - Pure white for outdoor readability */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 5%;
+    /* Core Backgrounds - Warm off-white */
+    --background: 60 5% 97%;
+    --foreground: 0 0% 4%;
 
     /* Always-dark surfaces (do not flip in dark mode) */
-    --ink: 0 0% 8%;
+    --ink: 0 0% 4%;
     --ink-foreground: 0 0% 100%;
 
-    /* Card - Solid whites */
-    --card: 0 0% 99%;
-    --card-foreground: 0 0% 5%;
+    /* Card - Pure white */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 4%;
     --card-elevated: 0 0% 100%;
 
-    /* Primary - Deep Racing Green */
-    --primary: 153 75% 18%;
+    /* Primary - Near black (Direction B CTA color) */
+    --primary: 0 0% 6%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 153 40% 95%;
-    --primary-muted: 153 30% 90%;
+    --primary-light: 60 5% 95%;
+    --primary-muted: 60 5% 92%;
 
     /* Secondary */
-    --secondary: 150 10% 96%;
-    --secondary-foreground: 153 75% 18%;
+    --secondary: 60 5% 94%;
+    --secondary-foreground: 0 0% 6%;
 
-    /* Muted - Stronger for visibility */
-    --muted: 150 8% 92%;
-    --muted-foreground: 150 10% 40%;
+    /* Muted */
+    --muted: 60 5% 93%;
+    --muted-foreground: 0 0% 47%;
 
     /* Accent */
-    --accent: 153 30% 94%;
-    --accent-foreground: 153 75% 18%;
+    --accent: 60 5% 95%;
+    --accent-foreground: 0 0% 6%;
 
     /* Destructive */
     --destructive: 0 85% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Success - Bold green for under par */
-    --success: 152 82% 32%;
+    /* Success - Bright green for live/active */
+    --success: 142 72% 29%;
     --success-foreground: 0 0% 100%;
-    --success-muted: 152 50% 94%;
+    --success-muted: 142 50% 95%;
 
-    /* Warning - Bright amber for bogey */
+    /* Warning - Amber for bogey */
     --warning: 38 95% 48%;
     --warning-foreground: 0 0% 100%;
     --warning-muted: 38 60% 95%;
 
-    /* Danger - Clear red for double+ */
+    /* Danger - Red for double+ */
     --danger: 0 85% 52%;
     --danger-foreground: 0 0% 100%;
     --danger-muted: 0 60% 96%;
 
-    /* Gold for winners */
-    --gold: 45 95% 50%;
-    --gold-foreground: 0 0% 5%;
-    --gold-muted: 45 80% 94%;
+    /* Gold / Chartreuse yellow accent — use sparingly */
+    --gold: 59 86% 57%;
+    --gold-foreground: 0 0% 4%;
+    --gold-muted: 59 80% 94%;
 
-    /* Borders - More visible */
-    --border: 150 12% 88%;
-    --border-strong: 150 12% 78%;
-    --input: 150 12% 88%;
-    --ring: 153 75% 18%;
+    /* Borders */
+    --border: 60 5% 88%;
+    --border-strong: 60 5% 76%;
+    --input: 60 5% 88%;
+    --ring: 0 0% 6%;
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
     /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 5%;
+    --popover-foreground: 0 0% 4%;
 
     /* Sidebar */
-    --sidebar-background: 0 0% 99%;
+    --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 0 0% 15%;
-    --sidebar-primary: 153 75% 18%;
+    --sidebar-primary: 0 0% 6%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 153 30% 95%;
-    --sidebar-accent-foreground: 153 75% 18%;
-    --sidebar-border: 150 12% 90%;
-    --sidebar-ring: 153 75% 18%;
+    --sidebar-accent: 60 5% 94%;
+    --sidebar-accent-foreground: 0 0% 6%;
+    --sidebar-border: 60 5% 88%;
+    --sidebar-ring: 0 0% 6%;
   }
 
   .dark {
-    --background: 153 15% 5%;
+    --background: 0 0% 6%;
     --foreground: 0 0% 97%;
 
     /* Always-dark surfaces (do not flip in dark mode) */
-    --ink: 0 0% 8%;
+    --ink: 0 0% 4%;
     --ink-foreground: 0 0% 100%;
 
-    --card: 153 12% 8%;
+    --card: 0 0% 9%;
     --card-foreground: 0 0% 97%;
-    --card-elevated: 153 12% 10%;
+    --card-elevated: 0 0% 11%;
 
-    --primary: 153 65% 42%;
-    --primary-foreground: 0 0% 100%;
-    --primary-light: 153 25% 15%;
-    --primary-muted: 153 20% 12%;
+    --primary: 0 0% 97%;
+    --primary-foreground: 0 0% 4%;
+    --primary-light: 0 0% 14%;
+    --primary-muted: 0 0% 12%;
 
-    --secondary: 153 12% 12%;
+    --secondary: 0 0% 14%;
     --secondary-foreground: 0 0% 97%;
 
-    --muted: 153 10% 18%;
-    --muted-foreground: 150 8% 55%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 55%;
 
-    --accent: 153 20% 15%;
-    --accent-foreground: 153 65% 42%;
+    --accent: 0 0% 16%;
+    --accent-foreground: 0 0% 97%;
 
     --destructive: 0 70% 40%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 75% 38%;
+    --success: 142 65% 40%;
     --success-foreground: 0 0% 100%;
-    --success-muted: 152 30% 12%;
+    --success-muted: 142 30% 12%;
 
     --warning: 38 85% 48%;
     --warning-foreground: 0 0% 100%;
@@ -129,26 +129,26 @@
     --danger-foreground: 0 0% 100%;
     --danger-muted: 0 30% 12%;
 
-    --gold: 45 85% 55%;
-    --gold-foreground: 0 0% 5%;
-    --gold-muted: 45 35% 12%;
+    --gold: 59 86% 57%;
+    --gold-foreground: 0 0% 4%;
+    --gold-muted: 59 40% 12%;
 
-    --border: 153 12% 18%;
-    --border-strong: 153 12% 25%;
-    --input: 153 12% 18%;
-    --ring: 153 65% 42%;
+    --border: 0 0% 18%;
+    --border-strong: 0 0% 26%;
+    --input: 0 0% 18%;
+    --ring: 0 0% 97%;
 
-    --popover: 153 12% 8%;
+    --popover: 0 0% 9%;
     --popover-foreground: 0 0% 97%;
 
-    --sidebar-background: 153 12% 6%;
+    --sidebar-background: 0 0% 7%;
     --sidebar-foreground: 0 0% 97%;
-    --sidebar-primary: 153 65% 42%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 153 20% 15%;
+    --sidebar-primary: 0 0% 97%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 16%;
     --sidebar-accent-foreground: 0 0% 97%;
-    --sidebar-border: 153 12% 18%;
-    --sidebar-ring: 153 65% 42%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 0 0% 97%;
   }
 }
 

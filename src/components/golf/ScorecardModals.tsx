@@ -21,6 +21,8 @@ interface ScorecardModalsProps {
   currentHolePar: number;
   onCloseScoreInput: () => void;
   onSelectScore: (score: number) => void;
+  pickupScore?: number;
+  onPickup?: () => void;
 
   // Voice confirmation
   showVoiceModal: boolean;
@@ -59,6 +61,8 @@ export function ScorecardModals({
   currentHolePar,
   onCloseScoreInput,
   onSelectScore,
+  pickupScore,
+  onPickup,
   showVoiceModal,
   parseResult,
   players,
@@ -92,6 +96,8 @@ export function ScorecardModals({
         holeNumber={currentHole}
         par={currentHolePar}
         currentScore={selectedPlayer?.currentHoleScore}
+        pickupScore={pickupScore}
+        onPickup={onPickup}
       />
 
       {/* Voice Confirmation Modal */}

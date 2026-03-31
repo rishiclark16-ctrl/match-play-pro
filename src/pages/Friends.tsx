@@ -1,13 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, UserPlus, Users, Search, Hash, AtSign, Phone, ScanLine, Contact, Crown } from 'lucide-react';
+import { ArrowLeft, UserPlus, Users, Hash, AtSign, Phone, ScanLine, Contact, Crown, Copy, QrCode } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { TechCard, TechCardContent } from '@/components/ui/tech-card';
-import { GeometricBackground } from '@/components/ui/geometric-background';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProfile } from '@/hooks/useProfile';
 import { useFriends } from '@/hooks/useFriends';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -25,14 +20,14 @@ export default function Friends() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { profile } = useProfile();
-  const { 
-    friends, 
-    pendingRequests, 
-    loading, 
-    sendFriendRequest, 
+  const {
+    friends,
+    pendingRequests,
+    loading,
+    sendFriendRequest,
     sendFriendRequestByEmail,
     sendFriendRequestByPhone,
-    acceptFriendRequest, 
+    acceptFriendRequest,
     declineFriendRequest,
     removeFriend,
   } = useFriends();
@@ -165,7 +160,7 @@ export default function Friends() {
     switch (searchType) {
       case 'email': return <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
       case 'phone': return <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
-      default: return <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
+      default: return <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -182,30 +177,32 @@ export default function Friends() {
   };
 
   const headerContent = (
-    <div className="bg-background/95 backdrop-blur-sm border-b-2 border-border px-4 pb-2 pt-safe-content">
+    <div className="pt-safe-content pb-3 px-6 border-b-2 border-foreground flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <Button
-          variant="outline"
-          size="icon"
+        <motion.button
+          whileTap={{ scale: 0.9 }}
           onClick={() => navigate(-1)}
-          className="shrink-0 border-2 w-11 h-11"
+          className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
         >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="heading-lg">Friends</h1>
-          <p className="text-xs text-muted-foreground font-mono">
-            <span className="number-display">{friends.length}</span> connection{friends.length !== 1 ? 's' : ''}
-          </p>
+          <ArrowLeft className="h-4 w-4" />
+        </motion.button>
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">MATCH Golf</p>
+          <h1 className="text-[22px] font-black tracking-[-0.04em] leading-tight text-foreground">Friends</h1>
         </div>
-        <Button
-          variant="outline"
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="text-right mr-1">
+          <p className="text-2xl font-black tabular-nums text-foreground leading-none">{friends.length}</p>
+          <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Connected</p>
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.9 }}
           onClick={() => navigate('/groups')}
-          className="gap-2 border-2"
+          className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
         >
           <Users className="h-4 w-4" />
-          Groups
-        </Button>
+        </motion.button>
       </div>
     </div>
   );
@@ -213,228 +210,203 @@ export default function Friends() {
   return (
     <AppLayout
       header={headerContent}
-      background={<GeometricBackground />}
-      mainClassName="px-4 pb-nav"
+      mainClassName="pb-nav bg-[#F8F8F6]"
     >
-        {/* Your Friend Code with QR and Sharing */}
-        <motion.section
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-4"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Hash className="w-4 h-4 text-primary" />
-            <span className="label-sm">Your Friend Code</span>
+      {/* Your Friend Code */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mt-4"
+      >
+        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-6 mb-2">Your Friend Code</p>
+        <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5 mx-6 mb-4">
+          <div className="font-mono text-3xl font-black tracking-[0.25em] text-foreground text-center py-4 bg-muted/30 rounded-xl mb-3">
+            {friendCode || '------'}
           </div>
-          <TechCard variant="elevated" accentBar="top">
-            <TechCardContent>
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                {/* QR Code */}
-                {friendCode && (
-                  <div className="shrink-0">
-                    <FriendCodeQR friendCode={friendCode} />
-                  </div>
-                )}
-                
-                {/* Code and Sharing */}
-                <div className="flex-1 flex flex-col items-center sm:items-start gap-3 min-w-0">
-                  <span className="text-3xl font-mono font-black tracking-[0.3em] text-primary">
-                    {friendCode || '------'}
-                  </span>
-                  
-                  {friendCode && (
-                    <ShareFriendCode friendCode={friendCode} userName={userName} />
-                  )}
-                </div>
-              </div>
-            </TechCardContent>
-          </TechCard>
-        </motion.section>
+          {friendCode && (
+            <ShareFriendCode friendCode={friendCode} userName={userName} />
+          )}
+          {friendCode && (
+            <button
+              onClick={() => setScannerOpen(true)}
+              className="w-full border-2 border-border rounded-2xl py-3 font-semibold text-sm flex items-center justify-center gap-2 mt-2"
+            >
+              <QrCode className="w-4 h-4" />
+              Show QR Code
+            </button>
+          )}
+          {friendCode && (
+            <div className="shrink-0 mt-3 flex justify-center">
+              <FriendCodeQR friendCode={friendCode} />
+            </div>
+          )}
+        </div>
+      </motion.section>
 
-        {/* Add Friend */}
-        <motion.section
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="mt-6"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <UserPlus className="w-4 h-4 text-primary" />
-              <span className="label-sm">Add a Friend</span>
-            </div>
-            <div className="flex gap-1.5">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setContactSyncOpen(true)}
-                className="gap-1.5 border-2 h-8"
-              >
-                <Contact className="h-4 w-4" />
-                Contacts
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setScannerOpen(true)}
-                className="gap-1.5 border-2 h-8"
-              >
-                <ScanLine className="h-4 w-4" />
-                Scan
-              </Button>
-            </div>
+      {/* Add Friend */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
+        <div className="flex items-center justify-between px-6 mb-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Add a Friend</p>
+          <div className="flex gap-1.5">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setContactSyncOpen(true)}
+              className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+            >
+              <Contact className="h-4 w-4" />
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setScannerOpen(true)}
+              className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+            >
+              <ScanLine className="h-4 w-4" />
+            </motion.button>
           </div>
-          <TechCard hover>
-            <TechCardContent className="space-y-3">
-              {/* Search Type Tabs */}
-              <Tabs value={searchType} onValueChange={(v) => setSearchType(v as 'code' | 'email' | 'phone')}>
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="code" className="text-xs gap-1">
-                    <Hash className="w-3 h-3" />
-                    Code
-                  </TabsTrigger>
-                  <TabsTrigger value="email" className="text-xs gap-1">
-                    <AtSign className="w-3 h-3" />
-                    Email
-                  </TabsTrigger>
-                  <TabsTrigger value="phone" className="text-xs gap-1">
-                    <Phone className="w-3 h-3" />
-                    Phone
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+        </div>
+        <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5 mx-6 mb-4">
+          {/* Tab switcher */}
+          <div className="bg-muted rounded-xl p-1 flex gap-1 mb-4">
+            {(['code', 'email', 'phone'] as const).map((type) => (
+              <button
+                key={type}
+                onClick={() => setSearchType(type)}
+                className={
+                  searchType === type
+                    ? 'bg-white rounded-lg shadow-sm text-foreground font-bold text-sm py-2 flex-1 text-center'
+                    : 'text-muted-foreground font-medium text-sm py-2 flex-1 text-center'
+                }
+              >
+                {type === 'code' ? 'Code' : type === 'email' ? 'Email' : 'Phone'}
+              </button>
+            ))}
+          </div>
 
-              {/* Search Input */}
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  {getSearchIcon()}
-                  <Input
-                    placeholder={getPlaceholder()}
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(
-                      searchType === 'code' ? e.target.value.toUpperCase() : e.target.value
-                    )}
-                    className={`pl-9 bg-background border-2 border-border focus:border-primary ${
-                      searchType === 'code' ? 'font-mono uppercase tracking-widest text-lg' : ''
-                    }`}
-                    maxLength={searchType === 'code' ? 6 : undefined}
-                    type={searchType === 'email' ? 'email' : searchType === 'phone' ? 'tel' : 'text'}
-                  />
-                </div>
-                <Button
-                  onClick={() => handleSendRequest()}
-                  disabled={!searchValue.trim() || isSending}
-                  className="shrink-0 font-bold px-6"
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add
-                </Button>
-              </div>
+          {/* Input */}
+          <div className="relative">
+            {getSearchIcon()}
+            <input
+              placeholder={getPlaceholder()}
+              value={searchValue}
+              onChange={(e) => setSearchValue(
+                searchType === 'code' ? e.target.value.toUpperCase() : e.target.value
+              )}
+              className={`bg-muted/50 rounded-xl border-0 py-3 px-4 text-sm w-full pl-9 outline-none ${
+                searchType === 'code' ? 'font-mono uppercase tracking-widest' : ''
+              }`}
+              maxLength={searchType === 'code' ? 6 : undefined}
+              type={searchType === 'email' ? 'email' : searchType === 'phone' ? 'tel' : 'text'}
+            />
+          </div>
 
-              <p className="text-xs text-muted-foreground">
-                {searchType === 'code' && 'Enter a 6-character friend code'}
-                {searchType === 'email' && 'Enter the email they registered with'}
-                {searchType === 'phone' && 'Enter their phone number'}
-              </p>
-            </TechCardContent>
-          </TechCard>
-        </motion.section>
-
-        {/* Pending Requests */}
-        {pendingRequests.length > 0 && (
-          <motion.section
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mt-6"
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={() => handleSendRequest()}
+            disabled={!searchValue.trim() || isSending}
+            className="bg-foreground text-background rounded-xl px-5 py-3 font-bold text-sm mt-3 w-full flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="label-sm">Pending Requests</span>
-              <span className="ml-auto text-xs font-mono text-muted-foreground">
-                {pendingRequests.length}
-              </span>
-            </div>
-            <div className="space-y-2">
-              {pendingRequests.map((request) => (
-                <FriendRequestCard
-                  key={request.id}
-                  request={request}
-                  onAccept={handleAccept}
-                  onDecline={handleDecline}
-                  isProcessing={processingId === request.id}
-                />
-              ))}
-            </div>
-          </motion.section>
+            <UserPlus className="h-4 w-4" />
+            {isSending ? 'Sending...' : 'Add Friend'}
+          </motion.button>
+        </div>
+      </motion.section>
+
+      {/* Pending Requests */}
+      {pendingRequests.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-4"
+        >
+          <div className="flex items-center gap-2 px-6 mb-2">
+            <motion.div
+              animate={{ opacity: [1, 0.4, 1] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+              className="w-1.5 h-1.5 rounded-full bg-[#22C55E]"
+            />
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Pending</p>
+            <span className="text-[11px] font-bold text-muted-foreground ml-auto">{pendingRequests.length}</span>
+          </div>
+          <div className="space-y-2">
+            {pendingRequests.map((request) => (
+              <FriendRequestCard
+                key={request.id}
+                request={request}
+                onAccept={handleAccept}
+                onDecline={handleDecline}
+                isProcessing={processingId === request.id}
+              />
+            ))}
+          </div>
+        </motion.section>
+      )}
+
+      {/* Friends List */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="pb-8"
+      >
+        <div className="flex items-center justify-between px-6 mb-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Your Friends</p>
+          <span className="text-[11px] font-bold text-muted-foreground">
+            {friends.length}{!isPro && maxFriends !== Infinity ? `/${maxFriends}` : ''}
+          </span>
+        </div>
+
+        {/* Friend limit upgrade prompt */}
+        {atFriendLimit && (
+          <motion.button
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => setShowPaywall(true)}
+            className="bg-[#F0EE3A]/10 border border-[#F0EE3A]/40 rounded-2xl mx-6 p-4 flex items-center gap-3 mb-3 w-[calc(100%-3rem)]"
+          >
+            <Crown className="w-4 h-4 text-[#A08800] flex-shrink-0" />
+            <span className="text-sm font-semibold text-foreground flex-1 text-left">Upgrade for unlimited friends</span>
+            <span className="bg-foreground text-background rounded-xl px-4 py-2 text-sm font-bold">Upgrade</span>
+          </motion.button>
         )}
 
-        {/* Friends List */}
-        <motion.section
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="mt-6 pb-8"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Users className="w-4 h-4 text-primary" />
-            <span className="label-sm">Your Friends</span>
-            <span className="ml-auto text-xs font-mono text-muted-foreground">
-              {friends.length}{!isPro && maxFriends !== Infinity ? `/${maxFriends}` : ''}
-            </span>
+        {loading ? (
+          <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 flex items-center justify-center py-12">
+            <div className="animate-spin h-8 w-8 border-2 border-foreground border-t-transparent rounded-full" />
           </div>
-
-          {/* Friend limit upgrade prompt */}
-          {atFriendLimit && (
-            <motion.button
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              onClick={() => setShowPaywall(true)}
-              className="w-full mb-3 py-3 px-4 rounded-xl bg-gold/10 border-2 border-gold/30 text-gold font-semibold flex items-center justify-center gap-2 hover:bg-gold/20 transition-all"
-            >
-              <Crown className="w-4 h-4" />
-              <span>Upgrade for unlimited friends</span>
-              <ProBadge size="sm" variant="default" />
-            </motion.button>
-          )}
-          
-          {loading ? (
-            <TechCard>
-              <TechCardContent className="flex items-center justify-center py-12">
-                <div className="animate-spin h-8 w-8 border-3 border-primary border-t-transparent rounded-full" />
-              </TechCardContent>
-            </TechCard>
-          ) : friends.length === 0 ? (
-            <TechCard variant="elevated">
-              <TechCardContent className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mb-4 border-2 border-border">
-                  <Users className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <h3 className="font-bold text-foreground mb-1">No friends yet</h3>
-                <p className="text-sm text-muted-foreground max-w-[240px]">
-                  Share your friend code or QR with golf buddies to connect and track each other's rounds.
-                </p>
-              </TechCardContent>
-            </TechCard>
-          ) : (
-            <div className="space-y-2">
-              {friends.map((friend, index) => (
-                <motion.div
-                  key={friend.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <FriendCard
-                    friend={friend}
-                    onRemove={handleRemove}
-                    isRemoving={processingId === friend.friendshipId}
-                  />
-                </motion.div>
-              ))}
+        ) : friends.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 flex flex-col items-center justify-center py-12 text-center px-6">
+            <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mb-4">
+              <Users className="h-8 w-8 text-muted-foreground" />
             </div>
-          )}
-        </motion.section>
+            <h3 className="font-bold text-foreground mb-1">No friends yet</h3>
+            <p className="text-sm text-muted-foreground max-w-[240px]">
+              Share your friend code or QR with golf buddies to connect and track each other's rounds.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {friends.map((friend, index) => (
+              <motion.div
+                key={friend.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.04 }}
+              >
+                <FriendCard
+                  friend={friend}
+                  onRemove={handleRemove}
+                  isRemoving={processingId === friend.friendshipId}
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </motion.section>
 
       {/* QR Code Scanner Modal */}
       <QRCodeScanner

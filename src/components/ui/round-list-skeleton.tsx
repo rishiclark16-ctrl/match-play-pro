@@ -1,36 +1,24 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { TechCard } from "@/components/ui/tech-card";
-
 export function RoundListSkeleton() {
-    return (
-        <div className="space-y-4">
-            {/* Header Skeleton */}
-            <div className="flex items-center gap-2 mb-4">
-                <Skeleton className="w-2 h-2 rounded-full" />
-                <Skeleton className="h-3 w-24" />
-            </div>
+  return (
+    <div>
+      {[1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-3 px-4 py-4 flex items-center gap-3"
+        >
+          {/* Icon ghost */}
+          <div className="w-10 h-10 rounded-xl bg-muted/60 animate-pulse flex-shrink-0" />
 
-            {/* Round Card Skeletons */}
-            {[1, 2, 3].map((i) => (
-                <TechCard key={i} className="p-4" corners>
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="space-y-2">
-                            <Skeleton className="h-5 w-40" />
-                            <Skeleton className="h-3 w-32" />
-                        </div>
-                        <Skeleton className="h-8 w-16 rounded-lg" />
-                    </div>
+          {/* Text lines */}
+          <div className="flex-1 min-w-0">
+            <div className="h-4 w-36 rounded-lg bg-muted/60 animate-pulse mb-2" />
+            <div className="h-3 w-24 rounded-lg bg-muted/40 animate-pulse" />
+          </div>
 
-                    <div className="flex gap-4">
-                        <div className="flex -space-x-2">
-                            {[1, 2, 3].map((j) => (
-                                <Skeleton key={j} className="w-8 h-8 rounded-full border-2 border-background" />
-                            ))}
-                        </div>
-                        <Skeleton className="h-8 w-20 ml-auto" />
-                    </div>
-                </TechCard>
-            ))}
+          {/* Right score ghost */}
+          <div className="h-6 w-12 rounded-lg bg-muted/60 animate-pulse ml-auto" />
         </div>
-    );
+      ))}
+    </div>
+  );
 }

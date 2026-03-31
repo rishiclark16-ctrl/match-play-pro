@@ -20,14 +20,7 @@ const generateConfetti = (count: number) => {
     delay: Math.random() * 0.3,
     duration: 1 + Math.random() * 1,
     rotation: Math.random() * 360,
-    color: [
-      'bg-yellow-400',
-      'bg-green-400',
-      'bg-blue-400',
-      'bg-pink-400',
-      'bg-purple-400',
-      'bg-orange-400',
-    ][Math.floor(Math.random() * 6)],
+    color: ['bg-[#F0EE3A]', 'bg-[#22C55E]', 'bg-[#0A0A0A]'][Math.floor(Math.random() * 3)],
     size: 4 + Math.random() * 8,
   }));
 };
@@ -109,7 +102,7 @@ export function PropBetCelebration({
               stiffness: 300,
               damping: 20,
             }}
-            className="relative z-10 bg-card border-2 border-success rounded-3xl p-6 mx-4 max-w-sm shadow-2xl shadow-success/30"
+            className="relative z-10 bg-white rounded-3xl border-2 border-[#F0EE3A] shadow-2xl p-6 mx-4 max-w-sm"
           >
             {/* Sparkle decorations */}
             <motion.div
@@ -123,7 +116,7 @@ export function PropBetCelebration({
               }}
               className="absolute -top-4 -right-4"
             >
-              <Sparkles className="w-8 h-8 text-yellow-400" />
+              <Sparkles className="w-8 h-8 text-[#F0EE3A]" />
             </motion.div>
             <motion.div
               animate={{
@@ -136,7 +129,7 @@ export function PropBetCelebration({
               }}
               className="absolute -bottom-4 -left-4"
             >
-              <Sparkles className="w-6 h-6 text-pink-400" />
+              <Sparkles className="w-6 h-6 text-[#22C55E]" />
             </motion.div>
 
             {/* Trophy icon with bounce */}
@@ -150,8 +143,8 @@ export function PropBetCelebration({
               }}
               className="flex justify-center mb-4"
             >
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-lg shadow-yellow-500/40">
-                <Trophy className="w-9 h-9 text-white" />
+              <div className="w-14 h-14 rounded-2xl bg-[#F0EE3A] flex items-center justify-center mx-auto mb-2">
+                <Trophy className="w-8 h-8 text-[#0A0A0A]" />
               </div>
             </motion.div>
 
@@ -173,7 +166,7 @@ export function PropBetCelebration({
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, type: 'spring' }}
-              className="text-2xl font-black text-center text-foreground mb-2"
+              className="font-black text-2xl tracking-[-0.03em] text-foreground text-center mb-2"
             >
               {winnerName}
             </motion.h2>
@@ -183,7 +176,7 @@ export function PropBetCelebration({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className="text-lg font-bold text-center text-success mb-3"
+              className="text-lg font-bold text-center text-[#22C55E] mb-3"
             >
               WINS!
             </motion.p>
@@ -193,10 +186,10 @@ export function PropBetCelebration({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="flex items-center justify-center gap-1 py-2 px-4 rounded-full bg-success/20 mx-auto w-fit"
+              className="flex items-center justify-center gap-1 bg-[#F0FFF4] border border-[#22C55E] text-[#22C55E] font-black rounded-full px-4 py-1.5 mx-auto w-fit"
             >
-              <DollarSign className="w-5 h-5 text-success" />
-              <span className="text-xl font-black text-success tabular-nums">
+              <DollarSign className="w-5 h-5 text-[#22C55E]" />
+              <span className="text-xl font-black text-[#22C55E] tabular-nums">
                 +${(amount * 3).toFixed(0)}
               </span>
             </motion.div>
@@ -210,7 +203,7 @@ export function PropBetCelebration({
                 repeat: 2,
                 repeatType: 'loop',
               }}
-              className="absolute inset-0 border-4 border-success rounded-3xl pointer-events-none"
+              className="absolute inset-0 border-4 border-[#F0EE3A] rounded-3xl pointer-events-none"
             />
           </motion.div>
         </motion.div>

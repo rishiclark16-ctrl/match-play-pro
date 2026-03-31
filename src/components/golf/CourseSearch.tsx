@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, MapPin, Loader2, Globe, Database } from 'lucide-react';
+import { Search, Plus, MapPin, Loader2, Globe, Database, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Course } from '@/types/golf';
-import { Input } from '@/components/ui/input';
-import { TechCard, TechCardContent } from '@/components/ui/tech-card';
 import { cn } from '@/lib/utils';
 import { useGolfCourseSearch, GolfCourseResult } from '@/hooks/useGolfCourseSearch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface CourseSearchProps {
   courses: Course[];
@@ -22,7 +19,7 @@ export function CourseSearch({ courses, onSelectCourse, onCreateNew, onSelectApi
 
   useEffect(() => {
     if (activeTab !== 'search') return;
-    
+
     const timer = setTimeout(() => {
       if (query.trim().length >= 2) {
         searchCourses(query);
@@ -35,7 +32,7 @@ export function CourseSearch({ courses, onSelectCourse, onCreateNew, onSelectApi
   }, [query, activeTab, searchCourses, clearResults]);
 
   const filteredLocalCourses = query.trim()
-    ? courses.filter(c => 
+    ? courses.filter(c =>
         c.name?.toLowerCase().includes(query.toLowerCase()) ||
         c.location?.toLowerCase().includes(query.toLowerCase())
       )
@@ -48,137 +45,141 @@ export function CourseSearch({ courses, onSelectCourse, onCreateNew, onSelectApi
   };
 
   return (
-    <div className="space-y-4">
+    <div>
       {/* Search Input */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-        <Input
+      <div className="bg-white rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex items-center px-4 py-0 mb-4 overflow-hidden">
+        <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        <input
           type="text"
           placeholder="Search golf courses..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-12 py-6 text-base bg-card border-border"
+          className="flex-1 py-4 bg-transparent border-0 focus:ring-0 text-sm placeholder:text-muted-foreground outline-none ml-3"
         />
         {isSearching && (
-          <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary animate-spin" />
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground flex-shrink-0" />
         )}
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'saved' | 'search')}>
-        <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-xl">
-          <TabsTrigger 
-            value="search" 
-            className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-lg font-semibold"
+      {/* Tab Switcher */}
+      <div className="bg-muted rounded-xl p-1 flex gap-1 mb-4 relative">
+        {(['search', 'saved'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={cn(
+              'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm transition-all relative z-10',
+              activeTab === tab
+                ? 'bg-white shadow-sm text-foreground font-bold'
+                : 'text-muted-foreground font-medium'
+            )}
           >
-            <Globe className="w-4 h-4" />
-            Search Online
-          </TabsTrigger>
-          <TabsTrigger 
-            value="saved" 
-            className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-lg font-semibold"
-          >
-            <Database className="w-4 h-4" />
-            My Courses
-          </TabsTrigger>
-        </TabsList>
+            {tab === 'search' ? (
+              <>
+                <Globe className="w-3.5 h-3.5" />
+                Search Online
+              </>
+            ) : (
+              <>
+                <Database className="w-3.5 h-3.5" />
+                My Courses
+              </>
+            )}
+          </button>
+        ))}
+      </div>
 
-        {/* Online Search Results */}
-        <TabsContent value="search" className="space-y-2 mt-4">
+      {/* Online Search Results */}
+      {activeTab === 'search' && (
+        <div>
           {error && (
-            <TechCard>
-              <TechCardContent className="py-4 text-center text-destructive text-sm">
-                {error}
-              </TechCardContent>
-            </TechCard>
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-4 py-3 mb-2 text-center text-destructive text-sm">
+              {error}
+            </div>
           )}
-          
+
           {searchResults.length > 0 ? (
-            searchResults.map((course) => (
+            searchResults.map((course, index) => (
               <motion.button
                 key={course.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.04 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleApiCourseSelect(course)}
-                className="w-full text-left"
+                className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-4 py-3.5 flex items-center justify-between mb-2 cursor-pointer w-full text-left"
               >
-                <TechCard hover>
-                  <TechCardContent className="p-4">
-                    <p className="font-semibold">{course.course_name}</p>
-                    {course.club_name !== course.course_name && (
-                      <p className="text-sm text-muted-foreground">{course.club_name}</p>
-                    )}
-                    {course.location && (
-                      <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {[course.location.city, course.location.state, course.location.country]
-                          .filter(Boolean)
-                          .join(', ')}
-                      </p>
-                    )}
-                  </TechCardContent>
-                </TechCard>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-sm text-foreground">{course.course_name}</p>
+                  {course.location && (
+                    <p className="text-[12px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <MapPin className="w-3 h-3" />
+                      {[course.location.city, course.location.state, course.location.country]
+                        .filter(Boolean)
+                        .join(', ')}
+                    </p>
+                  )}
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 ml-2" />
               </motion.button>
             ))
           ) : query.trim().length >= 2 && !isSearching ? (
-            <TechCard>
-              <TechCardContent className="py-8 text-center text-muted-foreground">
-                No courses found matching "{query}"
-              </TechCardContent>
-            </TechCard>
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-4 py-8 text-center text-muted-foreground text-sm">
+              No courses found matching "{query}"
+            </div>
           ) : (
             <div className="py-8 text-center text-muted-foreground text-sm">
               Enter at least 2 characters to search
             </div>
           )}
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Saved Courses */}
-        <TabsContent value="saved" className="space-y-2 mt-4">
+      {/* Saved Courses */}
+      {activeTab === 'saved' && (
+        <div>
           {filteredLocalCourses.length > 0 ? (
-            filteredLocalCourses.map((course) => (
+            filteredLocalCourses.map((course, index) => (
               <motion.button
                 key={course.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.04 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onSelectCourse(course)}
-                className="w-full text-left"
+                className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-4 py-3.5 flex items-center justify-between mb-2 cursor-pointer w-full text-left"
               >
-                <TechCard hover>
-                  <TechCardContent className="p-4">
-                    <p className="font-semibold">{course.name}</p>
-                    {course.location && (
-                      <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {course.location}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-1 font-mono">
-                      {course.holes.length} holes • Par {course.holes.reduce((sum, h) => sum + h.par, 0)}
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-sm text-foreground">{course.name}</p>
+                  {course.location && (
+                    <p className="text-[12px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <MapPin className="w-3 h-3" />
+                      {course.location}
                     </p>
-                  </TechCardContent>
-                </TechCard>
+                  )}
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 ml-2" />
               </motion.button>
             ))
           ) : query.trim() ? (
-            <TechCard>
-              <TechCardContent className="py-8 text-center text-muted-foreground">
-                No saved courses matching "{query}"
-              </TechCardContent>
-            </TechCard>
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-4 py-8 text-center text-muted-foreground text-sm">
+              No saved courses matching "{query}"
+            </div>
           ) : (
             <div className="py-8 text-center text-muted-foreground text-sm">
               No saved courses yet
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
 
       {/* Add New Course Button */}
       <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={onCreateNew}
-        className="w-full py-4 px-6 rounded-xl border-2 border-dashed border-primary/30 text-primary font-semibold flex items-center justify-center gap-2 hover:bg-primary-light hover:border-primary/50 transition-all"
+        className="border-2 border-dashed border-border rounded-2xl py-4 w-full flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground mt-2"
       >
-        <Plus className="w-5 h-5" />
+        <Plus className="w-4 h-4" />
         Add Course Manually
       </motion.button>
     </div>

@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MATCH Golf — Icon & Logo Options</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,800&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #F0F0EE;
+    font-family: 'Inter', sans-serif;
+    padding: 60px 48px;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+  .page-title {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.15em;
+    text-transform: uppercase; color: #999; margin-bottom: 8px;
+  }
+  .page-subtitle {
+    font-size: 32px; font-weight: 800; color: #0A0A0A;
+    letter-spacing: -0.04em; line-height: 1;
+  }
+  .page-sub {
+    font-size: 14px; color: #888; margin-top: 8px; font-weight: 400;
+  }
+  .direction-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 16px;
+    background: #0A0A0A; color: white;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 6px 14px; border-radius: 20px;
+  }
+  .direction-badge span { color: rgba(255,255,255,0.5); }
+
+  /* Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* Card */
+  .card {
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .card-preview {
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    padding: 40px;
+    position: relative;
+  }
+  .card-info {
+    padding: 20px 24px 24px;
+    border-top: 1px solid #F0F0EE;
+  }
+  .option-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: #CCC; margin-bottom: 4px;
+  }
+  .option-name {
+    font-size: 17px; font-weight: 700; color: #0A0A0A;
+    letter-spacing: -0.03em; margin-bottom: 4px;
+  }
+  .option-desc {
+    font-size: 13px; color: #888; line-height: 1.5;
+  }
+
+  /* App icon sizes shown side by side */
+  .icon-sizes {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .icon-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .icon-size-label { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #CCC; }
+
+  /* iOS icon shape */
+  .app-icon {
+    border-radius: 22.37%; /* iOS squircle */
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .app-icon.lg { width: 120px; height: 120px; }
+  .app-icon.md { width: 72px; height: 72px; }
+  .app-icon.sm { width: 44px; height: 44px; }
+
+  /* Wordmark area */
+  .wordmark-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* ===================== OPTION 1 — Pin & Fairway ===================== */
+  .o1-bg { background: #0A0A0A; }
+  .o1-wordmark h1 {
+    font-size: 22px; font-weight: 800; color: #0A0A0A;
+    letter-spacing: -0.04em; line-height: 1;
+  }
+  .o1-wordmark p {
+    font-size: 9px; font-weight: 500; letter-spacing: 0.12em;
+    color: #888; text-transform: uppercase; margin-top: 2px;
+  }
+
+  /* ===================== OPTION 2 — M Monogram ===================== */
+  .o2-bg { background: #0A0A0A; }
+
+  /* ===================== OPTION 3 — Crosshair ===================== */
+  .o3-bg { background: white; border: 1.5px solid #E0E0DC; }
+
+  /* ===================== OPTION 4 — Stroke Geometry ===================== */
+  .o4-bg { background: #F5F5F3; }
+
+  /* ===================== OPTION 5 — Solid Wordmark ===================== */
+  .o5-bg { background: #0A0A0A; }
+
+  /* ===================== OPTION 6 — Green Dot ===================== */
+  .o6-bg { background: white; border: 1.5px solid #E0E0DC; }
+
+  /* Backgrounds for card previews */
+  .bg-dark { background: #0A0A0A; }
+  .bg-light { background: #F8F8F6; }
+  .bg-white { background: white; }
+  .bg-grid {
+    background: white;
+    background-image: linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  .bg-dots {
+    background: #F8F8F6;
+    background-image: radial-gradient(circle, #D0D0CC 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-title">Icon &amp; Logo Concepts</div>
+  <div class="page-subtitle">MATCH Golf</div>
+  <div class="page-sub">6 directions — each shows app icon (large + small) and wordmark lockup</div>
+  <div class="direction-badge">Direction B <span>·</span> Clean &amp; Modern</div>
+</div>
+
+<div class="grid">
+
+  <!-- ===== OPTION 1: Pin + Circle ===== -->
+  <div class="card">
+    <div class="card-preview bg-grid">
+
+      <!-- App Icons -->
+      <div class="icon-sizes">
+        <div class="icon-wrap">
+          <div class="app-icon lg o1-bg">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+              <!-- Pin -->
+              <line x1="32" y1="16" x2="32" y2="50" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+              <!-- Flag -->
+              <path d="M32 16 L50 22 L32 28 Z" fill="white"/>
+              <!-- Ground arc -->
+              <path d="M22 50 Q32 56 42 50" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="icon-size-label">120px</span>
+        </div>
+        <div class="icon-wrap">
+          <div class="app-icon md o1-bg">
+            <svg width="38" height="38" viewBox="0 0 64 64" fill="none">
+              <line x1="32" y1="16" x2="32" y2="50" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+              <path d="M32 16 L50 22 L32 28 Z" fill="white"/>
+              <path d="M22 50 Q32 56 42 50" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="icon-size-label">72px</span>
+        </div>
+        <div class="icon-wrap">
+          <div class="app-icon sm o1-bg">
+            <svg width="24" height="24" viewBox="0 0 64 64" fill="none">
+              <line x1="32" y1="16" x2="32" y2="50" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+              <path d="M32 16 L50 22 L32 28 Z" fill="white"/>
+              <path d="M22 50 Q32 56 42 50" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="icon-size-label">44px</span>
+        </div>
+      </div>
+
+      <!-- Wordmark -->
+      <div class="wordmark-row">
+        <div style="width:44px;height:44px;background:#0A0A0A;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none">
+            <line x1="32" y1="16" x2="32" y2="50" stroke="white" stroke-width="4" stroke-linecap="round"/>
+            <path d="M32 16 L50 22 L32 28 Z" fill="white"/>
+            <path d="M22 50 Q32 56 42 50" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="o1-wordmark">
+          <h1>MATCH</h1>
+          <p>Golf Scorecard</p>
+        </div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="option-label">Option 1</div>
+      <div class="option-name">Flag &amp; Pin</div>
+      <div class="option-desc">Classic golf flag on a pin with a ground arc. Clean, universally understood. Pure black icon.</div>
+    </div>
+  </div>
+
+  <!-- ===== OPTION 2: Bold M ===== -->
+  <div class="card">
+    <div class="card-preview bg-dots">
+
+      <div class="icon-sizes">
+        <div class="icon-wrap">
+          <div class="app-icon lg o2-bg">
+            <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+              <!-- Bold M with flag notch -->
+              <path d="M16 58 L16 22 L40 46 L64 22 L64 58" stroke="white" stroke-width="6.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- Flag detail on left peak -->
+              <line x1="16" y1="22" x2="16" y2="13" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+              <path d="M16 13 L26 16.5 L16 20 Z" fill="white" opacity="0.5"/>
+            </svg>
+          </div>
+          <span class="icon-size-label">120px</span>
+        </div>
+        <div class="icon-wrap">
+          <div class="app-icon md o2-bg">
+            <svg width="46" height="46" viewBox="0 0 80 80" fill="none">
+              <path d="M16 58 L16 22 L40 46 L64 22 L64 58" stroke="white" stroke-width="6.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="16" y1="22" x2="16" y2="13" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+              <path d="M16 13 L26 16.5 L16 20 Z" fill="white" opacity="0.5"/>
+            </svg>
+          </div>
+          <span class="icon-size-label">72px</span>
+        </div>
+        <div class="icon-wrap">
+          <div class="app-icon sm o2-bg">
+            <svg width="28" height="28" viewBox="0 0 80 80" fill="none">
+              <path d="M16 58 L16 22 L40 46 L64 22 L64 58" stroke="white" stroke-width="6.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="icon-size-label">44px</span>
+        </div>
+      </div>
+
+      <!-- Wordmark -->
+      <div class="wordmark-row">
+        <div style="width:44px;height:44px;background:#0A0A0A;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="28" height="28" viewBox="0 0 80 80" fill="none">
+            <path d="M14 60 L14 20 L40 48 L66 20 L66 60" stroke="white" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1 style="font-size:22px;font-weight:800;color:#0A0A0A;letter-spacing:-0.04em;line-height:1;">MATCH</h1>
+          <p style="font-size:9px;font-weight:500;letter-spacing:0.12em;color:#888;text-transform:uppercase;margin-top:2px;">Golf Scorecard</p>
+        </div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="option-label">Option 2</div>
+      <div class="option-name">M Monogram</div>
+      <div class="option-desc">The M letterform as the icon — peaks evoke a golf course horizon. Instantly recognisable as the brand initial.</div>
+    </div>
+  </div>
+
+  <!-- ===== OPTION 3: Target / Hole ===== -->
+  <div class="card">
+    <div class="card-preview bg-dark">
+
+      <div class="icon-sizes">
+        <div class="icon-wrap">
+          <div class="app-icon lg" style="background:white;border:1.5px solid #E8E8E4;">
+            <svg width="70" height="70" viewBox="0 0 80 80" fill="none">
+              <!-- Outer ring -->
+              <circle cx="40" cy="40" r="28" stroke="#0A0A0A" stroke-width="3"/>
+              <!-- Middle ring -->
+              <circle cx="40" cy="40" r="18" stroke="#0A0A0A" stroke-width="3"/>
+              <!-- Center dot = hole -->
+              <circle cx="40" cy="40" r="5" fill="#0A0A0A"/>
+              <!-- Flag -->
+              <line x1="40" y1="35" x2="40" y2="18" stroke="#0A0A0A" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M40 18 L52 21 L40 24 Z" fill="#0A0A0A"/>
+            </svg>
+          </div>
+          <span class="icon-size-label" style="color:#666;">120px</span>
+        </div>
+        <div class="icon-wrap">
+          <div class="app-icon md" style="background:white;border:1.5px solid #E8E8E4;">
+            <svg width="42" height="42" viewBox="0 0 80 80" fill="none">
+              <circle cx="40" cy="40" r="28" stroke="#0A0A0A" stroke-width="3"/>
+              <circle cx="40" cy="40" r="18" stroke="#0A0A0A" stroke-width="3"/>
+              <circle cx="40" cy="40" r="5" fill="#0A0A0A"/>
+              <line x1="40" y1="35" x2="40" y2="18" stroke="#0A0A0A" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M40 18 L52 21 L40 24 Z" fill="#0A0A0A"/>
+            </svg>
+          </div>
+          <span class="icon-size-label" style="color:#666;">72px</span>
+        </div>
+        <div class="icon-wrap">
+          <div class="app-icon sm" style="background:white;border:1.5px solid #E8E8E4;">
+            <svg width="28" height="28" viewBox="0 0 80 80" fill="none">
+              <circle cx="40" cy="40" r="27" stroke="#0A0A0A" stroke-width="4"/>
+              <circle cx="40" cy="40" r="16" stroke="#0A0A0A" stroke-width="4"/>
+              <circle cx="40" cy="40" r="5" fill="#0A0A0A"/>
+            </svg>
+          </div>
+          <span class="icon-size-label" style="color:#666;">44px</span>
+        </div>
+      </div>
+
+      <!-- Wordmark on dark -->
+      <div class="wordmark-row">
+        <div style="width:44px;height:44px;background:white;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="28" height="28" viewBox="0 0 80 80" fill="none">
+            <circle cx="40" cy="40" r="27" stroke="#0A0A0A" stroke-width="4"/>
+            <circle cx="40" cy="40" r="16" stroke="#0A0A0A" stroke-width="4"/>
+            <circle cx="40" cy="40" r="5" fill="#0A0A0A"/>
+          </svg>
+        </div>
+        <div>
+          <h1 style="font-size:22px;font-weight:800;color:white;letter-spacing:-0.04em;line-height:1;">MATCH</h1>
+          <p style="font-size:9px;font-weight:500;letter-spacing:0.12em;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-top:2px;">Golf Scorecard</p>
+        </div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="option-label">Option 3</div>
+      <div class="option-name">Target &amp; Flag</div>
+      <div class="option-desc">Concentric circles like a golf green from above. Clean white icon on white — minimal and geometric. Works on both light and dark.</div>
+    </div>
+  </div>
+
+  <!-- ===== OPTION 4: Score Bracket ===== -->
+  <div class="card">
+    <div class="card-preview bg-light">
+
+      <div class="icon-sizes">
+        <div class="icon-wrap">
+          <div class="app-icon lg o1-bg">
+            <svg width="72" height="72" viewBox="0 0 80 80" fill="none">
+              <!-- Score card bracket shape -->
+              <!-- Left bracket -->
+              <path d="M26 22 L18 22 L18 58 L26 58" stroke="white" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- Right bracket -->
+              <path d="M54 22 L62 22 L62 58 L54 58" stroke="white" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- Score lines inside -->
+              <line x1="30" y1="32" x2="50" y2="32" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+              <line x1="30" y1="40" x2="46" y2="40" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+              <line x1="30" y1="48" x2="50" y2="48" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+              <!-- Flag accent -->
+              <line x1="40" y1="14" x2="40" y2="22" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+              <path d="M40 14 L50 17 L40 20 Z" fill="white" opacity="0.6"/>
+            </svg>
+          </div>
+          <span class="icon-size-label">120px</span>
+        </div>
+        <div class="icon-wrap">
+          <div class="app-icon md o1-bg">
+            <svg width="42" height="42" viewBox="0 0 80 80" fill="none">
+              <path d="M26 22 L18 22 L18 58 L26 58" stroke="white" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M54 22 L62 22 L62 58 L54 58" stroke="white" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="30" y1="33" x2="50" y2="33" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+              <line x1="30" y1="40" x2="46" y2="40" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+              <line x1="30" y1="47" x2="50" y2="47" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+            </svg>
+          </div>
+          <span class="icon-size-label">72px</span>
+        </div>
+        <div class="icon-wrap">
+          <div class="app-icon sm o1-bg">
+            <svg width="26" height="26" viewBox="0 0 80 80" fill="none">
+              <path d="M26 22 L18 22 L18 58 L26 58" stroke="white" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M54 22 L62 22 L62 58 L54 58" stroke="white" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="icon-size-label">44px</span>
+        </div>
+      </div>
+
+      <!-- Wordmark -->
+      <div class="wordmark-row">
+        <div style="width:44px;height:44px;background:#0A0A0A;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="28" height="28" viewBox="0 0 80 80" fill="none">
+            <path d="M24 22 L16 22 L16 58 L24 58" stroke="white" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M56 22 L64 22 L64 58 L56 58" stroke="white" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="28" y1="33" x2="52" y2="33" stroke="white" stroke-width="3.5" stroke-linecap="round" opacity="0.5"/>
+            <line x1="28" y1="40" x2="48" y2="40" stroke="white" stroke-width="3.5" stroke-linecap="round" opacity="0.5"/>
+            <line x1="28" y1="47" x2="52" y2="47" stroke="white" stroke-width="3.5" stroke-linecap="round" opacity="0.5"/>
+          </svg>
+        </div>
+        <div>
+          <h1 style="font-size:22px;font-weight:800;color:#0A0A0A;letter-spacing:-0.04em;line-height:1;">MATCH</h1>
+          <p style="font-size:9px;font-weight:500;letter-spacing:0.12em;color:#888;text-transform:uppercase;margin-top:2px;">Golf Scorecard</p>
+        </div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="option-label">Option 4</div>
+      <div class="option-name">Scorecard Bracket</div>
+      <div class="option-desc">Score lines inside brackets — directly referencing the app's core function. Clever, memorable, unique to golf scoring.</div>
+    </div>
+  </div>
+
+  <!-- ===== OPTION 5: Inverted Flag ===== -->
+  <div class="card">
+    <div class="card-preview bg-dark">
+
+      <div class="icon-sizes">
+        <div class="icon-wrap">
+          <div class="app-icon lg" style="background:#F5F5F3;">
+            <svg width="72" height="72" viewBox="0 0 80 80" fill="none">
+              <!-- Pin -->
+              <line x1="40" y1="15" x2="40" y2="62" stroke="#0A0A0A" stroke-width="4" stroke-linecap="round"/>
+              <!-- Flag filled -->
+              <path d="M40 15 L64 24 L40 33 Z" fill="#0A0A0A"/>
+              <!-- Ground circle -->
+              <ellipse cx="40" cy="62" rx="12" ry="4" fill="#0A0A0A" opacity="0.15"/>
+              <!-- Ball -->
+              <circle cx="28" cy="62" r="5" fill="#0A0A0A"/>
+            </svg>
+          </div>
+          <span class="icon-size-label" style="color:#666;">120px</span>
+        </div>
+        <div class="icon-wrap">
+          <div class="app-icon md" style="background:#F5F5F3;">
+            <svg width="44" height="44" viewBox="0 0 80 80" fill="none">
+              <line x1="40" y1="15" x2="40" y2="62" stroke="#0A0A0A" stroke-width="4" stroke-linecap="round"/>
+              <path d="M40 15 L64 24 L40 33 Z" fill="#0A0A0A"/>
+              <circle cx="28" cy="62" r="5" fill="#0A0A0A"/>
+            </svg>
+          </div>
+          <span class="icon-size-label" style="color:#666;">72px</span>
+        </div>
+        <div class="icon-wrap">
+          <div class="app-icon sm" style="background:#F5F5F3;">
+            <svg width="28" height="28" viewBox="0 0 80 80" fill="none">
+              <line x1="40" y1="15" x2="40" y2="62" stroke="#0A0A0A" stroke-width="5" stroke-linecap="round"/>
+              <path d="M40 15 L64 24 L40 33 Z" fill="#0A0A0A"/>
+              <circle cx="28" cy="62" r="5" fill="#0A0A0A"/>
+            </svg>
+          </div>
+          <span class="icon-size-label" style="color:#666;">44px</span>
+        </div>
+      </div>
+
+      <!-- Wordmark -->
+      <div class="wordmark-row">
+        <div style="width:44px;height:44px;background:#F5F5F3;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="26" height="26" viewBox="0 0 80 80" fill="none">
+            <line x1="40" y1="12" x2="40" y2="64" stroke="#0A0A0A" stroke-width="5" stroke-linecap="round"/>
+            <path d="M40 12 L66 22 L40 32 Z" fill="#0A0A0A"/>
+            <circle cx="27" cy="64" r="6" fill="#0A0A0A"/>
+          </svg>
+        </div>
+        <div>
+          <h1 style="font-size:22px;font-weight:800;color:white;letter-spacing:-0.04em;line-height:1;">MATCH</h1>
+          <p style="font-size:9px;font-weight:500;letter-spacing:0.12em;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-top:2px;">Golf Scorecard</p>
+        </div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="option-label">Option 5</div>
+      <div class="option-name">Flag &amp; Ball</div>
+      <div class="option-desc">Flag, pin and golf ball together — light icon on a warm grey background. Inverted feel from Option 1, softer but equally crisp.</div>
+    </div>
+  </div>
+
+  <!-- ===== OPTION 6: Stacked Wordmark ===== -->
+  <div class="card">
+    <div class="card-preview bg-light">
+
+      <div class="icon-sizes">
+        <div class="icon-wrap">
+          <div class="app-icon lg o1-bg">
+            <svg width="110" height="110" viewBox="0 0 120 120" fill="none">
+              <!-- MATCH stacked tight -->
+              <text x="60" y="52" text-anchor="middle"
+                font-family="Inter, sans-serif" font-weight="900"
+                font-size="34" fill="white" letter-spacing="-1">MATCH</text>
+              <!-- Rule line -->
+              <line x1="24" y1="62" x2="96" y2="62" stroke="white" stroke-width="2" opacity="0.3"/>
+              <!-- GOLF smaller -->
+              <text x="60" y="78" text-anchor="middle"
+                font-family="Inter, sans-serif" font-weight="600"
+                font-size="16" fill="white" letter-spacing="6" opacity="0.5">GOLF</text>
+              <!-- Small flag icon -->
+              <line x1="60" y1="86" x2="60" y2="100" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+              <path d="M60 86 L72 89 L60 92 Z" fill="white" opacity="0.3"/>
+            </svg>
+          </div>
+          <span class="icon-size-label">120px</span>
+        </div>
+        <div class="icon-wrap">
+          <div class="app-icon md o1-bg">
+            <svg width="66" height="66" viewBox="0 0 120 120" fill="none">
+              <text x="60" y="56" text-anchor="middle"
+                font-family="Inter, sans-serif" font-weight="900"
+                font-size="36" fill="white" letter-spacing="-1">M</text>
+              <line x1="32" y1="68" x2="88" y2="68" stroke="white" stroke-width="2" opacity="0.3"/>
+              <text x="60" y="84" text-anchor="middle"
+                font-family="Inter, sans-serif" font-weight="600"
+                font-size="14" fill="white" letter-spacing="5" opacity="0.5">GOLF</text>
+            </svg>
+          </div>
+          <span class="icon-size-label">72px</span>
+        </div>
+        <div class="icon-wrap">
+          <div class="app-icon sm o1-bg">
+            <svg width="40" height="40" viewBox="0 0 120 120" fill="none">
+              <text x="60" y="66" text-anchor="middle"
+                font-family="Inter, sans-serif" font-weight="900"
+                font-size="52" fill="white" letter-spacing="-2">M</text>
+            </svg>
+          </div>
+          <span class="icon-size-label">44px</span>
+        </div>
+      </div>
+
+      <!-- Wordmark - horizontal stacked with dot -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;background:#0A0A0A;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="22" height="22" viewBox="0 0 120 120" fill="none">
+              <text x="60" y="72" text-anchor="middle"
+                font-family="Inter, sans-serif" font-weight="900"
+                font-size="58" fill="white" letter-spacing="-2">M</text>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size:22px;font-weight:800;color:#0A0A0A;letter-spacing:-0.04em;line-height:1;">MATCH</div>
+            <div style="font-size:9px;font-weight:500;letter-spacing:0.12em;color:#888;text-transform:uppercase;margin-top:2px;">Golf Scorecard</div>
+          </div>
+        </div>
+        <!-- Alternate: all-text lockup -->
+        <div style="margin-top:12px;display:flex;align-items:baseline;gap:6px;">
+          <span style="font-size:28px;font-weight:900;color:#0A0A0A;letter-spacing:-0.05em;line-height:1;">MATCH</span>
+          <span style="font-size:11px;font-weight:600;color:#888;letter-spacing:0.15em;text-transform:uppercase;padding-bottom:2px;">GOLF</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="option-label">Option 6</div>
+      <div class="option-name">Wordmark Type</div>
+      <div class="option-desc">Pure typography — MATCH stacked with GOLF. App icon uses the M alone at small sizes. Most brand-forward, zero ambiguity.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bottom note -->
+<div style="text-align:center;margin-top:48px;">
+  <p style="font-size:13px;color:#AAA;font-weight:400;">Pick a number 1–6, or mix elements (e.g. "icon from 4, wordmark from 6")</p>
+</div>
+
+</body>
+</html>

@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Plus, Minus, ChevronLeft, ChevronRight, Trophy, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface TutorialStep {
@@ -153,7 +152,7 @@ export function ScorecardTutorial({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px]"
         >
           {/* Dark overlay with spotlight cutout */}
           <svg
@@ -219,118 +218,123 @@ export function ScorecardTutorial({
           {/* Close button - positioned below notch/dynamic island */}
           <button
             onClick={handleSkip}
-            className="absolute top-[70px] right-4 z-50 p-2 rounded-full bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute top-[70px] right-4 z-50 p-2 rounded-full bg-white/10 backdrop-blur-sm text-white/70 hover:text-white transition-colors"
             aria-label="Skip tutorial"
           >
             <X className="w-5 h-5" />
           </button>
 
-          {/* Tooltip card - always centered */}
+          {/* Tutorial card - always centered */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none">
-            <motion.div
-              key={currentStep}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="w-full max-w-sm pointer-events-auto"
-            >
-            <div className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
-              {/* Header */}
-              <div className="p-4 bg-primary/5 border-b border-border flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                  {currentStepData.icon}
-                </div>
-                <h3 className="text-lg font-bold text-foreground">
-                  {currentStepData.title}
-                </h3>
-              </div>
-
-              {/* Content */}
-              <div className="p-4 space-y-3">
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {currentStepData.description}
-                </p>
-
-                {/* Examples */}
-                {currentStepData.examples && (
-                  <div className="flex flex-wrap gap-2">
-                    {currentStepData.examples.map((example, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2.5 py-1 rounded-lg bg-muted text-xs font-medium text-foreground"
-                      >
-                        {example}
-                      </span>
-                    ))}
+            <div className="w-full max-w-sm pointer-events-auto">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentStep}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                  className="bg-white rounded-3xl overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.16)]"
+                >
+                  {/* Icon / illustration area */}
+                  <div className="bg-[#F8F8F6] p-8 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-2xl bg-[#F0EE3A] flex items-center justify-center text-[#0A0A0A]">
+                      {currentStepData.icon}
+                    </div>
                   </div>
-                )}
 
-                {/* Note */}
-                {currentStepData.note && (
-                  <p className="text-xs text-muted-foreground/80 italic">
-                    {currentStepData.note}
-                  </p>
-                )}
+                  {/* Content */}
+                  <div className="px-6 pb-6 pt-4">
+                    {/* Step indicator dots */}
+                    <div className="flex gap-1.5 justify-center mb-4">
+                      {steps.map((_, idx) => (
+                        <div
+                          key={idx}
+                          className={cn(
+                            'rounded-full transition-all',
+                            idx === currentStep
+                              ? 'w-4 h-1.5 bg-foreground'
+                              : 'w-1.5 h-1.5 bg-muted'
+                          )}
+                        />
+                      ))}
+                    </div>
 
-                {/* Don't show again checkbox on last step */}
-                {isLastStep && (
-                  <label className="flex items-center gap-2 cursor-pointer mt-2">
-                    <input
-                      type="checkbox"
-                      checked={dontShowAgain}
-                      onChange={(e) => setDontShowAgain(e.target.checked)}
-                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      Don't show this again
-                    </span>
-                  </label>
-                )}
-              </div>
+                    <h3 className="text-[20px] font-black tracking-[-0.04em] text-foreground text-center">
+                      {currentStepData.title}
+                    </h3>
+                    <p className="text-[14px] text-muted-foreground text-center mt-2 leading-relaxed">
+                      {currentStepData.description}
+                    </p>
 
-              {/* Footer */}
-              <div className="p-4 border-t border-border flex items-center justify-between">
-                {/* Progress dots */}
-                <div className="flex items-center gap-1.5">
-                  {steps.map((_, idx) => (
-                    <div
-                      key={idx}
-                      className={cn(
-                        'w-2 h-2 rounded-full transition-colors',
-                        idx === currentStep
-                          ? 'bg-primary'
-                          : idx < currentStep
-                          ? 'bg-primary/40'
-                          : 'bg-muted-foreground/30'
-                      )}
-                    />
-                  ))}
-                </div>
+                    {/* Examples */}
+                    {currentStepData.examples && (
+                      <div className="flex flex-wrap gap-2 mt-3 justify-center">
+                        {currentStepData.examples.map((example, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2.5 py-1 rounded-lg bg-muted text-xs font-medium text-foreground"
+                          >
+                            {example}
+                          </span>
+                        ))}
+                      </div>
+                    )}
 
-                {/* Navigation buttons */}
-                <div className="flex items-center gap-2">
-                  {!isFirstStep && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handlePrevious}
-                      className="h-9"
+                    {/* Note */}
+                    {currentStepData.note && (
+                      <p className="text-xs text-muted-foreground/80 italic mt-3 text-center">
+                        {currentStepData.note}
+                      </p>
+                    )}
+
+                    {/* Don't show again checkbox on last step */}
+                    {isLastStep && (
+                      <label className="flex items-center gap-2 cursor-pointer mt-3 justify-center">
+                        <input
+                          type="checkbox"
+                          checked={dontShowAgain}
+                          onChange={(e) => setDontShowAgain(e.target.checked)}
+                          className="w-4 h-4 rounded border-border text-foreground focus:ring-foreground"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          Don't show this again
+                        </span>
+                      </label>
+                    )}
+
+                    {/* Navigation */}
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={handleNext}
+                      className="bg-foreground text-background rounded-2xl h-[52px] font-bold w-full mt-4 text-[15px]"
                     >
-                      Back
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    onClick={handleNext}
-                    className="h-9 px-4 font-semibold"
-                  >
-                    {isLastStep ? 'Start Scoring' : 'Next'}
-                  </Button>
-                </div>
-              </div>
+                      {isLastStep ? 'Start Scoring' : 'Next'}
+                    </motion.button>
+
+                    {/* Back / Skip row */}
+                    <div className="flex items-center justify-between mt-1">
+                      {!isFirstStep ? (
+                        <button
+                          onClick={handlePrevious}
+                          className="text-muted-foreground text-sm font-medium py-2 px-1"
+                        >
+                          Back
+                        </button>
+                      ) : (
+                        <div />
+                      )}
+                      <button
+                        onClick={handleSkip}
+                        className="text-muted-foreground text-sm font-medium py-2 px-1"
+                      >
+                        Skip
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
             </div>
-          </motion.div>
           </div>
         </motion.div>
       )}

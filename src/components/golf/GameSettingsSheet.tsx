@@ -107,33 +107,42 @@ export function GameSettingsSheet({
       {!isControlled && (
         <SheetTrigger asChild>
           <motion.button
-            whileTap={{ scale: 0.9 }}
-            className="w-10 h-10 rounded-full bg-muted/80 flex items-center justify-center"
+            whileTap={{ scale: 0.97 }}
+            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
             aria-label="Game settings"
           >
-            <Settings className="w-5 h-5" />
+            <Settings className="w-4 h-4" />
           </motion.button>
         </SheetTrigger>
       )}
 
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl">
-        <SheetHeader className="pb-4 border-b border-border/50">
-          <SheetTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
+      <SheetContent side="bottom" className="h-[85vh] bg-[#F8F8F6] rounded-t-3xl p-0 border-0">
+        {/* Drag handle */}
+        <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
+
+        {/* Header */}
+        <div className="px-6 pb-3 flex items-center justify-between">
+          <SheetTitle className="text-[20px] font-black tracking-[-0.04em] text-foreground">
             Game Settings
           </SheetTitle>
-        </SheetHeader>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto py-4 space-y-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex-1 min-h-0 overflow-y-auto py-2 space-y-3" style={{ WebkitOverflowScrolling: 'touch' }}>
           {/* Skins */}
-          <div className={cn(
-            "p-4 rounded-xl border transition-all",
-            skinsGame ? "border-primary/30 bg-primary/5" : "border-border"
-          )}>
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h4 className="font-semibold">Skins</h4>
-                <p className="text-xs text-muted-foreground">Win hole outright to claim</p>
+          <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 overflow-hidden">
+            <div className="px-4 py-3 flex items-center gap-3 border-b border-border/50">
+              <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-base">
+                🎯
+              </div>
+              <div className="flex-1">
+                <h4 className="font-black text-[16px] tracking-[-0.02em]">Skins</h4>
+                <p className="text-[12px] text-muted-foreground">Win hole outright to claim</p>
               </div>
               <Switch
                 checked={!!skinsGame}
@@ -144,6 +153,7 @@ export function GameSettingsSheet({
                     updateGame('skins', null);
                   }
                 }}
+                className="data-[state=checked]:bg-[#22C55E]"
               />
             </div>
 
@@ -151,39 +161,44 @@ export function GameSettingsSheet({
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="space-y-3 pt-3 border-t border-border/50"
+                className="divide-y divide-border/40"
               >
-                <div className="flex items-center gap-3">
-                  <Label className="text-sm text-muted-foreground w-20">Stakes</Label>
+                <div className="px-4 py-3 flex items-center justify-between">
+                  <Label className="text-[14px] font-medium text-foreground">Stakes per hole</Label>
                   <div className="flex items-center gap-1">
                     <DollarSign className="w-4 h-4 text-muted-foreground" />
                     <Input
                       type="number"
                       value={skinsGame.stakes}
                       onChange={(e) => updateGame('skins', { stakes: Number(e.target.value) || 0 })}
-                      className="w-20 text-center"
+                      className="bg-muted/50 rounded-xl border-0 py-2 px-3 text-foreground w-20 text-center font-bold"
                       min={0}
                     />
-                    <span className="text-sm text-muted-foreground">/hole</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="px-4 py-3 flex items-center justify-between">
+                  <Label htmlFor="skins-carryover" className="text-[14px] font-medium text-foreground">
+                    Carryovers
+                    <span className="block text-[12px] text-muted-foreground font-normal">Ties roll over</span>
+                  </Label>
                   <Checkbox
                     id="skins-carryover"
                     checked={skinsGame.carryover ?? true}
                     onCheckedChange={(checked) => updateGame('skins', { carryover: checked === true })}
                   />
-                  <Label htmlFor="skins-carryover" className="text-sm">Carryovers (ties roll over)</Label>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="px-4 py-3 flex items-center justify-between last:border-b-0">
+                  <Label htmlFor="skins-net" className="text-[14px] font-medium text-foreground">
+                    Net skins
+                    <span className="block text-[12px] text-muted-foreground font-normal">Use handicap strokes</span>
+                  </Label>
                   <Checkbox
                     id="skins-net"
                     checked={skinsGame.useNet ?? false}
                     onCheckedChange={(checked) => updateGame('skins', { useNet: checked === true })}
                   />
-                  <Label htmlFor="skins-net" className="text-sm">Net skins (use handicap strokes)</Label>
                 </div>
               </motion.div>
             )}
@@ -191,14 +206,14 @@ export function GameSettingsSheet({
 
           {/* Nassau - only for 2 players */}
           {playerCount === 2 && (
-            <div className={cn(
-              "p-4 rounded-xl border transition-all",
-              nassauGame ? "border-primary/30 bg-primary/5" : "border-border"
-            )}>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h4 className="font-semibold">Nassau</h4>
-                  <p className="text-xs text-muted-foreground">Front 9 + Back 9 + Overall</p>
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 overflow-hidden">
+              <div className="px-4 py-3 flex items-center gap-3 border-b border-border/50">
+                <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-base">
+                  🏁
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-black text-[16px] tracking-[-0.02em]">Nassau</h4>
+                  <p className="text-[12px] text-muted-foreground">Front 9 + Back 9 + Overall</p>
                 </div>
                 <Switch
                   checked={!!nassauGame}
@@ -209,6 +224,7 @@ export function GameSettingsSheet({
                       updateGame('nassau', null);
                     }
                   }}
+                  className="data-[state=checked]:bg-[#22C55E]"
                 />
               </div>
 
@@ -216,39 +232,44 @@ export function GameSettingsSheet({
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="space-y-3 pt-3 border-t border-border/50"
+                  className="divide-y divide-border/40"
                 >
-                  <div className="flex items-center gap-3">
-                    <Label className="text-sm text-muted-foreground w-20">Stakes</Label>
+                  <div className="px-4 py-3 flex items-center justify-between">
+                    <Label className="text-[14px] font-medium text-foreground">Stakes per bet</Label>
                     <div className="flex items-center gap-1">
                       <DollarSign className="w-4 h-4 text-muted-foreground" />
                       <Input
                         type="number"
                         value={nassauGame.stakes}
                         onChange={(e) => updateGame('nassau', { stakes: Number(e.target.value) || 0 })}
-                        className="w-20 text-center"
+                        className="bg-muted/50 rounded-xl border-0 py-2 px-3 text-foreground w-20 text-center font-bold"
                         min={0}
                       />
-                      <span className="text-sm text-muted-foreground">/bet</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="px-4 py-3 flex items-center justify-between">
+                    <Label htmlFor="nassau-autopress" className="text-[14px] font-medium text-foreground">
+                      Auto-press
+                      <span className="block text-[12px] text-muted-foreground font-normal">When 2 down</span>
+                    </Label>
                     <Checkbox
                       id="nassau-autopress"
                       checked={nassauGame.autoPress ?? false}
                       onCheckedChange={(checked) => updateGame('nassau', { autoPress: checked === true })}
                     />
-                    <Label htmlFor="nassau-autopress" className="text-sm">Auto-press when 2 down</Label>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="px-4 py-3 flex items-center justify-between last:border-b-0">
+                    <Label htmlFor="nassau-net" className="text-[14px] font-medium text-foreground">
+                      Net Nassau
+                      <span className="block text-[12px] text-muted-foreground font-normal">Use handicap strokes</span>
+                    </Label>
                     <Checkbox
                       id="nassau-net"
                       checked={nassauGame.useNet ?? false}
                       onCheckedChange={(checked) => updateGame('nassau', { useNet: checked === true })}
                     />
-                    <Label htmlFor="nassau-net" className="text-sm">Net Nassau (use handicap strokes)</Label>
                   </div>
                 </motion.div>
               )}
@@ -256,14 +277,14 @@ export function GameSettingsSheet({
           )}
 
           {/* Stableford */}
-          <div className={cn(
-            "p-4 rounded-xl border transition-all",
-            stablefordGame ? "border-primary/30 bg-primary/5" : "border-border"
-          )}>
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h4 className="font-semibold">Stableford</h4>
-                <p className="text-xs text-muted-foreground">Points-based scoring</p>
+          <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 overflow-hidden">
+            <div className="px-4 py-3 flex items-center gap-3 border-b border-border/50">
+              <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-base">
+                🏆
+              </div>
+              <div className="flex-1">
+                <h4 className="font-black text-[16px] tracking-[-0.02em]">Stableford</h4>
+                <p className="text-[12px] text-muted-foreground">Points-based scoring</p>
               </div>
               <Switch
                 checked={!!stablefordGame}
@@ -274,6 +295,7 @@ export function GameSettingsSheet({
                     updateGame('stableford', null);
                   }
                 }}
+                className="data-[state=checked]:bg-[#22C55E]"
               />
             </div>
 
@@ -281,43 +303,51 @@ export function GameSettingsSheet({
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="space-y-3 pt-3 border-t border-border/50"
+                className="divide-y divide-border/40"
               >
-                <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-lg">
-                  🦅 Eagle: 4 pts • 🐦 Birdie: 3 pts • Par: 2 pts • Bogey: 1 pt
+                <div className="px-4 py-3">
+                  <p className="text-[12px] text-muted-foreground bg-muted/50 rounded-xl px-3 py-2">
+                    Eagle: 4 pts · Birdie: 3 pts · Par: 2 pts · Bogey: 1 pt
+                  </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="px-4 py-3 flex items-center justify-between">
+                  <Label htmlFor="stableford-modified" className="text-[14px] font-medium text-foreground">
+                    Modified
+                    <span className="block text-[12px] text-muted-foreground font-normal">Aggressive with negatives</span>
+                  </Label>
                   <Checkbox
                     id="stableford-modified"
                     checked={stablefordGame.modifiedStableford ?? false}
                     onCheckedChange={(checked) => updateGame('stableford', { modifiedStableford: checked === true })}
                   />
-                  <Label htmlFor="stableford-modified" className="text-sm">Modified (aggressive with negatives)</Label>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="px-4 py-3 flex items-center justify-between last:border-b-0">
+                  <Label htmlFor="stableford-net" className="text-[14px] font-medium text-foreground">
+                    Net Stableford
+                    <span className="block text-[12px] text-muted-foreground font-normal">Use handicap strokes</span>
+                  </Label>
                   <Checkbox
                     id="stableford-net"
                     checked={stablefordGame.useNet ?? false}
                     onCheckedChange={(checked) => updateGame('stableford', { useNet: checked === true })}
                   />
-                  <Label htmlFor="stableford-net" className="text-sm">Net Stableford (use handicap strokes)</Label>
                 </div>
               </motion.div>
             )}
           </div>
 
-          {/* Best Ball - only for 4 players */}
+          {/* Best Ball - only for 2+ players */}
           {playerCount >= 2 && (
-            <div className={cn(
-              "p-4 rounded-xl border transition-all",
-              bestBallGame ? "border-primary/30 bg-primary/5" : "border-border"
-            )}>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h4 className="font-semibold">Best Ball</h4>
-                  <p className="text-xs text-muted-foreground">Team format - best score counts</p>
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 overflow-hidden">
+              <div className="px-4 py-3 flex items-center gap-3 border-b border-border/50">
+                <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-base">
+                  ⛳
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-black text-[16px] tracking-[-0.02em]">Best Ball</h4>
+                  <p className="text-[12px] text-muted-foreground">Team format - best score counts</p>
                 </div>
                 <Switch
                   checked={!!bestBallGame}
@@ -328,6 +358,7 @@ export function GameSettingsSheet({
                       updateGame('bestball', null);
                     }
                   }}
+                  className="data-[state=checked]:bg-[#22C55E]"
                 />
               </div>
 
@@ -335,20 +366,25 @@ export function GameSettingsSheet({
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="space-y-3 pt-3 border-t border-border/50"
+                  className="divide-y divide-border/40"
                 >
-                  <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-lg flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" />
-                    Teams will be auto-assigned based on player order
+                  <div className="px-4 py-3">
+                    <div className="flex items-center gap-2 text-[12px] text-muted-foreground bg-muted/50 rounded-xl px-3 py-2">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      Teams will be auto-assigned based on player order
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="px-4 py-3 flex items-center justify-between last:border-b-0">
+                    <Label htmlFor="bestball-net" className="text-[14px] font-medium text-foreground">
+                      Net Best Ball
+                      <span className="block text-[12px] text-muted-foreground font-normal">Use handicap strokes</span>
+                    </Label>
                     <Checkbox
                       id="bestball-net"
                       checked={bestBallGame.useNet ?? false}
                       onCheckedChange={(checked) => updateGame('bestball', { useNet: checked === true })}
                     />
-                    <Label htmlFor="bestball-net" className="text-sm">Net Best Ball (use handicap strokes)</Label>
                   </div>
                 </motion.div>
               )}
@@ -357,17 +393,17 @@ export function GameSettingsSheet({
 
           {/* Wolf - only for 4 players */}
           {playerCount === 4 && (
-            <div className={cn(
-              "p-4 rounded-xl border transition-all",
-              wolfGame ? "border-warning/30 bg-warning/5" : "border-border"
-            )}>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Crown className="w-4 h-4 text-warning" />
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 overflow-hidden">
+              <div className="px-4 py-3 flex items-center gap-3 border-b border-border/50">
+                <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-base">
+                  🐺
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-black text-[16px] tracking-[-0.02em] flex items-center gap-2">
+                    <Crown className="w-4 h-4 text-amber-500" />
                     Wolf
                   </h4>
-                  <p className="text-xs text-muted-foreground">Rotating captain picks partner or goes alone</p>
+                  <p className="text-[12px] text-muted-foreground">Rotating captain picks partner or goes alone</p>
                 </div>
                 <Switch
                   checked={!!wolfGame}
@@ -378,6 +414,7 @@ export function GameSettingsSheet({
                       updateGame('wolf', null);
                     }
                   }}
+                  className="data-[state=checked]:bg-[#22C55E]"
                 />
               </div>
 
@@ -385,82 +422,103 @@ export function GameSettingsSheet({
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="space-y-3 pt-3 border-t border-border/50"
+                  className="divide-y divide-border/40"
                 >
-                  <div className="flex items-center gap-3">
-                    <Label className="text-sm text-muted-foreground w-20">Stakes</Label>
+                  <div className="px-4 py-3 flex items-center justify-between">
+                    <Label className="text-[14px] font-medium text-foreground">Stakes per point</Label>
                     <div className="flex items-center gap-1">
                       <DollarSign className="w-4 h-4 text-muted-foreground" />
                       <Input
                         type="number"
                         value={wolfGame.stakes}
                         onChange={(e) => updateGame('wolf', { stakes: Number(e.target.value) || 0 })}
-                        className="w-20 text-center"
+                        className="bg-muted/50 rounded-xl border-0 py-2 px-3 text-foreground w-20 text-center font-bold"
                         min={0}
                       />
-                      <span className="text-sm text-muted-foreground">/point</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="px-4 py-3 flex items-center justify-between">
+                    <Label htmlFor="wolf-carryover" className="text-[14px] font-medium text-foreground">
+                      Carryovers
+                      <span className="block text-[12px] text-muted-foreground font-normal">Pushes roll over</span>
+                    </Label>
                     <Checkbox
                       id="wolf-carryover"
                       checked={wolfGame.carryover ?? true}
                       onCheckedChange={(checked) => updateGame('wolf', { carryover: checked === true })}
                     />
-                    <Label htmlFor="wolf-carryover" className="text-sm">Carryovers (pushes roll over)</Label>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="px-4 py-3 flex items-center justify-between">
+                    <Label htmlFor="wolf-net" className="text-[14px] font-medium text-foreground">
+                      Net Wolf
+                      <span className="block text-[12px] text-muted-foreground font-normal">Use handicap strokes</span>
+                    </Label>
                     <Checkbox
                       id="wolf-net"
                       checked={wolfGame.useNet ?? false}
                       onCheckedChange={(checked) => updateGame('wolf', { useNet: checked === true })}
                     />
-                    <Label htmlFor="wolf-net" className="text-sm">Net Wolf (use handicap strokes)</Label>
                   </div>
 
-                  <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-lg">
-                    🐺 Lone Wolf: 3x points • ⚡ Blind Wolf: 6x points
+                  <div className="px-4 py-3 last:border-b-0">
+                    <p className="text-[12px] text-muted-foreground bg-muted/50 rounded-xl px-3 py-2">
+                      Lone Wolf: 3x points · Blind Wolf: 6x points
+                    </p>
                   </div>
                 </motion.div>
               )}
             </div>
           )}
 
-          <div className="p-4 rounded-xl border border-border bg-muted/20">
-            <h4 className="font-semibold mb-3">Display Settings</h4>
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
+          {/* Display Settings */}
+          <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 overflow-hidden">
+            <div className="px-4 py-3 border-b border-border/50">
+              <h4 className="font-black text-[16px] tracking-[-0.02em]">Display Settings</h4>
+            </div>
+            <div className="divide-y divide-border/40">
+              <div className="px-4 py-3 flex items-center justify-between">
+                <Label htmlFor="show-net" className="text-[14px] font-medium text-foreground">
+                  Net scores
+                  <span className="block text-[12px] text-muted-foreground font-normal">Show on player cards</span>
+                </Label>
                 <Checkbox id="show-net" defaultChecked />
-                <Label htmlFor="show-net" className="text-sm">Show net scores on player cards</Label>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="px-4 py-3 flex items-center justify-between last:border-b-0">
+                <Label htmlFor="show-strokes" className="text-[14px] font-medium text-foreground">
+                  Stroke dots
+                  <span className="block text-[12px] text-muted-foreground font-normal">Show on holes</span>
+                </Label>
                 <Checkbox id="show-strokes" defaultChecked />
-                <Label htmlFor="show-strokes" className="text-sm">Show stroke dots on holes</Label>
               </div>
             </div>
           </div>
+
+          {/* Bottom padding for CTA */}
+          <div className="h-2" />
         </div>
 
-        <SheetFooter className="pt-4 border-t border-border/50">
-          <Button
+        {/* CTA Button */}
+        <div className="px-6 pb-4 pt-2">
+          <motion.button
+            whileTap={{ scale: 0.97 }}
             onClick={handleSave}
             disabled={!hasChanges || isSaving}
-            className="w-full"
+            className="w-full bg-foreground text-background rounded-2xl h-[52px] font-bold flex items-center justify-center gap-2 disabled:opacity-40"
           >
             {isSaving ? (
               'Saving...'
             ) : hasChanges ? (
               <>
-                <Check className="w-4 h-4 mr-2" />
+                <Check className="w-4 h-4" />
                 Save Changes
               </>
             ) : (
               'No Changes'
             )}
-          </Button>
-        </SheetFooter>
+          </motion.button>
+        </div>
       </SheetContent>
     </Sheet>
   );

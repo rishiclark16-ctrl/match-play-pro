@@ -46,3 +46,4 @@ test-results/
 *.sln
 *.sw?
 ios/App/App/Config.xcconfig
+AuthKey_*.p8

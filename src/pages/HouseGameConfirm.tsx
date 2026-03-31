@@ -1,247 +1,41 @@
 import { useState, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, ChevronDown, ChevronUp, AlertTriangle, Sparkles, Minus, Plus } from 'lucide-react';
+import { ArrowLeft, Check, Sparkles } from 'lucide-react';
 import { useHouseGame } from '@/hooks/useHouseGame';
+import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { ParsedPrimitive, ActivePrimitive, HouseGamePrimitive } from '@/types/houseGame';
 import { PRIMITIVE_MAP, PRIMITIVES_BY_CATEGORY, CATEGORY_LABELS, CATEGORY_ORDER } from '@/lib/houseGame/primitives';
+import { PrimitiveRow, CategorySection } from '@/components/golf/HouseGamePrimitives';
 import { validateConfig } from '@/engine/HouseGameEngine';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 interface LocationState {
   description: string;
   parsedPrimitives: ParsedPrimitive[];
-}
-
-// ── Value input component (stepper / segmented) ──────────────────────────────
-function ValueInput({
-  primitive,
-  value,
-  onChange,
-}: {
-  primitive: HouseGamePrimitive;
-  value: any;
-  onChange: (v: any) => void;
-}) {
-  const { valueType, valueConfig, defaultValue } = primitive;
-  const current = value ?? defaultValue;
-
-  if (valueType === 'select' && valueConfig?.options) {
-    return (
-      <div className="flex gap-1 mt-2">
-        {valueConfig.options.map(opt => (
-          <button
-            key={opt}
-            onClick={() => { hapticLight(); onChange(opt); }}
-            className={cn(
-              'flex-1 text-[11px] font-bold py-1 rounded-lg border transition-colors',
-              current === opt
-                ? 'bg-foreground text-background border-foreground'
-                : 'bg-transparent text-muted-foreground border-border'
-            )}
-          >
-            {opt}
-          </button>
-        ))}
-      </div>
-    );
-  }
-
-  if (valueType === 'number' || valueType === 'currency' || valueType === 'distance') {
-    const min = valueConfig?.min ?? 0;
-    const max = valueConfig?.max ?? 99;
-    const step = valueConfig?.step ?? 1;
-    const unit = valueConfig?.unit ?? (valueType === 'currency' ? '$' : valueType === 'distance' ? 'ft' : '');
-
-    return (
-      <div className="flex items-center gap-2 mt-2">
-        <button
-          onClick={() => { hapticLight(); onChange(Math.max(min, (current ?? defaultValue) - step)); }}
-          disabled={(current ?? defaultValue) <= min}
-          className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center disabled:opacity-30"
-        >
-          <Minus className="w-3 h-3" />
-        </button>
-        <span className="text-[13px] font-bold text-foreground min-w-[40px] text-center">
-          {unit && valueType === 'currency' ? `${unit}${current ?? defaultValue}` : `${current ?? defaultValue}${unit ? ` ${unit}` : ''}`}
-        </span>
-        <button
-          onClick={() => { hapticLight(); onChange(Math.min(max, (current ?? defaultValue) + step)); }}
-          disabled={(current ?? defaultValue) >= max}
-          className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center disabled:opacity-30"
-        >
-          <Plus className="w-3 h-3" />
-        </button>
-      </div>
-    );
-  }
-
-  return null;
-}
-
-// ── Single primitive row ──────────────────────────────────────────────────────
-function PrimitiveRow({
-  primitive,
-  checked,
-  confidence,
-  value,
-  onToggle,
-  onValueChange,
-}: {
-  primitive: HouseGamePrimitive;
-  checked: boolean;
-  confidence?: 'high' | 'medium' | 'low';
-  value?: any;
-  onToggle: () => void;
-  onValueChange: (v: any) => void;
-}) {
-  const isLow = confidence === 'low';
-
-  return (
-    <motion.div
-      layout
-      className={cn(
-        'rounded-xl px-4 py-3 border transition-colors',
-        checked
-          ? isLow
-            ? 'bg-[#FFF9E6] border-[#F0EE3A]'
-            : 'bg-white border-foreground/20'
-          : 'bg-white border-border/40'
-      )}
-    >
-      <div className="flex items-start gap-3">
-        <button
-          onClick={() => { hapticLight(); onToggle(); }}
-          className={cn(
-            'w-5 h-5 rounded-md flex-shrink-0 mt-0.5 flex items-center justify-center border-2 transition-colors',
-            checked
-              ? 'bg-foreground border-foreground'
-              : 'bg-transparent border-border'
-          )}
-        >
-          {checked && <Check className="w-3 h-3 text-background stroke-[3]" />}
-        </button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={cn('text-[13px] font-bold', checked ? 'text-foreground' : 'text-muted-foreground')}>
-              {primitive.label}
-            </span>
-            {isLow && checked && (
-              <span className="flex items-center gap-1 text-[10px] font-bold text-[#B45309] bg-[#FEF3C7] px-1.5 py-0.5 rounded-md">
-                <AlertTriangle className="w-2.5 h-2.5" />
-                Low confidence
-              </span>
-            )}
-            {!primitive.implemented && (
-              <span className="text-[10px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md">
-                Coming soon
-              </span>
-            )}
-          </div>
-          <p className="text-[12px] text-muted-foreground leading-snug mt-0.5">
-            {primitive.description}
-          </p>
-          {checked && primitive.valueType !== 'none' && (
-            <ValueInput
-              primitive={primitive}
-              value={value}
-              onChange={onValueChange}
-            />
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// ── Collapsible category section ──────────────────────────────────────────────
-function CategorySection({
-  categoryId,
-  label,
-  primitives,
-  checkedIds,
-  confidenceMap,
-  valueMap,
-  onToggle,
-  onValueChange,
-}: {
-  categoryId: string;
-  label: string;
-  primitives: HouseGamePrimitive[];
-  checkedIds: Set<string>;
-  confidenceMap: Map<string, 'high' | 'medium' | 'low'>;
-  valueMap: Map<string, any>;
-  onToggle: (id: string) => void;
-  onValueChange: (id: string, v: any) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const checkedInCategory = primitives.filter(p => checkedIds.has(p.id)).length;
-
-  return (
-    <div className="rounded-2xl overflow-hidden border border-border/40">
-      <button
-        onClick={() => { hapticLight(); setOpen(o => !o); }}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] font-bold text-foreground">{label}</span>
-          {checkedInCategory > 0 && (
-            <span className="text-[10px] font-black text-background bg-foreground px-1.5 py-0.5 rounded-full">
-              {checkedInCategory}
-            </span>
-          )}
-        </div>
-        {open
-          ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
-          : <ChevronDown className="w-4 h-4 text-muted-foreground" />
-        }
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: 'auto' }}
-            exit={{ height: 0 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-            className="overflow-hidden"
-          >
-            <div className="px-3 pb-3 space-y-2 bg-[#F8F8F6]">
-              {primitives.map(p => (
-                <PrimitiveRow
-                  key={p.id}
-                  primitive={p}
-                  checked={checkedIds.has(p.id)}
-                  confidence={confidenceMap.get(p.id)}
-                  value={valueMap.get(p.id)}
-                  onToggle={() => onToggle(p.id)}
-                  onValueChange={v => onValueChange(p.id, v)}
-                />
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+  returnTo?: string;
 }
 
 // ── Main confirm page ─────────────────────────────────────────────────────────
 export default function HouseGameConfirm() {
-  const { groupId } = useParams<{ groupId: string }>();
+  const { groupId } = useParams<{ groupId?: string }>();
+  const isPersonal = !groupId;
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as LocationState | null;
 
   const description = state?.description ?? '';
   const parsedPrimitives: ParsedPrimitive[] = state?.parsedPrimitives ?? [];
+  const returnTo = state?.returnTo;
 
-  const { saving, saveHouseGame } = useHouseGame(groupId ?? null);
+  const { saving: groupSaving, saveHouseGame } = useHouseGame(isPersonal ? null : groupId ?? null);
+  const { saving: personalSaving, saveFormat } = usePersonalGameFormats();
+  const saving = isPersonal ? personalSaving : groupSaving;
 
   // Game name — auto-generated from description, user can edit
   const [gameName, setGameName] = useState<string>(() => {
-    if (!description) return 'House Game';
+    if (!description) return 'My Format';
     const firstSentence = description.split(/[.!?]/)[0].trim();
     return firstSentence.length > 0 && firstSentence.length <= 30
       ? firstSentence
@@ -274,7 +68,6 @@ export default function HouseGameConfirm() {
         next.delete(id);
       } else {
         next.add(id);
-        // Set default value if not already set
         const prim = PRIMITIVE_MAP[id];
         if (prim && prim.valueType !== 'none' && !valueMap.has(id)) {
           setValueMap(vm => {
@@ -315,19 +108,33 @@ export default function HouseGameConfirm() {
       return;
     }
 
-    const ok = await saveHouseGame({
-      groupId: groupId!,
-      name: gameName.trim() || 'House Game',
-      description,
-      activePrimitives,
-    });
-
-    if (ok) {
-      hapticSuccess();
-      toast.success('House Game saved!');
-      navigate(`/groups`, { replace: true });
+    if (isPersonal) {
+      const id = await saveFormat({
+        name: gameName.trim() || 'My Format',
+        description,
+        activePrimitives,
+      });
+      if (id) {
+        hapticSuccess();
+        toast.success('Format saved!');
+        navigate(returnTo ?? '/', { replace: true });
+      } else {
+        toast.error('Failed to save — try again');
+      }
     } else {
-      toast.error('Failed to save — try again');
+      const ok = await saveHouseGame({
+        groupId: groupId!,
+        name: gameName.trim() || 'House Game',
+        description,
+        activePrimitives,
+      });
+      if (ok) {
+        hapticSuccess();
+        toast.success('House Game saved!');
+        navigate('/groups', { replace: true });
+      } else {
+        toast.error('Failed to save — try again');
+      }
     }
   };
 
@@ -336,8 +143,8 @@ export default function HouseGameConfirm() {
     .map(p => PRIMITIVE_MAP[p.id])
     .filter(Boolean) as HouseGamePrimitive[];
 
-  // For the library, show categories excluding what AI already found (but still show all for completeness)
   const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
+  const defaultName = isPersonal ? 'My Format' : 'House Game';
 
   return (
     <div className="h-screen flex flex-col bg-[#F8F8F6]">
@@ -352,7 +159,9 @@ export default function HouseGameConfirm() {
             <ArrowLeft className="w-4 h-4 text-foreground" />
           </motion.button>
           <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">House Game</p>
+            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              {isPersonal ? 'My Format' : 'House Game'}
+            </p>
             <h1 className="text-[22px] font-black tracking-[-0.04em] text-foreground leading-none">Confirm Rules</h1>
           </div>
           <div className="ml-auto bg-foreground text-[#F0EE3A] text-[9px] font-black tracking-[0.1em] px-2 py-1 rounded-lg">
@@ -370,14 +179,14 @@ export default function HouseGameConfirm() {
           transition={{ ...spring, delay: 0.03 }}
         >
           <label className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground block mb-1.5">
-            Game Name
+            {isPersonal ? 'Format Name' : 'Game Name'}
           </label>
           <input
             type="text"
             value={gameName}
             onChange={e => setGameName(e.target.value)}
             maxLength={40}
-            placeholder="House Game"
+            placeholder={defaultName}
             className="w-full bg-white border-2 border-foreground/20 focus:border-foreground rounded-xl px-4 py-3 text-[15px] font-bold text-foreground placeholder:text-muted-foreground/50 outline-none transition-colors"
           />
         </motion.div>
@@ -501,7 +310,7 @@ export default function HouseGameConfirm() {
                   transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
                   className="w-5 h-5 rounded-full border-2 border-background border-t-transparent"
                 />
-                <span>Saving your game...</span>
+                <span>Saving{isPersonal ? ' format' : ' your game'}...</span>
               </motion.div>
             ) : (
               <motion.div
@@ -512,7 +321,7 @@ export default function HouseGameConfirm() {
                 className="flex items-center gap-2"
               >
                 <Check className="w-5 h-5" />
-                <span>Looks Good — Save My House Game</span>
+                <span>{isPersonal ? 'Save My Format' : 'Looks Good — Save My House Game'}</span>
               </motion.div>
             )}
           </AnimatePresence>

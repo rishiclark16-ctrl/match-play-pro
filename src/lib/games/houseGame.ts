@@ -4,11 +4,12 @@
  * Top 15 primitives are fully implemented; others return stubs.
  */
 
-import { Score, Player, HoleInfo } from '@/types/golf';
+import { Score, Player, HoleInfo, BingoBangoHoleResult } from '@/types/golf';
 import { HouseGameScoringConfig } from '@/types/houseGame';
 import { getStrokesPerHole, calculatePlayingHandicap } from '@/lib/handicapUtils';
 import { calculateSkins, StrokesPerHoleMap } from './skins';
 import { calculateNassau } from './nassau';
+import { calculateStableford } from './stableford';
 
 export interface HouseGameHoleResult {
   holeNumber: number;
@@ -38,16 +39,19 @@ export interface HouseGameResult {
   // Subset results for implemented sub-games
   skinsResult?: ReturnType<typeof calculateSkins>;
   nassauResult?: ReturnType<typeof calculateNassau>;
+  stablefordResult?: ReturnType<typeof calculateStableford>;
   // Unimplemented primitives that are active (shown as "coming soon" in UI)
   stubbedPrimitives: string[];
   // Summary text lines for the live panel
   summary: string[];
+  // Players whose losses were capped by settlement_max_loss_cap
+  cappedPlayerIds: string[];
 }
 
 const STUBS = new Set([
-  'format_wolf', 'format_vegas', 'format_hammer', 'format_bingo_bango_bongo',
+  'format_wolf', 'format_vegas', 'format_hammer',
   'format_rabbit', 'format_quota', 'format_defender', 'format_sixes',
-  'press_auto_birdie', 'press_auto_eagle', 'press_manual_request',
+  'press_auto_eagle', 'press_manual_request',
   'press_requires_acceptance', 'press_double_or_nothing', 'press_max_per_round',
   'press_new_submatch', 'press_no_dormie', 'press_back9_auto',
   'bonus_par3_special', 'bonus_greenie', 'bonus_sandie', 'bonus_barkie',
@@ -55,10 +59,10 @@ const STUBS = new Set([
   'bonus_garbage_tracking', 'carryover_cap', 'carryover_jackpot_18',
   'carryover_reset_on_win', 'carryover_nassau_halved',
   'handicap_ghost_player', 'handicap_bump_and_run', 'handicap_mixed_tees',
-  'casual_breakfast_ball', 'casual_preferred_lies', 'casual_concede_match',
+  'casual_breakfast_ball', 'casual_concede_match',
   'casual_foot_wedge', 'settlement_pay_per_hole', 'settlement_running_tab',
-  'settlement_max_loss_cap', 'settlement_ties_split', 'settlement_ties_carryover',
-  'group_min_players', 'group_pickup_rule', 'group_sub_in',
+  'settlement_ties_split', 'settlement_ties_carryover',
+  'group_min_players', 'group_sub_in',
   'group_teams_fixed', 'group_teams_rotating', 'group_wolf_lone_multiplier',
   'group_point_bank',
 ]);
@@ -99,8 +103,10 @@ export function calculateHouseGame(
   config: HouseGameScoringConfig,
   slopeRating = 113,
   totalHoles: 9 | 18 = 18,
+  bbbResults?: BingoBangoHoleResult[],
 ): HouseGameResult {
   const stubbedPrimitives: string[] = [];
+  const cappedPlayerIds: string[] = [];
   const strokesMap = buildStrokesMap(players, holeInfo, config, slopeRating, totalHoles);
 
   // Track which stubs are actually active
@@ -173,19 +179,19 @@ export function calculateHouseGame(
     players.forEach(p => { holeEarnings[p.id] = 0; });
     const activeBonuses: string[] = [];
 
-    // Birdie / eagle unit bonuses
+    // Birdie / eagle unit bonuses — use NET scores
     if (config.birdieUnitBonus > 0 || config.eagleUnitBonus > 0) {
       for (const s of holeScores) {
-        const diff = s.strokes - hole.par;
+        const netDiff = netScores[s.playerId] - hole.par;
         const otherCount = players.length - 1;
-        if (diff === -1 && config.birdieUnitBonus > 0) {
+        if (netDiff === -1 && config.birdieUnitBonus > 0) {
           const earn = config.birdieUnitBonus * config.unitValue * otherCount;
           holeEarnings[s.playerId] = (holeEarnings[s.playerId] ?? 0) + earn;
           players.filter(p => p.id !== s.playerId).forEach(p => {
             holeEarnings[p.id] = (holeEarnings[p.id] ?? 0) - config.birdieUnitBonus * config.unitValue;
           });
           activeBonuses.push('bonus_birdie_unit');
-        } else if (diff <= -2 && config.eagleUnitBonus > 0) {
+        } else if (netDiff <= -2 && config.eagleUnitBonus > 0) {
           const earn = config.eagleUnitBonus * config.unitValue * otherCount;
           holeEarnings[s.playerId] = (holeEarnings[s.playerId] ?? 0) + earn;
           players.filter(p => p.id !== s.playerId).forEach(p => {
@@ -209,9 +215,50 @@ export function calculateHouseGame(
     }
   }
 
-  // ── Net-out settlement ────────────────────────────────────────────────────
-  // (Skins + Nassau earnings already computed by their calculators)
-  // Merge bonus earnings into standings
+  // ── Stableford scoring ────────────────────────────────────────────────────
+  let stablefordResult: ReturnType<typeof calculateStableford> | undefined;
+  if (config.stableford) {
+    stablefordResult = calculateStableford(
+      scores,
+      players,
+      holeInfo,
+      config.modifiedStableford,
+      strokesMap,
+    );
+    // Pairwise points settlement: each point differential × unitValue
+    const ptsByPlayer = new Map<string, number>(
+      stablefordResult.standings.map(s => [s.playerId, s.totalPoints])
+    );
+    for (const player of players) {
+      const ptsA = ptsByPlayer.get(player.id) ?? 0;
+      let earning = 0;
+      for (const other of players) {
+        if (other.id === player.id) continue;
+        const ptsB = ptsByPlayer.get(other.id) ?? 0;
+        earning += (ptsA - ptsB) * config.unitValue;
+      }
+      playerEarnings[player.id] = (playerEarnings[player.id] ?? 0) + earning;
+    }
+  }
+
+  // ── Bingo Bango Bongo scoring ─────────────────────────────────────────────
+  if (config.bingoBangoBongo && bbbResults && bbbResults.length > 0) {
+    const award = (winnerId: string | null) => {
+      if (!winnerId) return;
+      const earn = config.unitValue * (players.length - 1);
+      playerEarnings[winnerId] = (playerEarnings[winnerId] ?? 0) + earn;
+      players.filter(p => p.id !== winnerId).forEach(p => {
+        playerEarnings[p.id] = (playerEarnings[p.id] ?? 0) - config.unitValue;
+      });
+    };
+    for (const result of bbbResults) {
+      award(result.bingoPlayerId);
+      award(result.bangoPlayerId);
+      award(result.bongoPlayerId);
+    }
+  }
+
+  // ── Standings ─────────────────────────────────────────────────────────────
   const standings: HouseGameStanding[] = players.map(player => {
     const playerScores = scores.filter(s => s.playerId === player.id);
     const birdies = playerScores.filter(s => {
@@ -245,6 +292,34 @@ export function calculateHouseGame(
     };
   }).sort((a, b) => b.netEarnings - a.netEarnings);
 
+  // ── Max loss cap ──────────────────────────────────────────────────────────
+  if (config.maxLossCap !== null && config.maxLossCap > 0) {
+    let cappedAmount = 0;
+    for (const standing of standings) {
+      if (standing.netEarnings < -config.maxLossCap) {
+        cappedAmount += -config.maxLossCap - standing.netEarnings;
+        standing.netEarnings = -config.maxLossCap;
+        standing.grossEarnings = -config.maxLossCap;
+        cappedPlayerIds.push(standing.playerId);
+      }
+    }
+    // Redistribute proportionally among winners
+    if (cappedAmount > 0.005) {
+      const winners = standings.filter(s => s.netEarnings > 0);
+      const totalWinnings = winners.reduce((sum, s) => sum + s.netEarnings, 0);
+      if (totalWinnings > 0) {
+        for (const standing of winners) {
+          const reduction = cappedAmount * (standing.netEarnings / totalWinnings);
+          standing.netEarnings = Math.round((standing.netEarnings - reduction) * 100) / 100;
+          standing.grossEarnings = standing.netEarnings;
+        }
+      }
+    }
+  }
+
+  // ── Pickup rule ───────────────────────────────────────────────────────────
+  // (No scoring logic needed — pickup score = net double bogey, set at score entry)
+
   // ── Summary lines ─────────────────────────────────────────────────────────
   const summary: string[] = [];
   if (standings.length > 0) {
@@ -258,8 +333,11 @@ export function calculateHouseGame(
   if (stubbedPrimitives.length > 0) {
     summary.push(`${stubbedPrimitives.length} rule${stubbedPrimitives.length > 1 ? 's' : ''} coming soon`);
   }
+  if (cappedPlayerIds.length > 0) {
+    summary.push('Loss cap applied');
+  }
 
-  return { holeResults, standings, skinsResult, nassauResult, stubbedPrimitives, summary };
+  return { holeResults, standings, skinsResult, nassauResult, stablefordResult, stubbedPrimitives, summary, cappedPlayerIds };
 }
 
 /** Helper: check if a stub primitive's config flag is truthy */

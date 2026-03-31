@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { Swords } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { PlayerWithScores } from '@/types/golf';
 
@@ -33,29 +32,28 @@ export function PlayoffMode({
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex-shrink-0 bg-primary/10 border-b-2 border-primary px-4 py-4"
+        className="bg-[#F0FFF4] border border-[#BBF7D0] rounded-2xl mx-0 mb-4 p-4"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-              <Swords className="w-6 h-6 text-primary-foreground" />
+            <div className="w-10 h-10 rounded-xl bg-[#22C55E] flex items-center justify-center flex-shrink-0">
+              <Swords className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="heading-md text-primary">Playoff Hole #{playoffHole}</h2>
-              <p className="text-xs text-muted-foreground">
+              <h2 className="font-black text-base tracking-[-0.02em]">Playoff Hole #{playoffHole}</h2>
+              <p className="text-[12px] text-muted-foreground">
                 Lowest score wins • Par {currentHolePar}
               </p>
             </div>
           </div>
           {allPlayoffScored && !playoffWinnerId && (
-            <Button
+            <motion.button
+              whileTap={{ scale: 0.9 }}
               onClick={onNextPlayoffHole}
-              size="sm"
-              variant="outline"
-              className="border-2 border-primary text-primary"
+              className="bg-foreground text-background rounded-xl px-4 py-2 text-sm font-bold"
             >
-              Still Tied → Next Hole
-            </Button>
+              Still Tied
+            </motion.button>
           )}
         </div>
       </motion.div>
@@ -65,6 +63,7 @@ export function PlayoffMode({
         {players.map((player, index) => {
           const playoffScore = getPlayoffScore(player.id, playoffHole);
           const hasScored = playoffScore !== undefined;
+          const isWinner = playoffWinnerId === player.id;
 
           return (
             <motion.div
@@ -73,30 +72,24 @@ export function PlayoffMode({
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
               className={cn(
-                'bg-card border-2 rounded-xl p-4 transition-all',
-                hasScored ? 'border-primary/30' : 'border-border',
-                playoffWinnerId === player.id && 'border-primary bg-primary/5'
+                'bg-white rounded-2xl p-4 mb-3',
+                isWinner
+                  ? 'shadow-[0_0_0_2px_rgba(240,238,58,0.5),0_2px_8px_rgba(240,238,58,0.1)]'
+                  : 'shadow-[0_1px_3px_rgba(0,0,0,0.06)]'
               )}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div
-                    className={cn(
-                      'w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold',
-                      hasScored
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
-                    )}
-                  >
+                  <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center text-background font-black text-sm">
                     {player.name.charAt(0)}
                   </div>
                   <div>
-                    <p className="font-bold">{player.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {player.handicap !== null &&
-                        player.handicap !== undefined &&
-                        `HCP ${player.handicap}`}
-                    </p>
+                    <p className="font-bold text-sm text-foreground">{player.name}</p>
+                    {player.handicap !== null && player.handicap !== undefined && (
+                      <span className="bg-muted text-[10px] font-bold px-1.5 py-0.5 rounded-md text-muted-foreground">
+                        HCP {player.handicap}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -104,7 +97,7 @@ export function PlayoffMode({
                   <div className="flex items-center gap-2">
                     <span
                       className={cn(
-                        'text-3xl font-black tabular-nums',
+                        'font-black text-3xl tabular-nums',
                         playoffScore < currentHolePar && 'text-red-600',
                         playoffScore === currentHolePar && 'text-foreground',
                         playoffScore > currentHolePar && 'text-blue-600'
@@ -112,15 +105,16 @@ export function PlayoffMode({
                     >
                       {playoffScore}
                     </span>
-                    <button
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
                       onClick={() => onClearPlayoffScore(player.id)}
-                      className="text-xs text-muted-foreground hover:text-foreground"
+                      className="bg-muted rounded-xl px-3 py-1.5 text-xs font-bold text-muted-foreground"
                     >
                       Edit
-                    </button>
+                    </motion.button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1">
+                  <div className="grid grid-cols-4 gap-2 mt-3">
                     {[
                       currentHolePar - 1,
                       currentHolePar,
@@ -132,16 +126,16 @@ export function PlayoffMode({
                         whileTap={{ scale: 0.9 }}
                         onClick={() => onPlayoffScore(player.id, score)}
                         className={cn(
-                          'w-11 h-11 rounded-lg font-bold text-lg border-2 transition-colors',
-                          score < currentHolePar &&
-                            'bg-red-100 border-red-300 text-red-700',
-                          score === currentHolePar &&
-                            'bg-muted border-border text-foreground',
-                          score > currentHolePar &&
-                            'bg-blue-100 border-blue-300 text-blue-700'
+                          'rounded-xl py-3 flex flex-col items-center gap-0.5',
+                          score < currentHolePar && 'bg-red-100 text-red-700',
+                          score === currentHolePar && 'bg-muted text-foreground',
+                          score > currentHolePar && 'bg-blue-100 text-blue-700'
                         )}
                       >
-                        {score}
+                        <span className="text-base font-black">{score}</span>
+                        <span className="text-[9px] font-bold uppercase">
+                          {score < currentHolePar ? 'Under' : score === currentHolePar ? 'Par' : 'Over'}
+                        </span>
                       </motion.button>
                     ))}
                   </div>
@@ -153,8 +147,8 @@ export function PlayoffMode({
 
         {/* Playoff History */}
         {playoffHole > 1 && (
-          <div className="bg-muted/50 rounded-xl p-4 mt-4">
-            <h4 className="label-sm mb-2">Playoff History</h4>
+          <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">Playoff History</p>
             <div className="space-y-1">
               {Array.from({ length: playoffHole }).map((_, holeIdx) => {
                 const holeNum = holeIdx + 1;
@@ -168,12 +162,12 @@ export function PlayoffMode({
                 if (scores.length === 0) return null;
 
                 return (
-                  <div key={holeNum} className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Hole {holeNum}:</span>
+                  <div key={holeNum} className="text-sm text-muted-foreground py-1 border-b border-border/40 last:border-0">
+                    <span>Hole {holeNum}:</span>
                     {scores.map((s, i) => (
-                      <span key={i} className="font-mono">
+                      <span key={i} className="font-mono ml-1">
                         {s.name} {s.score}
-                        {i < scores.length - 1 && ', '}
+                        {i < scores.length - 1 && ','}
                       </span>
                     ))}
                   </div>

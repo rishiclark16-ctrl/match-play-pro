@@ -30,6 +30,7 @@ import { usePlayersWithScores } from '@/hooks/usePlayersWithScores';
 import { useSettlementPreview } from '@/hooks/useSettlementPreview';
 import { Press, PlayerWithScores, GameConfig, BingoBangoHoleResult } from '@/types/golf';
 import { checkAutoPress, createPress } from '@/lib/games/nassau';
+import { sendPushToProfiles } from '@/lib/pushUtils';
 import { buildConfig } from '@/engine/HouseGameEngine';
 import { buildScoringConfig } from '@/lib/houseGame/engine';
 import { toast } from 'sonner';
@@ -353,6 +354,19 @@ export default function Scorecard() {
           duration: 4000,
         }
       );
+      // Notify all players with accounts
+      const profileIds = playersWithScores
+        .filter(p => p.profileId)
+        .map(p => p.profileId as string);
+      if (profileIds.length > 0 && round) {
+        sendPushToProfiles({
+          profileIds,
+          title: 'Auto-Press!',
+          body: `${(pressingPlayer?.name || 'Player').split(' ')[0]} is 2 down — press started at hole ${autoPress.startHole}`,
+          data: { roundId: round.id, route: `/round/${round.id}` },
+          type: 'pressTriggered',
+        });
+      }
     }
   }, [round, roundScores, playersWithScores, handleAddPress]);
 

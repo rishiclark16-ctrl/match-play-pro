@@ -67,44 +67,46 @@ export function BettingBreakdownSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
-        <SheetHeader className="pb-4 border-b border-border">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-success/20 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-success" />
-              </div>
-              <span>Money Breakdown</span>
-            </SheetTitle>
-            <button
-              onClick={onClose}
-              className="w-10 h-10 rounded-full bg-muted flex items-center justify-center"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </SheetHeader>
+      <SheetContent
+        side="bottom"
+        className="h-[85vh] bg-[#F8F8F6] rounded-t-3xl p-0 border-0"
+      >
+        {/* Drag handle */}
+        <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
 
-        <div className="pt-4 space-y-6 overflow-y-auto h-[calc(100%-80px)] pb-8">
+        {/* Header */}
+        <div className="px-6 pb-3 flex items-center justify-between">
+          <SheetTitle className="text-[20px] font-black tracking-[-0.04em] text-foreground">
+            Money Breakdown
+          </SheetTitle>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="px-0 space-y-4 overflow-y-auto h-[calc(100%-80px)] pb-8">
           {/* Player Tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+          <div className="flex gap-2 overflow-x-auto pb-2 px-6">
             {players.map((player, index) => (
               <motion.button
                 key={player.playerId}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => setActivePlayerId(player.playerId)}
                 className={cn(
                   "flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all",
                   activePlayerId === player.playerId
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    ? "bg-foreground text-background"
+                    : "bg-muted text-muted-foreground"
                 )}
               >
                 <div className="flex items-center gap-2">
                   <span className={cn(
                     "w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold",
                     index === 0 && player.currentBalance > 0
-                      ? "bg-success text-success-foreground"
+                      ? "bg-[#22C55E] text-white"
                       : "bg-background/50 text-current"
                   )}>
                     {index + 1}
@@ -123,145 +125,149 @@ export function BettingBreakdownSheet({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="space-y-6"
+                className="space-y-3"
               >
                 {/* Total Balance Card */}
-                <div className={cn(
-                  "p-4 rounded-2xl border",
-                  activePlayer.currentBalance > 0
-                    ? "bg-success/10 border-success/30"
-                    : activePlayer.currentBalance < 0
-                    ? "bg-danger/10 border-danger/30"
-                    : "bg-muted border-border"
-                )}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground font-medium">
-                        Total Balance
-                      </p>
-                      <p className={cn(
-                        "text-3xl font-black tabular-nums mt-1",
-                        getMoneyColor(activePlayer.currentBalance)
+                <div className="mx-6">
+                  <div className={cn(
+                    "bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-4",
+                  )}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                          Total Balance
+                        </p>
+                        <p className={cn(
+                          "text-3xl font-black tabular-nums mt-1 tracking-[-0.04em]",
+                          getMoneyColor(activePlayer.currentBalance)
+                        )}>
+                          {activePlayer.currentBalance === 0
+                            ? 'EVEN'
+                            : formatMoney(activePlayer.currentBalance)}
+                        </p>
+                      </div>
+                      <div className={cn(
+                        "w-14 h-14 rounded-2xl flex items-center justify-center",
+                        activePlayer.currentBalance > 0
+                          ? "bg-[#22C55E]/15"
+                          : activePlayer.currentBalance < 0
+                          ? "bg-[#EF4444]/15"
+                          : "bg-muted"
                       )}>
-                        {activePlayer.currentBalance === 0
-                          ? 'EVEN'
-                          : formatMoney(activePlayer.currentBalance)}
-                      </p>
-                    </div>
-                    <div className={cn(
-                      "w-14 h-14 rounded-2xl flex items-center justify-center",
-                      activePlayer.currentBalance > 0
-                        ? "bg-success/20"
-                        : activePlayer.currentBalance < 0
-                        ? "bg-danger/20"
-                        : "bg-muted"
-                    )}>
-                      {activePlayer.currentBalance > 0 ? (
-                        <TrendingUp className="w-7 h-7 text-success" />
-                      ) : activePlayer.currentBalance < 0 ? (
-                        <TrendingDown className="w-7 h-7 text-danger" />
-                      ) : (
-                        <Sparkles className="w-7 h-7 text-muted-foreground" />
-                      )}
+                        {activePlayer.currentBalance > 0 ? (
+                          <TrendingUp className="w-7 h-7 text-[#22C55E]" />
+                        ) : activePlayer.currentBalance < 0 ? (
+                          <TrendingDown className="w-7 h-7 text-[#EF4444]" />
+                        ) : (
+                          <Sparkles className="w-7 h-7 text-muted-foreground" />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Game Breakdown */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-6">
                     By Game
-                  </h3>
+                  </p>
 
-                  {GAME_CONFIG.map(({ key, label, icon: Icon, color, bgColor }) => {
-                    const value = activePlayer.breakdown[key as keyof MoneyBreakdown];
-                    if (typeof value !== 'number') return null;
+                  <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 overflow-hidden divide-y divide-border/40">
+                    {GAME_CONFIG.map(({ key, label, icon: Icon, color, bgColor }, index) => {
+                      const value = activePlayer.breakdown[key as keyof MoneyBreakdown];
+                      if (typeof value !== 'number') return null;
 
-                    const barWidth = maxValue > 0 ? (Math.abs(value) / maxValue) * 100 : 0;
-                    const hasValue = value !== 0;
+                      const barWidth = maxValue > 0 ? (Math.abs(value) / maxValue) * 100 : 0;
+                      const hasValue = value !== 0;
 
-                    return (
-                      <motion.div
-                        key={key}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: GAME_CONFIG.findIndex(g => g.key === key) * 0.05 }}
-                        className={cn(
-                          "p-3 rounded-xl border",
-                          hasValue ? "bg-card border-border" : "bg-muted/30 border-transparent"
-                        )}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", bgColor)}>
-                              <Icon className={cn("w-4 h-4", color)} />
+                      return (
+                        <motion.div
+                          key={key}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="px-4 py-3"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center text-sm">
+                                <Icon className={cn("w-4 h-4", color)} />
+                              </div>
+                              <span className="text-[14px] font-medium text-foreground">{label}</span>
                             </div>
-                            <span className="font-semibold text-sm">{label}</span>
+                            <span className={cn(
+                              "font-black tabular-nums text-[14px]",
+                              hasValue
+                                ? value > 0
+                                  ? "text-[#22C55E]"
+                                  : "text-[#EF4444]"
+                                : "text-muted-foreground"
+                            )}>
+                              {hasValue ? formatMoney(value) : '--'}
+                            </span>
                           </div>
-                          <span className={cn(
-                            "font-bold tabular-nums text-base",
-                            hasValue ? getMoneyColor(value) : "text-muted-foreground"
-                          )}>
-                            {hasValue ? formatMoney(value) : '--'}
-                          </span>
-                        </div>
 
-                        {/* Progress bar */}
-                        {hasValue && (
-                          <div className="h-2 bg-muted rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${barWidth}%` }}
-                              transition={{ delay: 0.2, duration: 0.4, ease: "easeOut" }}
-                              className={cn(
-                                "h-full rounded-full",
-                                value > 0 ? "bg-success" : "bg-danger"
-                              )}
-                            />
-                          </div>
-                        )}
-                      </motion.div>
-                    );
-                  })}
+                          {/* Progress bar */}
+                          {hasValue && (
+                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${barWidth}%` }}
+                                transition={{ delay: 0.2, duration: 0.4, ease: "easeOut" }}
+                                className={cn(
+                                  "h-full rounded-full",
+                                  value > 0 ? "bg-[#22C55E]" : "bg-[#EF4444]"
+                                )}
+                              />
+                            </div>
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Standings Summary */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-6">
                     All Players
-                  </h3>
+                  </p>
 
-                  <div className="space-y-2">
+                  <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 overflow-hidden divide-y divide-border/40">
                     {players.map((player, index) => (
                       <motion.div
                         key={player.playerId}
-                        initial={{ opacity: 0, y: 5 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.03 }}
+                        transition={{ delay: index * 0.05 }}
                         onClick={() => setActivePlayerId(player.playerId)}
                         className={cn(
-                          "flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all",
+                          "px-4 py-2.5 flex items-center justify-between cursor-pointer transition-all",
                           player.playerId === activePlayerId
-                            ? "bg-primary/10 border border-primary/30"
-                            : "bg-muted/50 hover:bg-muted"
+                            ? "bg-[#F0EE3A]/20"
+                            : ""
                         )}
                       >
                         <div className="flex items-center gap-3">
                           <span className={cn(
                             "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
                             index === 0 && player.currentBalance > 0
-                              ? "bg-success text-success-foreground"
-                              : "bg-muted-foreground/20 text-muted-foreground"
+                              ? "bg-[#22C55E] text-white"
+                              : "bg-muted text-muted-foreground"
                           )}>
                             {index + 1}
                           </span>
-                          <span className="font-semibold text-sm">
+                          <span className="text-[14px] font-medium text-foreground">
                             {player.playerName}
                           </span>
                         </div>
                         <span className={cn(
-                          "font-bold tabular-nums",
-                          getMoneyColor(player.currentBalance)
+                          "font-black tabular-nums text-[14px]",
+                          player.currentBalance > 0
+                            ? "text-[#22C55E]"
+                            : player.currentBalance < 0
+                            ? "text-[#EF4444]"
+                            : "text-muted-foreground"
                         )}>
                           {player.currentBalance === 0 ? 'E' : formatMoney(player.currentBalance)}
                         </span>

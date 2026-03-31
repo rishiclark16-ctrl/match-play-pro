@@ -31,13 +31,14 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-card"
       style={{
         WebkitTransform: 'translateZ(0)',
         transform: 'translateZ(0)',
         WebkitTapHighlightColor: 'transparent',
         touchAction: 'manipulation',
-        paddingBottom: '34px', // Home indicator safe area
+        paddingBottom: '34px',
+        borderTop: '1px solid rgba(0,0,0,0.06)',
       }}
     >
       <div className="flex items-center justify-around h-16 px-2">
@@ -50,12 +51,18 @@ export function BottomNav() {
                 key={item.to}
                 to={item.to}
                 onClick={() => hapticLight()}
-                className="flex flex-col items-center justify-center -mt-6 touch-manipulation cursor-pointer select-none"
+                className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[56px] px-3 py-2 touch-manipulation cursor-pointer select-none"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
-                <div className="w-16 h-16 min-w-[64px] min-h-[64px] rounded-full bg-primary shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform">
-                  <Plus className="w-8 h-8 text-primary-foreground" strokeWidth={2.5} />
-                </div>
+                <motion.div
+                  whileTap={{ scale: 0.9 }}
+                  className="w-14 h-14 rounded-full bg-foreground flex items-center justify-center shadow-lg"
+                >
+                  <item.icon
+                    className="w-[22px] h-[22px] text-background"
+                    strokeWidth={1.75}
+                  />
+                </motion.div>
               </Link>
             );
           }
@@ -65,29 +72,30 @@ export function BottomNav() {
               key={item.to}
               to={item.to}
               onClick={() => hapticLight()}
-              className="flex flex-col items-center justify-center min-w-[64px] min-h-[56px] px-3 py-2 touch-manipulation cursor-pointer select-none active:scale-95 transition-transform"
+              className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[56px] px-2 py-2 touch-manipulation cursor-pointer select-none active:scale-95 transition-transform"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <div
-                className={cn(
-                  "relative p-2.5 rounded-xl transition-colors",
-                  active ? "bg-primary/10" : ""
-                )}
-              >
+              <div className={cn(
+                "flex flex-col items-center gap-0.5 rounded-xl px-3 py-1 transition-colors",
+                active ? "bg-foreground/8" : ""
+              )}>
                 <item.icon
                   className={cn(
-                    "w-6 h-6 transition-colors",
-                    active ? "text-primary" : "text-muted-foreground"
+                    "w-[22px] h-[22px] transition-colors",
+                    active ? "text-foreground" : "text-muted-foreground"
                   )}
-                  strokeWidth={active ? 2.5 : 2}
+                  strokeWidth={active ? 2.5 : 1.75}
                 />
+                <span className={cn(
+                  "text-[9px] font-bold uppercase tracking-[0.08em] transition-colors",
+                  active ? "text-[#F0EE3A]" : "text-muted-foreground"
+                )}>
+                  {item.label}
+                </span>
               </div>
-              <span className={cn(
-                "text-[10px] font-semibold uppercase tracking-wide transition-colors mt-0.5",
-                active ? "text-primary" : "text-muted-foreground"
-              )}>
-                {item.label}
-              </span>
+              {active && (
+                <span className="w-1 h-1 rounded-full bg-gold mt-0.5" />
+              )}
             </Link>
           );
         })}

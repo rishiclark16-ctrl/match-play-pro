@@ -18,6 +18,7 @@ interface PlayerCardProps {
   voiceHighlight?: boolean;
   voiceSuccess?: boolean;
   index?: number;
+  isGhost?: boolean;
 }
 
 // Score label with relative-to-par suffix
@@ -80,9 +81,17 @@ export function PlayerCard({
   voiceHighlight = false,
   voiceSuccess = false,
   index = 0,
+  isGhost = false,
 }: PlayerCardProps) {
+  // Ghost players are always read-only — suppress edit callbacks
+  if (isGhost) {
+    onScoreTap = undefined;
+    onQuickScore = undefined;
+  }
   const [isAnimating, setIsAnimating] = useState(false);
   const [scoreFlash, setScoreFlash] = useState(false);
+  const [celebrated, setCelebrated] = useState(false);
+  const [celebrationType, setCelebrationType] = useState<'birdie' | 'eagle' | null>(null);
 
   // Score change flash effect
   useEffect(() => {
@@ -92,6 +101,20 @@ export function PlayerCard({
       return () => clearTimeout(timer);
     }
   }, [currentHoleScore]);
+
+  // Birdie/Eagle celebration effect
+  useEffect(() => {
+    if (currentHoleScore !== undefined && currentHoleScore <= currentHolePar - 1) {
+      const type = currentHoleScore <= currentHolePar - 2 ? 'eagle' : 'birdie';
+      setCelebrationType(type);
+      setCelebrated(true);
+      const timer = setTimeout(() => {
+        setCelebrated(false);
+        setCelebrationType(null);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentHoleScore, currentHolePar]);
 
   // Get initials - with defensive null check
   const playerName = player.name || 'Player';
@@ -161,12 +184,20 @@ export function PlayerCard({
   const scoreNumColor = getScoreNumColor(currentHoleScore, currentHolePar, currentNetScore, useNet);
   const labelColor = getLabelColor(currentHoleScore, currentHolePar, currentNetScore, useNet);
 
+  const celebrationShadow = celebrated
+    ? celebrationType === 'eagle'
+      ? 'shadow-[0_0_0_2px_#F0EE3A]'
+      : 'shadow-[0_0_0_2px_#22C55E]'
+    : '';
+
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={
-        scoreFlash
+        celebrated
+          ? { opacity: 1, y: 0, scale: [1, 1.02, 1] }
+          : scoreFlash
           ? {
               opacity: 1,
               y: 0,
@@ -183,7 +214,9 @@ export function PlayerCard({
           : { opacity: 1, y: 0 }
       }
       transition={
-        scoreFlash
+        celebrated
+          ? { type: 'spring', stiffness: 300, damping: 20, duration: 0.5 }
+          : scoreFlash
           ? { duration: 0.4 }
           : voiceSuccess
           ? { duration: 0.5 }
@@ -195,9 +228,12 @@ export function PlayerCard({
         'rounded-2xl p-4 relative overflow-hidden',
         'shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]',
         cardBg,
-        isLeading && player.holesPlayed > 0
+        celebrated
+          ? celebrationShadow
+          : isLeading && player.holesPlayed > 0
           ? 'shadow-[0_0_0_2px_rgba(34,197,94,0.35),0_4px_16px_rgba(34,197,94,0.1)]'
           : '',
+        isLeading && player.holesPlayed > 0 && 'border-l-[3px] border-[#F0EE3A]',
         voiceHighlight && 'ring-2 ring-[#22C55E]/40',
       )}
     >
@@ -241,25 +277,33 @@ export function PlayerCard({
         >
           {/* Avatar */}
           <div className="shrink-0 relative">
-            <Avatar className="w-10 h-10 rounded-xl">
-              <AvatarImage src={player.avatarUrl} className="rounded-xl object-cover" />
-              <AvatarFallback className="bg-[#0A0A0A] text-white text-sm font-bold rounded-xl">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            {/* Handicap stroke dot indicator */}
-            {holeStrokes > 0 && (
-              <div className="absolute -top-1 -right-1 flex gap-0.5">
-                {Array.from({ length: Math.min(holeStrokes, 2) }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-2 h-2 rounded-full bg-[#F0EE3A] border border-white shadow-sm"
-                  />
-                ))}
-                {holeStrokes > 2 && (
-                  <span className="text-[7px] font-bold text-[#888]">+{holeStrokes - 2}</span>
-                )}
+            {isGhost ? (
+              <div className="w-10 h-10 rounded-xl bg-muted/60 border border-dashed border-border/50 flex items-center justify-center text-xl">
+                👻
               </div>
+            ) : (
+              <>
+                <Avatar className="w-10 h-10 rounded-xl">
+                  <AvatarImage src={player.avatarUrl} className="rounded-xl object-cover" />
+                  <AvatarFallback className="bg-[#0A0A0A] text-white text-sm font-bold rounded-xl">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                {/* Handicap stroke dot indicator */}
+                {holeStrokes > 0 && (
+                  <div className="absolute -top-1 -right-1 flex gap-0.5">
+                    {Array.from({ length: Math.min(holeStrokes, 2) }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-2 h-2 rounded-full bg-[#F0EE3A] border border-white shadow-sm"
+                      />
+                    ))}
+                    {holeStrokes > 2 && (
+                      <span className="text-[7px] font-bold text-[#888]">+{holeStrokes - 2}</span>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -270,7 +314,11 @@ export function PlayerCard({
               <h4 className="text-sm font-bold text-[#0A0A0A] truncate leading-tight">
                 {nameParts[0] || playerName}
               </h4>
-              {hasHandicap && (
+              {isGhost ? (
+                <span className="shrink-0 bg-black/6 text-[#0A0A0A]/40 text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-tight">
+                  net par
+                </span>
+              ) : hasHandicap && (
                 <span className="shrink-0 bg-black/6 text-[#0A0A0A]/50 text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-tight">
                   {player.playingHandicap}
                 </span>
@@ -362,11 +410,11 @@ export function PlayerCard({
                     transition={{ duration: 0.2 }}
                     className="mt-0.5 flex items-baseline gap-0.5"
                   >
-                    <span className={cn("text-[9px] font-bold uppercase tracking-wide leading-none", labelColor)}>
+                    <span className={cn("text-[12px] font-bold uppercase tracking-wide leading-none", labelColor)}>
                       {scoreLabel.label}
                     </span>
                     {scoreLabel.diff !== '' && (
-                      <span className={cn("text-[9px] font-bold leading-none", labelColor)}>
+                      <span className={cn("text-[12px] font-bold leading-none", labelColor)}>
                         {scoreLabel.diff}
                       </span>
                     )}
@@ -416,11 +464,11 @@ export function PlayerCard({
             </span>
             {scoreLabel && (
               <div className="mt-0.5 flex items-baseline gap-0.5">
-                <span className={cn("text-[9px] font-bold uppercase tracking-wide leading-none", labelColor)}>
+                <span className={cn("text-[12px] font-bold uppercase tracking-wide leading-none", labelColor)}>
                   {scoreLabel.label}
                 </span>
                 {scoreLabel.diff !== '' && (
-                  <span className={cn("text-[9px] font-bold leading-none", labelColor)}>
+                  <span className={cn("text-[12px] font-bold leading-none", labelColor)}>
                     {scoreLabel.diff}
                   </span>
                 )}

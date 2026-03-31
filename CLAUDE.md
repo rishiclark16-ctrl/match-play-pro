@@ -84,8 +84,8 @@ All routes except `/auth` and legal pages require auth via `<AuthGuard>`.
 
 ### Betting Games
 All game logic lives in `src/lib/games/` as pure functions with extensive tests:
-- **Nassau** (27 tests) — front/back/overall with auto-press
-- **Skins** (22 tests) — individual hole wins, optional carryover
+- **Nassau** (27 tests) — front/back/overall with auto-press; full 9-hole support via `holesInRound` param
+- **Skins** (24 tests) — individual hole wins, optional carryover; auto-adapts to any hole count including 9
 - **Match Play** (31 tests) — 2-player head-to-head, net scoring
 - **Wolf** (55 tests) — 4-player rotating wolf, blind wolf option
 - **Stableford** (42 tests) — points-based, standard + modified
@@ -108,7 +108,8 @@ All game logic lives in `src/lib/games/` as pure functions with extensive tests:
 ### Offline Support
 - IndexedDB (`src/lib/offlineDb.ts`) stores pending scores
 - Offline queue syncs on reconnect
-- `OfflineContext` tracks network status
+- `OfflineContext` tracks network status (`isOnline`, `pendingCount`, `isSyncing`)
+- `OfflineBanner` (`src/components/ui/OfflineBanner.tsx`) — fixed top banner with Framer Motion slide-in; shows "No connection · X scores queued" when offline, "Back online · Syncing…" on reconnect, auto-dismisses after sync
 
 ### Handicap
 - `src/lib/handicapUtils.ts`
@@ -229,4 +230,20 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Project ID:** `puqgbsxabcyxrbwwoznn`
 - **URL:** `https://puqgbsxabcyxrbwwoznn.supabase.co`
 - **Edge functions:** delete-account, validate-revenucat-webhook (+ others)
-- **Migrations:** 18 files in `supabase/migrations/`
+- **Migrations:** 20 files in `supabase/migrations/`
+- **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
+
+## V2 Feature Status
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Onboarding flow (photo/handicap/tees/course) | ✅ Done | `has_onboarded` col, `/onboarding` route, `OnboardingRedirect` in App.tsx |
+| App tutorial overlay | ✅ Done | `AppTutorial` component, triggered via `location.state.showTutorial` |
+| Personal game formats | ✅ Done | `personal_game_formats` table, `usePersonalGameFormats`, `/my-formats/*` routes |
+| Push notifications — round invites | ✅ Done | `useCreateSupabaseRound` → `sendPushToProfiles` → `send-push` edge fn |
+| Share round results | ✅ Done | Canvas image + native share + SMS/email in `RoundComplete.tsx` |
+| 9-hole scoring | ✅ Done | Nassau has `holesInRound` param; Skins auto-adapts; both tested |
+| Score conflict resolution | ✅ Done | Last-write-wins upsert on `(player_id, hole_number)`; optimistic + real-time confirm |
+| QR lazy loading | ✅ Done | `qrcode.react` lazy-loaded in `FriendCodeQR` and `ShareJoinCodeModal` |
+| Offline indicator UX | ✅ Done | `OfflineBanner` in `App.tsx`; shows pending count, syncing state |
+| Stats — all-time records | ✅ Done | Best round, best payout, most skins cards in Stats page |
+| Stats — scoring trend | ✅ Done | ▲/▼ trend badge on avg score (requires 10+ rounds) |

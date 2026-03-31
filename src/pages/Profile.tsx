@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Settings, HelpCircle, Mic, Crown, ExternalLink, Trash2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Settings, HelpCircle, Mic, Crown, ExternalLink, Trash2, AlertTriangle, Bell } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,11 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { HomeCourseSelector } from '@/components/profile/HomeCourseSelector';
-import { TechCard, TechCardContent } from '@/components/ui/tech-card';
-import { GeometricBackground } from '@/components/ui/geometric-background';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useAuth } from '@/hooks/useAuth';
-import { useProfile, ProfileUpdate } from '@/hooks/useProfile';
+import { useProfile, ProfileUpdate, NotificationPreferences, DEFAULT_NOTIFICATION_PREFERENCES } from '@/hooks/useProfile';
+import { shouldPromptForPush, requestPushPermission, checkPushPermission } from '@/lib/pushUtils';
 import { useFriends } from '@/hooks/useFriends';
 import { useSettings } from '@/hooks/useSettings';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -26,12 +25,17 @@ import { cn } from '@/lib/utils';
 import { validatePlayerName, validateHandicap, sanitizeString } from '@/lib/validation';
 
 const TEE_OPTIONS = [
-  { value: 'back', label: 'Back', color: 'bg-foreground text-background' },
-  { value: 'blue', label: 'Blue', color: 'bg-blue-600 text-white' },
-  { value: 'white', label: 'White', color: 'bg-white text-foreground border-2 border-border' },
-  { value: 'gold', label: 'Gold', color: 'bg-yellow-500 text-foreground' },
-  { value: 'red', label: 'Red', color: 'bg-red-600 text-white' },
+  { value: 'back', label: 'B', color: 'bg-foreground text-background' },
+  { value: 'blue', label: 'B', color: 'bg-blue-600 text-white' },
+  { value: 'white', label: 'W', color: 'bg-white text-foreground' },
+  { value: 'gold', label: 'G', color: 'bg-yellow-500 text-foreground' },
+  { value: 'red', label: 'R', color: 'bg-red-600 text-white' },
 ];
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0 },
+};
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -55,7 +59,11 @@ export default function Profile() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  
+
+  // Push notification state
+  const [pushPermission, setPushPermission] = useState<'granted' | 'denied' | 'prompt' | null>(null);
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>(DEFAULT_NOTIFICATION_PREFERENCES);
+
   // Track if initial load is complete to prevent auto-save on mount
   const isInitialized = useRef(false);
   const hasLoadedOnce = useRef(false);
@@ -72,12 +80,20 @@ export default function Profile() {
       setHomeCourseName(profile.home_course_name);
       setDiscoveryEmail(profile.email || '');
       setDiscoveryPhone(profile.phone || '');
+      if (profile.notification_preferences) {
+        setNotifPrefs({ ...DEFAULT_NOTIFICATION_PREFERENCES, ...profile.notification_preferences });
+      }
       // Mark as initialized after a short delay to prevent immediate auto-save
       setTimeout(() => {
         isInitialized.current = true;
       }, 100);
     }
   }, [profile]);
+
+  // Check push permission status on mount
+  useEffect(() => {
+    checkPushPermission().then(setPushPermission);
+  }, []);
 
   // Auto-save function with debounce
   const autoSave = useCallback(async (updates: ProfileUpdate) => {
@@ -230,7 +246,7 @@ export default function Profile() {
 
   const handleCopyFriendCode = async () => {
     if (!profile?.friend_code) return;
-    
+
     try {
       await navigator.clipboard.writeText(profile.friend_code);
       setCopied(true);
@@ -267,560 +283,636 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <GeometricBackground />
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-[#F8F8F6] flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-foreground" />
       </div>
     );
   }
 
   const headerContent = (
-    <div className="flex items-center gap-4 px-4 pb-2 pt-safe-content">
-      <button
-        onClick={() => navigate(-1)}
-        className="w-11 h-11 rounded-lg bg-card border border-border flex items-center justify-center hover:bg-accent transition-colors"
-      >
-        <ArrowLeft className="w-5 h-5" />
-      </button>
-      <h1 className="heading-lg flex-1">Profile</h1>
-      <button
+    <div className="flex-shrink-0 px-6 pb-3 pt-safe-content border-b-2 border-foreground flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={() => navigate(-1)}
+          className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </motion.button>
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">MATCH Golf</p>
+          <h1 className="text-[22px] font-black tracking-[-0.04em] leading-tight text-foreground">Profile</h1>
+        </div>
+      </div>
+      <motion.button
+        whileTap={{ scale: 0.9 }}
         onClick={handleSignOut}
         disabled={isSigningOut}
-        className="w-11 h-11 rounded-lg bg-card border border-border flex items-center justify-center hover:bg-accent transition-colors"
+        className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
       >
         {isSigningOut ? (
-          <Loader2 className="w-5 h-5 animate-spin" />
+          <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
-          <LogOut className="w-5 h-5" />
+          <LogOut className="w-4 h-4" />
         )}
-      </button>
+      </motion.button>
     </div>
   );
 
   return (
     <AppLayout
       header={headerContent}
-      background={<GeometricBackground />}
-      mainClassName="px-4 space-y-6"
+      mainClassName="bg-[#F8F8F6] pb-8"
     >
-        {/* Avatar Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center pt-2"
-        >
-          <TechCard variant="elevated" className="p-5 flex flex-col items-center w-full">
-            <AvatarUpload
-              avatarUrl={profile?.avatar_url || null}
-              fullName={profile?.full_name || null}
-              onUpload={handleAvatarUpload}
-              size="lg"
-            />
-            <p className="mt-3 heading-md">{profile?.full_name || 'Add your name'}</p>
-            <p className="text-sm text-muted-foreground font-mono">{user?.email}</p>
-            
-            {/* Friend Code & Friends Link */}
-            <div className="flex items-center gap-2 mt-3">
-              <button
-                onClick={handleCopyFriendCode}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
-              >
-                <span className="font-mono tracking-widest text-xs">{profile?.friend_code || '------'}</span>
-                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
-              <button
-                onClick={() => {
-                  hapticLight();
-                  navigate('/friends');
-                }}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-semibold hover:bg-accent/80 transition-colors"
-              >
-                <Users className="w-3.5 h-3.5" />
-                <span className="number-display">{friends.length}</span>
-                <span>Friend{friends.length !== 1 ? 's' : ''}</span>
-              </button>
-            </div>
-          </TechCard>
-        </motion.div>
+      {/* Avatar Section */}
+      <motion.div
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: 0 }}
+        className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5 mx-6 mb-3 mt-4 flex flex-col items-center"
+      >
+        <AvatarUpload
+          avatarUrl={profile?.avatar_url || null}
+          fullName={profile?.full_name || null}
+          onUpload={handleAvatarUpload}
+          size="lg"
+          className="rounded-2xl"
+        />
+        <p className="mt-3 text-lg font-black tracking-[-0.03em]">{profile?.full_name || 'Add your name'}</p>
+        <p className="text-sm font-mono text-muted-foreground">{user?.email}</p>
 
-        {/* Golf Info Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="space-y-3"
-        >
-          <div className="flex items-center gap-2">
-            <Flag className="w-4 h-4 text-primary" />
-            <span className="label-sm">Golf Info</span>
+        {/* Friend Code Row */}
+        <div className="flex items-center gap-2 mt-3">
+          <div className="bg-muted rounded-xl px-4 py-2 font-mono font-black tracking-[0.2em] text-sm">
+            {profile?.friend_code || '------'}
           </div>
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={handleCopyFriendCode}
+            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+          >
+            {copied ? (
+              <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                <Check className="w-4 h-4 text-[#22C55E]" />
+              </motion.span>
+            ) : (
+              <Copy className="w-4 h-4 text-muted-foreground" />
+            )}
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => {
+              hapticLight();
+              navigate('/friends');
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-muted text-sm font-bold"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>{friends.length} Friend{friends.length !== 1 ? 's' : ''}</span>
+          </motion.button>
+        </div>
+      </motion.div>
 
+      {/* Golf Info Section */}
+      <motion.div
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: 0.06 }}
+        className="mx-6 mb-3"
+      >
+        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">Golf Info</p>
+        <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
           {/* Handicap */}
-          <TechCard hover>
-            <TechCardContent className="space-y-1.5">
-              <Label htmlFor="handicap" className="label-sm">Handicap Index</Label>
-              <Input
-                id="handicap"
-                type="number"
-                step="0.1"
-                placeholder="e.g. 12.4"
-                value={handicap}
-                onChange={(e) => setHandicap(e.target.value)}
-                className="h-11 text-base font-mono bg-background border border-border focus:border-primary"
-              />
-            </TechCardContent>
-          </TechCard>
-
+          <div className="px-4 py-3.5 flex items-center gap-3 border-b border-border/40">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <Flag className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <span className="text-sm font-medium text-foreground flex-1">Handicap Index</span>
+            <input
+              type="number"
+              step="0.1"
+              placeholder="e.g. 12.4"
+              value={handicap}
+              onChange={(e) => setHandicap(e.target.value)}
+              className="bg-transparent border-0 text-sm text-right text-foreground font-medium focus:ring-0 p-0 w-20 outline-none"
+            />
+          </div>
           {/* Home Course */}
-          <TechCard hover>
-            <TechCardContent className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <Home className="w-4 h-4 text-muted-foreground" />
-                <Label className="label-sm">Home Course</Label>
-              </div>
+          <div className="px-4 py-3.5 flex items-center gap-3 border-b border-border/40">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <Home className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <span className="text-sm font-medium text-foreground flex-1">Home Course</span>
+            <div className="flex-shrink-0 max-w-[160px]">
               <HomeCourseSelector
                 courseId={homeCourseId}
                 courseName={homeCourseName}
                 onSelect={handleHomeCourseSelect}
                 onClear={handleHomeCourseClear}
               />
-            </TechCardContent>
-          </TechCard>
-
+            </div>
+          </div>
           {/* Tee Preference */}
-          <TechCard hover>
-            <TechCardContent className="space-y-2">
-              <Label className="label-sm">Preferred Tees</Label>
-              <div className="flex flex-wrap gap-2">
-                {TEE_OPTIONS.map((tee) => (
-                  <button
-                    key={tee.value}
-                    type="button"
-                    onClick={() => {
-                      hapticLight();
-                      setTeePreference(teePreference === tee.value ? null : tee.value);
-                    }}
-                    className={cn(
-                      'px-3 py-2 rounded-lg font-bold text-sm transition-all',
-                      tee.color,
-                      teePreference === tee.value
-                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-105'
-                        : 'opacity-70 hover:opacity-100'
-                    )}
-                  >
-                    {tee.label}
-                  </button>
-                ))}
-              </div>
-            </TechCardContent>
-          </TechCard>
-        </motion.section>
-
-        {/* Friend Discovery Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="space-y-3"
-        >
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-primary" />
-            <span className="label-sm">Friend Discovery</span>
-          </div>
-          
-          <p className="text-xs text-muted-foreground">
-            Let friends find you by email or phone number
-          </p>
-
-          {/* Discoverable Email */}
-          <TechCard hover>
-            <TechCardContent className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <AtSign className="w-4 h-4 text-muted-foreground" />
-                <Label htmlFor="discoveryEmail" className="label-sm">Discoverable Email</Label>
-              </div>
-              <Input
-                id="discoveryEmail"
-                type="email"
-                placeholder="email@example.com"
-                value={discoveryEmail}
-                onChange={(e) => setDiscoveryEmail(e.target.value)}
-                className="h-11 text-base bg-background border border-border focus:border-primary"
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Friends can send you requests using this email
-              </p>
-            </TechCardContent>
-          </TechCard>
-
-          {/* Discoverable Phone */}
-          <TechCard hover>
-            <TechCardContent className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-muted-foreground" />
-                <Label htmlFor="discoveryPhone" className="label-sm">Discoverable Phone</Label>
-              </div>
-              <Input
-                id="discoveryPhone"
-                type="tel"
-                placeholder="(555) 123-4567"
-                value={discoveryPhone}
-                onChange={(e) => setDiscoveryPhone(e.target.value)}
-                className="h-11 text-base bg-background border border-border focus:border-primary"
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Friends can send you requests using this number
-              </p>
-            </TechCardContent>
-          </TechCard>
-        </motion.section>
-
-        {/* Account Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-3"
-        >
-          <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-primary" />
-            <span className="label-sm">Account</span>
-          </div>
-
-          {/* Full Name */}
-          <TechCard hover>
-            <TechCardContent className="space-y-1.5">
-              <Label htmlFor="fullName" className="label-sm">Full Name</Label>
-              <Input
-                id="fullName"
-                placeholder="Your name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="h-11 text-base bg-background border border-border focus:border-primary"
-              />
-            </TechCardContent>
-          </TechCard>
-
-          {/* Email (readonly) */}
-          <TechCard>
-            <TechCardContent className="space-y-1.5">
-              <Label className="label-sm">Login Email</Label>
-              <div className="py-2.5 px-3 rounded-lg bg-muted text-muted-foreground font-mono text-sm">
-                {user?.email}
-              </div>
-            </TechCardContent>
-          </TechCard>
-        </motion.section>
-
-        {/* Subscription Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.21 }}
-          className="space-y-3"
-        >
-          <div className="flex items-center gap-2">
-            <Crown className="w-4 h-4 text-primary" />
-            <span className="label-sm">Subscription</span>
-          </div>
-
-          <TechCard hover>
-            <TechCardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="label-sm">Current Plan</span>
-                  {isPro && <ProBadge size="sm" />}
-                </div>
-                <span className={cn(
-                  "text-sm font-bold",
-                  isPro ? "text-primary" : "text-muted-foreground"
-                )}>
-                  {isPro
-                    ? subscription?.product_id?.includes('annual') ? 'Pro (Annual)' : 'Pro (Monthly)'
-                    : 'Free'}
-                </span>
-              </div>
-
-              {!isPro ? (
-                <Button
+          <div className="px-4 py-3.5 flex items-center gap-3 last:border-0">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <Flag className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <span className="text-sm font-medium text-foreground flex-1">Preferred Tees</span>
+            <div className="flex gap-2 flex-wrap justify-end">
+              {TEE_OPTIONS.map((tee) => (
+                <button
+                  key={tee.value}
+                  type="button"
                   onClick={() => {
                     hapticLight();
-                    setShowPaywall(true);
+                    setTeePreference(teePreference === tee.value ? null : tee.value);
                   }}
-                  className="w-full"
+                  className={cn(
+                    'w-8 h-8 rounded-full flex items-center justify-center border-2 text-xs font-bold transition-all',
+                    tee.color,
+                    teePreference === tee.value
+                      ? 'ring-2 ring-foreground ring-offset-1'
+                      : 'opacity-60'
+                  )}
                 >
-                  <Crown className="w-4 h-4 mr-2" />
-                  Upgrade to Pro
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  onClick={handleManageSubscription}
-                  className="w-full"
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Manage Subscription
-                </Button>
-              )}
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRestorePurchases}
-                disabled={isRestoring}
-                className="w-full text-muted-foreground"
-              >
-                {isRestoring ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : null}
-                Restore Purchases
-              </Button>
-            </TechCardContent>
-          </TechCard>
-        </motion.section>
-
-        {/* Scoring Settings Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.22 }}
-          className="space-y-3"
-        >
-          <div className="flex items-center gap-2">
-            <Settings className="w-4 h-4 text-primary" />
-            <span className="label-sm">Scoring Settings</span>
+                  {tee.label}
+                </button>
+              ))}
+            </div>
           </div>
+        </div>
+      </motion.div>
 
-          {/* Net Scoring Toggle */}
-          <TechCard hover>
-            <TechCardContent className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <Label className="label-sm">Use Net Scoring</Label>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Determine winners by handicap-adjusted scores
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.useNetScoring}
-                  onCheckedChange={(checked) => {
-                    hapticLight();
-                    updateSettings({ useNetScoring: checked });
-                    toast.success(checked ? 'Net scoring enabled' : 'Gross scoring enabled');
-                  }}
-                />
-              </div>
-              <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/50 text-[11px] text-muted-foreground">
-                <HelpCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                <span>
-                  {settings.useNetScoring
-                    ? 'Winners are determined by net scores (strokes minus handicap). Match play uses differential strokes per hole.'
-                    : 'Winners are determined by gross scores (raw strokes). Handicaps are ignored for winner calculation.'}
-                </span>
-              </div>
-            </TechCardContent>
-          </TechCard>
-        </motion.section>
-
-        {/* Voice Control Settings Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.24 }}
-          className="space-y-3"
-        >
-          <div className="flex items-center gap-2">
-            <Mic className="w-4 h-4 text-primary" />
-            <span className="label-sm">Voice Control</span>
+      {/* Friend Discovery Section */}
+      <motion.div
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: 0.1 }}
+        className="mx-6 mb-3"
+      >
+        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">Friend Discovery</p>
+        <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+          {/* Discoverable Email */}
+          <div className="px-4 py-3.5 flex items-center gap-3 border-b border-border/40">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <AtSign className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <span className="text-sm font-medium text-foreground flex-1">Email</span>
+            <input
+              type="email"
+              placeholder="email@example.com"
+              value={discoveryEmail}
+              onChange={(e) => setDiscoveryEmail(e.target.value)}
+              className="bg-transparent border-0 text-sm text-right text-foreground font-medium focus:ring-0 p-0 w-40 outline-none"
+            />
           </div>
+          {/* Discoverable Phone */}
+          <div className="px-4 py-3.5 flex items-center gap-3 last:border-0">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <Phone className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <span className="text-sm font-medium text-foreground flex-1">Phone</span>
+            <input
+              type="tel"
+              placeholder="(555) 123-4567"
+              value={discoveryPhone}
+              onChange={(e) => setDiscoveryPhone(e.target.value)}
+              className="bg-transparent border-0 text-sm text-right text-foreground font-medium focus:ring-0 p-0 w-36 outline-none"
+            />
+          </div>
+        </div>
+      </motion.div>
 
-          {/* Continuous Voice Toggle */}
-          <TechCard hover>
-            <TechCardContent>
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <Label className="label-sm">Continuous Listening</Label>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Keep listening after saving scores
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.continuousVoice}
-                  onCheckedChange={(checked) => {
-                    hapticLight();
-                    updateSettings({ continuousVoice: checked });
-                    toast.success(checked ? 'Continuous mode on' : 'Continuous mode off');
-                  }}
-                />
-              </div>
-            </TechCardContent>
-          </TechCard>
+      {/* Account Section */}
+      <motion.div
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: 0.14 }}
+        className="mx-6 mb-3"
+      >
+        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">Account</p>
+        <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+          {/* Full Name */}
+          <div className="px-4 py-3.5 flex items-center gap-3 border-b border-border/40">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <User className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <span className="text-sm font-medium text-foreground flex-1">Full Name</span>
+            <input
+              type="text"
+              placeholder="Your name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="bg-transparent border-0 text-sm text-right text-foreground font-medium focus:ring-0 p-0 w-36 outline-none"
+            />
+          </div>
+          {/* Login Email (readonly) */}
+          <div className="px-4 py-3.5 flex items-center gap-3 last:border-0">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <AtSign className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <span className="text-sm font-medium text-foreground flex-1">Login Email</span>
+            <span className="text-sm font-mono text-muted-foreground truncate max-w-[160px]">{user?.email}</span>
+          </div>
+        </div>
+      </motion.div>
 
-          {/* Always Confirm Toggle */}
-          <TechCard hover>
-            <TechCardContent>
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <Label className="label-sm">Always Confirm</Label>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Review all voice scores before saving
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.alwaysConfirmVoice}
-                  onCheckedChange={(checked) => {
-                    hapticLight();
-                    updateSettings({ alwaysConfirmVoice: checked });
-                    toast.success(checked ? 'Confirmation required' : 'High confidence saves auto');
-                  }}
-                />
-              </div>
-            </TechCardContent>
-          </TechCard>
-
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 text-[11px] text-muted-foreground">
-            <HelpCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-            <span>
-              Voice commands: "Mike 5, John par" • "next hole" • "go to hole 7" • "finish round" • Say "yes" or "no" to confirm
+      {/* Subscription Section */}
+      <motion.div
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: 0.18 }}
+        className="mx-6 mb-3"
+      >
+        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">Subscription</p>
+        <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+          {/* Current Plan row */}
+          <div className="px-4 py-3.5 flex items-center gap-3 border-b border-border/40">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <Crown className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <span className="text-sm font-medium text-foreground flex-1">Current Plan</span>
+            <div className="flex items-center gap-2">
+              <span className="bg-foreground text-background text-[10px] font-bold px-2 py-0.5 rounded-full">
+                {isPro
+                  ? subscription?.product_id?.includes('annual') ? 'Pro Annual' : 'Pro Monthly'
+                  : 'Free'}
+              </span>
+              {isPro && <ProBadge size="sm" />}
+            </div>
+          </div>
+          {/* Upgrade / Manage row */}
+          <div className="px-4 py-3.5 flex items-center gap-3 border-b border-border/40">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <ExternalLink className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <span className="text-sm font-medium text-foreground flex-1">
+              {isPro ? 'Manage Subscription' : 'Unlock Pro Features'}
             </span>
-          </div>
-        </motion.section>
-
-        {/* Delete Account Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.26 }}
-          className="space-y-3"
-        >
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-destructive" />
-            <span className="label-sm text-destructive">Danger Zone</span>
-          </div>
-
-          <TechCard>
-            <TechCardContent className="space-y-3">
-              <div>
-                <p className="text-sm font-semibold">Delete Account</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Permanently delete your account and all associated data. This action cannot be undone.
-                </p>
-              </div>
-              <Button
-                variant="destructive"
+            {!isPro ? (
+              <button
                 onClick={() => {
                   hapticLight();
-                  setShowDeleteConfirm(true);
-                  setDeleteConfirmText('');
+                  setShowPaywall(true);
                 }}
-                className="w-full"
+                className="bg-[#F0EE3A] text-[#0A0A0A] font-bold rounded-xl text-sm px-4 py-2"
               >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete Account
-              </Button>
-            </TechCardContent>
-          </TechCard>
-        </motion.section>
-
-        {/* Delete Account Confirmation Dialog */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-6">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-card border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-xl"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-                  <AlertTriangle className="w-5 h-5 text-destructive" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg">Delete Account?</h3>
-                  <p className="text-xs text-muted-foreground">This cannot be undone</p>
-                </div>
-              </div>
-
-              <p className="text-sm text-muted-foreground">
-                This will permanently delete your account, rounds, scores, friends, and all other data. Any active subscriptions will need to be cancelled separately through the App Store.
-              </p>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">
-                  Type <span className="font-mono font-bold text-foreground">DELETE</span> to confirm
-                </Label>
-                <Input
-                  value={deleteConfirmText}
-                  onChange={(e) => setDeleteConfirmText(e.target.value)}
-                  placeholder="DELETE"
-                  className="font-mono text-center"
-                  autoFocus
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  disabled={isDeletingAccount}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleDeleteAccount}
-                  disabled={deleteConfirmText !== 'DELETE' || isDeletingAccount}
-                  className="flex-1"
-                >
-                  {isDeletingAccount ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    'Delete Forever'
-                  )}
-                </Button>
-              </div>
-            </motion.div>
+                Upgrade
+              </button>
+            ) : (
+              <button
+                onClick={handleManageSubscription}
+                className="text-sm font-medium text-muted-foreground"
+              >
+                Manage
+              </button>
+            )}
           </div>
-        )}
+          {/* Restore Purchases row */}
+          <div className="px-4 py-3.5 flex items-center gap-3 last:border-0">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              {isRestoring ? (
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              ) : (
+                <Settings className="w-4 h-4 text-muted-foreground" />
+              )}
+            </div>
+            <button
+              onClick={handleRestorePurchases}
+              disabled={isRestoring}
+              className="text-sm font-medium text-foreground flex-1 text-left"
+            >
+              Restore Purchases
+            </button>
+          </div>
+        </div>
+      </motion.div>
 
-        {/* Support & Legal Links */}
+      {/* Scoring Settings Section */}
+      <motion.div
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: 0.22 }}
+        className="mx-6 mb-3"
+      >
+        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">Scoring Settings</p>
+        <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+          {/* Net Scoring Toggle */}
+          <div className="px-4 py-3.5 flex items-center gap-3 border-b border-border/40">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <Settings className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">Use Net Scoring</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Determine winners by handicap-adjusted scores</p>
+            </div>
+            <Switch
+              checked={settings.useNetScoring}
+              onCheckedChange={(checked) => {
+                hapticLight();
+                updateSettings({ useNetScoring: checked });
+                toast.success(checked ? 'Net scoring enabled' : 'Gross scoring enabled');
+              }}
+              className="data-[state=checked]:bg-[#22C55E]"
+            />
+          </div>
+          <div className="px-4 py-3 last:border-0">
+            <div className="flex items-start gap-2 text-[11px] text-muted-foreground">
+              <HelpCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+              <span>
+                {settings.useNetScoring
+                  ? 'Winners are determined by net scores (strokes minus handicap). Match play uses differential strokes per hole.'
+                  : 'Winners are determined by gross scores (raw strokes). Handicaps are ignored for winner calculation.'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Voice Control Settings Section */}
+      <motion.div
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: 0.22 }}
+        className="mx-6 mb-3"
+      >
+        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">Voice Control</p>
+        <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+          {/* Continuous Listening Toggle */}
+          <div className="px-4 py-3.5 flex items-center gap-3 border-b border-border/40">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <Mic className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">Continuous Listening</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Keep listening after saving scores</p>
+            </div>
+            <Switch
+              checked={settings.continuousVoice}
+              onCheckedChange={(checked) => {
+                hapticLight();
+                updateSettings({ continuousVoice: checked });
+                toast.success(checked ? 'Continuous mode on' : 'Continuous mode off');
+              }}
+              className="data-[state=checked]:bg-[#22C55E]"
+            />
+          </div>
+          {/* Always Confirm Toggle */}
+          <div className="px-4 py-3.5 flex items-center gap-3 border-b border-border/40">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <Mic className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">Always Confirm</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Review all voice scores before saving</p>
+            </div>
+            <Switch
+              checked={settings.alwaysConfirmVoice}
+              onCheckedChange={(checked) => {
+                hapticLight();
+                updateSettings({ alwaysConfirmVoice: checked });
+                toast.success(checked ? 'Confirmation required' : 'High confidence saves auto');
+              }}
+              className="data-[state=checked]:bg-[#22C55E]"
+            />
+          </div>
+          <div className="px-4 py-3 last:border-0">
+            <div className="flex items-start gap-2 text-[11px] text-muted-foreground">
+              <HelpCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+              <span>
+                Voice commands: "Mike 5, John par" • "next hole" • "go to hole 7" • "finish round" • Say "yes" or "no" to confirm
+              </span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Notifications Section */}
+      {Capacitor.isNativePlatform() && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.25 }}
-          className="flex flex-col items-center gap-3 pt-4 pb-8"
+          variants={sectionVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{ delay: 0.24 }}
+          className="mx-6 mb-3"
         >
-          <button
-            onClick={() => {
-              hapticLight();
-              navigate('/support');
-            }}
-            className="text-sm text-primary font-semibold hover:underline transition-colors"
-          >
-            Help & Support
-          </button>
-          <div className="flex justify-center gap-4">
-            <a
-              href="/privacy-policy"
-              className="text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              Privacy Policy
-            </a>
-            <span className="text-muted-foreground/30">•</span>
-            <a
-              href="/terms-of-service"
-              className="text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              Terms of Service
-            </a>
+          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">Notifications</p>
+          <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+            {/* Permission row */}
+            <div className="px-4 py-3.5 flex items-center gap-3 border-b border-border/40">
+              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                <Bell className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">Push Notifications</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {pushPermission === 'granted' ? 'Enabled' : pushPermission === 'denied' ? 'Blocked — tap to open Settings' : 'Not yet enabled'}
+                </p>
+              </div>
+              {pushPermission === 'granted' ? (
+                <span className="text-[11px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">On</span>
+              ) : pushPermission === 'denied' ? (
+                <button
+                  onClick={() => {
+                    hapticLight();
+                    // On iOS, open app settings
+                    import('@capacitor/core').then(({ Capacitor: Cap }) => {
+                      if (Cap.isNativePlatform()) {
+                        import('@capacitor/app').then(({ App }) => {
+                          App.openUrl({ url: 'app-settings:' });
+                        });
+                      }
+                    });
+                  }}
+                  className="text-[12px] font-bold text-primary flex items-center gap-1"
+                >
+                  Settings <ExternalLink className="w-3 h-3" />
+                </button>
+              ) : shouldPromptForPush() ? (
+                <button
+                  onClick={async () => {
+                    hapticLight();
+                    const granted = await requestPushPermission();
+                    setPushPermission(granted ? 'granted' : 'denied');
+                    if (granted) hapticSuccess();
+                  }}
+                  className="text-[12px] font-bold text-primary"
+                >
+                  Enable
+                </button>
+              ) : null}
+            </div>
+
+            {/* Notification type toggles — only show when enabled */}
+            {pushPermission === 'granted' && (
+              <>
+                {(
+                  [
+                    { key: 'roundInvites', label: 'Round Invites', desc: "When someone adds you to a round" },
+                    { key: 'pressTriggered', label: 'Press Triggered', desc: 'When an auto-press fires in your round' },
+                    { key: 'tabSettled', label: 'Tab Settled', desc: 'When group debts are settled' },
+                    { key: 'tabAddedTo', label: 'Tab Added', desc: 'When a round is added to your group tab' },
+                  ] as { key: keyof NotificationPreferences; label: string; desc: string }[]
+                ).map(({ key, label, desc }, i, arr) => (
+                  <div
+                    key={key}
+                    className={cn('px-4 py-3.5 flex items-center gap-3', i < arr.length - 1 && 'border-b border-border/40')}
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">{label}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{desc}</p>
+                    </div>
+                    <Switch
+                      checked={notifPrefs[key]}
+                      onCheckedChange={(checked) => {
+                        hapticLight();
+                        const updated = { ...notifPrefs, [key]: checked };
+                        setNotifPrefs(updated);
+                        updateProfile({ notification_preferences: updated });
+                      }}
+                      className="data-[state=checked]:bg-[#22C55E]"
+                    />
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </motion.div>
+      )}
 
-        {/* Paywall Modal */}
-        <PaywallModal
-          open={showPaywall}
-          onOpenChange={setShowPaywall}
-        />
+      {/* Danger Zone */}
+      <motion.div
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: 0.26 }}
+        className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 mb-3 p-4"
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <AlertTriangle className="w-4 h-4 text-[#EF4444]" />
+          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#EF4444]">Danger Zone</p>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          Permanently delete your account and all associated data. This action cannot be undone.
+        </p>
+        <button
+          onClick={() => {
+            hapticLight();
+            setShowDeleteConfirm(true);
+            setDeleteConfirmText('');
+          }}
+          className="w-full border border-[#EF4444]/40 bg-[#FEF2F2] text-[#EF4444] rounded-xl py-3 font-semibold text-sm flex items-center justify-center gap-2"
+        >
+          <Trash2 className="w-4 h-4" />
+          Delete Account
+        </button>
+      </motion.div>
+
+      {/* Delete Account Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px] px-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm space-y-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#FEF2F2] flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-[#EF4444]" />
+              </div>
+              <div>
+                <h3 className="font-black text-lg tracking-[-0.03em]">Delete Account?</h3>
+                <p className="text-xs text-muted-foreground">This cannot be undone</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              This will permanently delete your account, rounds, scores, friends, and all other data. Any active subscriptions will need to be cancelled separately through the App Store.
+            </p>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">
+                Type <span className="font-mono font-bold text-foreground">DELETE</span> to confirm
+              </Label>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="DELETE"
+                className="bg-muted/50 rounded-xl border border-border font-mono text-center py-3"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeletingAccount}
+                className="flex-1 rounded-2xl"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirmText !== 'DELETE' || isDeletingAccount}
+                className="flex-1 bg-destructive text-destructive-foreground rounded-2xl h-12 font-bold"
+              >
+                {isDeletingAccount ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  'Delete Forever'
+                )}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Support & Legal Links */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.28 }}
+        className="flex flex-col items-center gap-3 pt-4 pb-8 mx-6"
+      >
+        <button
+          onClick={() => {
+            hapticLight();
+            navigate('/support');
+          }}
+          className="text-sm text-foreground font-semibold hover:underline transition-colors"
+        >
+          Help & Support
+        </button>
+        <div className="flex justify-center gap-4">
+          <a
+            href="/privacy-policy"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Privacy Policy
+          </a>
+          <span className="text-muted-foreground/30">•</span>
+          <a
+            href="/terms-of-service"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Terms of Service
+          </a>
+        </div>
+      </motion.div>
+
+      {/* Paywall Modal */}
+      <PaywallModal
+        open={showPaywall}
+        onOpenChange={setShowPaywall}
+      />
     </AppLayout>
   );
 }

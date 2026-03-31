@@ -12,7 +12,6 @@ import {
   Loader2,
   Share2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useFriends, Friend } from '@/hooks/useFriends';
 import { PlayerWithScores, Round } from '@/types/golf';
@@ -185,6 +184,28 @@ export function ShareRoundResultsSheet({
     onClose();
   };
 
+  // Share option rows config
+  const shareOptions = [
+    {
+      label: 'Share',
+      icon: <Share2 className="w-5 h-5 text-white" />,
+      iconBg: 'bg-[#0A0A0A]',
+      onClick: handleNativeShare,
+    },
+    {
+      label: 'Messages',
+      icon: <MessageSquare className="w-5 h-5 text-white" />,
+      iconBg: 'bg-[#22C55E]',
+      onClick: handleSMS,
+    },
+    {
+      label: 'Email',
+      icon: <Mail className="w-5 h-5 text-white" />,
+      iconBg: 'bg-blue-500',
+      onClick: handleEmail,
+    },
+  ];
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -194,7 +215,7 @@ export function ShareRoundResultsSheet({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-40"
             onClick={onClose}
           />
 
@@ -203,114 +224,129 @@ export function ShareRoundResultsSheet({
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-            className="fixed bottom-0 left-0 right-0 bg-background rounded-t-3xl z-50 shadow-2xl max-h-[90vh] flex flex-col"
+            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+            className="fixed bottom-0 left-0 right-0 bg-[#F8F8F6] rounded-t-3xl z-50 shadow-2xl max-h-[90vh] flex flex-col"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
-            {/* Drag Handle */}
-            <div className="flex justify-center pt-3 pb-2 shrink-0">
-              <div className="w-12 h-1.5 bg-muted-foreground/20 rounded-full" />
-            </div>
+            {/* Handle */}
+            <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3 shrink-0" />
 
             {/* Header */}
             <div className="flex items-center justify-between px-6 pb-4 shrink-0">
-              <div>
-                <h3 className="text-xl font-bold text-foreground">Share Results</h3>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Send round summary to friends
-                </p>
-              </div>
+              <h3 className="text-[20px] font-black tracking-[-0.04em] text-[#0A0A0A]">
+                Share Results
+              </h3>
               <motion.button
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={onClose}
-                className="w-10 h-10 rounded-full bg-muted flex items-center justify-center"
+                className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 text-muted-foreground" />
               </motion.button>
             </div>
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto px-6 pb-4">
-              {/* Quick Share Buttons */}
-              <div className="grid grid-cols-4 gap-2 mb-6">
-                <button
-                  onClick={handleNativeShare}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                >
-                  <Share2 className="w-5 h-5" />
-                  <span className="text-[10px] font-semibold">Share</span>
-                </button>
-
-                <button
-                  onClick={handleSMS}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-success text-success-foreground hover:bg-success/90 transition-colors"
-                >
-                  <MessageSquare className="w-5 h-5" />
-                  <span className="text-[10px] font-semibold">SMS</span>
-                </button>
-
-                <button
-                  onClick={handleEmail}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-                >
-                  <Mail className="w-5 h-5" />
-                  <span className="text-[10px] font-semibold">Email</span>
-                </button>
-
-                <button
-                  onClick={handleCopy}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted hover:bg-muted/80 transition-colors"
-                >
-                  {copied ? (
-                    <Check className="w-5 h-5 text-success" />
-                  ) : (
-                    <Copy className="w-5 h-5" />
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto pb-4">
+              {/* Share preview card */}
+              <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-4 overflow-hidden">
+                {/* Top accent stripe */}
+                <div className="h-1 bg-[#F0EE3A]" />
+                <div className="p-5">
+                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+                    MATCH Golf
+                  </p>
+                  <p className="font-black text-[18px] tracking-[-0.04em] mt-1">
+                    {round.courseName}
+                  </p>
+                  {winner && (
+                    <p className="text-[13px] mt-1 text-muted-foreground">
+                      {hasTie ? (
+                        <span>Tied</span>
+                      ) : (
+                        <>
+                          Winner: <span className="text-[#22C55E] font-black">{winner.name}</span>
+                        </>
+                      )}
+                    </p>
                   )}
-                  <span className="text-[10px] font-semibold">
-                    {copied ? 'Copied' : 'Copy'}
-                  </span>
-                </button>
-              </div>
-
-              {/* Preview */}
-              <div className="mb-6">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                  Preview
-                </p>
-                <div className="p-4 rounded-xl bg-muted/50 border border-border text-sm font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
-                  {shortSummary}
+                  <div className="mt-3 p-3 rounded-xl bg-[#F8F8F6] text-[12px] font-mono whitespace-pre-wrap max-h-28 overflow-y-auto text-muted-foreground">
+                    {shortSummary}
+                  </div>
                 </div>
               </div>
 
+              {/* Section label */}
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-6 mb-3">
+                Share via
+              </p>
+
+              {/* Share option rows */}
+              {shareOptions.map((option, index) => (
+                <motion.button
+                  key={option.label}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05, type: 'spring', stiffness: 300, damping: 28 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={option.onClick}
+                  className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-2 px-4 py-3 flex items-center gap-3 w-[calc(100%-48px)]"
+                >
+                  <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', option.iconBg)}>
+                    {option.icon}
+                  </div>
+                  <span className="font-semibold text-foreground">{option.label}</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
+                </motion.button>
+              ))}
+
+              {/* Copy link button */}
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={handleCopy}
+                className="bg-foreground text-background rounded-2xl h-[52px] font-bold mx-6 mt-3 w-[calc(100%-48px)] flex items-center justify-center gap-2"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-5 h-5" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-5 h-5" />
+                    Copy Summary
+                  </>
+                )}
+              </motion.button>
+
               {/* Friends Section */}
               {friendsNotInRound.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Users className="w-4 h-4 text-primary" />
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Send to Friends ({selectedFriendIds.size} selected)
-                    </p>
-                  </div>
+                <div className="mt-6">
+                  {/* Section label */}
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-6 mb-3">
+                    Send to Friends ({selectedFriendIds.size} selected)
+                  </p>
 
                   {friendsLoading ? (
                     <div className="py-8 flex items-center justify-center">
                       <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                     </div>
                   ) : (
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {friendsNotInRound.map(friend => (
-                        <button
+                    <div className="space-y-0 max-h-48 overflow-y-auto">
+                      {friendsNotInRound.map((friend, index) => (
+                        <motion.button
                           key={friend.id}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05, type: 'spring', stiffness: 300, damping: 28 }}
+                          whileTap={{ scale: 0.97 }}
                           onClick={() => toggleFriend(friend.id)}
                           className={cn(
-                            'w-full flex items-center gap-3 p-3 rounded-xl border transition-all',
-                            selectedFriendIds.has(friend.id)
-                              ? 'bg-primary/10 border-primary'
-                              : 'bg-card border-border hover:border-primary/30'
+                            'bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-2 px-4 py-3 flex items-center gap-3 w-[calc(100%-48px)] transition-all',
+                            selectedFriendIds.has(friend.id) && 'ring-2 ring-foreground'
                           )}
                         >
                           {/* Avatar */}
-                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                             {friend.avatarUrl ? (
                               <img
                                 src={friend.avatarUrl}
@@ -326,7 +362,7 @@ export function ShareRoundResultsSheet({
 
                           {/* Name */}
                           <div className="flex-1 text-left min-w-0">
-                            <p className="font-semibold text-sm truncate">
+                            <p className="font-semibold text-foreground text-sm truncate">
                               {friend.fullName || 'Unknown'}
                             </p>
                             {friend.handicap !== null && (
@@ -339,17 +375,17 @@ export function ShareRoundResultsSheet({
                           {/* Checkbox */}
                           <div
                             className={cn(
-                              'w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
+                              'w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
                               selectedFriendIds.has(friend.id)
-                                ? 'bg-primary border-primary'
+                                ? 'bg-foreground border-foreground'
                                 : 'border-muted-foreground/30'
                             )}
                           >
                             {selectedFriendIds.has(friend.id) && (
-                              <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                              <Check className="w-3 h-3 text-background" />
                             )}
                           </div>
-                        </button>
+                        </motion.button>
                       ))}
                     </div>
                   )}
@@ -357,7 +393,7 @@ export function ShareRoundResultsSheet({
               )}
 
               {friendsNotInRound.length === 0 && !friendsLoading && (
-                <div className="py-6 text-center">
+                <div className="py-6 text-center mt-4">
                   <Users className="w-10 h-10 mx-auto text-muted-foreground/50 mb-2" />
                   <p className="text-sm text-muted-foreground">
                     All your friends were in this round!
@@ -369,21 +405,22 @@ export function ShareRoundResultsSheet({
               )}
             </div>
 
-            {/* Bottom Action */}
+            {/* Bottom Action — send to friends */}
             {friendsNotInRound.length > 0 && selectedFriendIds.size > 0 && (
-              <div className="px-6 pb-6 pt-2 shrink-0 border-t border-border/50">
-                <Button
+              <div className="px-6 pb-6 pt-2 shrink-0">
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
                   onClick={handleSendToFriends}
                   disabled={isSending}
-                  className="w-full py-6 rounded-2xl font-semibold"
+                  className="bg-foreground text-background rounded-2xl h-[52px] font-bold w-full flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   {isSending ? (
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
-                    <Send className="w-5 h-5 mr-2" />
+                    <Send className="w-5 h-5" />
                   )}
                   Send to {selectedFriendIds.size} Friend{selectedFriendIds.size > 1 ? 's' : ''}
-                </Button>
+                </motion.button>
               </div>
             )}
           </motion.div>

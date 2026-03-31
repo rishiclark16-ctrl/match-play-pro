@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import { Loader2, CloudRain, Shuffle, Coins, Zap, Plus, Share2 } from 'lucide-react';
 import { useRounds } from '@/hooks/useRounds';
 import { useRoundSharing } from '@/hooks/useRoundSharing';
@@ -16,6 +17,7 @@ import { toast } from 'sonner';
 import { shareResults, shareText } from '@/lib/shareResults';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { supabase } from '@/integrations/supabase/client';
+import { sendPushToProfiles, shouldPromptForPush, requestPushPermission } from '@/lib/pushUtils';
 import { StrokesPerHoleMap } from '@/lib/games/skins';
 import { calculateSettlement, NetSettlement } from '@/lib/games/settlement';
 import { calculateMatchPlay, MatchPlayResult } from '@/lib/games/matchPlay';
@@ -64,6 +66,32 @@ export default function RoundComplete() {
   const { round, players: rawPlayers, scores: rawScores, presses, loading, isLocalData } = useRoundData(id);
   const { groups } = useGroups();
   const { syncRoundToLedger } = useRoundLedgerSync();
+
+  // Contextual push permission prompt — shown once after first completed round
+  useEffect(() => {
+    if (!round) return;
+    if (!shouldPromptForPush()) return;
+    // Small delay so round results render first
+    const timer = setTimeout(() => {
+      requestPushPermission();
+    }, 3000);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!round]);
+
+  // Confetti celebration on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.3 },
+        colors: ['#F0EE3A', '#ffffff', '#22C55E', '#0A0A0A'],
+        disableForReducedMotion: true,
+      });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Ensure round is marked complete and share with friends
   useEffect(() => {
@@ -364,6 +392,19 @@ export default function RoundComplete() {
       setAddedToGroupId(groupId);
       setShowGroupPicker(false);
       toast.success('Round added to group tab!');
+      // Notify players with negative net amounts (they owe money)
+      const owingProfileIds = entries
+        .filter(e => e.amount < 0)
+        .map(e => e.profileId);
+      if (owingProfileIds.length > 0) {
+        sendPushToProfiles({
+          profileIds: owingProfileIds,
+          title: 'Tab Updated',
+          body: `${round?.courseName ?? 'A round'} was added to your group tab`,
+          data: { route: '/groups' },
+          type: 'tabAddedTo',
+        });
+      }
     } catch {
       hapticError();
       toast.error('Failed to add to tab — try again');

@@ -12,7 +12,7 @@ interface PendingScore {
   holeNumber: number;
   strokes: number;
   timestamp: number;
-  synced: boolean;
+  synced: 0 | 1; // must be numeric for IndexedDB index queries (0 = pending, 1 = synced)
 }
 
 interface PendingRoundUpdate {
@@ -21,7 +21,7 @@ interface PendingRoundUpdate {
   field: string;
   value: unknown;
   timestamp: number;
-  synced: boolean;
+  synced: 0 | 1; // must be numeric for IndexedDB index queries
 }
 
 interface OfflineDBSchema extends DBSchema {
@@ -104,7 +104,7 @@ export async function queueScore(
     holeNumber,
     strokes,
     timestamp: Date.now(),
-    synced: false,
+    synced: 0,
   });
 
   return id;
@@ -125,7 +125,7 @@ export async function markScoreSynced(id: string): Promise<void> {
   const db = await getDB();
   const score = await db.get('pendingScores', id);
   if (score) {
-    score.synced = true;
+    score.synced = 1;
     await db.put('pendingScores', score);
   }
 }
@@ -142,7 +142,7 @@ export async function cleanupSyncedScores(): Promise<void> {
   
   let cursor = await store.openCursor();
   while (cursor) {
-    if (cursor.value.synced && cursor.value.timestamp < oneDayAgo) {
+    if (cursor.value.synced === 1 && cursor.value.timestamp < oneDayAgo) {
       await cursor.delete();
     }
     cursor = await cursor.continue();

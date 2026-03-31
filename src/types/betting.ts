@@ -5,6 +5,8 @@ export type PropBetType =
   | 'greenie'       // Hit green on par 3 + closest + 1-putt
   | 'sandie'        // Up and down from bunker
   | 'barkie'        // Hit a tree, still make par or better
+  | 'oozle'         // Miss green on par 3 + still make par
+  | 'chippy'        // Chip in from off the green for par or better
   | 'polie'         // 3-putt or worse but still make par
   | 'arnie'         // Par or better after hitting a tree
   | 'ferret'        // Hole out from off the green
@@ -54,6 +56,8 @@ export const PROP_BET_TEMPLATES = [
   // Junk/Save bets
   { type: 'sandie' as const, label: 'Sandie', icon: '🏖️', description: 'Up and down from a bunker', category: 'junk' },
   { type: 'barkie' as const, label: 'Barkie', icon: '🌲', description: 'Hit a tree, still make par or better', category: 'junk' },
+  { type: 'oozle' as const, label: 'Oozle', icon: '💧', description: 'Miss the green on a par 3, still make par', category: 'junk' },
+  { type: 'chippy' as const, label: 'Chippy', icon: '🏌️', description: 'Chip in from off the green for par or better', category: 'junk' },
   { type: 'polie' as const, label: 'Polie', icon: '🏁', description: '3-putt or worse but still make par', category: 'junk' },
   { type: 'arnie' as const, label: 'Arnie', icon: '⛳', description: 'Par or better after hitting a tree', category: 'junk' },
   { type: 'ferret' as const, label: 'Ferret', icon: '🦡', description: 'Hole out from off the green', category: 'junk' },

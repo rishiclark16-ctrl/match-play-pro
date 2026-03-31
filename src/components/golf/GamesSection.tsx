@@ -1103,6 +1103,8 @@ function HouseGameSection({
   holeInfo,
   currentHole,
   pressThreshold,
+  existingPresses,
+  totalHoles,
   onAutoPress,
 }: {
   result: HouseGameResult;
@@ -1110,30 +1112,36 @@ function HouseGameSection({
   holeInfo: Round['holeInfo'];
   currentHole: number;
   pressThreshold: number | null;
+  existingPresses: Press[];
+  totalHoles: 9 | 18;
   onAutoPress: (press: Press) => void;
 }) {
   const leader = result.standings[0];
-  const autoPressTriggeredRef = useRef<Set<number>>(new Set());
+  const prevMarginRef = useRef<number>(0);
 
-  // Auto-press detection: when a player is X down in nassau, fire a press
+  // Auto-press detection: fires only on the transition to X-down, starts on next hole, max 3 presses
   useEffect(() => {
     if (!pressThreshold || !result.nassauResult) return;
     const nassau = result.nassauResult;
-    if (nassau.overall.margin >= pressThreshold && nassau.overall.winnerId) {
-      const key = currentHole;
-      if (!autoPressTriggeredRef.current.has(key)) {
-        autoPressTriggeredRef.current.add(key);
-        const loser = players.find(p => p.id !== nassau.overall.winnerId);
-        if (loser) {
-          const press = createPress(loser.id, currentHole, 1);
-          onAutoPress(press);
-          toast.success(`Auto-press triggered — new sub-match started on hole ${currentHole}`, {
-            icon: '⚡',
-          });
-        }
+    const currentMargin = nassau.overall.margin;
+    const wasBelow = prevMarginRef.current < pressThreshold;
+    prevMarginRef.current = currentMargin;
+
+    const isXDown = currentMargin >= pressThreshold && !!nassau.overall.winnerId;
+    const underPressLimit = existingPresses.length < 3;
+    const notLastHole = currentHole < totalHoles;
+
+    if (isXDown && wasBelow && underPressLimit && notLastHole) {
+      const loser = players.find(p => p.id !== nassau.overall.winnerId);
+      if (loser) {
+        const press = createPress(loser.id, currentHole + 1, 1);
+        onAutoPress(press);
+        toast.success(`Auto-press triggered — new sub-match starts hole ${currentHole + 1}`, {
+          icon: '⚡',
+        });
       }
     }
-  }, [result.nassauResult, currentHole, pressThreshold, players, onAutoPress]);
+  }, [result.nassauResult, currentHole, pressThreshold, existingPresses, players, totalHoles, onAutoPress]);
 
   return (
     <div>
@@ -1358,6 +1366,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
         config,
         round.slope ?? 113,
         round.holes as 9 | 18,
+        houseGameEntry.bbbResults,
       );
     } catch {
       return null;
@@ -1508,6 +1517,8 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
         holeInfo={round.holeInfo}
         currentHole={currentHole}
         pressThreshold={autoPressThreshold}
+        existingPresses={round.presses || []}
+        totalHoles={round.holes}
         onAutoPress={onAddPress}
       />
     );

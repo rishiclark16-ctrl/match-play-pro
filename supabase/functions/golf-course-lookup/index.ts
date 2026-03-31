@@ -85,7 +85,7 @@ serve(async (req) => {
     }
 
     let apiUrl: string;
-    
+
     if (action === 'search' && query) {
       apiUrl = `${BASE_URL}/v1/search?search_query=${encodeURIComponent(query)}`;
     } else if (action === 'details' && courseId) {

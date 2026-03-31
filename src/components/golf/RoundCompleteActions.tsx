@@ -1,6 +1,6 @@
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Share2, Plus, Home, Loader2, Image, Send } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { hapticLight } from '@/lib/haptics';
 
 interface RoundCompleteActionsProps {
@@ -20,76 +20,98 @@ export function RoundCompleteActions({
 }: RoundCompleteActionsProps) {
   const navigate = useNavigate();
 
+  const buttonVariants = {
+    initial: { opacity: 0, y: 8 },
+    animate: { opacity: 1, y: 0 },
+  };
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 pb-4 bg-gradient-to-t from-background via-background to-transparent z-50 pointer-events-auto">
+    <div className="fixed bottom-0 left-0 right-0 border-t border-[rgba(0,0,0,0.06)] bg-background px-6 py-4 pb-safe z-50 pointer-events-auto">
       <div className="space-y-2">
-        {/* Send to Group Button */}
-        <Button
+        {/* Send Results button (secondary) */}
+        <motion.button
+          variants={buttonVariants}
+          initial="initial"
+          animate="animate"
+          transition={{ delay: 0.04 }}
           onClick={() => {
             hapticLight();
             onShowShareSheet();
           }}
-          variant="outline"
-          className="w-full h-12 text-base font-bold rounded-lg border-2 border-primary text-primary hover:bg-primary/10"
+          className="w-full border-2 border-foreground rounded-2xl h-[52px] font-semibold text-foreground flex items-center justify-center gap-2 mb-2"
         >
-          <Send className="w-5 h-5 mr-2" />
+          <Send className="w-5 h-5" />
           Send Results to Group
-        </Button>
+        </motion.button>
 
-        {/* Share Buttons */}
+        {/* Share Buttons (tertiary) */}
         <div className="flex gap-2">
-          <Button
-            variant="outline"
+          <motion.button
+            variants={buttonVariants}
+            initial="initial"
+            animate="animate"
+            transition={{ delay: 0.08 }}
             onClick={onShareImage}
             disabled={isSharing}
-            className="flex-1 h-11 text-sm font-semibold rounded-lg"
+            className="flex-1 bg-white border border-border rounded-2xl h-11 font-medium text-sm flex items-center justify-center gap-1.5"
           >
             {isSharing && shareMode === 'image' ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Image className="w-4 h-4 mr-2" />
+              <Image className="w-4 h-4" />
             )}
             Image
-          </Button>
+          </motion.button>
 
-          <Button
-            variant="outline"
+          <motion.button
+            variants={buttonVariants}
+            initial="initial"
+            animate="animate"
+            transition={{ delay: 0.12 }}
             onClick={onShareText}
             disabled={isSharing}
-            className="flex-1 h-11 text-sm font-semibold rounded-lg"
+            className="flex-1 bg-white border border-border rounded-2xl h-11 font-medium text-sm flex items-center justify-center gap-1.5"
           >
             {isSharing && shareMode === 'text' ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Share2 className="w-4 h-4 mr-2" />
+              <Share2 className="w-4 h-4" />
             )}
             Text
-          </Button>
+          </motion.button>
         </div>
 
-        {/* New Round Button */}
-        <Button
+        {/* New Round Button (primary) */}
+        <motion.button
+          variants={buttonVariants}
+          initial="initial"
+          animate="animate"
+          transition={{ delay: 0.16 }}
           onClick={() => {
             hapticLight();
             navigate('/new-round');
           }}
-          className="w-full h-12 text-base font-bold rounded-lg"
+          className="w-full bg-foreground text-background rounded-2xl h-[52px] font-bold text-[15px] flex items-center justify-center gap-2"
         >
-          <Plus className="w-5 h-5 mr-2" />
+          <Plus className="w-5 h-5" />
           New Round
-        </Button>
+        </motion.button>
 
-        {/* Home Link */}
-        <button
+        {/* Back to Home ghost */}
+        <motion.button
+          variants={buttonVariants}
+          initial="initial"
+          animate="animate"
+          transition={{ delay: 0.2 }}
           onClick={() => {
             hapticLight();
             navigate('/');
           }}
-          className="w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1"
+          className="w-full text-muted-foreground text-sm font-medium flex items-center justify-center gap-1.5 py-2"
         >
           <Home className="w-4 h-4" />
           Back to Home
-        </button>
+        </motion.button>
       </div>
     </div>
   );

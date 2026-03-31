@@ -2,6 +2,20 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
+export interface NotificationPreferences {
+  roundInvites: boolean;
+  pressTriggered: boolean;
+  tabSettled: boolean;
+  tabAddedTo: boolean;
+}
+
+export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+  roundInvites: true,
+  pressTriggered: true,
+  tabSettled: true,
+  tabAddedTo: true,
+};
+
 export interface Profile {
   id: string;
   full_name: string | null;
@@ -15,6 +29,10 @@ export interface Profile {
   phone: string | null;
   created_at: string | null;
   updated_at: string | null;
+  push_token: string | null;
+  notification_preferences: NotificationPreferences | null;
+  push_permission_denied_at: string | null;
+  has_onboarded: boolean | null;
 }
 
 export interface ProfileUpdate {
@@ -26,6 +44,10 @@ export interface ProfileUpdate {
   tee_preference?: string | null;
   email?: string | null;
   phone?: string | null;
+  push_token?: string | null;
+  notification_preferences?: NotificationPreferences | null;
+  push_permission_denied_at?: string | null;
+  has_onboarded?: boolean | null;
 }
 
 export function useProfile() {
@@ -91,6 +113,10 @@ export function useProfile() {
               phone: null,
               created_at: null,
               updated_at: null,
+              push_token: null,
+              notification_preferences: null,
+              push_permission_denied_at: null,
+              has_onboarded: null,
             });
           } else if (newProfile) {
             setProfile(newProfile as Profile);

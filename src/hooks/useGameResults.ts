@@ -81,6 +81,7 @@ export function useGameResults({
           config,
           round.slope ?? 113,
           round.holes as 9 | 18,
+          houseGame.bbbResults,
         );
       } catch (err) {
         console.error('[useGameResults] calculateHouseGame failed:', err);

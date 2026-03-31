@@ -2,7 +2,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GolfCourseDetails } from '@/hooks/useGolfCourseSearch';
-import { TechCard, TechCardContent } from '@/components/ui/tech-card';
 
 interface TeeInfo {
   tee_name: string;
@@ -20,29 +19,29 @@ interface TeeSelectorProps {
   onClose: () => void;
 }
 
-const teeColors: Record<string, string> = {
-  'Black': 'bg-gray-900 text-white',
-  'Blue': 'bg-blue-600 text-white',
-  'White': 'bg-white text-gray-900 border border-gray-300',
-  'Gold': 'bg-yellow-500 text-gray-900',
-  'Yellow': 'bg-yellow-400 text-gray-900',
-  'Green': 'bg-green-600 text-white',
-  'Red': 'bg-red-600 text-white',
-  'Orange': 'bg-orange-500 text-white',
-  'Silver': 'bg-gray-400 text-gray-900',
-  'Combo': 'bg-purple-600 text-white',
+const teeColorDots: Record<string, string> = {
+  'Black': 'bg-gray-900',
+  'Blue': 'bg-blue-600',
+  'White': 'bg-white border border-gray-300',
+  'Gold': 'bg-yellow-500',
+  'Yellow': 'bg-yellow-400',
+  'Green': 'bg-green-600',
+  'Red': 'bg-red-600',
+  'Orange': 'bg-orange-500',
+  'Silver': 'bg-gray-400',
+  'Combo': 'bg-purple-600',
 };
 
-function getTeeColor(teeName: string): string {
-  if (teeColors[teeName]) return teeColors[teeName];
-  
-  for (const [color, className] of Object.entries(teeColors)) {
+function getTeeDotColor(teeName: string): string {
+  if (teeColorDots[teeName]) return teeColorDots[teeName];
+
+  for (const [color, className] of Object.entries(teeColorDots)) {
     if (teeName.toLowerCase().includes(color.toLowerCase())) {
       return className;
     }
   }
-  
-  return 'bg-primary text-primary-foreground';
+
+  return 'bg-foreground';
 }
 
 export function TeeSelector({ isOpen, courseDetails, onSelectTee, onClose }: TeeSelectorProps) {
@@ -52,44 +51,31 @@ export function TeeSelector({ isOpen, courseDetails, onSelectTee, onClose }: Tee
   const femaleTees = courseDetails.tees?.female || [];
   const hasBothGenders = maleTees.length > 0 && femaleTees.length > 0;
 
-  const renderTeeOption = (tee: TeeInfo, gender: 'male' | 'female') => (
+  const renderTeeOption = (tee: TeeInfo, gender: 'male' | 'female', index: number) => (
     <motion.button
       key={`${gender}-${tee.tee_name}`}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.04 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => onSelectTee(tee.tee_name, gender)}
-      className="w-full text-left"
+      className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-4 py-3.5 flex items-center gap-3 mb-2 w-full text-left"
     >
-      <TechCard hover>
-        <TechCardContent className="p-4">
-          <div className="flex items-center gap-4">
-            {/* Tee color indicator */}
-            <div className={cn(
-              "w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold shadow-sm",
-              getTeeColor(tee.tee_name)
-            )}>
-              {tee.tee_name.charAt(0)}
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold">{tee.tee_name}</p>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5 font-mono">
-                <span>{tee.total_yards.toLocaleString()} yds</span>
-                <span className="text-border">•</span>
-                <span>Par {tee.par_total}</span>
-                <span className="text-border">•</span>
-                <span>{tee.number_of_holes}H</span>
-              </div>
-            </div>
-            
-            <div className="text-right">
-              <p className="text-lg font-bold font-mono">{tee.course_rating}</p>
-              <p className="text-xs text-muted-foreground font-mono">/ {tee.slope_rating}</p>
-            </div>
-            
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
-          </div>
-        </TechCardContent>
-      </TechCard>
+      {/* Tee color dot */}
+      <div className={cn('w-3 h-3 rounded-full flex-shrink-0', getTeeDotColor(tee.tee_name))} />
+
+      <div className="flex-1 min-w-0">
+        <p className="font-bold text-sm text-foreground">{tee.tee_name}</p>
+        <p className="font-mono text-sm text-muted-foreground">
+          {tee.total_yards.toLocaleString()} yds • Par {tee.par_total}
+        </p>
+      </div>
+
+      <div className="text-right flex-shrink-0">
+        <p className="text-sm font-bold text-foreground">{tee.course_rating} / {tee.slope_rating}</p>
+      </div>
+
+      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
     </motion.button>
   );
 
@@ -100,55 +86,58 @@ export function TeeSelector({ isOpen, courseDetails, onSelectTee, onClose }: Tee
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center"
           onClick={onClose}
         >
           <motion.div
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-background rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden border border-border shadow-2xl"
+            className="bg-[#F8F8F6] rounded-t-3xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-2xl"
           >
+            {/* Handle */}
+            <div className="w-10 h-1 bg-muted-foreground/25 rounded-full mx-auto mt-3 mb-1" />
+
             {/* Header */}
-            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
+            <div className="px-5 py-4 border-b border-border/50 flex items-center justify-between">
               <div>
-                <h3 className="headline-sm">Select Tees</h3>
-                <p className="text-sm text-muted-foreground mt-0.5">{courseDetails.course_name}</p>
+                <h3 className="text-lg font-black tracking-[-0.03em]">Select Tees</h3>
+                <p className="text-sm text-muted-foreground">{courseDetails.course_name}</p>
               </div>
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
-                className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center"
+                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </motion.button>
             </div>
 
             {/* Tee Options */}
-            <div className="p-4 overflow-y-auto max-h-[60vh] space-y-4">
+            <div className="px-5 py-4 overflow-y-auto max-h-[60vh]">
               {/* Male Tees */}
               {maleTees.length > 0 && (
-                <div className="space-y-2">
+                <div className="mb-2">
                   {hasBothGenders && (
-                    <p className="label-sm px-1">Men's Tees</p>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
+                      Men's Tees
+                    </p>
                   )}
-                  <div className="space-y-2">
-                    {maleTees.map((tee) => renderTeeOption(tee, 'male'))}
-                  </div>
+                  {maleTees.map((tee, index) => renderTeeOption(tee, 'male', index))}
                 </div>
               )}
 
               {/* Female Tees */}
               {femaleTees.length > 0 && (
-                <div className="space-y-2">
+                <div className="mb-2">
                   {hasBothGenders && (
-                    <p className="label-sm px-1">Women's Tees</p>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
+                      Women's Tees
+                    </p>
                   )}
-                  <div className="space-y-2">
-                    {femaleTees.map((tee) => renderTeeOption(tee, 'female'))}
-                  </div>
+                  {femaleTees.map((tee, index) => renderTeeOption(tee, 'female', index))}
                 </div>
               )}
 
@@ -161,7 +150,7 @@ export function TeeSelector({ isOpen, courseDetails, onSelectTee, onClose }: Tee
             </div>
 
             {/* Rating Legend */}
-            <div className="p-4 border-t border-border bg-muted/30">
+            <div className="px-5 py-4 border-t border-border/50">
               <p className="text-xs text-muted-foreground text-center font-mono">
                 Course Rating / Slope shown on the right
               </p>

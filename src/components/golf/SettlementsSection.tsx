@@ -80,32 +80,38 @@ export function SettlementsSection({
           key={i}
           layout
           className={cn(
-            'p-3 rounded-lg border transition-all',
-            s.status === 'paid' && 'bg-success/5 border-success/20',
-            s.status === 'forgiven' && 'bg-muted/30 border-border/30 opacity-60',
-            s.status === 'pending' && 'bg-muted/50 border-border/50'
+            'bg-white rounded-2xl px-4 py-3.5 mb-2 transition-all',
+            s.status === 'paid' && 'bg-[#F0FFF4]',
+            s.status === 'forgiven' && 'opacity-70',
+            s.status === 'pending' && 'shadow-[0_1px_3px_rgba(0,0,0,0.06)]'
           )}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm">
               <span
-                className={cn('font-medium', s.status !== 'pending' && 'text-muted-foreground')}
+                className={cn(
+                  'font-semibold text-foreground',
+                  s.status !== 'pending' && 'text-muted-foreground'
+                )}
               >
                 {s.fromPlayerName.split(' ')[0]}
               </span>
-              <ArrowRight className="w-3 h-3 text-muted-foreground" />
+              <ArrowRight className="w-4 h-4 text-[#F0EE3A] flex-shrink-0" />
               <span
-                className={cn('font-medium', s.status !== 'pending' && 'text-muted-foreground')}
+                className={cn(
+                  'font-semibold text-foreground',
+                  s.status !== 'pending' && 'text-muted-foreground'
+                )}
               >
                 {s.toPlayerName.split(' ')[0]}
               </span>
             </div>
             <span
               className={cn(
-                'font-bold tabular-nums',
-                s.status === 'paid' && 'text-success',
+                'font-black tabular-nums text-xl',
+                s.status === 'paid' && 'text-[#22C55E]',
                 s.status === 'forgiven' && 'text-muted-foreground line-through',
-                s.status === 'pending' && 'text-primary'
+                s.status === 'pending' && 'text-[#EF4444]'
               )}
             >
               ${s.amount.toFixed(0)}
@@ -116,40 +122,35 @@ export function SettlementsSection({
           <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
             {s.status === 'pending' ? (
               <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 px-2 gap-1 text-xs border-success/30 text-success hover:bg-success hover:text-success-foreground"
+                <button
+                  className="bg-[#F0FFF4] border border-[#22C55E] text-[#22C55E] text-sm font-bold rounded-xl px-3 py-1.5"
                   onClick={() => {
                     hapticSuccess();
                     markAsPaid(s);
                     toast.success('Marked as paid!');
                   }}
                 >
-                  <Check className="w-3 h-3" />
+                  <Check className="w-3 h-3 inline mr-1" />
                   Paid
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 px-2 gap-1 text-xs text-muted-foreground hover:text-foreground"
+                </button>
+                <button
+                  className="text-muted-foreground text-sm font-medium border border-border rounded-xl px-3 py-1.5"
                   onClick={() => {
                     hapticLight();
                     markAsForgiven(s);
                     toast.info('Settlement forgiven');
                   }}
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3 h-3 inline mr-1" />
                   Forgive
-                </Button>
+                </button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <span
                   className={cn(
-                    'text-xs font-medium flex items-center gap-1',
-                    s.status === 'paid' && 'text-success',
-                    s.status === 'forgiven' && 'text-muted-foreground'
+                    'text-[11px] font-semibold text-muted-foreground flex items-center gap-1',
+                    s.status === 'paid' && 'text-[#22C55E]'
                   )}
                 >
                   {s.status === 'paid' && <Check className="w-3 h-3" />}
@@ -160,10 +161,8 @@ export function SettlementsSection({
                     </span>
                   )}
                 </span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                <button
+                  className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground"
                   onClick={() => {
                     hapticLight();
                     markAsPending(s);
@@ -171,7 +170,7 @@ export function SettlementsSection({
                   }}
                 >
                   <RotateCcw className="w-3 h-3" />
-                </Button>
+                </button>
               </div>
             )}
           </div>

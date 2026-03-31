@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MATCH Golf — Direction C: Bold Sport</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,800&family=Barlow+Condensed:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Barlow', sans-serif;
+    gap: 48px;
+    padding: 48px;
+    flex-wrap: wrap;
+  }
+  .label {
+    color: #555;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 16px;
+    font-family: 'Barlow', sans-serif;
+  }
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: #111;
+    border-radius: 54px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 2px #222,
+      0 0 0 4px #111,
+      0 40px 80px rgba(0,0,0,0.8);
+  }
+  .dynamic-island {
+    width: 120px; height: 34px;
+    background: #000; border-radius: 20px;
+    position: absolute; top: 10px; left: 50%;
+    transform: translateX(-50%); z-index: 20;
+  }
+  .status-bar {
+    height: 54px;
+    display: flex; align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 32px 10px; z-index: 10;
+    position: relative;
+  }
+  .status-bar .time {
+    font-size: 15px; font-weight: 700;
+    color: #fff; letter-spacing: -0.01em;
+  }
+
+  /* Accent color: electric green */
+  :root { --accent: #B5F03A; }
+
+  /* Header — full bleed with accent strip */
+  .header {
+    background: #111;
+    padding: 6px 24px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid #1a1a1a;
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 24px;
+    width: 48px; height: 2px;
+    background: var(--accent);
+  }
+  .logo-area { display: flex; align-items: center; gap: 12px; }
+  .logo-mark {
+    width: 44px; height: 44px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-text h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 30px; font-weight: 900;
+    color: #fff; letter-spacing: 0.04em;
+    text-transform: uppercase; line-height: 1;
+  }
+  .logo-text p {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.2em; color: #444;
+    text-transform: uppercase; margin-top: 1px;
+  }
+  .avatar {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: #1a1a1a;
+    border: 2px solid #2a2a2a;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 14px; color: #fff;
+    position: relative;
+  }
+  .avatar-dot {
+    position: absolute; bottom: -3px; right: -3px;
+    width: 12px; height: 12px;
+    background: var(--accent); border-radius: 50%;
+    border: 2px solid #111;
+  }
+
+  /* Scoreboard-style stats */
+  .scoreboard {
+    margin: 16px 24px;
+    background: #161616;
+    border-radius: 14px;
+    border: 1px solid #222;
+    overflow: hidden;
+  }
+  .scoreboard-header {
+    background: #1a1a1a;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #222;
+  }
+  .scoreboard-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #555;
+  }
+  .live-indicator {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; color: var(--accent);
+    text-transform: uppercase;
+  }
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .scoreboard-body {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr 1px 1fr;
+  }
+  .score-cell {
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .score-divider { background: #222; }
+  .score-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 38px; font-weight: 900;
+    color: #fff; line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .score-num.accent { color: var(--accent); }
+  .score-label {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: #444; margin-top: 3px;
+  }
+
+  /* Action bar */
+  .action-bar {
+    margin: 0 24px 16px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .action-btn {
+    padding: 14px 16px;
+    border-radius: 12px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer;
+  }
+  .action-btn.primary {
+    background: var(--accent);
+  }
+  .action-btn.secondary {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+  }
+  .action-btn-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .action-btn.primary .action-btn-icon { background: rgba(0,0,0,0.15); }
+  .action-btn.secondary .action-btn-icon { background: rgba(255,255,255,0.05); }
+  .action-btn-text .main {
+    font-size: 14px; font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .action-btn.primary .action-btn-text .main { color: #000; }
+  .action-btn.secondary .action-btn-text .main { color: #fff; }
+  .action-btn-text .sub {
+    font-size: 10px; font-weight: 500; margin-top: 1px;
+  }
+  .action-btn.primary .action-btn-text .sub { color: rgba(0,0,0,0.5); }
+  .action-btn.secondary .action-btn-text .sub { color: #444; }
+
+  /* Section */
+  .section-head {
+    padding: 0 24px 8px;
+    display: flex; align-items: center;
+    justify-content: space-between;
+  }
+  .section-head-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 800;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: #444;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .section-accent-line {
+    width: 20px; height: 2px;
+    background: var(--accent); border-radius: 2px;
+  }
+
+  /* Round card */
+  .round-card {
+    margin: 0 24px 8px;
+    background: #161616;
+    border-radius: 16px;
+    border: 1px solid #222;
+    overflow: hidden;
+  }
+  .round-card.active { border-color: rgba(181, 240, 58, 0.2); }
+  .card-top-strip {
+    padding: 14px 16px 10px;
+    position: relative;
+  }
+  .round-card.active .card-top-strip::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent 60%);
+  }
+  .card-title-row {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; margin-bottom: 6px;
+  }
+  .course-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px; font-weight: 800;
+    color: #fff; letter-spacing: 0.02em;
+    text-transform: uppercase; line-height: 1.1;
+  }
+  .status-pill {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 5px;
+  }
+  .status-pill.live {
+    background: rgba(181, 240, 58, 0.1);
+    color: var(--accent);
+    border: 1px solid rgba(181, 240, 58, 0.2);
+  }
+  .status-pill.done {
+    background: rgba(255,255,255,0.04);
+    color: #555;
+    border: 1px solid #222;
+  }
+  .card-meta {
+    display: flex; gap: 12px;
+    font-size: 12px; color: #555;
+    font-weight: 500; margin-bottom: 8px;
+  }
+  .card-meta strong { color: #888; font-weight: 700; }
+  .card-bottom-strip {
+    padding: 8px 16px;
+    background: #131313;
+    border-top: 1px solid #1d1d1d;
+    display: flex; gap: 6px; flex-wrap: wrap;
+    align-items: center; justify-content: space-between;
+  }
+  .games-row { display: flex; gap: 5px; flex-wrap: wrap; }
+  .game-tag {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px;
+    background: rgba(255,255,255,0.04);
+    color: #555; border: 1px solid #222;
+  }
+  .round-card.active .game-tag {
+    color: rgba(181, 240, 58, 0.5);
+    border-color: rgba(181, 240, 58, 0.1);
+    background: rgba(181, 240, 58, 0.04);
+  }
+  .hole-indicator {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 800;
+    color: var(--accent); letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 90px;
+    background: rgba(13,13,13,0.97);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid #1d1d1d;
+    display: flex; align-items: flex-start;
+    justify-content: space-around; padding: 12px 0 0;
+  }
+  .nav-item {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 3px; flex: 1;
+  }
+  .nav-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: #333;
+  }
+  .nav-item.active .nav-label { color: var(--accent); }
+</style>
+</head>
+<body>
+<div>
+  <p class="label">Direction C — Bold &amp; Sport</p>
+  <div class="phone">
+    <div class="dynamic-island"></div>
+
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="3" width="3" height="9" rx="1" fill="white"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="white"/><rect x="9" y="0" width="3" height="12" rx="1" fill="white"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" fill="white" opacity="0.3"/></svg>
+        <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0" y="1" width="22" height="10" rx="3" fill="none" stroke="white" stroke-width="1.5"/><rect x="22.5" y="4" width="2" height="4" rx="1" fill="white" opacity="0.4"/><rect x="1.5" y="2.5" width="18" height="7" rx="2" fill="white"/></svg>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+      <div class="logo-area">
+        <div class="logo-mark">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <line x1="8" y1="3" x2="8" y2="19" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M8 3 L20 7.5 L8 12 Z" fill="#000"/>
+            <ellipse cx="8" cy="19.5" rx="4.5" ry="1.5" fill="rgba(0,0,0,0.3)"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>MATCH</h1>
+          <p>Golf Scorecard</p>
+        </div>
+      </div>
+      <div class="avatar">
+        RC
+        <span class="avatar-dot"></span>
+      </div>
+    </div>
+
+    <!-- Scoreboard -->
+    <div class="scoreboard">
+      <div class="scoreboard-header">
+        <span class="scoreboard-title">Your Season</span>
+        <span class="live-indicator">
+          <span class="live-dot"></span>
+          2 Live
+        </span>
+      </div>
+      <div class="scoreboard-body">
+        <div class="score-cell">
+          <div class="score-num accent">2</div>
+          <div class="score-label">Active</div>
+        </div>
+        <div class="score-divider"></div>
+        <div class="score-cell">
+          <div class="score-num">14</div>
+          <div class="score-label">Played</div>
+        </div>
+        <div class="score-divider"></div>
+        <div class="score-cell">
+          <div class="score-num">1</div>
+          <div class="score-label">Watching</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-bar">
+      <div class="action-btn primary">
+        <div class="action-btn-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <div class="action-btn-text">
+          <div class="main">New Round</div>
+          <div class="sub">Setup + Play</div>
+        </div>
+      </div>
+      <div class="action-btn secondary">
+        <div class="action-btn-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div class="action-btn-text">
+          <div class="main">Watch</div>
+          <div class="sub">Join via code</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Rounds -->
+    <div class="section-head">
+      <div class="section-head-title">
+        <span class="section-accent-line"></span>
+        Live Now
+      </div>
+    </div>
+
+    <div class="round-card active">
+      <div class="card-top-strip">
+        <div class="card-title-row">
+          <div class="course-name">Pebble Beach</div>
+          <span class="status-pill live">● Live</span>
+        </div>
+        <div class="card-meta">
+          <span><strong>4</strong> Players</span>
+          <span>Today · 7:02am</span>
+        </div>
+      </div>
+      <div class="card-bottom-strip">
+        <div class="games-row">
+          <span class="game-tag">Nassau</span>
+          <span class="game-tag">Skins</span>
+          <span class="game-tag">Wolf</span>
+        </div>
+        <span class="hole-indicator">H.12/18 →</span>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="section-head" style="margin-top:8px;">
+      <div class="section-head-title">
+        <span style="width:20px;height:2px;background:#2a2a2a;border-radius:2px;display:block;"></span>
+        History
+      </div>
+    </div>
+
+    <div class="round-card">
+      <div class="card-top-strip">
+        <div class="card-title-row">
+          <div class="course-name">Augusta Natl</div>
+          <span class="status-pill done">Done</span>
+        </div>
+        <div class="card-meta">
+          <span><strong>3</strong> Players</span>
+          <span>Mar 22</span>
+        </div>
+      </div>
+      <div class="card-bottom-strip">
+        <div class="games-row">
+          <span class="game-tag">Match Play</span>
+          <span class="game-tag">Stableford</span>
+        </div>
+        <span style="font-size:12px;font-weight:700;color:#333;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.05em;">VIEW →</span>
+      </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="bottom-nav">
+      <div class="nav-item active">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B5F03A" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span class="nav-label">Home</span>
+      </div>
+      <div class="nav-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="nav-label">Friends</span>
+      </div>
+      <div class="nav-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span class="nav-label">Stats</span>
+      </div>
+      <div class="nav-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="nav-label">Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -9,7 +9,7 @@ interface ProBadgeProps {
 
 export function ProBadge({ className, size = 'sm', variant = 'default' }: ProBadgeProps) {
   const sizeClasses = {
-    sm: 'text-[10px] px-1.5 py-0.5 gap-0.5',
+    sm: 'text-[10px] px-2 py-0.5 gap-0.5',
     md: 'text-xs px-2 py-1 gap-1',
     lg: 'text-sm px-2.5 py-1 gap-1.5',
   };
@@ -21,15 +21,15 @@ export function ProBadge({ className, size = 'sm', variant = 'default' }: ProBad
   };
 
   const variantClasses = {
-    default: 'bg-gold text-gold-foreground',
-    subtle: 'bg-gold/10 text-gold border border-gold/20',
-    outline: 'bg-transparent text-gold border border-gold/40',
+    default: 'bg-[#F0EE3A] text-[#0A0A0A]',
+    subtle: 'bg-[#F0EE3A]/20 text-[#0A0A0A] border border-[#F0EE3A]/40',
+    outline: 'bg-transparent text-[#0A0A0A] border border-[#F0EE3A]/60',
   };
 
   return (
     <span
       className={cn(
-        'inline-flex items-center font-bold uppercase tracking-wider rounded-full',
+        'inline-flex items-center font-black uppercase tracking-[0.06em] rounded-full',
         sizeClasses[size],
         variantClasses[variant],
         className

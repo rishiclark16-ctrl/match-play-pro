@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, ChevronDown } from 'lucide-react';
 import { getScoreLabel, getScoreColor } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
@@ -12,6 +13,102 @@ interface ScoreInputSheetProps {
   holeNumber: number;
   par: number;
   currentScore?: number;
+  pickupScore?: number;
+  onPickup?: () => void;
+}
+
+interface NamedScore {
+  label: string;
+  score: number;
+  diff: number;
+  bgClass: string;
+  textClass: string;
+}
+
+function buildNamedScores(par: number): NamedScore[] {
+  const options: NamedScore[] = [];
+
+  // Ace — only for par 3
+  if (par === 3) {
+    options.push({
+      label: 'ACE',
+      score: 1,
+      diff: 1 - par,
+      bgClass: 'bg-[#22C55E]',
+      textClass: 'text-white',
+    });
+  }
+
+  // Albatross / Double Eagle — par 5 only (score 2)
+  if (par >= 5) {
+    options.push({
+      label: 'ALBATROSS',
+      score: par - 3,
+      diff: -3,
+      bgClass: 'bg-[#22C55E]',
+      textClass: 'text-white',
+    });
+  }
+
+  // Eagle (par-2) — meaningful on par 4+ (would be hole-in-one on par 3, already covered)
+  if (par >= 4) {
+    options.push({
+      label: 'EAGLE',
+      score: par - 2,
+      diff: -2,
+      bgClass: 'bg-[#22C55E]',
+      textClass: 'text-white',
+    });
+  }
+
+  // Birdie (par-1)
+  if (par >= 2) {
+    options.push({
+      label: 'BIRDIE',
+      score: par - 1,
+      diff: -1,
+      bgClass: 'bg-[#4ADE80]',
+      textClass: 'text-[#0A0A0A]',
+    });
+  }
+
+  // Par
+  options.push({
+    label: 'PAR',
+    score: par,
+    diff: 0,
+    bgClass: 'bg-[#F0EE3A]',
+    textClass: 'text-[#0A0A0A]',
+  });
+
+  // Bogey (par+1)
+  options.push({
+    label: 'BOGEY',
+    score: par + 1,
+    diff: 1,
+    bgClass: 'bg-[#FB923C]',
+    textClass: 'text-white',
+  });
+
+  // Double bogey (par+2)
+  options.push({
+    label: 'DOUBLE',
+    score: par + 2,
+    diff: 2,
+    bgClass: 'bg-[#EF4444]',
+    textClass: 'text-white',
+  });
+
+  // Triple bogey (par+3)
+  options.push({
+    label: 'TRIPLE+',
+    score: par + 3,
+    diff: 3,
+    bgClass: 'bg-[#991B1B]',
+    textClass: 'text-white',
+  });
+
+  return options;
 }
 
 export function ScoreInputSheet({
@@ -22,8 +119,12 @@ export function ScoreInputSheet({
   holeNumber,
   par,
   currentScore,
+  pickupScore,
+  onPickup,
 }: ScoreInputSheetProps) {
-  const scores = Array.from({ length: 12 }, (_, i) => i + 1);
+  const [showNumpad, setShowNumpad] = useState(false);
+  const customScores = Array.from({ length: 12 }, (_, i) => i + 1);
+  const namedScores = buildNamedScores(par);
 
   const handleSelectScore = (score: number) => {
     hapticSuccess();
@@ -31,16 +132,9 @@ export function ScoreInputSheet({
     onClose();
   };
 
-  // Get background color for score button
-  const getScoreButtonBg = (score: number, isSelected: boolean) => {
-    if (isSelected) return 'border-primary bg-primary text-primary-foreground';
-    
-    const diff = score - par;
-    if (diff <= -2) return 'border-success/40 bg-success/10 hover:bg-success/20';
-    if (diff === -1) return 'border-success/30 bg-success/5 hover:bg-success/15';
-    if (diff === 0) return 'border-border bg-card hover:bg-muted';
-    if (diff === 1) return 'border-warning/30 bg-warning/5 hover:bg-warning/15';
-    return 'border-destructive/30 bg-destructive/5 hover:bg-destructive/15';
+  const diffLabel = (diff: number): string => {
+    if (diff === 0) return 'E';
+    return diff > 0 ? `+${diff}` : `${diff}`;
   };
 
   return (
@@ -52,7 +146,7 @@ export function ScoreInputSheet({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 bg-black/25 backdrop-blur-[2px] z-40"
             onClick={onClose}
           />
 
@@ -62,20 +156,20 @@ export function ScoreInputSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-            className="fixed bottom-0 left-0 right-0 bg-background rounded-t-2xl z-50 border-t border-border"
+            className="fixed inset-x-0 bottom-0 z-50 bg-[#F8F8F6] rounded-t-3xl"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             {/* Drag Handle */}
-            <div className="flex justify-center pt-1.5 pb-0.5">
-              <div className="w-10 h-1 bg-muted-foreground/20 rounded-full" />
-            </div>
+            <div className="w-10 h-1 bg-muted-foreground/25 rounded-full mx-auto mt-3 mb-4" />
 
             {/* Header */}
-            <div className="flex items-center justify-between px-3 pb-1">
+            <div className="px-5 pb-4 flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-foreground">{playerName}</h3>
-                <p className="text-[10px] text-muted-foreground font-medium">
-                  Hole {holeNumber} • Par {par}
+                <h3 className="text-lg font-black tracking-[-0.03em] text-foreground">
+                  {playerName}
+                </h3>
+                <p className="text-[13px] font-black tracking-[0.04em] text-foreground mt-0.5">
+                  Hole {holeNumber} · Par {par}
                 </p>
               </div>
               <motion.button
@@ -84,49 +178,134 @@ export function ScoreInputSheet({
                   hapticLight();
                   onClose();
                 }}
-                className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center"
+                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center"
                 aria-label="Close score input"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </motion.button>
             </div>
 
-            {/* Score Grid */}
-            <div className="grid grid-cols-4 gap-2 px-3 pb-2">
-              {scores.map((score) => {
-                const isSelected = currentScore === score;
-                const label = getScoreLabel(score, par);
-                const colorClass = isSelected ? 'text-primary-foreground' : getScoreColor(score, par);
+            {/* Pickup button — only when group_pickup_rule is active */}
+            {onPickup && pickupScore !== undefined && (
+              <div className="px-5 pb-3">
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => {
+                    hapticLight();
+                    onPickup();
+                    onClose();
+                  }}
+                  className="w-full bg-muted rounded-2xl py-3 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm font-bold text-foreground">Pickup</span>
+                  <span className="text-xs font-mono text-muted-foreground">({pickupScore})</span>
+                </motion.button>
+              </div>
+            )}
+
+            {/* Named Score Buttons */}
+            <div className="flex flex-col gap-2 px-5 pb-3">
+              {namedScores.map((item, index) => {
+                const isSelected = currentScore === item.score;
 
                 return (
                   <motion.button
-                    key={score}
-                    whileTap={{ scale: 0.92 }}
-                    onClick={() => handleSelectScore(score)}
-                    aria-label={`Score ${score}, ${label}`}
+                    key={item.label}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      delay: index * 0.03,
+                      type: 'spring',
+                      stiffness: 400,
+                      damping: 28,
+                    }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => handleSelectScore(item.score)}
+                    aria-label={`${item.label}, ${item.score} strokes`}
                     aria-pressed={isSelected}
                     className={cn(
-                      "flex flex-col items-center justify-center py-3 rounded-xl border-2 transition-all min-h-[56px] min-w-[44px] touch-manipulation",
-                      getScoreButtonBg(score, isSelected)
+                      "w-full h-14 rounded-2xl flex items-center justify-between px-5 touch-manipulation",
+                      item.bgClass,
+                      isSelected && "ring-2 ring-offset-2 ring-[#0A0A0A]"
                     )}
                     style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
-                    <span className={cn(
-                      "text-xl font-bold tabular-nums leading-none",
-                      colorClass
-                    )}>
-                      {score}
+                    <span className={cn("text-[15px] font-black tracking-[0.06em]", item.textClass)}>
+                      {item.label}
                     </span>
-                    <span className={cn(
-                      "text-[9px] font-bold mt-1 uppercase tracking-wide",
-                      colorClass
-                    )}>
-                      {label}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className={cn("text-[13px] font-semibold opacity-70", item.textClass)}>
+                        {diffLabel(item.diff)}
+                      </span>
+                      <span className={cn(
+                        "text-xl font-black tabular-nums min-w-[28px] text-right",
+                        item.textClass
+                      )}>
+                        {item.score}
+                      </span>
+                    </div>
                   </motion.button>
                 );
               })}
             </div>
+
+            {/* Separator + Custom numpad toggle */}
+            <div className="px-5 pb-2">
+              <div className="border-t border-black/8 mb-3" />
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => {
+                  hapticLight();
+                  setShowNumpad(prev => !prev);
+                }}
+                className="w-full flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold text-muted-foreground"
+              >
+                <span>Enter number</span>
+                <motion.span
+                  animate={{ rotate: showNumpad ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </motion.span>
+              </motion.button>
+            </div>
+
+            {/* Custom numpad — compact, collapsible */}
+            <AnimatePresence>
+              {showNumpad && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                  className="overflow-hidden px-5 pb-5"
+                >
+                  <div className="grid grid-cols-6 gap-1.5 pt-1">
+                    {customScores.map((score) => {
+                      const isSelected = currentScore === score;
+                      return (
+                        <motion.button
+                          key={score}
+                          whileTap={{ scale: 0.92 }}
+                          onClick={() => handleSelectScore(score)}
+                          aria-label={`Score ${score}`}
+                          aria-pressed={isSelected}
+                          className={cn(
+                            "rounded-xl py-2.5 flex items-center justify-center touch-manipulation",
+                            isSelected
+                              ? "bg-[#F0EE3A] text-[#0A0A0A] font-black"
+                              : "bg-muted text-foreground font-semibold"
+                          )}
+                          style={{ WebkitTapHighlightColor: 'transparent' }}
+                        >
+                          <span className="text-sm tabular-nums">{score}</span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </>
       )}

@@ -1,10 +1,13 @@
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Trophy, Flag, CheckCircle2, Mic, Share2, DollarSign } from 'lucide-react';
+import { BarChart3, Trophy, Flag, CheckCircle2, Mic, Share2, DollarSign, Zap } from 'lucide-react';
 import { VoiceButton } from '@/components/golf/VoiceButton';
 import { PropBetSheet } from '@/components/golf/PropBetSheet';
+import { JunkBetSheet } from '@/components/golf/JunkBetSheet';
 import { cn } from '@/lib/utils';
 import { PlayerWithScores, HoleInfo } from '@/types/golf';
 import { PropBet } from '@/types/betting';
+import { hapticLight } from '@/lib/haptics';
 
 interface ScorecardBottomBarProps {
   roundId: string;
@@ -23,6 +26,7 @@ interface ScorecardBottomBarProps {
   isProcessing: boolean;
   isSupported: boolean;
   propBets: PropBet[];
+  junkStakes?: number;
   autoAdvanceCountdown?: number | null;
   allCurrentHoleScored?: boolean;
   voiceButtonRef?: React.RefObject<HTMLDivElement>;
@@ -53,6 +57,7 @@ export function ScorecardBottomBar({
   isProcessing,
   isSupported,
   propBets,
+  junkStakes = 1,
   autoAdvanceCountdown,
   allCurrentHoleScored,
   voiceButtonRef,
@@ -68,6 +73,28 @@ export function ScorecardBottomBar({
   const isLastHole = currentHole === totalHoles;
   const isFinishState = (canFinish || hole18FullyScored) && !isSpectator && playoffHole === 0;
   const isPlayoffState = playoffHole > 0;
+
+  // Junk bet sheet state
+  const [showJunk, setShowJunk] = useState(false);
+  // Track which holes have had the junk prompt dismissed so it doesn't re-show
+  const junkDismissedRef = useRef<Set<number>>(new Set());
+  const prevHoleRef = useRef<number>(currentHole);
+
+  // Reset dismissed flag when hole changes
+  useEffect(() => {
+    if (prevHoleRef.current !== currentHole) {
+      prevHoleRef.current = currentHole;
+    }
+  }, [currentHole]);
+
+  // Show junk prompt when all players have scored (if not dismissed for this hole)
+  const showJunkBanner = !isSpectator && playoffHole === 0 && !!allCurrentHoleScored
+    && !junkDismissedRef.current.has(currentHole);
+
+  const handleJunkDismiss = () => {
+    junkDismissedRef.current.add(currentHole);
+    setShowJunk(false);
+  };
 
   // Determine what the main action button does
   const showNextHole = !isSpectator && !isLastHole && playoffHole === 0 && allCurrentHoleScored;
@@ -85,6 +112,31 @@ export function ScorecardBottomBar({
         paddingBottom: 'env(safe-area-inset-bottom, 8px)',
       }}
     >
+      {/* Any Junk? Banner */}
+      <AnimatePresence>
+        {showJunkBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="px-4 pt-2"
+          >
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => { hapticLight(); setShowJunk(true); }}
+              className="w-full bg-[#F0EE3A] rounded-2xl px-4 py-2.5 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-[#0A0A0A]" />
+                <span className="text-[13px] font-black text-[#0A0A0A]">Any junk on hole {currentHole}?</span>
+              </div>
+              <span className="text-[12px] font-bold text-[#0A0A0A]/60">Log it →</span>
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Secondary Actions Row */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2 gap-2">
         {/* Leaderboard */}
@@ -302,6 +354,18 @@ export function ScorecardBottomBar({
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Junk Bet Sheet */}
+      <JunkBetSheet
+        isOpen={showJunk}
+        onClose={handleJunkDismiss}
+        roundId={roundId}
+        currentHole={currentHole}
+        holeInfo={holeInfo}
+        players={players}
+        existingBets={propBets}
+        defaultStakes={junkStakes}
+      />
     </div>
   );
 }

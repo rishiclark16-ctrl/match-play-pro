@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, MoreVertical, Flag, Share2, RotateCcw, Users, Settings } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ManageScorekeepersSheet } from '@/components/golf/ManageScorekeepersSheet';
 import { GameSettingsSheet } from '@/components/golf/GameSettingsSheet';
@@ -44,7 +43,7 @@ export function ScorecardHeader({
   return (
     <>
       <header
-        className="flex-shrink-0 z-30 bg-background border-b border-border pt-safe-content"
+        className="flex-shrink-0 z-30 bg-background border-b-2 border-foreground pt-safe-content"
         style={{
           WebkitTransform: 'translateZ(0)',
           transform: 'translateZ(0)',
@@ -53,57 +52,74 @@ export function ScorecardHeader({
         <div className="pb-3 px-4 flex items-center justify-between gap-3">
           <motion.button
             whileTap={{ scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             onClick={() => {
               hapticLight();
               onShowExitDialog();
             }}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-muted flex items-center justify-center shrink-0 touch-manipulation"
+            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0 touch-manipulation"
             style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-label="Exit round"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </motion.button>
 
           <div className="text-center flex-1 min-w-0">
-            <h1 className="text-base font-bold truncate">{round.courseName}</h1>
-            <p className="text-xs text-muted-foreground/80 font-mono tracking-widest uppercase">
+            <h1 className="text-base font-black tracking-[-0.04em] text-foreground truncate">{round.courseName}</h1>
+            <p className="text-[11px] font-mono tracking-[0.15em] text-muted-foreground">
               {round.joinCode}
             </p>
           </div>
 
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-muted hover:bg-muted/80 touch-manipulation"
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0 touch-manipulation"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
                 aria-label="More options"
               >
-                <MoreVertical className="w-5 h-5" />
-              </Button>
+                <MoreVertical className="w-4 h-4" />
+              </motion.button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52 z-50" sideOffset={8}>
-              <DropdownMenuItem onClick={onShowShareModal}>
+            <DropdownMenuContent
+              align="end"
+              sideOffset={8}
+              className="w-52 z-50 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.12)] border-0 p-1"
+            >
+              <DropdownMenuItem
+                onClick={onShowShareModal}
+                className="rounded-xl text-sm font-medium py-2.5 px-3 hover:bg-muted focus:bg-muted"
+              >
                 <Share2 className="w-4 h-4 mr-2" />
                 Share Round
               </DropdownMenuItem>
 
               {canEditScores && (
-                <DropdownMenuItem onClick={() => setShowGameSettingsSheet(true)}>
+                <DropdownMenuItem
+                  onClick={() => setShowGameSettingsSheet(true)}
+                  className="rounded-xl text-sm font-medium py-2.5 px-3 hover:bg-muted focus:bg-muted"
+                >
                   <Settings className="w-4 h-4 mr-2" />
                   Game Settings
                 </DropdownMenuItem>
               )}
 
               {isCreator && !isSpectator && (
-                <DropdownMenuItem onClick={() => setShowScorekeepersSheet(true)}>
+                <DropdownMenuItem
+                  onClick={() => setShowScorekeepersSheet(true)}
+                  className="rounded-xl text-sm font-medium py-2.5 px-3 hover:bg-muted focus:bg-muted"
+                >
                   <Users className="w-4 h-4 mr-2" />
                   Manage Scorekeepers
                 </DropdownMenuItem>
               )}
 
-              <DropdownMenuItem onClick={() => toast.info('Reset feature coming soon')}>
+              <DropdownMenuItem
+                onClick={() => toast.info('Reset feature coming soon')}
+                className="rounded-xl text-sm font-medium py-2.5 px-3 hover:bg-muted focus:bg-muted"
+              >
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset This Hole
               </DropdownMenuItem>
@@ -112,7 +128,7 @@ export function ScorecardHeader({
 
               <DropdownMenuItem
                 onClick={onShowEndDialog}
-                className="text-destructive focus:text-destructive"
+                className="rounded-xl text-sm font-medium py-2.5 px-3 text-destructive hover:bg-destructive/10 focus:bg-destructive/10 focus:text-destructive"
               >
                 <Flag className="w-4 h-4 mr-2" />
                 End Round Early

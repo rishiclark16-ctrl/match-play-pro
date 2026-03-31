@@ -303,6 +303,59 @@ describe('calculateSkins', () => {
   });
 });
 
+describe('9-hole rounds', () => {
+  const players: Player[] = [
+    createPlayer('p1', 'Alice'),
+    createPlayer('p2', 'Bob'),
+    createPlayer('p3', 'Charlie'),
+    createPlayer('p4', 'Diana'),
+  ];
+
+  it('should calculate skins correctly for 9-hole rounds', () => {
+    const scores: Score[] = [
+      // Hole 1 - Alice wins with birdie
+      createScore('p1', 1, 3), createScore('p2', 1, 4), createScore('p3', 1, 4), createScore('p4', 1, 5),
+      // Hole 2 - Tie (carryover)
+      createScore('p1', 2, 4), createScore('p2', 2, 4), createScore('p3', 2, 5), createScore('p4', 2, 5),
+      // Hole 3 - Alice wins with birdie (gets 2 skins from carryover)
+      createScore('p1', 3, 3), createScore('p2', 3, 4), createScore('p3', 3, 5), createScore('p4', 3, 4),
+      // Hole 4 - Tie (carryover)
+      createScore('p1', 4, 4), createScore('p2', 4, 4), createScore('p3', 4, 5), createScore('p4', 4, 5),
+      // Hole 5 - Alice wins with birdie (gets 2 skins from carryover)
+      createScore('p1', 5, 3), createScore('p2', 5, 4), createScore('p3', 5, 4), createScore('p4', 5, 5),
+      // Hole 6 - Tie (carryover)
+      createScore('p1', 6, 4), createScore('p2', 6, 4), createScore('p3', 6, 5), createScore('p4', 6, 5),
+      // Hole 7 - Alice wins with birdie (gets 2 skins from carryover)
+      createScore('p1', 7, 3), createScore('p2', 7, 4), createScore('p3', 7, 5), createScore('p4', 7, 4),
+      // Hole 8 - Tie (carryover)
+      createScore('p1', 8, 4), createScore('p2', 8, 4), createScore('p3', 8, 5), createScore('p4', 8, 5),
+      // Hole 9 - Alice wins with birdie (gets 2 skins from carryover)
+      createScore('p1', 9, 3), createScore('p2', 9, 4), createScore('p3', 9, 4), createScore('p4', 9, 5),
+    ];
+
+    const result = calculateSkins(scores, players, 9, 2, true);
+
+    // Alice wins holes 1, 3, 5, 7, 9
+    // Hole 1: 1 skin (no carryover), Holes 3/5/7/9: 2 skins each (carryover from tied holes)
+    // Total skins for Alice: 1 + 2 + 2 + 2 + 2 = 9
+    expect(result.standings.find(s => s.playerId === 'p1')?.skins).toBe(9);
+    // Bob, Charlie, Diana win no skins
+    expect(result.standings.find(s => s.playerId === 'p2')?.skins).toBe(0);
+    expect(result.standings.find(s => s.playerId === 'p3')?.skins).toBe(0);
+    expect(result.standings.find(s => s.playerId === 'p4')?.skins).toBe(0);
+    // No remaining carryover at end
+    expect(result.carryover).toBe(0);
+  });
+
+  it('should scale the total pot to 9 holes', () => {
+    const result = calculateSkins([], players, 9, 1);
+
+    // totalPot = holesPlayed * stakes * numPlayers = 9 * 1 * 4 = 36
+    expect(result.totalPot).toBe(36);
+    expect(result.potPerSkin).toBe(4); // 4 players * $1
+  });
+});
+
 describe('getSkinsHoleResult', () => {
   const players: Player[] = [
     createPlayer('p1', 'Alice'),

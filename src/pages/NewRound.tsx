@@ -14,6 +14,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useFriends, Friend } from '@/hooks/useFriends';
 import { useGroups, GolfGroup } from '@/hooks/useGroups';
 import { useHouseGame } from '@/hooks/useHouseGame';
+import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { Course, HoleInfo, GameConfig, Team, TeeSet, generateId } from '@/types/golf';
 import { createDefaultTeams } from '@/lib/games/bestball';
 import { buildConfig, summarizeScoringConfig } from '@/engine/HouseGameEngine';
@@ -88,8 +89,15 @@ export default function NewRound() {
   const [houseGameEnabled, setHouseGameEnabled] = useState(true);
   const { houseGame } = useHouseGame(selectedGroupId);
 
-  // Ghost player — active when house game has handicap_ghost_player primitive
-  const ghostPrimitiveActive = houseGame?.activePrimitives?.some(p => p.id === 'handicap_ghost_player') ?? false;
+  // Personal saved formats
+  const { formats: personalFormats } = usePersonalGameFormats();
+  const [selectedPersonalFormatId, setSelectedPersonalFormatId] = useState<string | null>(null);
+  const selectedPersonalFormat = personalFormats.find(f => f.id === selectedPersonalFormatId) ?? null;
+
+  // Ghost player — active when house game or personal format has handicap_ghost_player primitive
+  const ghostPrimitiveActive =
+    (houseGame?.activePrimitives?.some(p => p.id === 'handicap_ghost_player') && houseGameEnabled) ||
+    (selectedPersonalFormat?.activePrimitives?.some(p => p.id === 'handicap_ghost_player') ?? false);
   const [ghostName, setGhostName] = useState('Ghost');
   const [ghostHandicap, setGhostHandicap] = useState<number | undefined>(undefined);
 
@@ -349,6 +357,18 @@ export default function NewRound() {
         });
       }
 
+      // Personal saved format — add as a 'house' entry when selected
+      if (selectedPersonalFormat && selectedPersonalFormat.activePrimitives.length > 0) {
+        const pfConfig = buildConfig(selectedPersonalFormat.activePrimitives);
+        games.push({
+          id: generateId(),
+          type: 'house',
+          stakes: pfConfig.settlementConfig.unitValue,
+          activePrimitives: selectedPersonalFormat.activePrimitives,
+          houseGameId: selectedPersonalFormat.id,
+        });
+      }
+
       if (matchPlay && stakes) {
         games.push({
           id: generateId(),
@@ -573,8 +593,8 @@ export default function NewRound() {
                 </motion.div>
               )}
 
-              {/* Ghost Player card — shown when house game has the ghost primitive active */}
-              {ghostPrimitiveActive && houseGameEnabled && (
+              {/* Ghost Player card — shown when house game or personal format has the ghost primitive active */}
+              {ghostPrimitiveActive && (
                 <motion.div
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -646,6 +666,10 @@ export default function NewRound() {
               onWolfEnabledChange={setWolfEnabled}
               onWolfStakesChange={setWolfStakes}
               onWolfCarryoverChange={setWolfCarryover}
+              personalFormats={personalFormats}
+              selectedPersonalFormatId={selectedPersonalFormatId}
+              onPersonalFormatSelect={setSelectedPersonalFormatId}
+              onBuildNewFormat={() => navigate('/my-formats/new', { state: { returnTo: '/new-round' } })}
             />
             </motion.div>
           )}

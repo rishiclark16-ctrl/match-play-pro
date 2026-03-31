@@ -14,40 +14,30 @@ const TechCard = React.forwardRef<HTMLDivElement, TechCardProps>(
   ({ className, children, variant = 'default', corners = false, hover = false, accentBar = 'none', ...props }, ref) => {
     const variants = {
       default: "bg-card border border-border",
-      elevated: "bg-card border border-border shadow-md",
-      highlighted: "bg-card border-2 border-primary/30 shadow-sm",
-      winner: "bg-gradient-to-br from-gold/5 to-gold/10 border-2 border-gold/40",
+      elevated: "bg-card border border-border",
+      highlighted: "bg-card border border-border",
+      winner: "bg-card border-2 border-gold",
     };
 
     const accentStyles = {
-      top: "before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-primary before:rounded-t-xl",
-      left: "before:absolute before:top-0 before:bottom-0 before:left-0 before:w-1 before:bg-primary before:rounded-l-xl",
+      top: "before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-foreground before:rounded-t-xl",
+      left: "before:absolute before:top-0 before:bottom-0 before:left-0 before:w-[3px] before:bg-foreground",
       none: "",
     };
 
     return (
       <motion.div
         ref={ref}
-        whileHover={hover ? { y: -1, transition: { duration: 0.15 } } : undefined}
-        whileTap={hover ? { scale: 0.995 } : undefined}
+        whileTap={hover ? { scale: 0.99 } : undefined}
         className={cn(
           "rounded-xl relative overflow-hidden",
           variants[variant],
           accentStyles[accentBar],
-          hover && "cursor-pointer hover:shadow-lg hover:border-primary/20 transition-shadow",
+          hover && "cursor-pointer active:bg-muted/30 transition-colors",
           className
         )}
         {...props}
       >
-        {/* Corner accent brackets */}
-        {corners && (
-          <>
-            <div className="absolute top-2 left-2 w-3 h-3 border-l-2 border-t-2 border-primary/40" />
-            <div className="absolute top-2 right-2 w-3 h-3 border-r-2 border-t-2 border-primary/20" />
-            <div className="absolute bottom-2 left-2 w-3 h-3 border-l-2 border-b-2 border-primary/20" />
-            <div className="absolute bottom-2 right-2 w-3 h-3 border-r-2 border-b-2 border-primary/10" />
-          </>
-        )}
         {children}
       </motion.div>
     );

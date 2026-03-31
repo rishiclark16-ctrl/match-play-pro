@@ -1,9 +1,12 @@
-import { useState, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Mic, MicOff, Sparkles, ChevronRight } from 'lucide-react';
 import { useHouseGame } from '@/hooks/useHouseGame';
+import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
+import { useSubscription } from '@/hooks/useSubscription';
+import { PaywallModal } from '@/components/subscription/PaywallModal';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -18,12 +21,26 @@ const EXAMPLES = [
 ];
 
 export default function HouseGameBuilder() {
-  const { groupId } = useParams<{ groupId: string }>();
+  const { groupId } = useParams<{ groupId?: string }>();
+  const isPersonal = !groupId;
   const navigate = useNavigate();
-  const { parsing, parseDescription } = useHouseGame(groupId ?? null);
+  const location = useLocation();
+  const returnTo = (location.state as any)?.returnTo as string | undefined;
+  const { isPro, isLoading: subLoading } = useSubscription();
+  const { parsing: groupParsing, parseDescription: groupParseDescription } = useHouseGame(isPersonal ? null : groupId ?? null);
+  const { parsing: personalParsing, parseDescription: personalParseDescription } = usePersonalGameFormats();
+  const parsing = isPersonal ? personalParsing : groupParsing;
+  const parseDescription = isPersonal ? personalParseDescription : groupParseDescription;
   const [description, setDescription] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Gate: show paywall immediately if not Pro (once subscription loaded)
+  useEffect(() => {
+    if (subLoading) return;
+    if (!isPro) setShowPaywall(true);
+  }, [subLoading, isPro]);
 
   const { startListening, stopListening, isSupported: voiceSupported } = useVoiceRecognition({
     onResult: (transcript) => {
@@ -61,8 +78,11 @@ export default function HouseGameBuilder() {
       return;
     }
     // Navigate to confirm screen with parsed results
-    navigate(`/groups/${groupId}/house-game/confirm`, {
-      state: { description: description.trim(), parsedPrimitives: primitives },
+    const confirmPath = isPersonal
+      ? '/my-formats/confirm'
+      : `/groups/${groupId}/house-game/confirm`;
+    navigate(confirmPath, {
+      state: { description: description.trim(), parsedPrimitives: primitives, returnTo },
     });
   };
 
@@ -70,6 +90,14 @@ export default function HouseGameBuilder() {
 
   return (
     <div className="h-screen flex flex-col bg-[#F8F8F6]">
+      <PaywallModal
+        open={showPaywall}
+        onOpenChange={(open) => {
+          setShowPaywall(open);
+          if (!open && !isPro) navigate(-1);
+        }}
+        feature="House Game"
+      />
       {/* Header */}
       <header className="flex-shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground">
         <div className="flex items-center gap-3">
@@ -103,7 +131,9 @@ export default function HouseGameBuilder() {
             Describe your Saturday game in plain English
           </p>
           <p className="text-white/50 text-[13px] leading-relaxed">
-            AI reads your description and builds a custom scoring ruleset for your group. Every round with this group auto-loads your House Game.
+            {isPersonal
+              ? 'AI reads your description and builds a custom scoring ruleset. Save it and pick it anytime when starting a round.'
+              : 'AI reads your description and builds a custom scoring ruleset for your group. Every round with this group auto-loads your House Game.'}
           </p>
         </motion.div>
 

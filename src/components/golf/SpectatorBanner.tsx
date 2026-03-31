@@ -13,12 +13,11 @@ export function SpectatorBanner({ isSpectator = true, isScorekeeper = false }: S
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-primary/10 border-b border-primary/20 px-4 py-2"
+        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+        className="bg-[#F0FFF4] border-b-2 border-[#22C55E] px-4 py-2.5 flex items-center gap-2"
       >
-        <div className="flex items-center justify-center gap-2 text-sm font-medium text-primary">
-          <Eye className="w-4 h-4" />
-          <span>Watching this round live</span>
-        </div>
+        <Eye className="text-[#22C55E] w-4 h-4 shrink-0" />
+        <span className="text-sm font-semibold text-[#15803D]">Watching this round live</span>
       </motion.div>
     );
   }
@@ -29,12 +28,11 @@ export function SpectatorBanner({ isSpectator = true, isScorekeeper = false }: S
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-muted border-b border-border px-4 py-2"
+        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+        className="bg-muted/50 border-b border-border px-4 py-2.5 flex items-center gap-2"
       >
-        <div className="flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground">
-          <Lock className="w-4 h-4" />
-          <span>View only – scorekeeper enters scores</span>
-        </div>
+        <Lock className="text-muted-foreground w-4 h-4 shrink-0" />
+        <span className="text-sm text-muted-foreground">View only – scorekeeper enters scores</span>
       </motion.div>
     );
   }

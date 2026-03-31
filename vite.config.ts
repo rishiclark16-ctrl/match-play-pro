@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 
@@ -16,7 +15,6 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === "development" && componentTagger(),
     // Sentry source map upload - only in production builds with auth token
     mode === "production" && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
       org: process.env.SENTRY_ORG,

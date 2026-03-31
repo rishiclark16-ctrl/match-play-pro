@@ -33,7 +33,7 @@ export function HomeCourseSelector({
   };
 
   const handleSelect = (course: { id: number; course_name: string; club_name?: string }) => {
-    const displayName = course.club_name 
+    const displayName = course.club_name
       ? `${course.course_name} - ${course.club_name}`
       : course.course_name;
     onSelect(course.id.toString(), displayName);
@@ -47,43 +47,24 @@ export function HomeCourseSelector({
       <SheetTrigger asChild>
         <button
           type="button"
-          className={cn(
-            'w-full flex items-center justify-between p-4 rounded-xl',
-            'bg-card border border-border hover:border-primary/50 transition-colors',
-            'text-left'
-          )}
+          className="flex items-center gap-1.5 text-right"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              {courseName ? (
-                <>
-                  <p className="font-medium text-foreground">{courseName}</p>
-                  <p className="text-sm text-muted-foreground">Home Course</p>
-                </>
-              ) : (
-                <>
-                  <p className="font-medium text-muted-foreground">Select Home Course</p>
-                  <p className="text-sm text-muted-foreground">Tap to search</p>
-                </>
-              )}
-            </div>
-          </div>
+          <span className={cn('text-sm font-medium truncate max-w-[120px]', courseName ? 'text-foreground' : 'text-muted-foreground')}>
+            {courseName ?? 'None'}
+          </span>
           {courseName ? (
-            <button
-              type="button"
+            <span
+              role="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onClear();
               }}
-              className="p-2 hover:bg-muted rounded-full transition-colors"
+              className="p-0.5 rounded-full hover:bg-muted transition-colors"
             >
-              <X className="w-4 h-4 text-muted-foreground" />
-            </button>
+              <X className="w-3.5 h-3.5 text-muted-foreground" />
+            </span>
           ) : (
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           )}
         </button>
       </SheetTrigger>

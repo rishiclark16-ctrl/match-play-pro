@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, Crown, Users, Zap, Trophy, BarChart3, Loader2 } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
 import { SubscriptionCard } from './SubscriptionCard';
 import { useSubscription } from '@/hooks/useSubscription';
 import {
@@ -113,20 +112,15 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl p-0 overflow-hidden">
+      <SheetContent side="bottom" className="h-[90vh] bg-[#F8F8F6] rounded-t-3xl p-0 overflow-hidden">
         <div className="h-full flex flex-col overflow-y-auto">
+          {/* Sheet handle */}
+          <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
+
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center">
-                  <Crown className="w-5 h-5 text-gold" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold">Upgrade to Pro</h2>
-                  <p className="text-xs text-muted-foreground">Unlock the full experience</p>
-                </div>
-              </div>
+          <div className="px-6 pb-4 flex flex-col items-center gap-3">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex-1" />
               <button
                 onClick={() => onOpenChange(false)}
                 className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
@@ -134,83 +128,113 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
                 <X className="w-4 h-4" />
               </button>
             </div>
+            {/* Crown icon */}
+            <div className="w-14 h-14 rounded-2xl bg-[#F0EE3A] flex items-center justify-center mx-auto">
+              <Crown className="text-[#0A0A0A] w-7 h-7" />
+            </div>
+            {/* MATCH Pro label */}
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4B800]">
+              MATCH Pro
+            </p>
+            <h2 className="text-[24px] font-black tracking-[-0.04em] text-foreground text-center">
+              Unlock the full experience
+            </h2>
+            <p className="text-[14px] text-muted-foreground text-center">
+              Play more games, track more stats, and bring more players to every round.
+            </p>
           </div>
 
           {/* Content */}
-          <div className="flex-1 px-6 py-6 space-y-6">
+          <div className="flex-1 px-6 py-4 space-y-6">
             {/* Feature context */}
             {feature && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-xl bg-primary/5 border border-primary/20"
+                className="p-4 rounded-xl bg-[#F0EE3A]/20 border border-[#F0EE3A]/40"
               >
                 <p className="text-sm text-center">
-                  <span className="font-semibold text-primary">{feature}</span> is a Pro feature
+                  <span className="font-black text-[#0A0A0A]">{feature}</span> is a Pro feature
                 </p>
               </motion.div>
             )}
 
-            {/* Pricing Cards */}
-            <div className="grid grid-cols-2 gap-3">
-              <SubscriptionCard
-                title="Monthly"
-                price={monthlyPrice}
-                period="month"
-                selected={selectedPlan === 'monthly'}
-                onSelect={() => setSelectedPlan('monthly')}
-                disabled={loading}
-              />
-              <SubscriptionCard
-                title="Annual"
-                price={annualPrice}
-                period="year"
-                badge="Save 48%"
-                highlighted
-                selected={selectedPlan === 'annual'}
-                onSelect={() => setSelectedPlan('annual')}
-                disabled={loading}
-              />
+            {/* Plan toggle */}
+            <div className="bg-muted rounded-xl p-1 flex mx-0">
+              <button
+                onClick={() => setSelectedPlan('monthly')}
+                className={
+                  selectedPlan === 'monthly'
+                    ? 'bg-white rounded-lg shadow-sm flex-1 py-2 font-bold text-foreground text-center'
+                    : 'flex-1 py-2 text-muted-foreground text-center'
+                }
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setSelectedPlan('annual')}
+                className={
+                  selectedPlan === 'annual'
+                    ? 'bg-white rounded-lg shadow-sm flex-1 py-2 font-bold text-foreground text-center flex items-center justify-center gap-1.5'
+                    : 'flex-1 py-2 text-muted-foreground text-center flex items-center justify-center gap-1.5'
+                }
+              >
+                Annual
+                <span className="bg-[#F0EE3A] text-[#0A0A0A] text-[10px] font-black rounded-full px-2 py-0.5">
+                  Best value
+                </span>
+              </button>
             </div>
 
-            {/* Monthly equivalent for annual */}
-            <AnimatePresence mode="wait">
-              {selectedPlan === 'annual' && (
-                <motion.p
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="text-center text-sm text-muted-foreground"
-                >
-                  That's only <span className="font-semibold text-foreground">{annualMonthlyEquivalent}/month</span>
-                </motion.p>
-              )}
-            </AnimatePresence>
+            {/* Price display */}
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-baseline gap-1">
+                <span className="text-[40px] font-black tracking-[-0.04em]">
+                  {selectedPlan === 'annual' ? annualPrice : monthlyPrice}
+                </span>
+                <span className="text-[14px] text-muted-foreground">
+                  /{selectedPlan === 'annual' ? 'year' : 'month'}
+                </span>
+              </div>
+              <AnimatePresence mode="wait">
+                {selectedPlan === 'annual' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex items-center gap-2"
+                  >
+                    <span className="bg-[#F0FFF4] text-[#22C55E] text-[11px] font-bold rounded-full px-2.5 py-0.5">
+                      Save 48% · {annualMonthlyEquivalent}/mo
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
-            {/* Feature Comparison */}
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            {/* Feature list */}
+            <div className="space-y-1">
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-3">
                 What you get
               </p>
-              <div className="space-y-2">
-                {PRO_FEATURES.map((feature, index) => (
+              <div className="space-y-0">
+                {PRO_FEATURES.map((feat, index) => (
                   <motion.div
-                    key={feature.label}
+                    key={feat.label}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-card border border-border"
+                    className="flex items-center gap-3 py-2.5"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <feature.icon className="w-4 h-4 text-primary" />
+                    <div className="w-5 h-5 rounded-full bg-[#F0FFF4] border border-[#BBF7D0] flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-[#22C55E]" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{feature.label}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Free: {feature.free}
+                      <p className="text-[14px] text-foreground">{feat.label}</p>
+                      <p className="text-[12px] text-muted-foreground">
+                        Free: {feat.free}
                       </p>
                     </div>
-                    <Check className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
                   </motion.div>
                 ))}
               </div>
@@ -218,11 +242,12 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-background border-t border-border px-6 py-4 pb-safe space-y-3">
-            <Button
+          <div className="sticky bottom-0 bg-[#F8F8F6] px-6 py-4 pb-safe space-y-3">
+            <motion.button
+              whileTap={{ scale: 0.97 }}
               onClick={handlePurchase}
               disabled={purchasing || loading}
-              className="w-full py-6 text-lg font-semibold bg-primary"
+              className="w-full bg-[#F0EE3A] text-[#0A0A0A] rounded-2xl h-[52px] font-black text-[16px] flex items-center justify-center disabled:opacity-60"
             >
               {purchasing ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -231,12 +256,12 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
                   Continue with {selectedPlan === 'annual' ? 'Annual' : 'Monthly'}
                 </>
               )}
-            </Button>
+            </motion.button>
 
             <button
               onClick={handleRestore}
               disabled={restoring}
-              className="w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="w-full text-muted-foreground text-[13px] font-medium text-center py-2"
             >
               {restoring ? 'Restoring...' : 'Restore Purchases'}
             </button>

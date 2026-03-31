@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import { Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatRelativeToPar, PlayerWithScores, Round } from '@/types/golf';
-import { TechCard, TechCardContent } from '@/components/ui/tech-card';
 import { MatchPlayResult } from '@/lib/games/matchPlay';
 
 interface WinnerCardProps {
@@ -29,17 +28,26 @@ export function WinnerCard({
       transition={{ delay: 0.3 }}
       className="mx-4 mb-4"
     >
-      <TechCard variant="winner" accentBar="top">
-        <TechCardContent className="p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.85, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.2 }}
+      >
+      <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+        {/* Top accent bar */}
+        <div className="h-1 bg-[#F0EE3A] w-full" />
+
+        {/* Card body */}
+        <div className="px-5 py-4">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <Trophy className="w-4 h-4 text-gold" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gold">
+                <Trophy className="text-[#F0EE3A] w-6 h-6" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#D4B800]">
                   {hasTie ? 'Tied' : 'Winner'}
                 </span>
               </div>
-              <h2 className="text-xl font-bold tracking-tight">
+              <h2 className="font-black text-xl tracking-[-0.03em] text-foreground">
                 {hasTie
                   ? sortedPlayers
                       .filter(p => {
@@ -61,7 +69,7 @@ export function WinnerCard({
               {/* For match play, show the match result; otherwise show strokes */}
               {round?.matchPlay && matchPlayResult ? (
                 <>
-                  <div className="text-2xl font-black tracking-tight">
+                  <div className="font-black text-xl text-foreground">
                     {matchPlayResult.winMargin ||
                       (matchPlayResult.holesUp > 0 ? `${matchPlayResult.holesUp} UP` : 'AS')}
                   </div>
@@ -71,22 +79,22 @@ export function WinnerCard({
                 </>
               ) : (
                 <>
-                  <div className="text-3xl font-black tabular-nums tracking-tight">
+                  <div className="font-black text-3xl tabular-nums text-foreground">
                     {useNetScoring
                       ? (winner.totalNetStrokes ?? winner.totalStrokes)
                       : winner.totalStrokes}
                   </div>
                   <div
                     className={cn(
-                      'text-sm font-bold',
+                      'text-sm font-black',
                       (useNetScoring
                         ? (winner.netRelativeToPar ?? winner.totalRelativeToPar)
                         : winner.totalRelativeToPar) < 0
-                        ? 'text-success'
+                        ? 'text-[#22C55E]'
                         : (useNetScoring
                             ? (winner.netRelativeToPar ?? winner.totalRelativeToPar)
                             : winner.totalRelativeToPar) > 0
-                        ? 'text-destructive'
+                        ? 'text-[#EF4444]'
                         : 'text-muted-foreground'
                     )}
                   >
@@ -101,8 +109,9 @@ export function WinnerCard({
               )}
             </div>
           </div>
-        </TechCardContent>
-      </TechCard>
+        </div>
+      </div>
+      </motion.div>
     </motion.div>
   );
 }

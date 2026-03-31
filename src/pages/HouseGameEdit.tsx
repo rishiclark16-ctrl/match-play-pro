@@ -1,217 +1,34 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, ChevronDown, ChevronUp, Minus, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, Trash2 } from 'lucide-react';
 import { useHouseGame } from '@/hooks/useHouseGame';
+import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { useAuth } from '@/hooks/useAuth';
-import { ActivePrimitive, HouseGamePrimitive } from '@/types/houseGame';
+import { ActivePrimitive } from '@/types/houseGame';
 import { PRIMITIVE_MAP, PRIMITIVES_BY_CATEGORY, CATEGORY_LABELS, CATEGORY_ORDER } from '@/lib/houseGame/primitives';
+import { CategorySection } from '@/components/golf/HouseGamePrimitives';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-
-// ── Value input ───────────────────────────────────────────────────────────────
-function ValueInput({
-  primitive,
-  value,
-  onChange,
-}: {
-  primitive: HouseGamePrimitive;
-  value: any;
-  onChange: (v: any) => void;
-}) {
-  const { valueType, valueConfig, defaultValue } = primitive;
-  const current = value ?? defaultValue;
-
-  if (valueType === 'select' && valueConfig?.options) {
-    return (
-      <div className="flex gap-1 mt-2">
-        {valueConfig.options.map(opt => (
-          <button
-            key={opt}
-            onClick={() => { hapticLight(); onChange(opt); }}
-            className={cn(
-              'flex-1 text-[11px] font-bold py-1 rounded-lg border transition-colors',
-              current === opt
-                ? 'bg-foreground text-background border-foreground'
-                : 'bg-transparent text-muted-foreground border-border'
-            )}
-          >
-            {opt}
-          </button>
-        ))}
-      </div>
-    );
-  }
-
-  if (valueType === 'number' || valueType === 'currency' || valueType === 'distance') {
-    const min = valueConfig?.min ?? 0;
-    const max = valueConfig?.max ?? 99;
-    const step = valueConfig?.step ?? 1;
-    const unit = valueConfig?.unit ?? (valueType === 'currency' ? '$' : valueType === 'distance' ? 'ft' : '');
-
-    return (
-      <div className="flex items-center gap-2 mt-2">
-        <button
-          onClick={() => { hapticLight(); onChange(Math.max(min, (current) - step)); }}
-          disabled={current <= min}
-          className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center disabled:opacity-30"
-        >
-          <Minus className="w-3 h-3" />
-        </button>
-        <span className="text-[13px] font-bold text-foreground min-w-[40px] text-center">
-          {valueType === 'currency' ? `${unit}${current}` : `${current}${unit ? ` ${unit}` : ''}`}
-        </span>
-        <button
-          onClick={() => { hapticLight(); onChange(Math.min(max, (current) + step)); }}
-          disabled={current >= max}
-          className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center disabled:opacity-30"
-        >
-          <Plus className="w-3 h-3" />
-        </button>
-      </div>
-    );
-  }
-
-  return null;
-}
-
-// ── Single primitive row ──────────────────────────────────────────────────────
-function PrimitiveRow({
-  primitive,
-  checked,
-  value,
-  onToggle,
-  onValueChange,
-}: {
-  primitive: HouseGamePrimitive;
-  checked: boolean;
-  value?: any;
-  onToggle: () => void;
-  onValueChange: (v: any) => void;
-}) {
-  return (
-    <motion.div
-      layout
-      className={cn(
-        'rounded-xl px-4 py-3 border transition-colors',
-        checked ? 'bg-white border-foreground/20' : 'bg-white border-border/40'
-      )}
-    >
-      <div className="flex items-start gap-3">
-        <button
-          onClick={() => { hapticLight(); onToggle(); }}
-          className={cn(
-            'w-5 h-5 rounded-md flex-shrink-0 mt-0.5 flex items-center justify-center border-2 transition-colors',
-            checked ? 'bg-foreground border-foreground' : 'bg-transparent border-border'
-          )}
-        >
-          {checked && <Check className="w-3 h-3 text-background stroke-[3]" />}
-        </button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={cn('text-[13px] font-bold', checked ? 'text-foreground' : 'text-muted-foreground')}>
-              {primitive.label}
-            </span>
-            {!primitive.implemented && (
-              <span className="text-[10px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md">
-                Coming soon
-              </span>
-            )}
-          </div>
-          <p className="text-[12px] text-muted-foreground leading-snug mt-0.5">
-            {primitive.description}
-          </p>
-          {checked && primitive.valueType !== 'none' && (
-            <ValueInput
-              primitive={primitive}
-              value={value}
-              onChange={onValueChange}
-            />
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// ── Collapsible category section ──────────────────────────────────────────────
-function CategorySection({
-  categoryId,
-  label,
-  primitives,
-  checkedIds,
-  valueMap,
-  onToggle,
-  onValueChange,
-  defaultOpen = false,
-}: {
-  categoryId: string;
-  label: string;
-  primitives: HouseGamePrimitive[];
-  checkedIds: Set<string>;
-  valueMap: Map<string, any>;
-  onToggle: (id: string) => void;
-  onValueChange: (id: string, v: any) => void;
-  defaultOpen?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  const checkedInCategory = primitives.filter(p => checkedIds.has(p.id)).length;
-
-  return (
-    <div className="rounded-2xl overflow-hidden border border-border/40">
-      <button
-        onClick={() => { hapticLight(); setOpen(o => !o); }}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] font-bold text-foreground">{label}</span>
-          {checkedInCategory > 0 && (
-            <span className="text-[10px] font-black text-background bg-foreground px-1.5 py-0.5 rounded-full">
-              {checkedInCategory}
-            </span>
-          )}
-        </div>
-        {open
-          ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
-          : <ChevronDown className="w-4 h-4 text-muted-foreground" />
-        }
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: 'auto' }}
-            exit={{ height: 0 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-            className="overflow-hidden"
-          >
-            <div className="px-3 pb-3 space-y-2 bg-[#F8F8F6]">
-              {primitives.map(p => (
-                <PrimitiveRow
-                  key={p.id}
-                  primitive={p}
-                  checked={checkedIds.has(p.id)}
-                  value={valueMap.get(p.id)}
-                  onToggle={() => onToggle(p.id)}
-                  onValueChange={v => onValueChange(p.id, v)}
-                />
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 // ── Main edit page ────────────────────────────────────────────────────────────
 export default function HouseGameEdit() {
-  const { groupId } = useParams<{ groupId: string }>();
+  const { groupId, formatId } = useParams<{ groupId?: string; formatId?: string }>();
+  const isPersonal = !groupId;
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { houseGame, loading, saving, saveHouseGame } = useHouseGame(groupId ?? null);
+
+  // Group mode hooks
+  const { houseGame, loading: groupLoading, saving: groupSaving, saveHouseGame } = useHouseGame(isPersonal ? null : groupId ?? null);
+
+  // Personal mode hooks
+  const { formats, loading: personalLoading, saving: personalSaving, saveFormat, deleteFormat } = usePersonalGameFormats();
+  const personalFormat = isPersonal ? (formats.find(f => f.id === formatId) ?? null) : null;
+
+  const loading = isPersonal ? personalLoading : groupLoading;
+  const saving = isPersonal ? personalSaving : groupSaving;
+
   const [deleting, setDeleting] = useState(false);
   const [hasActiveRound, setHasActiveRound] = useState(false);
 
@@ -220,20 +37,21 @@ export default function HouseGameEdit() {
   const [initialized, setInitialized] = useState(false);
   const [gameName, setGameName] = useState<string>('');
 
-  // Pre-load existing primitives once house game data arrives
+  // Pre-load existing primitives once data arrives
   useEffect(() => {
-    if (houseGame && !initialized) {
-      const ids = new Set(houseGame.activePrimitives.map(p => p.id));
+    const source = isPersonal ? personalFormat : houseGame;
+    if (source && !initialized) {
+      const ids = new Set(source.activePrimitives.map(p => p.id));
       const vals = new Map<string, any>();
-      for (const p of houseGame.activePrimitives) {
+      for (const p of source.activePrimitives) {
         if (p.value !== null && p.value !== undefined) vals.set(p.id, p.value);
       }
       setCheckedIds(ids);
       setValueMap(vals);
-      setGameName(houseGame.name ?? 'House Game');
+      setGameName(source.name ?? (isPersonal ? 'My Format' : 'House Game'));
       setInitialized(true);
     }
-  }, [houseGame, initialized]);
+  }, [houseGame, personalFormat, initialized, isPersonal]);
 
   // Check if the user is currently in any active (non-complete) round
   useEffect(() => {
@@ -301,34 +119,62 @@ export default function HouseGameEdit() {
       value: valueMap.get(id) ?? PRIMITIVE_MAP[id]?.defaultValue ?? null,
     }));
 
-    const ok = await saveHouseGame({
-      groupId: groupId!,
-      name: gameName.trim() || houseGame?.name || 'House Game',
-      description: houseGame?.description ?? '',
-      activePrimitives,
-    });
-
-    if (ok) {
-      hapticSuccess();
-      toast.success('House Game updated!');
-      navigate('/groups', { replace: true });
+    if (isPersonal) {
+      const id = await saveFormat({
+        id: formatId,
+        name: gameName.trim() || personalFormat?.name || 'My Format',
+        description: personalFormat?.description ?? '',
+        activePrimitives,
+      });
+      if (id) {
+        hapticSuccess();
+        toast.success('Format updated!');
+        navigate(-1);
+      } else {
+        toast.error('Failed to save — try again');
+      }
     } else {
-      toast.error('Failed to save — try again');
+      const ok = await saveHouseGame({
+        groupId: groupId!,
+        name: gameName.trim() || houseGame?.name || 'House Game',
+        description: houseGame?.description ?? '',
+        activePrimitives,
+      });
+      if (ok) {
+        hapticSuccess();
+        toast.success('House Game updated!');
+        navigate('/groups', { replace: true });
+      } else {
+        toast.error('Failed to save — try again');
+      }
     }
   };
 
   const handleDelete = async () => {
-    if (!houseGame) return;
     setDeleting(true);
     try {
-      const { error } = await supabase
-        .from('house_games')
-        .delete()
-        .eq('id', houseGame.id);
-      if (error) throw error;
-      hapticSuccess();
-      toast.success('House Game removed');
-      navigate('/groups', { replace: true });
+      if (isPersonal) {
+        if (!formatId) return;
+        const ok = await deleteFormat(formatId);
+        if (ok) {
+          hapticSuccess();
+          toast.success('Format removed');
+          navigate(-1);
+        } else {
+          hapticError();
+          toast.error('Failed to delete — try again');
+        }
+      } else {
+        if (!houseGame) return;
+        const { error } = await supabase
+          .from('house_games')
+          .delete()
+          .eq('id', houseGame.id);
+        if (error) throw error;
+        hapticSuccess();
+        toast.success('House Game removed');
+        navigate('/groups', { replace: true });
+      }
     } catch {
       hapticError();
       toast.error('Failed to delete — try again');
@@ -338,6 +184,7 @@ export default function HouseGameEdit() {
   };
 
   const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
+  const currentSource = isPersonal ? personalFormat : houseGame;
 
   if (loading) {
     return (
@@ -372,7 +219,9 @@ export default function HouseGameEdit() {
             <ArrowLeft className="w-4 h-4 text-foreground" />
           </motion.button>
           <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">House Game</p>
+            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              {isPersonal ? 'My Format' : 'House Game'}
+            </p>
             <h1 className="text-[22px] font-black tracking-[-0.04em] text-foreground leading-none">Edit Rules</h1>
           </div>
           <motion.button
@@ -386,14 +235,16 @@ export default function HouseGameEdit() {
         </div>
       </header>
 
-      {houseGame && (
+      {currentSource && (
         <motion.div
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
           className="mx-6 mt-4 bg-[#0A0A0A] rounded-2xl px-4 py-3"
         >
-          <p className="text-white/50 text-[11px] font-bold uppercase tracking-[0.08em]">Current game</p>
-          <p className="text-white text-[13px] font-bold mt-0.5 line-clamp-2">{houseGame.description || houseGame.name}</p>
+          <p className="text-white/50 text-[11px] font-bold uppercase tracking-[0.08em]">Current</p>
+          <p className="text-white text-[13px] font-bold mt-0.5 line-clamp-2">
+            {currentSource.description || currentSource.name}
+          </p>
         </motion.div>
       )}
 
@@ -414,14 +265,14 @@ export default function HouseGameEdit() {
         {/* Game name */}
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground block mb-1.5">
-            Game Name
+            {isPersonal ? 'Format Name' : 'Game Name'}
           </label>
           <input
             type="text"
             value={gameName}
             onChange={e => setGameName(e.target.value)}
             maxLength={40}
-            placeholder="House Game"
+            placeholder={isPersonal ? 'My Format' : 'House Game'}
             className="w-full bg-white border-2 border-foreground/20 focus:border-foreground rounded-xl px-4 py-3 text-[15px] font-bold text-foreground placeholder:text-muted-foreground/50 outline-none transition-colors"
           />
         </div>

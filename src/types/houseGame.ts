@@ -21,6 +21,17 @@ export interface HouseGame {
   updatedAt: string;
 }
 
+export interface PersonalGameFormat {
+  id: string;
+  ownerId: string;
+  name: string;
+  description: string;
+  activePrimitives: ActivePrimitive[];
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type PrimitiveValueType = 'none' | 'number' | 'currency' | 'distance' | 'select';
 
 export interface PrimitiveValueConfig {
