@@ -233,8 +233,13 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Migrations:** 20 files in `supabase/migrations/`
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
-## Known Baseline Test Failures
-144 voice-parser tests fail due to a pre-existing test environment issue (Web Speech API / voice scoring hook mocks). All game calculator and app logic tests pass. Do not fix voice tests unless explicitly asked — they are tracked separately.
+## Test Baseline
+**661 pass, 0 fail** (661 tests across 18 files). All tests pass.
+
+Test infrastructure notes:
+- `bunfig.toml` preloads `src/test/setup.ts` which polyfills jsdom, localStorage, sessionStorage, and indexedDB for all test files
+- `useVoiceScoring.test.ts` uses `vi.spyOn` (not `vi.mock`) for voiceParser to avoid mock contamination across files under bun's test runner
+- `vi.mocked()` is not available in bun's vitest shim — use type casts `(fn as ReturnType<typeof vi.fn>)` instead
 
 ---
 
@@ -250,7 +255,7 @@ Full audit performed and all critical/high/medium/low bugs fixed across:
 - `useAuth.tsx` — per-device rate limit key using `navigator.userAgent|screen.width|screen.height` (M-1)
 - `Home.tsx` — stable React key for game tags (L-2), console.error in spectator catch (L-5)
 - New tests added: settlement rounding, Wolf multi-player, skins per-player contribution, nassau/wolf edge cases (20 new tests, all pass)
-- Test baseline after audit: **460 pass, 144 fail** (604 total; 144 failures are pre-existing voice tests)
+- Test baseline after audit + voice fix: **661 pass, 0 fail** (661 total)
 
 ---
 
