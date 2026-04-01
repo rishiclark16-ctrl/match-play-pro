@@ -441,3 +441,181 @@ describe('getSkinsHoleContext', () => {
     expect(context.potValue).toBe(20);
   });
 });
+
+describe('per-player contribution (C-4)', () => {
+  const players: Player[] = [
+    createPlayer('p1', 'Alice'),
+    createPlayer('p2', 'Bob'),
+    createPlayer('p3', 'Charlie'),
+    createPlayer('p4', 'Diana'),
+  ];
+
+  it('player with 9 scores contributes 9 * stakesPerSkin, not 18 * stakesPerSkin', () => {
+    const stakesPerSkin = 5;
+    // Player A (p1) has all 18 holes scored
+    // Player B (p2) only has 9 holes scored
+    // Players C and D have all 18 holes scored
+
+    // Build scores: all 18 holes for p1, p3, p4 but only holes 1-9 for p2
+    const scores: Score[] = [];
+    for (let h = 1; h <= 18; h++) {
+      scores.push(createScore('p1', h, 4));
+      scores.push(createScore('p3', h, 4));
+      scores.push(createScore('p4', h, 4));
+      if (h <= 9) {
+        scores.push(createScore('p2', h, 4));
+      }
+    }
+
+    const result = calculateSkins(scores, players, 18, stakesPerSkin);
+
+    const p2Standing = result.standings.find(s => s.playerId === 'p2')!;
+    const p1Standing = result.standings.find(s => s.playerId === 'p1')!;
+
+    // p2 only scored 9 holes so contribution = 9 * 5 = 45
+    // p1 scored all 18 holes so contribution = 18 * 5 = 90
+    // Since nobody wins any skins (all ties), earnings = 0 - contribution
+    const p2ExpectedContribution = 9 * stakesPerSkin;
+    const p1ExpectedContribution = 18 * stakesPerSkin;
+
+    expect(p2Standing.earnings).toBe(-p2ExpectedContribution);
+    expect(p1Standing.earnings).toBe(-p1ExpectedContribution);
+  });
+
+  it('all players with identical hole counts have equal contributions', () => {
+    const stakesPerSkin = 3;
+    const holesEach = 9;
+
+    // All 4 players have exactly 9 holes each, no winners (all tied)
+    const scores: Score[] = [];
+    for (let h = 1; h <= holesEach; h++) {
+      players.forEach(p => {
+        scores.push(createScore(p.id, h, 4)); // All tie every hole
+      });
+    }
+
+    const result = calculateSkins(scores, players, holesEach, stakesPerSkin);
+
+    const contributions = result.standings.map(s => s.earnings);
+    const expectedContribution = -(holesEach * stakesPerSkin);
+
+    // All players have same hole count so all earnings should be equal
+    contributions.forEach(c => {
+      expect(c).toBe(expectedContribution);
+    });
+  });
+});
+
+describe('getSkinsHoleContext carryover consistency (M-7 regression)', () => {
+  // Verify that getSkinsHoleContext for hole N reports the same carryover count
+  // as calling calculateSkins directly with only scores for holes < N.
+  // This is a regression guard for the M-7 refactor ensuring both code paths agree.
+
+  const players: Player[] = [
+    createPlayer('p1', 'Alice'),
+    createPlayer('p2', 'Bob'),
+    createPlayer('p3', 'Charlie'),
+    createPlayer('p4', 'Diana'),
+  ];
+
+  it('carryover from getSkinsHoleContext matches calculateSkins for hole 2 (1 tie before)', () => {
+    const scores: Score[] = [
+      // Hole 1 — tie: no winner, 1 carryover
+      createScore('p1', 1, 4),
+      createScore('p2', 1, 4),
+      createScore('p3', 1, 5),
+      createScore('p4', 1, 5),
+    ];
+
+    const stakesPerSkin = 5;
+    const targetHole = 2;
+
+    // Direct calculateSkins with only holes before targetHole
+    const scoresBeforeTarget = scores.filter(s => s.holeNumber < targetHole);
+    const { carryover: directCarryover } = calculateSkins(
+      scoresBeforeTarget,
+      players,
+      targetHole - 1,
+      stakesPerSkin,
+      true
+    );
+
+    // getSkinsHoleContext for hole 2
+    const context = getSkinsHoleContext(scores, players, targetHole, stakesPerSkin, true, 18);
+
+    expect(context.carryovers).toBe(directCarryover);
+    expect(context.carryovers).toBe(1);
+  });
+
+  it('carryover from getSkinsHoleContext matches calculateSkins for hole 4 (multiple ties)', () => {
+    const scores: Score[] = [
+      // Holes 1-3: all ties → 3 carryovers going into hole 4
+      createScore('p1', 1, 4), createScore('p2', 1, 4), createScore('p3', 1, 5), createScore('p4', 1, 5),
+      createScore('p1', 2, 4), createScore('p2', 2, 4), createScore('p3', 2, 5), createScore('p4', 2, 5),
+      createScore('p1', 3, 4), createScore('p2', 3, 4), createScore('p3', 3, 5), createScore('p4', 3, 5),
+    ];
+
+    const stakesPerSkin = 3;
+    const targetHole = 4;
+
+    const scoresBeforeTarget = scores.filter(s => s.holeNumber < targetHole);
+    const { carryover: directCarryover } = calculateSkins(
+      scoresBeforeTarget,
+      players,
+      targetHole - 1,
+      stakesPerSkin,
+      true
+    );
+
+    const context = getSkinsHoleContext(scores, players, targetHole, stakesPerSkin, true, 18);
+
+    expect(context.carryovers).toBe(directCarryover);
+    expect(context.carryovers).toBe(3);
+  });
+
+  it('carryover resets to 0 after a win — both paths agree', () => {
+    const scores: Score[] = [
+      // Hole 1 — tie
+      createScore('p1', 1, 4), createScore('p2', 1, 4), createScore('p3', 1, 5), createScore('p4', 1, 5),
+      // Hole 2 — Alice wins, clears carryover
+      createScore('p1', 2, 3), createScore('p2', 2, 4), createScore('p3', 2, 5), createScore('p4', 2, 4),
+    ];
+
+    const stakesPerSkin = 5;
+    const targetHole = 3;
+
+    const scoresBeforeTarget = scores.filter(s => s.holeNumber < targetHole);
+    const { carryover: directCarryover } = calculateSkins(
+      scoresBeforeTarget,
+      players,
+      targetHole - 1,
+      stakesPerSkin,
+      true
+    );
+
+    const context = getSkinsHoleContext(scores, players, targetHole, stakesPerSkin, true, 18);
+
+    expect(context.carryovers).toBe(directCarryover);
+    expect(context.carryovers).toBe(0);
+  });
+
+  it('first hole always has 0 carryovers in both paths', () => {
+    const scores: Score[] = [];
+    const stakesPerSkin = 5;
+    const targetHole = 1;
+
+    // calculateSkins with 0 holes is a degenerate case — carryover must be 0
+    const { carryover: directCarryover } = calculateSkins(
+      [],
+      players,
+      0,
+      stakesPerSkin,
+      true
+    );
+
+    const context = getSkinsHoleContext(scores, players, targetHole, stakesPerSkin, true, 18);
+
+    expect(context.carryovers).toBe(directCarryover);
+    expect(context.carryovers).toBe(0);
+  });
+});

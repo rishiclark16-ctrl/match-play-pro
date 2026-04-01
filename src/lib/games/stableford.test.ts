@@ -156,7 +156,7 @@ describe('getPointsLabel', () => {
 
 describe('formatStablefordPoints', () => {
   it('should format positive points', () => {
-    expect(formatStablefordPoints(5)).toBe('5 pts');
+    expect(formatStablefordPoints(5)).toBe('+5 pts');
   });
 
   it('should format zero points', () => {

@@ -117,95 +117,92 @@ export function useCreateSupabaseRound() {
         tee_set_id: p.teeSetId || null,
       }));
 
-      const { error: playersError } = await supabase
-        .from('players')
-        .insert(playersToInsert);
+      // Wrap players insert + ghost score generation in a try/catch so that any
+      // failure (thrown exception or Supabase error) triggers cleanup of the
+      // already-inserted round row, preventing orphaned rounds (Bug H-3).
+      try {
+        const { error: playersError } = await supabase
+          .from('players')
+          .insert(playersToInsert);
 
-      if (playersError) {
-        // Create players error handled
-        // Clean up round if players failed - wrap in try-catch to handle cleanup failures
+        // Bug M-5: explicitly check the players insert error and throw before
+        // reaching ghost score generation so scores never reference non-existent
+        // player IDs.
+        if (playersError) {
+          throw playersError;
+        }
+
+        // Auto-populate scores for ghost players (gross = par + handicap_strokes → net par)
+        const ghostPlayers = input.players.filter(p => p.isGhost);
+        if (ghostPlayers.length > 0) {
+          const { data: insertedPlayers } = await supabase
+            .from('players')
+            .select('id, name, handicap, order_index')
+            .eq('round_id', roundId)
+            .eq('is_ghost', true);
+
+          if (insertedPlayers && insertedPlayers.length > 0) {
+            const slope = input.slope ?? 113;
+            const ghostScores: { round_id: string; player_id: string; hole_number: number; strokes: number }[] = [];
+
+            for (const gp of insertedPlayers) {
+              const playingHcp = gp.handicap
+                ? calculatePlayingHandicap(gp.handicap, slope, input.holes)
+                : 0;
+              const strokesMap = getStrokesPerHole(playingHcp, input.holeInfo);
+
+              for (const hole of input.holeInfo) {
+                const handicapStrokes = strokesMap.get(hole.number) ?? 0;
+                // Gross score = par + handicap strokes → net = par (net par)
+                ghostScores.push({
+                  round_id: roundId,
+                  player_id: gp.id,
+                  hole_number: hole.number,
+                  strokes: hole.par + handicapStrokes,
+                });
+              }
+            }
+
+            if (ghostScores.length > 0) {
+              await supabase.from('scores').insert(ghostScores);
+            }
+          }
+        }
+
+        // Notify other players with accounts that a round has been created
+        const inviteeProfileIds = input.players
+          .slice(1) // skip creator (index 0)
+          .filter(p => p.profileId && !p.isGhost)
+          .map(p => p.profileId as string);
+        if (inviteeProfileIds.length > 0) {
+          sendPushToProfiles({
+            profileIds: inviteeProfileIds,
+            title: 'Round Started',
+            body: `You've been added to a round at ${input.courseName}`,
+            data: { roundId, route: `/round/${roundId}` },
+            type: 'roundInvites',
+          });
+        }
+      } catch (playersOrGhostErr) {
+        // Bug H-3: players insert (or ghost score generation) failed — delete the
+        // orphaned round row so the DB is left in a consistent state.
         try {
           const { error: cleanupError } = await supabase.from('rounds').delete().eq('id', roundId);
           if (cleanupError) {
-            // Cleanup error handled
             captureException(new Error(`Cleanup failed: ${cleanupError.message}`), {
               context: 'createRound.cleanup',
               roundId,
-              originalError: playersError.message
+              originalError: playersOrGhostErr instanceof Error ? playersOrGhostErr.message : String(playersOrGhostErr),
             });
           }
         } catch (cleanupErr) {
-          // Exception handled
           captureException(cleanupErr instanceof Error ? cleanupErr : new Error('Cleanup exception'), {
             context: 'createRound.cleanup',
-            roundId
+            roundId,
           });
         }
-
-        const isAuthError = playersError.code === '401' ||
-          playersError.message?.toLowerCase().includes('jwt') ||
-          playersError.message?.toLowerCase().includes('auth');
-        return {
-          round: null,
-          error: {
-            step: 'players_insert',
-            message: isAuthError ? 'Session expired. Please sign in again.' : `Failed to add players: ${playersError.message}`,
-            code: playersError.code,
-            isAuthError,
-          }
-        };
-      }
-
-      // Auto-populate scores for ghost players (gross = par + handicap_strokes → net par)
-      const ghostPlayers = input.players.filter(p => p.isGhost);
-      if (ghostPlayers.length > 0) {
-        const { data: insertedPlayers } = await supabase
-          .from('players')
-          .select('id, name, handicap, order_index')
-          .eq('round_id', roundId)
-          .eq('is_ghost', true);
-
-        if (insertedPlayers && insertedPlayers.length > 0) {
-          const slope = input.slope ?? 113;
-          const ghostScores: { round_id: string; player_id: string; hole_number: number; strokes: number }[] = [];
-
-          for (const gp of insertedPlayers) {
-            const playingHcp = gp.handicap
-              ? calculatePlayingHandicap(gp.handicap, slope, input.holes)
-              : 0;
-            const strokesMap = getStrokesPerHole(playingHcp, input.holeInfo);
-
-            for (const hole of input.holeInfo) {
-              const handicapStrokes = strokesMap.get(hole.number) ?? 0;
-              // Gross score = par + handicap strokes → net = par (net par)
-              ghostScores.push({
-                round_id: roundId,
-                player_id: gp.id,
-                hole_number: hole.number,
-                strokes: hole.par + handicapStrokes,
-              });
-            }
-          }
-
-          if (ghostScores.length > 0) {
-            await supabase.from('scores').insert(ghostScores);
-          }
-        }
-      }
-
-      // Notify other players with accounts that a round has been created
-      const inviteeProfileIds = input.players
-        .slice(1) // skip creator (index 0)
-        .filter(p => p.profileId && !p.isGhost)
-        .map(p => p.profileId as string);
-      if (inviteeProfileIds.length > 0) {
-        sendPushToProfiles({
-          profileIds: inviteeProfileIds,
-          title: 'Round Started',
-          body: `You've been added to a round at ${input.courseName}`,
-          data: { roundId, route: `/round/${roundId}` },
-          type: 'roundInvites',
-        });
+        // Re-throw so the outer catch can format and return the CreateRoundError.
+        throw playersOrGhostErr;
       }
 
       // Build Round object from inputs (no need to fetch back from DB)
@@ -233,12 +230,20 @@ export function useCreateSupabaseRound() {
       return { round };
     } catch (err) {
       // CreateRound error handled
+      const isAuthError = err instanceof Error
+        ? err.message?.toLowerCase().includes('jwt') || err.message?.toLowerCase().includes('auth')
+        : (err as { code?: string })?.code === '401';
       return {
         round: null,
         error: {
-          step: 'round_insert',
-          message: err instanceof Error ? err.message : 'Unexpected error creating round',
-          code: 'UNKNOWN',
+          step: 'players_insert',
+          message: isAuthError
+            ? 'Session expired. Please sign in again.'
+            : err instanceof Error
+              ? err.message
+              : 'Unexpected error creating round',
+          code: (err as { code?: string })?.code ?? 'UNKNOWN',
+          isAuthError,
         }
       };
     }

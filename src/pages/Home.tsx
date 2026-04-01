@@ -131,7 +131,7 @@ function B_RoundCard({
         <div className="flex flex-wrap gap-1.5 mb-2.5">
           {games.map((g, i) => (
             <span
-              key={i}
+              key={`${g}-${i}`}
               className={cn(
                 'text-[11px] font-medium px-[9px] py-[3px] rounded-[6px] uppercase tracking-wide',
                 isActive
@@ -244,7 +244,9 @@ export default function Home() {
           { round_id: round.id, profile_id: user.id },
           { onConflict: 'round_id,profile_id' }
         );
-      } catch {}
+      } catch (err) {
+        console.error('[Home] Failed to add round spectator:', err);
+      }
       hapticSuccess();
       navigate(`/round/${round.id}?spectator=true`);
       setShowJoinModal(false);

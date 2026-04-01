@@ -103,50 +103,62 @@ export function calculateNassau(
     // Front 9 settlement (only if all 9 holes played)
     if (front9HolesPlayed === 9 && front9Result.winnerId) {
       const loser = front9Result.winnerId === p1.id ? p2 : p1;
-      const winner = players.find(p => p.id === front9Result.winnerId)!;
-      settlements.push({
-        fromPlayerId: loser.id,
-        fromPlayerName: loser.name,
-        toPlayerId: winner.id,
-        toPlayerName: winner.name,
-        amount: stakes,
-        description: 'Front 9'
-      });
+      const winner = players.find(p => p.id === front9Result.winnerId);
+      if (!winner) {
+        console.warn(`Nassau: could not find front9 winner with id ${front9Result.winnerId}`);
+      } else {
+        settlements.push({
+          fromPlayerId: loser.id,
+          fromPlayerName: loser.name,
+          toPlayerId: winner.id,
+          toPlayerName: winner.name,
+          amount: stakes,
+          description: 'Front 9'
+        });
+      }
     }
-    
+
     // Back 9 settlement (only if all 9 holes played)
     if (back9HolesPlayed === 9 && back9Result.winnerId) {
       const loser = back9Result.winnerId === p1.id ? p2 : p1;
-      const winner = players.find(p => p.id === back9Result.winnerId)!;
-      settlements.push({
-        fromPlayerId: loser.id,
-        fromPlayerName: loser.name,
-        toPlayerId: winner.id,
-        toPlayerName: winner.name,
-        amount: stakes,
-        description: 'Back 9'
-      });
+      const winner = players.find(p => p.id === back9Result.winnerId);
+      if (!winner) {
+        console.warn(`Nassau: could not find back9 winner with id ${back9Result.winnerId}`);
+      } else {
+        settlements.push({
+          fromPlayerId: loser.id,
+          fromPlayerName: loser.name,
+          toPlayerId: winner.id,
+          toPlayerName: winner.name,
+          amount: stakes,
+          description: 'Back 9'
+        });
+      }
     }
-    
+
     // Overall settlement (only if all holes played)
     if (front9HolesPlayed + back9HolesPlayed === holesInRound && overallResult.winnerId) {
       const loser = overallResult.winnerId === p1.id ? p2 : p1;
-      const winner = players.find(p => p.id === overallResult.winnerId)!;
-      settlements.push({
-        fromPlayerId: loser.id,
-        fromPlayerName: loser.name,
-        toPlayerId: winner.id,
-        toPlayerName: winner.name,
-        amount: stakes,
-        description: 'Overall'
-      });
+      const winner = players.find(p => p.id === overallResult.winnerId);
+      if (!winner) {
+        console.warn(`Nassau: could not find overall winner with id ${overallResult.winnerId}`);
+      } else {
+        settlements.push({
+          fromPlayerId: loser.id,
+          fromPlayerName: loser.name,
+          toPlayerId: winner.id,
+          toPlayerName: winner.name,
+          amount: stakes,
+          description: 'Overall'
+        });
+      }
     }
-    
+
     // Process presses - also use net scores
     presses.forEach(press => {
       const pressScores: Record<string, number> = { [p1.id]: 0, [p2.id]: 0 };
       let pressHolesPlayed = 0;
-      
+
       for (let hole = press.startHole; hole <= holesInRound; hole++) {
         const holeScores = scores.filter(s => s.holeNumber === hole);
         if (holeScores.length === 2) {
@@ -156,20 +168,24 @@ export function calculateNassau(
           pressHolesPlayed++;
         }
       }
-      
+
       if (pressHolesPlayed > 0 && press.status === 'active') {
         const pressResult = findWinnerAndMargin(pressScores);
         if (pressResult.winnerId && pressHolesPlayed === (holesInRound - press.startHole + 1)) {
           const loser = pressResult.winnerId === p1.id ? p2 : p1;
-          const winner = players.find(p => p.id === pressResult.winnerId)!;
-          settlements.push({
-            fromPlayerId: loser.id,
-            fromPlayerName: loser.name,
-            toPlayerId: winner.id,
-            toPlayerName: winner.name,
-            amount: press.stakes,
-            description: `Press (hole ${press.startHole})`
-          });
+          const winner = players.find(p => p.id === pressResult.winnerId);
+          if (!winner) {
+            console.warn(`Nassau: could not find press winner with id ${pressResult.winnerId}`);
+          } else {
+            settlements.push({
+              fromPlayerId: loser.id,
+              fromPlayerName: loser.name,
+              toPlayerId: winner.id,
+              toPlayerName: winner.name,
+              amount: press.stakes,
+              description: `Press (hole ${press.startHole})`
+            });
+          }
         }
       }
     });
@@ -307,6 +323,9 @@ export function checkAutoPress(
   // Check if this is exactly 2 down (not already pressed when they were 2 down before)
   // We create press for next hole
   const nextHole = currentHole + 1;
+
+  // Do not create a press that starts on the last hole — it would be immediately over
+  if (nextHole >= holesInRound) return null;
 
   // Only auto-press if going 2 down for the first time or after a press has reset
   // Check margin on previous hole to see if they just went 2 down

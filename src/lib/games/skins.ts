@@ -74,17 +74,19 @@ export function calculateSkins(
   // Calculate pot value - each player contributes stakes per hole
   const potPerSkin = stakesPerSkin * players.length;
   const totalPot = holesPlayed * potPerSkin;
-  
+
   // Calculate earnings (net winnings/losses)
-  // Each player contributes stakesPerSkin per hole played
-  const playerContribution = holesPlayed * stakesPerSkin;
-  
-  const standings: SkinsStanding[] = players.map(p => ({
-    playerId: p.id,
-    playerName: p.name,
-    skins: playerSkins[p.id],
-    earnings: (playerSkins[p.id] * potPerSkin) - playerContribution
-  })).sort((a, b) => b.skins - a.skins);
+  // Each player contributes stakesPerSkin only for the holes they actually scored
+  const standings: SkinsStanding[] = players.map(p => {
+    const holesScored = scores.filter(s => s.playerId === p.id).length;
+    const playerContribution = holesScored * stakesPerSkin;
+    return {
+      playerId: p.id,
+      playerName: p.name,
+      skins: playerSkins[p.id],
+      earnings: (playerSkins[p.id] * potPerSkin) - playerContribution
+    };
+  }).sort((a, b) => b.skins - a.skins);
   
   return { 
     results, 
@@ -135,39 +137,25 @@ export function getSkinsHoleContext(
   totalHoles: number,
   strokesPerHole?: StrokesPerHoleMap
 ): SkinsHoleContext {
-  // Calculate carryovers up to current hole
-  let carryoverCount = 0;
-  
-  for (let hole = 1; hole < currentHole; hole++) {
-    const holeScores = scores.filter(s => s.holeNumber === hole);
-    
-    if (holeScores.length < players.length) {
-      continue; // Not all scored yet
-    }
-    
-    // Sort by net score when using handicaps
-    const sorted = [...holeScores].sort((a, b) => 
-      getNetScore(a, strokesPerHole) - getNetScore(b, strokesPerHole)
-    );
-    const lowestNet = getNetScore(sorted[0], strokesPerHole);
-    const winners = sorted.filter(s => getNetScore(s, strokesPerHole) === lowestNet);
-    
-    if (winners.length === 1) {
-      // Someone won, reset carryover
-      carryoverCount = 0;
-    } else if (carryover) {
-      // Tie, add to carryover
-      carryoverCount += 1;
-    }
-  }
-  
+  // Delegate to calculateSkins for all holes before currentHole so the
+  // carryover count stays in sync with the canonical implementation.
+  const scoresBeforeCurrent = scores.filter(s => s.holeNumber < currentHole);
+  const { carryover: carryoverCount } = calculateSkins(
+    scoresBeforeCurrent,
+    players,
+    currentHole - 1,
+    stakesPerSkin,
+    carryover,
+    strokesPerHole
+  );
+
   const baseValue = stakesPerSkin * players.length;
   const potValue = baseValue * (1 + carryoverCount);
-  
+
   return {
     potValue,
     carryovers: carryoverCount,
-    message: carryoverCount > 0 
+    message: carryoverCount > 0
       ? `$${potValue} (${carryoverCount} carryover${carryoverCount > 1 ? 's' : ''})`
       : `$${baseValue}`
   };

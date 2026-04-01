@@ -108,9 +108,13 @@ export function calculateStableford(
     }
   });
 
-  // Count unique holes scored
-  const uniqueHoles = new Set(scores.map(s => s.holeNumber));
-  holesScored = uniqueHoles.size;
+  // Count unique holes scored (only holes that exist in holeInfo)
+  const scoredHoleNumbers = new Set(
+    scores
+      .filter(s => holeInfo.some(h => h.number === s.holeNumber))
+      .map(s => s.holeNumber)
+  );
+  holesScored = scoredHoleNumbers.size;
 
   return {
     standings: standings.sort((a, b) => b.totalPoints - a.totalPoints),
@@ -121,7 +125,8 @@ export function calculateStableford(
 
 // Format Stableford points display
 export function formatStablefordPoints(points: number): string {
-  if (points >= 0) return `${points} pts`;
+  if (points > 0) return `+${points} pts`;
+  if (points === 0) return `0 pts`;
   return `${points} pts`;
 }
 

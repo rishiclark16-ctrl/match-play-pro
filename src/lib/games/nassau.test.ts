@@ -220,6 +220,33 @@ describe('calculateNassau', () => {
       expect(result.overall.holesPlayed).toBe(9);
     });
   });
+
+  describe('mismatched player IDs (C-5 fix)', () => {
+    it('should not crash and should return empty settlements when players array has different IDs than scores', () => {
+      // Scores reference 'p1'/'p2', but the players array uses 'x1'/'x2'
+      const mismatchedPlayers: Player[] = [
+        createPlayer('x1', 'Xena'),
+        createPlayer('x2', 'Xerxes'),
+      ];
+
+      const scores: Score[] = [];
+      for (let hole = 1; hole <= 18; hole++) {
+        scores.push(createScore('p1', hole, 4));
+        scores.push(createScore('p2', hole, 5));
+      }
+
+      // Should not throw
+      let result: ReturnType<typeof calculateNassau> | undefined;
+      expect(() => {
+        result = calculateNassau(scores, mismatchedPlayers, 10, [], 18);
+      }).not.toThrow();
+
+      // No scores match the players, so no holes are counted and no winner found
+      expect(result!.settlements).toHaveLength(0);
+      expect(result!.front9.winnerId).toBeNull();
+      expect(result!.overall.winnerId).toBeNull();
+    });
+  });
 });
 
 describe('canPress', () => {
@@ -345,6 +372,60 @@ describe('checkAutoPress', () => {
     scores.push(createScore('p1', 2, 3), createScore('p2', 2, 4), createScore('p3', 2, 5));
 
     const press = checkAutoPress(scores, threePlayers, 10, [], 18);
+
+    expect(press).toBeNull();
+  });
+
+  it('should NOT trigger on the last hole of an 18-hole round', () => {
+    // Scores through hole 18 — currentHole === 18 === holesInRound, so blocked
+    const scores: Score[] = [];
+    for (let hole = 1; hole <= 18; hole++) {
+      scores.push(createScore('p1', hole, 3), createScore('p2', hole, 4));
+    }
+
+    const press = checkAutoPress(scores, players, 10, [], 18);
+
+    expect(press).toBeNull();
+  });
+
+  it('should NOT trigger on the last hole of a 9-hole round', () => {
+    // Scores through hole 9 — currentHole === 9 === holesInRound, so blocked
+    const scores: Score[] = [];
+    for (let hole = 1; hole <= 9; hole++) {
+      scores.push(createScore('p1', hole, 3), createScore('p2', hole, 4));
+    }
+
+    const press = checkAutoPress(scores, players, 10, [], 9);
+
+    expect(press).toBeNull();
+  });
+
+  it('should NOT trigger when nextHole would equal holesInRound (press on final hole blocked)', () => {
+    // currentHole = 17 in an 18-hole round → nextHole = 18 = holesInRound
+    // The M-2 fix: nextHole >= holesInRound should block this press
+    const scores: Score[] = [];
+    // Alice wins hole 1 and hole 2 only (going 2 up early), but we want
+    // the *trigger* hole to be hole 17. Build scores so the first time
+    // Bob goes 2 down is on hole 17.
+    for (let hole = 1; hole <= 16; hole++) {
+      scores.push(createScore('p1', hole, 4), createScore('p2', hole, 4)); // all square
+    }
+    // Hole 17: Alice wins by 1 → Bob now 1 down (not yet 2 down; no trigger expected)
+    scores.push(createScore('p1', 17, 3), createScore('p2', 17, 5));
+
+    // At this point Bob is only 1 down, so no press anyway — but to isolate
+    // the boundary, also test with Bob already 1 down before hole 17 then
+    // going to 2 down ON hole 17:
+    const scores2: Score[] = [];
+    for (let hole = 1; hole <= 15; hole++) {
+      scores2.push(createScore('p1', hole, 4), createScore('p2', hole, 4));
+    }
+    // Hole 16: Alice goes 1 up
+    scores2.push(createScore('p1', 16, 3), createScore('p2', 16, 5));
+    // Hole 17: Alice goes 2 up (Bob goes 2 down) → nextHole = 18 = holesInRound → blocked
+    scores2.push(createScore('p1', 17, 3), createScore('p2', 17, 5));
+
+    const press = checkAutoPress(scores2, players, 10, [], 18);
 
     expect(press).toBeNull();
   });

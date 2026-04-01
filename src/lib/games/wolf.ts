@@ -186,17 +186,24 @@ export function calculateWolfStandings(
     blindWolfWins: 0,
     earnings: 0,
   }));
-  
+
+  // Accumulate raw (un-divided) lone-wolf hunter points separately to avoid
+  // floating-point drift from dividing by 3 on every hole. We divide once at
+  // the end and snap to the nearest integer with Math.round().
+  const rawLoneWolfHunterPoints = new Map<string, number>(
+    players.map(p => [p.id, 0])
+  );
+
   results.forEach(result => {
     const wolfStanding = standings.find(s => s.playerId === result.wolfId);
     if (wolfStanding) {
       wolfStanding.timesAsWolf++;
     }
-    
+
     if (result.winningTeam === 'push') return;
-    
+
     const isLoneWolf = result.partnerId === null;
-    
+
     if (result.winningTeam === 'wolf') {
       // Wolf team wins
       if (isLoneWolf) {
@@ -207,21 +214,24 @@ export function calculateWolfStandings(
           wolf.loneWolfWins++;
           if (result.isBlindWolf) wolf.blindWolfWins++;
         }
-        
-        // Hunters lose
+
+        // Accumulate raw hunter loss (divide by 3 once at the end)
         standings.forEach(s => {
           if (s.playerId !== result.wolfId) {
-            s.totalPoints -= result.points / 3;
+            rawLoneWolfHunterPoints.set(
+              s.playerId,
+              (rawLoneWolfHunterPoints.get(s.playerId) ?? 0) - result.points
+            );
           }
         });
       } else {
         // 2v2 Wolf team wins
         const wolf = standings.find(s => s.playerId === result.wolfId);
         const partner = standings.find(s => s.playerId === result.partnerId);
-        
+
         if (wolf) wolf.totalPoints += result.points / 2;
         if (partner) partner.totalPoints += result.points / 2;
-        
+
         // Hunters lose
         standings.forEach(s => {
           if (s.playerId !== result.wolfId && s.playerId !== result.partnerId) {
@@ -235,21 +245,24 @@ export function calculateWolfStandings(
         // Lone Wolf loses to all hunters
         const wolf = standings.find(s => s.playerId === result.wolfId);
         if (wolf) wolf.totalPoints -= result.points;
-        
-        // Hunters win
+
+        // Accumulate raw hunter win (divide by 3 once at the end)
         standings.forEach(s => {
           if (s.playerId !== result.wolfId) {
-            s.totalPoints += result.points / 3;
+            rawLoneWolfHunterPoints.set(
+              s.playerId,
+              (rawLoneWolfHunterPoints.get(s.playerId) ?? 0) + result.points
+            );
           }
         });
       } else {
         // 2v2 Hunters win
         const wolf = standings.find(s => s.playerId === result.wolfId);
         const partner = standings.find(s => s.playerId === result.partnerId);
-        
+
         if (wolf) wolf.totalPoints -= result.points / 2;
         if (partner) partner.totalPoints -= result.points / 2;
-        
+
         // Hunters win
         standings.forEach(s => {
           if (s.playerId !== result.wolfId && s.playerId !== result.partnerId) {
@@ -259,12 +272,21 @@ export function calculateWolfStandings(
       }
     }
   });
-  
+
+  // Apply accumulated lone-wolf hunter points with a single division by 3,
+  // then snap to the nearest integer to eliminate any residual floating-point error.
+  standings.forEach(s => {
+    const raw = rawLoneWolfHunterPoints.get(s.playerId) ?? 0;
+    if (raw !== 0) {
+      s.totalPoints += Math.round(raw / 3);
+    }
+  });
+
   // Calculate earnings
   standings.forEach(s => {
     s.earnings = Math.round(s.totalPoints * stakes * 100) / 100;
   });
-  
+
   return standings.sort((a, b) => b.totalPoints - a.totalPoints);
 }
 

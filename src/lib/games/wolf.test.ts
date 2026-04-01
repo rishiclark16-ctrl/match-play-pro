@@ -685,3 +685,62 @@ describe('calculateWolfSettlements', () => {
     });
   });
 });
+
+describe('calculateWolfStandings — floating-point accumulation', () => {
+  // 6 lone-wolf wins for p1 across holes 1, 5, 9, 13, 17 and one extra.
+  // Each win is worth 12 points (4 per hunter × 3 hunters).
+  // Hunters each accumulate +72 raw points over those holes,
+  // which divides by 3 to exactly 24. No .999... or .001 artifacts expected.
+
+  it('should produce exact integer hunter points after 6 lone-wolf wins', () => {
+    const results: WolfHoleResult[] = [
+      { holeNumber: 1,  wolfId: 'p1', partnerId: null, isBlindWolf: false, winningTeam: 'wolf', points: 12 },
+      { holeNumber: 5,  wolfId: 'p1', partnerId: null, isBlindWolf: false, winningTeam: 'wolf', points: 12 },
+      { holeNumber: 9,  wolfId: 'p1', partnerId: null, isBlindWolf: false, winningTeam: 'wolf', points: 12 },
+      { holeNumber: 13, wolfId: 'p1', partnerId: null, isBlindWolf: false, winningTeam: 'wolf', points: 12 },
+      { holeNumber: 17, wolfId: 'p1', partnerId: null, isBlindWolf: false, winningTeam: 'wolf', points: 12 },
+      { holeNumber: 18, wolfId: 'p1', partnerId: null, isBlindWolf: false, winningTeam: 'wolf', points: 12 },
+    ];
+
+    const standings = calculateWolfStandings(results, fourPlayers, 1);
+
+    const alice = standings.find(s => s.playerId === 'p1')!;
+    // Wolf total: 6 * 12 = 72 — exact integer
+    expect(alice.totalPoints).toBe(72);
+    expect(Number.isInteger(alice.totalPoints)).toBe(true);
+
+    // Each hunter loses 72/3 = 24 — must be exact integer, not 23.999... or 24.001...
+    ['p2', 'p3', 'p4'].forEach(id => {
+      const hunter = standings.find(s => s.playerId === id)!;
+      expect(hunter.totalPoints).toBe(-24);
+      expect(Number.isInteger(hunter.totalPoints)).toBe(true);
+    });
+  });
+
+  it('should produce exact integer hunter points after 6 lone-wolf losses', () => {
+    // Wolf loses all 6 lone-wolf holes: hunters win 12 points each time.
+    // Each hunter gains raw 72 points total, divided by 3 = exactly 24.
+    const results: WolfHoleResult[] = [
+      { holeNumber: 1,  wolfId: 'p1', partnerId: null, isBlindWolf: false, winningTeam: 'hunters', points: 12 },
+      { holeNumber: 5,  wolfId: 'p1', partnerId: null, isBlindWolf: false, winningTeam: 'hunters', points: 12 },
+      { holeNumber: 9,  wolfId: 'p1', partnerId: null, isBlindWolf: false, winningTeam: 'hunters', points: 12 },
+      { holeNumber: 13, wolfId: 'p1', partnerId: null, isBlindWolf: false, winningTeam: 'hunters', points: 12 },
+      { holeNumber: 17, wolfId: 'p1', partnerId: null, isBlindWolf: false, winningTeam: 'hunters', points: 12 },
+      { holeNumber: 18, wolfId: 'p1', partnerId: null, isBlindWolf: false, winningTeam: 'hunters', points: 12 },
+    ];
+
+    const standings = calculateWolfStandings(results, fourPlayers, 1);
+
+    const alice = standings.find(s => s.playerId === 'p1')!;
+    // Wolf loses 6 * 12 = 72 total
+    expect(alice.totalPoints).toBe(-72);
+    expect(Number.isInteger(alice.totalPoints)).toBe(true);
+
+    // Each hunter gains exactly 24 (72 / 3), no floating-point drift
+    ['p2', 'p3', 'p4'].forEach(id => {
+      const hunter = standings.find(s => s.playerId === id)!;
+      expect(hunter.totalPoints).toBe(24);
+      expect(Number.isInteger(hunter.totalPoints)).toBe(true);
+    });
+  });
+});

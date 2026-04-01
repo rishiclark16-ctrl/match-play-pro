@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { calculateSettlement, formatSettlementText, getTotalWinnings, NetSettlement } from './settlement';
-import { Player } from '@/types/golf';
+import { Player, WolfHoleResult } from '@/types/golf';
 import { SkinsResult } from './skins';
 import { NassauResult } from './nassau';
 import { PropBet } from '@/types/betting';
@@ -352,6 +352,346 @@ describe('calculateSettlement', () => {
   });
 });
 
+describe('multi-winner rounding (C-2)', () => {
+  it('3 equal winners sharing $3 pot — total distributed equals exactly $3', () => {
+    // 3 winners each earning $1, 3 losers each losing $1
+    // Using whole-dollar amounts to ensure no penny is lost to rounding
+    const sixPlayers: Player[] = [
+      createPlayer('w1', 'Winner1'),
+      createPlayer('w2', 'Winner2'),
+      createPlayer('w3', 'Winner3'),
+      createPlayer('l1', 'Loser1'),
+      createPlayer('l2', 'Loser2'),
+      createPlayer('l3', 'Loser3'),
+    ];
+
+    const skinsResult: SkinsResult = {
+      results: [],
+      standings: [
+        { playerId: 'w1', playerName: 'Winner1', skins: 1, earnings: 1 },
+        { playerId: 'w2', playerName: 'Winner2', skins: 1, earnings: 1 },
+        { playerId: 'w3', playerName: 'Winner3', skins: 1, earnings: 1 },
+        { playerId: 'l1', playerName: 'Loser1', skins: 0, earnings: -1 },
+        { playerId: 'l2', playerName: 'Loser2', skins: 0, earnings: -1 },
+        { playerId: 'l3', playerName: 'Loser3', skins: 0, earnings: -1 },
+      ],
+      carryover: 0,
+      potPerSkin: 3,
+      totalPot: 3,
+    };
+
+    const settlements = calculateSettlement(sixPlayers, skinsResult);
+
+    // Sum of payments from all losers must equal exactly $3 (total pot)
+    // Each individual amount is already rounded to cents; round the final sum to
+    // eliminate JS floating-point accumulation drift before asserting.
+    const totalFromLosers = settlements
+      .filter(s => ['l1', 'l2', 'l3'].includes(s.fromPlayerId))
+      .reduce((sum, s) => sum + s.amount, 0);
+
+    expect(Math.round(totalFromLosers * 100)).toBe(300);
+  });
+
+  it('2 winners splitting a $3 pot — each gets $1.50, total is exactly $3', () => {
+    const twoWinnerPlayers: Player[] = [
+      createPlayer('w1', 'Winner1'),
+      createPlayer('w2', 'Winner2'),
+      createPlayer('l1', 'Loser1'),
+      createPlayer('l2', 'Loser2'),
+    ];
+
+    const skinsResult: SkinsResult = {
+      results: [],
+      standings: [
+        { playerId: 'w1', playerName: 'Winner1', skins: 1, earnings: 1.5 },
+        { playerId: 'w2', playerName: 'Winner2', skins: 1, earnings: 1.5 },
+        { playerId: 'l1', playerName: 'Loser1', skins: 0, earnings: -1.5 },
+        { playerId: 'l2', playerName: 'Loser2', skins: 0, earnings: -1.5 },
+      ],
+      carryover: 0,
+      potPerSkin: 3,
+      totalPot: 3,
+    };
+
+    const settlements = calculateSettlement(twoWinnerPlayers, skinsResult);
+
+    const totalReceived = settlements
+      .filter(s => ['w1', 'w2'].includes(s.toPlayerId))
+      .reduce((sum, s) => sum + s.amount, 0);
+
+    expect(totalReceived).toBe(3);
+
+    // Each winner should net exactly $1.50
+    const w1Net = getTotalWinnings('w1', settlements);
+    const w2Net = getTotalWinnings('w2', settlements);
+    expect(w1Net).toBe(1.5);
+    expect(w2Net).toBe(1.5);
+  });
+
+  it('5 winners splitting $5 pot — last winner absorbs remainder; sum of all payouts === $5', () => {
+    // 5 winners each earning $1, 5 losers each losing $1
+    // Using whole-dollar amounts so rounding never drops a penny
+    const tenPlayers: Player[] = [
+      createPlayer('w1', 'Winner1'),
+      createPlayer('w2', 'Winner2'),
+      createPlayer('w3', 'Winner3'),
+      createPlayer('w4', 'Winner4'),
+      createPlayer('w5', 'Winner5'),
+      createPlayer('l1', 'Loser1'),
+      createPlayer('l2', 'Loser2'),
+      createPlayer('l3', 'Loser3'),
+      createPlayer('l4', 'Loser4'),
+      createPlayer('l5', 'Loser5'),
+    ];
+
+    const skinsResult: SkinsResult = {
+      results: [],
+      standings: [
+        { playerId: 'w1', playerName: 'Winner1', skins: 1, earnings: 1 },
+        { playerId: 'w2', playerName: 'Winner2', skins: 1, earnings: 1 },
+        { playerId: 'w3', playerName: 'Winner3', skins: 1, earnings: 1 },
+        { playerId: 'w4', playerName: 'Winner4', skins: 1, earnings: 1 },
+        { playerId: 'w5', playerName: 'Winner5', skins: 1, earnings: 1 },
+        { playerId: 'l1', playerName: 'Loser1', skins: 0, earnings: -1 },
+        { playerId: 'l2', playerName: 'Loser2', skins: 0, earnings: -1 },
+        { playerId: 'l3', playerName: 'Loser3', skins: 0, earnings: -1 },
+        { playerId: 'l4', playerName: 'Loser4', skins: 0, earnings: -1 },
+        { playerId: 'l5', playerName: 'Loser5', skins: 0, earnings: -1 },
+      ],
+      carryover: 0,
+      potPerSkin: 5,
+      totalPot: 5,
+    };
+
+    const settlements = calculateSettlement(tenPlayers, skinsResult);
+
+    const loserIds = ['l1', 'l2', 'l3', 'l4', 'l5'];
+    const totalPaidOut = settlements
+      .filter(s => loserIds.includes(s.fromPlayerId))
+      .reduce((sum, s) => sum + s.amount, 0);
+
+    // Round to cents before asserting to eliminate JS FP accumulation drift;
+    // each individual amount is already rounded to the cent.
+    expect(Math.round(totalPaidOut * 100)).toBe(500);
+  });
+});
+
+describe('Wolf player mismatch (C-3)', () => {
+  it('Wolf settlement runs without throwing for a 3-player round', () => {
+    const threePlayers: Player[] = [
+      createPlayer('p1', 'Alice', 0),
+      createPlayer('p2', 'Bob', 1),
+      createPlayer('p3', 'Charlie', 2),
+    ];
+
+    // Minimal wolf results — p1 was wolf, lone wolf scenario, wolf team won
+    const wolfResults: WolfHoleResult[] = [
+      {
+        holeNumber: 1,
+        wolfId: 'p1',
+        partnerId: null,
+        isBlindWolf: false,
+        winningTeam: 'wolf',
+        points: 4,
+      },
+    ];
+
+    let result: ReturnType<typeof calculateSettlement> | undefined;
+    expect(() => {
+      result = calculateSettlement(
+        threePlayers,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        wolfResults,
+        5
+      );
+    }).not.toThrow();
+
+    expect(result).toBeDefined();
+  });
+
+  it('Wolf settlement runs without throwing for a 5-player round', () => {
+    const fivePlayers: Player[] = [
+      createPlayer('p1', 'Alice', 0),
+      createPlayer('p2', 'Bob', 1),
+      createPlayer('p3', 'Charlie', 2),
+      createPlayer('p4', 'Diana', 3),
+      createPlayer('p5', 'Eve', 4),
+    ];
+
+    const wolfResults: WolfHoleResult[] = [
+      {
+        holeNumber: 1,
+        wolfId: 'p1',
+        partnerId: 'p2',
+        isBlindWolf: false,
+        winningTeam: 'hunters',
+        points: 4,
+      },
+    ];
+
+    let result: ReturnType<typeof calculateSettlement> | undefined;
+    expect(() => {
+      result = calculateSettlement(
+        fivePlayers,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        wolfResults,
+        5
+      );
+    }).not.toThrow();
+
+    expect(result).toBeDefined();
+  });
+});
+
+describe('multi-winner rounding with indivisible pot', () => {
+  it('3 equal winners splitting a $10 pot — total distributed equals exactly $10', () => {
+    // $10 pot / 3 winners = $3.333... each; last winner absorbs remainder
+    // One loser pays $10 total
+    const fourPlayers: Player[] = [
+      createPlayer('w1', 'Winner1'),
+      createPlayer('w2', 'Winner2'),
+      createPlayer('w3', 'Winner3'),
+      createPlayer('l1', 'Loser1'),
+    ];
+
+    // Pot = $10: each winner earned ~$3.33, loser lost $10
+    // Use earnings that reflect $10 / 3 ≈ 3.33 each
+    const skinsResult: SkinsResult = {
+      results: [],
+      standings: [
+        { playerId: 'w1', playerName: 'Winner1', skins: 1, earnings: 10 / 3 },
+        { playerId: 'w2', playerName: 'Winner2', skins: 1, earnings: 10 / 3 },
+        { playerId: 'w3', playerName: 'Winner3', skins: 1, earnings: 10 / 3 },
+        { playerId: 'l1', playerName: 'Loser1', skins: 0, earnings: -10 },
+      ],
+      carryover: 0,
+      potPerSkin: 10,
+      totalPot: 10,
+    };
+
+    const settlements = calculateSettlement(fourPlayers, skinsResult);
+
+    // The loser should pay out a total of exactly $10 across the 3 winners
+    const totalPaidByLoser = settlements
+      .filter(s => s.fromPlayerId === 'l1')
+      .reduce((sum, s) => sum + s.amount, 0);
+
+    // Round to cents to eliminate JS float accumulation drift
+    expect(Math.round(totalPaidByLoser * 100)).toBe(1000);
+
+    // Each winner should have a positive net
+    const w1Net = getTotalWinnings('w1', settlements);
+    const w2Net = getTotalWinnings('w2', settlements);
+    const w3Net = getTotalWinnings('w3', settlements);
+    expect(w1Net).toBeGreaterThan(0);
+    expect(w2Net).toBeGreaterThan(0);
+    expect(w3Net).toBeGreaterThan(0);
+
+    // The sum of all winner nets should equal $10
+    expect(Math.round((w1Net + w2Net + w3Net) * 100)).toBe(1000);
+  });
+});
+
+describe('prop bet with player not in ledger', () => {
+  it('should skip gracefully when prop bet winner is not among the round players', () => {
+    const twoPlayers: Player[] = [
+      createPlayer('p1', 'Alice'),
+      createPlayer('p2', 'Bob'),
+    ];
+
+    // The winner ID 'ghost' is not a player in this round
+    const propBets: PropBet[] = [
+      {
+        id: 'pb-ghost',
+        roundId: 'r1',
+        type: 'ctp',
+        holeNumber: 5,
+        stakes: 8,
+        winnerId: 'ghost',
+        createdAt: new Date(),
+      },
+      // A valid prop bet so we can verify normal flow still works
+      {
+        id: 'pb-valid',
+        roundId: 'r1',
+        type: 'longest_drive',
+        holeNumber: 10,
+        stakes: 6,
+        winnerId: 'p1',
+        createdAt: new Date(),
+      },
+    ];
+
+    // Should not throw even though 'ghost' is not in the ledger
+    let settlements: ReturnType<typeof calculateSettlement> | undefined;
+    expect(() => {
+      settlements = calculateSettlement(
+        twoPlayers,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        propBets
+      );
+    }).not.toThrow();
+
+    expect(settlements).toBeDefined();
+
+    // The valid bet should still settle: p2 owes p1 $6
+    const p1Net = getTotalWinnings('p1', settlements!);
+    expect(p1Net).toBe(6);
+  });
+
+  it('should skip gracefully when a non-winner player in ledger check references unknown winner', () => {
+    const twoPlayers: Player[] = [
+      createPlayer('p1', 'Alice'),
+      createPlayer('p2', 'Bob'),
+    ];
+
+    // winnerId references a player who is in the game but the loser side
+    // references a player (p3) not in the ledger — since we iterate players,
+    // the only paths are winner-not-in-ledger (covered above). Here we just
+    // confirm a fully valid bet completes without issue even after a bad one.
+    const propBets: PropBet[] = [
+      {
+        id: 'pb-orphan',
+        roundId: 'r1',
+        type: 'ctp',
+        holeNumber: 3,
+        stakes: 10,
+        winnerId: 'p3-not-exist',  // winner not in players list
+        createdAt: new Date(),
+      },
+    ];
+
+    let settlements: ReturnType<typeof calculateSettlement> | undefined;
+    expect(() => {
+      settlements = calculateSettlement(
+        twoPlayers,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        propBets
+      );
+    }).not.toThrow();
+
+    // No valid bets settled, so no settlements
+    expect(settlements).toBeDefined();
+    expect(settlements!).toHaveLength(0);
+  });
+});
+
 describe('formatSettlementText', () => {
   it('should format settlement text correctly', () => {
     const settlement: NetSettlement = {
@@ -364,7 +704,7 @@ describe('formatSettlementText', () => {
 
     const text = formatSettlementText(settlement);
 
-    expect(text).toBe('Alice owes Bob $25');
+    expect(text).toBe('Alice owes Bob $25.00');
   });
 
   it('should handle decimal amounts', () => {
@@ -378,7 +718,7 @@ describe('formatSettlementText', () => {
 
     const text = formatSettlementText(settlement);
 
-    expect(text).toBe('Alice owes Bob $26'); // Rounds to nearest dollar
+    expect(text).toBe('Alice owes Bob $25.50'); // Shows cents (M-8 fix)
   });
 });
 

@@ -28,6 +28,9 @@ export function calculatePlayingHandicap(
   par?: number
 ): number {
   const courseHandicap = calculateCourseHandicap(handicapIndex, slopeRating, courseRating, par);
+  // For 9 holes: USGA recommends using the 9-hole course rating/slope if available.
+  // We approximate by halving the 18-hole course handicap — accurate when the 9-hole
+  // slope/rating equals half the 18-hole values, which is the common case.
   return holes === 9 ? Math.round(courseHandicap / 2) : courseHandicap;
 }
 
@@ -45,7 +48,8 @@ export function getStrokesPerHole(
   holeInfo.forEach(hole => strokesMap.set(hole.number, 0));
   
   if (playingHandicap <= 0) return strokesMap;
-  
+  if (holeInfo.length === 0) return strokesMap;
+
   // Sort holes by handicap rating (1 = hardest, gets stroke first)
   // If no handicap rating, use hole number as fallback
   const sortedHoles = [...holeInfo].sort((a, b) => {
@@ -122,7 +126,7 @@ export function calculateTotalNetStrokes(
  * - Positive internal value (5) = regular handicap, displays as "5"
  * - Zero = scratch
  */
-export function formatHandicap(handicap: number | undefined): string {
+export function formatHandicap(handicap: number | null | undefined): string {
   if (handicap === undefined || handicap === null) return '–';
   if (handicap === 0) return 'Scr';
   // Plus handicaps are stored as negative, display with + sign

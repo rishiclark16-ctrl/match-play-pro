@@ -106,8 +106,10 @@ export function useAuth() {
     }
 
     // Check rate limit using device identifier for Apple Sign In
-    // Since we don't have email upfront, use a device-based key
-    const deviceKey = 'apple-sign-in-device';
+    // Since we don't have email upfront, use a per-device fingerprint key
+    // so one device's limit does not affect other users/devices
+    const deviceFingerprint = `${navigator.userAgent}|${screen.width}|${screen.height}`;
+    const deviceKey = `apple-sign-in-${deviceFingerprint}`;
     const rateLimitResult = authRateLimiter.checkAndRecord(deviceKey);
     if (!rateLimitResult.allowed) {
       const resetTime = formatResetTime(rateLimitResult.resetInMs);

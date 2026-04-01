@@ -47,15 +47,16 @@ export function calculateSettlement(
     
     losers.forEach(loser => {
       let lossToDistribute = Math.abs(loser.earnings);
-      
-      winners.forEach(winner => {
-        if (lossToDistribute > 0 && remainingWinnings > 0) {
-          const proportion = winner.earnings / remainingWinnings;
-          const payment = Math.min(lossToDistribute, Math.round(proportion * Math.abs(loser.earnings) * 100) / 100);
-          
-          ledger[loser.playerId][winner.playerId] += payment;
-          lossToDistribute -= payment;
-        }
+
+      winners.forEach((winner, idx) => {
+        if (lossToDistribute <= 0) return;
+        const isLast = idx === winners.length - 1;
+        const payment = isLast
+          ? Math.round(lossToDistribute * 100) / 100
+          : Math.round((winner.earnings / remainingWinnings) * Math.abs(loser.earnings) * 100) / 100;
+        const actualPayment = Math.min(lossToDistribute, payment);
+        ledger[loser.playerId][winner.playerId] += actualPayment;
+        lossToDistribute -= actualPayment;
       });
     });
   }
@@ -76,7 +77,7 @@ export function calculateSettlement(
   }
   
   // Process Wolf settlements
-  if (wolfResults && wolfResults.length > 0 && wolfStakes && players.length === 4) {
+  if (wolfResults && wolfResults.length > 0 && wolfStakes) {
     const wolfStandings = calculateWolfStandings(wolfResults, players, wolfStakes);
     
     // Add Wolf earnings to ledger
@@ -94,10 +95,12 @@ export function calculateSettlement(
             const proportion = winner.earnings / totalWinnings;
             const payment = Math.round(proportion * Math.abs(loser.earnings) * 100) / 100;
 
-            if (payment > 0 && ledger[loser.playerId] && ledger[loser.playerId][winner.playerId] !== undefined) {
+            if (payment > 0 && ledger[loser.playerId]?.[winner.playerId] !== undefined) {
               ledger[loser.playerId][winner.playerId] += payment;
+              lossToDistribute -= payment;
+            } else if (payment > 0) {
+              console.warn('[Settlement] Wolf ledger entry missing for:', loser.playerId, '->', winner.playerId);
             }
-            lossToDistribute -= payment;
           }
         });
       });
@@ -116,8 +119,10 @@ export function calculateSettlement(
       players.forEach(player => {
         if (player.id !== bet.winnerId) {
           // player owes winner the stakes
-          if (ledger[player.id] && ledger[player.id][bet.winnerId!] !== undefined) {
+          if (ledger[player.id]?.[bet.winnerId!] !== undefined) {
             ledger[player.id][bet.winnerId!] += bet.stakes;
+          } else {
+            console.warn('[Settlement] Prop bet player not in ledger, skipping:', player.id, '->', bet.winnerId);
           }
         }
       });
@@ -167,7 +172,7 @@ export function calculateSettlement(
 }
 
 export function formatSettlementText(settlement: NetSettlement): string {
-  return `${settlement.fromPlayerName} owes ${settlement.toPlayerName} $${settlement.amount.toFixed(0)}`;
+  return `${settlement.fromPlayerName} owes ${settlement.toPlayerName} $${settlement.amount.toFixed(2)}`;
 }
 
 export function getTotalWinnings(

@@ -5,9 +5,9 @@
  * Pure functions only — no side effects, no imports of React or hooks.
  *
  * buildConfig() maps all 75+ primitives to a ScoringConfig.
- * 15 primitives are fully implemented (populated correctly + scoring honours them).
- * All others are stubbed: they log a warning and set a safe default so the app never crashes.
- * STUB comments mark every unimplemented primitive for easy future lookup.
+ * All primitives map to ScoringConfig fields. Implemented primitives (those that
+ * actively affect scoring) are marked with // IMPLEMENTED comments below.
+ * Stubs are marked with // STUB and log console warnings but never crash.
  */
 
 import { ActivePrimitive } from '@/types/houseGame';

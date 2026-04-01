@@ -233,6 +233,27 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Migrations:** 20 files in `supabase/migrations/`
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
+## Known Baseline Test Failures
+144 voice-parser tests fail due to a pre-existing test environment issue (Web Speech API / voice scoring hook mocks). All game calculator and app logic tests pass. Do not fix voice tests unless explicitly asked — they are tracked separately.
+
+---
+
+## Audit Fix History (2026-03-31)
+Full audit performed and all critical/high/medium/low bugs fixed across:
+- `settlement.ts` — rounding fix (C-2), Wolf 3-5 player support (C-3), prop bet guard (M-3), ledger decrement guard (M-4), `toFixed(2)` cents display (M-8)
+- `skins.ts` — per-player contribution uses scored holes not round holes (C-4), carryover logic deduplication (M-7)
+- `nassau.ts` — safe `players.find()` with null guard instead of non-null assertion (C-5), auto-press blocked on last hole (M-2)
+- `stableford.ts` — `formatStablefordPoints` three distinct branches: `+N pts` / `0 pts` / `-N pts` (H-1), `holesScored` filters through valid hole refs (H-4)
+- `wolf.ts` — accumulate whole points, divide by 3 once at end to eliminate float drift (H-5)
+- `handicapUtils.ts` — null/undefined type guard (L-1), empty `holeInfo` infinite loop guard (L-7), 9-hole approximation comment (L-8)
+- `useCreateSupabaseRound.ts` — delete-on-failure cleanup pattern for atomicity (H-3), explicit error check before ghost score generation (M-5)
+- `useAuth.tsx` — per-device rate limit key using `navigator.userAgent|screen.width|screen.height` (M-1)
+- `Home.tsx` — stable React key for game tags (L-2), console.error in spectator catch (L-5)
+- New tests added: settlement rounding, Wolf multi-player, skins per-player contribution, nassau/wolf edge cases (20 new tests, all pass)
+- Test baseline after audit: **460 pass, 144 fail** (604 total; 144 failures are pre-existing voice tests)
+
+---
+
 ## V2 Feature Status
 | Feature | Status | Notes |
 |---------|--------|-------|
