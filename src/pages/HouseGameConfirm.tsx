@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Check, Sparkles } from 'lucide-react';
 import { useHouseGame } from '@/hooks/useHouseGame';
 import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
-import { ParsedPrimitive, ActivePrimitive, HouseGamePrimitive } from '@/types/houseGame';
+import { ParsedPrimitive, ActivePrimitive, HouseGamePrimitive, isCustomPrimitive } from '@/types/houseGame';
 import { PRIMITIVE_MAP, PRIMITIVES_BY_CATEGORY, CATEGORY_LABELS, CATEGORY_ORDER } from '@/lib/houseGame/primitives';
-import { PrimitiveRow, CategorySection } from '@/components/golf/HouseGamePrimitives';
+import { PrimitiveRow, CategorySection, CustomPrimitiveRow } from '@/components/golf/HouseGamePrimitives';
 import { validateConfig } from '@/engine/HouseGameEngine';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { toast } from 'sonner';
@@ -102,10 +102,24 @@ export default function HouseGameConfirm() {
 
     hapticLight();
 
-    const activePrimitives: ActivePrimitive[] = Array.from(checkedIds).map(id => ({
-      id,
-      value: valueMap.get(id) ?? PRIMITIVE_MAP[id]?.defaultValue ?? null,
-    }));
+    // Build a lookup map for custom primitives so we can preserve their metadata
+    const customMap = new Map<string, ParsedPrimitive>(
+      parsedPrimitives.filter(isCustomPrimitive).map(p => [p.id, p])
+    );
+
+    const activePrimitives: ActivePrimitive[] = Array.from(checkedIds).map(id => {
+      const custom = customMap.get(id);
+      if (custom) {
+        return {
+          id,
+          custom: true as const,
+          label: custom.label,
+          description: custom.description,
+          value: valueMap.get(id) ?? custom.value ?? null,
+        };
+      }
+      return { id, value: valueMap.get(id) ?? PRIMITIVE_MAP[id]?.defaultValue ?? null };
+    });
 
     const validation = validateConfig(activePrimitives);
     if (!validation.valid) {
@@ -143,16 +157,19 @@ export default function HouseGameConfirm() {
     }
   };
 
-  // Build the "AI found" list (parsed primitives that still exist in PRIMITIVE_MAP)
+  // Split into standard (known in PRIMITIVE_MAP) and custom (AI-created)
   const aiFoundPrimitives = parsedPrimitives
+    .filter(p => !isCustomPrimitive(p))
     .map(p => PRIMITIVE_MAP[p.id])
     .filter(Boolean) as HouseGamePrimitive[];
+
+  const customPrimitives = parsedPrimitives.filter(isCustomPrimitive);
 
   const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
   const defaultName = isPersonal ? 'My Format' : 'House Game';
 
   return (
-    <div className="h-screen flex flex-col bg-[#F8F8F6]">
+    <div className="h-screen flex flex-col bg-[#F8F8F6] relative">
       {/* Header */}
       <header className="flex-shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground">
         <div className="flex items-center gap-3">
@@ -175,7 +192,7 @@ export default function HouseGameConfirm() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5 pb-32">
+      <main className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5 pb-6">
 
         {/* Game name field */}
         <motion.div
@@ -219,15 +236,48 @@ export default function HouseGameConfirm() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...spring, delay: 0.05 }}
         >
-          <div className="bg-[#0A0A0A] rounded-2xl p-4 flex items-start gap-3">
-            <Sparkles className="w-5 h-5 text-[#F0EE3A] flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-white font-bold text-[13px] leading-snug">
-                Found {aiFoundPrimitives.length} rule{aiFoundPrimitives.length !== 1 ? 's' : ''} in your description
-              </p>
-              <p className="text-white/50 text-[12px] mt-0.5 leading-relaxed line-clamp-2">
-                "{description}"
-              </p>
+          <div className="bg-[#0A0A0A] rounded-2xl p-4">
+            <div className="flex items-start gap-3">
+              <Sparkles className="w-5 h-5 text-[#F0EE3A] flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-bold text-[13px] leading-snug">
+                  Found {aiFoundPrimitives.length} rule{aiFoundPrimitives.length !== 1 ? 's' : ''} in your description
+                </p>
+                {aiFoundPrimitives.length > 0 && (
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    {(() => {
+                      const high = parsedPrimitives.filter(p => p.confidence === 'high').length;
+                      const medium = parsedPrimitives.filter(p => p.confidence === 'medium').length;
+                      const low = parsedPrimitives.filter(p => p.confidence === 'low').length;
+                      return (
+                        <>
+                          {high > 0 && (
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-[#4ADE80] bg-[#4ADE80]/15 px-2 py-0.5 rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80]" />
+                              {high} high
+                            </span>
+                          )}
+                          {medium > 0 && (
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-[#FCD34D] bg-[#FCD34D]/15 px-2 py-0.5 rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#FCD34D]" />
+                              {medium} medium
+                            </span>
+                          )}
+                          {low > 0 && (
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-[#FB923C] bg-[#FB923C]/15 px-2 py-0.5 rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#FB923C]" />
+                              {low} low
+                            </span>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+                <p className="text-white/40 text-[11px] mt-1.5 leading-relaxed line-clamp-2">
+                  "{description}"
+                </p>
+              </div>
             </div>
           </div>
           <button
@@ -254,16 +304,59 @@ export default function HouseGameConfirm() {
               Here's what we found
             </p>
             <div className="space-y-2">
-              {aiFoundPrimitives.map(p => (
-                <PrimitiveRow
+              {aiFoundPrimitives.map((p, i) => (
+                <motion.div
                   key={p.id}
-                  primitive={p}
-                  checked={checkedIds.has(p.id)}
-                  confidence={confidenceMap.get(p.id)}
-                  value={valueMap.get(p.id)}
-                  onToggle={() => handleToggle(p.id)}
-                  onValueChange={v => handleValueChange(p.id, v)}
-                />
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 28, delay: 0.1 + i * 0.05 }}
+                >
+                  <PrimitiveRow
+                    primitive={p}
+                    checked={checkedIds.has(p.id)}
+                    confidence={confidenceMap.get(p.id)}
+                    value={valueMap.get(p.id)}
+                    onToggle={() => handleToggle(p.id)}
+                    onValueChange={v => handleValueChange(p.id, v)}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* AI-created custom rules */}
+        {customPrimitives.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.12 }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                AI-Created Rules
+              </p>
+              <span className="text-[9px] font-black text-[#0A0A0A] bg-[#F0EE3A] px-1.5 py-0.5 rounded-md">
+                NEW
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mb-2 leading-snug">
+              These rules aren't in our standard library — they'll be saved as reminders and shown at settlement.
+            </p>
+            <div className="space-y-2">
+              {customPrimitives.map((p, i) => (
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 28, delay: 0.12 + i * 0.05 }}
+                >
+                  <CustomPrimitiveRow
+                    primitive={p}
+                    checked={checkedIds.has(p.id)}
+                    onToggle={() => handleToggle(p.id)}
+                  />
+                </motion.div>
               ))}
             </div>
           </motion.div>
@@ -301,7 +394,7 @@ export default function HouseGameConfirm() {
       </main>
 
       {/* CTA */}
-      <div className="absolute bottom-0 left-0 right-0 px-6 pb-safe pt-4 bg-[#F8F8F6] border-t border-border/30">
+      <div className="flex-shrink-0 px-6 pt-4 pb-[34px] bg-[#F8F8F6] border-t border-border/30">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[12px] text-muted-foreground">
             {checkedIds.size} rule{checkedIds.size !== 1 ? 's' : ''} selected

@@ -19,7 +19,7 @@ export function usePushNotifications() {
   const listenersRef = useRef(false);
 
   useEffect(() => {
-    if (!Capacitor.isNativePlatform() || !user || listenersRef.current) return;
+    if (!Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('PushNotifications') || !user || listenersRef.current) return;
     listenersRef.current = true;
 
     // Token received → persist to profiles
@@ -58,7 +58,7 @@ export function usePushNotifications() {
       if (receive === 'granted') {
         PushNotifications.register().catch(() => {});
       }
-    });
+    }).catch(() => {});
 
     return () => {
       regListener.then((l) => l.remove());

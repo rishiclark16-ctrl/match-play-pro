@@ -76,8 +76,10 @@ export interface ConfigValidationResult {
  * Call before saving a House Game to surface user-facing errors.
  */
 export function validateConfig(activePrimitives: ActivePrimitive[]): ConfigValidationResult {
-  const c = buildScoringConfig(activePrimitives);
-  const activeIds = new Set(activePrimitives.map(p => p.id));
+  // Custom primitives (AI-created) have no scoring config — skip them for validation
+  const standardPrimitives = activePrimitives.filter(p => !p.id.startsWith('custom_'));
+  const c = buildScoringConfig(standardPrimitives);
+  const activeIds = new Set(standardPrimitives.map(p => p.id));
   const errors: string[] = [];
 
   if (c.nassau && c.stableford) {

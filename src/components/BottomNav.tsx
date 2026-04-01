@@ -56,11 +56,11 @@ export function BottomNav() {
               >
                 <motion.div
                   whileTap={{ scale: 0.9 }}
-                  className="w-14 h-14 rounded-full bg-foreground flex items-center justify-center shadow-lg"
+                  className="w-14 h-14 rounded-full bg-[#F0EE3A] flex items-center justify-center shadow-[0_4px_16px_rgba(240,238,58,0.4)]"
                 >
                   <item.icon
-                    className="w-[22px] h-[22px] text-background"
-                    strokeWidth={1.75}
+                    className="w-[22px] h-[22px] text-foreground"
+                    strokeWidth={2.5}
                   />
                 </motion.div>
               </Link>
@@ -75,10 +75,7 @@ export function BottomNav() {
               className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[56px] px-2 py-2 touch-manipulation cursor-pointer select-none active:scale-95 transition-transform"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <div className={cn(
-                "flex flex-col items-center gap-0.5 rounded-xl px-3 py-1 transition-colors",
-                active ? "bg-foreground/8" : ""
-              )}>
+              <div className="flex flex-col items-center gap-0.5 px-3 py-1">
                 <item.icon
                   className={cn(
                     "w-[22px] h-[22px] transition-colors",
@@ -88,13 +85,13 @@ export function BottomNav() {
                 />
                 <span className={cn(
                   "text-[9px] font-bold uppercase tracking-[0.08em] transition-colors",
-                  active ? "text-[#F0EE3A]" : "text-muted-foreground"
+                  active ? "text-foreground" : "text-muted-foreground"
                 )}>
                   {item.label}
                 </span>
               </div>
               {active && (
-                <span className="w-1 h-1 rounded-full bg-gold mt-0.5" />
+                <span className="w-1 h-1 rounded-full bg-[#F0EE3A] mt-0.5" />
               )}
             </Link>
           );

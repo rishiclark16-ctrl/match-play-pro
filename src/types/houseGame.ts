@@ -1,12 +1,25 @@
 export interface ActivePrimitive {
   id: string;
   value: any; // null for 'none' valueType primitives
+  // Custom primitive fields (only present when id starts with 'custom_')
+  custom?: true;
+  label?: string;
+  description?: string;
 }
 
 export interface ParsedPrimitive {
   id: string;
   value: any;
   confidence: 'high' | 'medium' | 'low';
+  // Custom primitive fields
+  custom?: true;
+  label?: string;
+  description?: string;
+}
+
+/** Type guard — true when a primitive was AI-created, not from the standard VALID_IDS set */
+export function isCustomPrimitive(p: ActivePrimitive | ParsedPrimitive): boolean {
+  return !!(p as any).custom || p.id.startsWith('custom_');
 }
 
 export interface HouseGame {

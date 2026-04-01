@@ -12,8 +12,12 @@ export type NotificationType = keyof NotificationPreferences;
  * Returns true if we should show the contextual push prompt.
  * False if user denied within the last 30 days.
  */
+function isPushAvailable(): boolean {
+  return Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('PushNotifications');
+}
+
 export function shouldPromptForPush(): boolean {
-  if (!Capacitor.isNativePlatform()) return false;
+  if (!isPushAvailable()) return false;
   const deniedAt = localStorage.getItem(DENIAL_STORAGE_KEY);
   if (!deniedAt) return true;
   return Date.now() - Number(deniedAt) > THIRTY_DAYS_MS;
@@ -24,7 +28,7 @@ export function shouldPromptForPush(): boolean {
  * Records denial timestamp to enforce 30-day cooldown.
  */
 export async function requestPushPermission(): Promise<boolean> {
-  if (!Capacitor.isNativePlatform()) return false;
+  if (!isPushAvailable()) return false;
   try {
     const { receive } = await PushNotifications.requestPermissions();
     if (receive === 'granted') {
@@ -44,7 +48,7 @@ export async function requestPushPermission(): Promise<boolean> {
  * Check current push permission status without prompting.
  */
 export async function checkPushPermission(): Promise<'granted' | 'denied' | 'prompt'> {
-  if (!Capacitor.isNativePlatform()) return 'denied';
+  if (!isPushAvailable()) return 'denied';
   try {
     const { receive } = await PushNotifications.checkPermissions();
     return receive as 'granted' | 'denied' | 'prompt';
