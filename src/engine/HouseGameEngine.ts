@@ -77,6 +77,7 @@ export interface ConfigValidationResult {
  */
 export function validateConfig(activePrimitives: ActivePrimitive[]): ConfigValidationResult {
   const c = buildScoringConfig(activePrimitives);
+  const activeIds = new Set(activePrimitives.map(p => p.id));
   const errors: string[] = [];
 
   if (c.nassau && c.stableford) {
@@ -84,6 +85,31 @@ export function validateConfig(activePrimitives: ActivePrimitive[]): ConfigValid
   }
   if (c.matchPlay && c.stableford) {
     errors.push("Match Play and Stableford can't run together — pick one.");
+  }
+
+  // Skins + back-9 skins selected together
+  if (activeIds.has('format_skins') && activeIds.has('format_skins_back9_only')) {
+    errors.push("Pick either Skins or Back-9 Skins, not both.");
+  }
+
+  // Ties carryover + ties split selected together — use activeIds because
+  // config flags are mutually exclusive (last primitive wins), so check the
+  // raw primitive list to detect both being explicitly selected.
+  if (activeIds.has('settlement_ties_carryover') && activeIds.has('settlement_ties_split')) {
+    errors.push("Choose either Ties Split or Ties Carryover, not both.");
+  }
+
+  // Nassau + Match Play selected together
+  if (c.nassau && c.matchPlay) {
+    errors.push("Nassau and Match Play can't run together — pick one.");
+  }
+
+  // Handicap scratch + any handicap percentage primitive
+  const handicapPctIds = ['handicap_full', 'handicap_90_pct', 'handicap_80_pct', 'handicap_75_pct'];
+  const hasScratch = activeIds.has('handicap_scratch');
+  const hasPctHandicap = handicapPctIds.some(id => activeIds.has(id));
+  if (hasScratch && hasPctHandicap) {
+    errors.push("Pick one handicap setting.");
   }
 
   return { valid: errors.length === 0, errors };

@@ -32,7 +32,9 @@ export default function HouseGameBuilder() {
   const { formats, loading: formatsLoading, parsing: personalParsing, parseDescription: personalParseDescription } = usePersonalGameFormats();
   const parsing = isPersonal ? personalParsing : groupParsing;
   const parseDescription = isPersonal ? personalParseDescription : groupParseDescription;
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState<string>(() => {
+    return (location.state as any)?.prefillDescription ?? '';
+  });
   const [isListening, setIsListening] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);

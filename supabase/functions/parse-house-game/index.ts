@@ -29,7 +29,7 @@ const VALID_IDS = new Set([
   'group_wolf_lone_multiplier','group_sixes','group_point_bank',
 ]);
 
-const SYSTEM_PROMPT = `You are a golf rules parser for a scoring app. The user will describe their group's betting game in plain English. Your job is to map their description to a structured set of rule primitives.
+const SYSTEM_PROMPT = `You are an expert golf rules parser for a scoring app. The user will describe their group's betting game in plain English. Your job is to accurately map their description to a structured set of rule primitives.
 
 Return ONLY valid JSON — no preamble, no markdown, no explanation. The JSON must be an array of activated rule objects.
 
@@ -57,7 +57,43 @@ Value field rules:
 - format_modified_stableford: { eagle: 5, birdie: 2, par: 0, bogey: -1, double: -3 }
 - All others: null
 
-Only include rules clearly described or strongly implied. Never invent rules. Use "low" confidence only for ambiguous interpretations.`;
+--- DISAMBIGUATION RULES ---
+- When user says "press when 2 down" or "auto press when X down" → use press_auto_x_down with value:X. Do NOT use press_manual_request.
+- press_manual_request means a player must ASK to press (not automatic). Only use it when the user explicitly says requests or asks for presses.
+- When user mentions a dollar amount like "$5 bets" or "$5 per unit" or "worth $10" → always include settlement_unit_value with that dollar value as the number.
+- When user mentions "carryover" or "carries over" with skins → include carryover_skins_halved (value: null).
+- When user says "net out" or "settle at the end" or "settle up at the end" → include settlement_net_out (value: null).
+- When user says "full handicap" or just "handicaps" or "using handicaps" → include handicap_full (value: null). When user says "90%" or "90 percent handicap" → use handicap_90_pct. When "80%" → handicap_80_pct. When "75%" → handicap_75_pct.
+- When user says "back 9 skins" or "skins on the back" or "skins on the back 9" → use format_skins_back9_only, NOT format_skins.
+- Only include rules clearly described or strongly implied. Never invent rules not mentioned.
+- Use "low" confidence only for genuinely ambiguous interpretations where multiple rules could apply.
+
+--- EXAMPLES ---
+
+<example>
+Input: "Nassau $5 with 2-down auto presses, birdies pay a unit from everyone"
+Output: [{"id":"format_nassau","value":null,"confidence":"high"},{"id":"settlement_unit_value","value":5,"confidence":"high"},{"id":"press_auto_x_down","value":2,"confidence":"high"},{"id":"bonus_birdie_unit","value":1,"confidence":"high"}]
+</example>
+
+<example>
+Input: "Skins with carryovers, par 5s worth double, settle at the end, $2 per skin"
+Output: [{"id":"format_skins","value":null,"confidence":"high"},{"id":"carryover_skins_halved","value":null,"confidence":"high"},{"id":"bonus_par5_double","value":null,"confidence":"high"},{"id":"settlement_net_out","value":null,"confidence":"high"},{"id":"settlement_unit_value","value":2,"confidence":"high"}]
+</example>
+
+<example>
+Input: "Wolf with 2x lone wolf payout, full handicaps, gimmes inside 2 feet"
+Output: [{"id":"format_wolf","value":null,"confidence":"high"},{"id":"group_wolf_lone_multiplier","value":2,"confidence":"high"},{"id":"handicap_full","value":null,"confidence":"high"},{"id":"casual_gimme_distance","value":2,"confidence":"high"}]
+</example>
+
+<example>
+Input: "Match play 90% handicap, birdies pay a unit to each player, no blood rule"
+Output: [{"id":"format_match_play","value":null,"confidence":"high"},{"id":"handicap_90_pct","value":null,"confidence":"high"},{"id":"bonus_birdie_unit","value":1,"confidence":"high"},{"id":"casual_no_blood","value":null,"confidence":"high"}]
+</example>
+
+<example>
+Input: "We do a Nassau worth $10, press when 2 down, skins on the back 9 for $1 per hole, eagles pay triple"
+Output: [{"id":"format_nassau","value":null,"confidence":"high"},{"id":"settlement_unit_value","value":10,"confidence":"high"},{"id":"press_auto_x_down","value":2,"confidence":"high"},{"id":"format_skins_back9_only","value":null,"confidence":"high"},{"id":"bonus_eagle_unit","value":3,"confidence":"high"}]
+</example>`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {

@@ -42,9 +42,14 @@ export default function HouseGameConfirm() {
       : description.slice(0, 28).trim() + (description.length > 28 ? '…' : '');
   });
 
-  // Initialize checked set from parsed results
+  // Initialize checked set from parsed results.
+  // high/medium confidence → auto-checked; low confidence → starts unchecked (user must opt in).
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => {
-    return new Set(parsedPrimitives.map(p => p.id));
+    return new Set(
+      parsedPrimitives
+        .filter(p => p.confidence === 'high' || p.confidence === 'medium')
+        .map(p => p.id)
+    );
   });
 
   // Value map: id → current value (starts from parsed or default)
@@ -213,17 +218,29 @@ export default function HouseGameConfirm() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...spring, delay: 0.05 }}
-          className="bg-[#0A0A0A] rounded-2xl p-4 flex items-start gap-3"
         >
-          <Sparkles className="w-5 h-5 text-[#F0EE3A] flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-white font-bold text-[13px] leading-snug">
-              Found {aiFoundPrimitives.length} rule{aiFoundPrimitives.length !== 1 ? 's' : ''} in your description
-            </p>
-            <p className="text-white/50 text-[12px] mt-0.5 leading-relaxed line-clamp-2">
-              "{description}"
-            </p>
+          <div className="bg-[#0A0A0A] rounded-2xl p-4 flex items-start gap-3">
+            <Sparkles className="w-5 h-5 text-[#F0EE3A] flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-white font-bold text-[13px] leading-snug">
+                Found {aiFoundPrimitives.length} rule{aiFoundPrimitives.length !== 1 ? 's' : ''} in your description
+              </p>
+              <p className="text-white/50 text-[12px] mt-0.5 leading-relaxed line-clamp-2">
+                "{description}"
+              </p>
+            </div>
           </div>
+          <button
+            onClick={() =>
+              navigate(
+                isPersonal ? '/my-formats/new' : `/groups/${groupId}/house-game/new`,
+                { state: { prefillDescription: description } }
+              )
+            }
+            className="mt-2 text-[12px] text-muted-foreground font-bold"
+          >
+            ← Refine description
+          </button>
         </motion.div>
 
         {/* AI found section */}
