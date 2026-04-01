@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Loader2, CloudRain, Shuffle, Coins, Zap, Plus, Share2 } from 'lucide-react';
+import { Loader2, CloudRain, Shuffle, Coins, Zap, Plus, Share2, Sparkles } from 'lucide-react';
 import { useRounds } from '@/hooks/useRounds';
 import { useRoundSharing } from '@/hooks/useRoundSharing';
 import { useSettings } from '@/hooks/useSettings';
@@ -22,6 +22,7 @@ import { StrokesPerHoleMap } from '@/lib/games/skins';
 import { calculateSettlement, NetSettlement } from '@/lib/games/settlement';
 import { calculateMatchPlay, MatchPlayResult } from '@/lib/games/matchPlay';
 import { buildConfig } from '@/engine/HouseGameEngine';
+import { isCustomPrimitive } from '@/types/houseGame';
 import { getPropBetLabel, getPropBetIcon } from '@/types/betting';
 import { useGroups } from '@/hooks/useGroups';
 import { useRoundLedgerSync } from '@/hooks/useRoundLedgerSync';
@@ -679,6 +680,48 @@ export default function RoundComplete() {
             </div>
           </motion.div>
         )}
+
+        {/* Custom Rules (manual settlement reminders) */}
+        {(() => {
+          const customRules = (houseGameEntry?.activePrimitives ?? []).filter(isCustomPrimitive);
+          if (customRules.length === 0) return null;
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.40 }}
+              className="mx-4 mb-4"
+            >
+              <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
+                  <div className="w-5 h-5 rounded-md bg-[#F0EE3A] flex items-center justify-center">
+                    <Sparkles className="w-3 h-3 text-[#0A0A0A]" />
+                  </div>
+                  <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-foreground">Custom Rules</span>
+                  <span className="ml-auto text-[10px] font-bold text-muted-foreground">Settle manually</span>
+                </div>
+                {customRules.map((rule, i) => {
+                  const label = (rule as any).label ?? rule.id.replace('custom_', '').replace(/_/g, ' ');
+                  const desc = (rule as any).description ?? '';
+                  const val = rule.value;
+                  return (
+                    <div key={rule.id} className="px-4 py-3 border-b border-border/10 last:border-b-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[13px] font-semibold text-foreground block">{label}</span>
+                          {desc && <span className="text-[11px] text-muted-foreground leading-snug">{desc}</span>}
+                        </div>
+                        {val != null && (
+                          <span className="text-[13px] font-black text-foreground flex-shrink-0">${val}</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          );
+        })()}
 
         {/* Junk Bets Settlement */}
         {wonJunkBets.length > 0 && (

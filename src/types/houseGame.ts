@@ -15,6 +15,8 @@ export interface ParsedPrimitive {
   custom?: true;
   label?: string;
   description?: string;
+  /** True when the rule is physically/logically impossible to track in the app */
+  infeasible?: true;
 }
 
 /** Type guard — true when a primitive was AI-created, not from the standard VALID_IDS set */

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, RefreshCw, Trophy, Target, TrendingUp, TrendingDown, Minus, Medal, Award } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Trophy, Target, TrendingUp, TrendingDown, Minus, Medal, Award, Sparkles } from 'lucide-react';
 import { useRounds } from '@/hooks/useRounds';
 import { useSupabaseRound } from '@/hooks/useSupabaseRound';
 import { formatRelativeToPar, getScoreColor, PlayerWithScores } from '@/types/golf';
@@ -14,6 +14,7 @@ import {
   buildMatchPlayStrokesMap,
 } from '@/lib/handicapUtils';
 import { calculateMatchPlay } from '@/lib/games/matchPlay';
+import { isCustomPrimitive } from '@/types/houseGame';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ConnectionStatus } from '@/components/golf/ConnectionStatus';
@@ -535,6 +536,47 @@ export default function Leaderboard() {
                 </div>
               </motion.div>
             )}
+
+            {/* Custom House Game Rules */}
+            {(() => {
+              const houseEntry = round?.games?.find(g => g.type === 'house');
+              const customRules = (houseEntry?.activePrimitives ?? []).filter(isCustomPrimitive);
+              if (customRules.length === 0) return null;
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 }}
+                  className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden mt-2 mb-2"
+                >
+                  <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
+                    <div className="w-5 h-5 rounded-md bg-[#F0EE3A] flex items-center justify-center">
+                      <Sparkles className="w-3 h-3 text-[#0A0A0A]" />
+                    </div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground">Custom Rules</p>
+                    <span className="ml-auto text-[10px] font-bold text-muted-foreground">Settle manually</span>
+                  </div>
+                  {customRules.map((rule) => {
+                    const label = (rule as any).label ?? rule.id.replace('custom_', '').replace(/_/g, ' ');
+                    const desc = (rule as any).description ?? '';
+                    const val = rule.value;
+                    return (
+                      <div key={rule.id} className="px-4 py-3 border-b border-border/10 last:border-b-0">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[13px] font-semibold text-foreground block">{label}</span>
+                            {desc && <span className="text-[11px] text-muted-foreground leading-snug">{desc}</span>}
+                          </div>
+                          {val != null && (
+                            <span className="text-[12px] font-black text-foreground flex-shrink-0">${val}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </motion.div>
+              );
+            })()}
           </>
         )}
       </main>

@@ -27,6 +27,7 @@ import { calculateMatchPlay, MatchPlayResult, getMatchPlayStatusColor } from '@/
 import { calculateHouseGame, HouseGameResult } from '@/lib/games/houseGame';
 import { buildScoringConfig } from '@/lib/houseGame/engine';
 import { buildConfig } from '@/engine/HouseGameEngine';
+import { isCustomPrimitive } from '@/types/houseGame';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
@@ -1521,6 +1522,42 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
         totalHoles={round.holes}
         onAutoPress={onAddPress}
       />
+    );
+  }
+
+  // Custom rules reminder section (AI-created rules that need manual tracking)
+  const customRules = (houseGameEntry?.activePrimitives ?? []).filter(isCustomPrimitive);
+  if (customRules.length > 0) {
+    sections.push(
+      <div key="custom-rules">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-4 h-4 rounded-md bg-[#F0EE3A] flex items-center justify-center">
+            <Sparkles className="w-2.5 h-2.5 text-[#0A0A0A]" />
+          </div>
+          <span className="text-[12px] font-bold text-foreground">Custom Rules</span>
+          <span className="ml-auto text-[10px] font-bold text-muted-foreground">Settle manually</span>
+        </div>
+        <div className="space-y-1.5">
+          {customRules.map(rule => {
+            const label = (rule as any).label ?? rule.id.replace('custom_', '').replace(/_/g, ' ');
+            const desc = (rule as any).description ?? '';
+            const val = rule.value;
+            return (
+              <div key={rule.id} className="rounded-xl bg-[#F0EE3A]/10 border border-[#F0EE3A]/40 px-3 py-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[12px] font-bold text-foreground block">{label}</span>
+                    {desc && <span className="text-[11px] text-muted-foreground leading-snug">{desc}</span>}
+                  </div>
+                  {val != null && (
+                    <span className="text-[12px] font-black text-foreground flex-shrink-0">${val}</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     );
   }
 

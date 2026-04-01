@@ -69,6 +69,19 @@ When a described rule doesn't match any standard id, create a custom primitive w
 - Use custom primitives for: unusual penalties, side bets, last-man-standing games, prop bets not in the standard list, social rules, unique formats
 - Create as many custom primitives as needed — one per distinct rule
 
+--- INFEASIBLE RULES ---
+Some rules simply cannot be tracked by a digital golf scoring app. When a described rule falls into this category, add "infeasible": true to the custom primitive. The app will show the user a "cannot be created" warning for these.
+
+Mark as infeasible when the rule requires:
+- Physical actions outside the app (e.g. "winner shaves head", "loser buys drinks at the bar", "do push-ups")
+- Non-golf social bets with no scoreable outcome (e.g. "bring homemade food", "wear a funny hat")
+- Outcomes that cannot be determined from golf scores (e.g. "funniest shot", "best dressed")
+- Rules requiring external judging or subjective assessment with no numeric outcome
+
+Format: { "id": "custom_<slug>", "custom": true, "infeasible": true, "label": string, "description": string, "value": number | null, "confidence": "high" }
+
+Do NOT mark as infeasible: money bets based on score outcomes (bogey totals, last place finish, etc.) — these CAN be manually settled using final scores.
+
 --- DISAMBIGUATION RULES ---
 - When user says "press when 2 down" or "auto press when X down" → use press_auto_x_down with value:X. Do NOT use press_manual_request.
 - press_manual_request means a player must ASK to press (not automatic). Only use it when the user explicitly says requests or asks for presses.
@@ -132,6 +145,7 @@ function sanitizePrimitives(items: any[]) {
         return {
           id: item.id,
           custom: true as const,
+          ...(item.infeasible === true ? { infeasible: true as const } : {}),
           label: String(item.label).slice(0, 60),
           description: typeof item.description === 'string' ? item.description.slice(0, 200) : item.label,
           value: typeof item.value === 'number' ? item.value : null,

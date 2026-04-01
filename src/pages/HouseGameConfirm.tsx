@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, Sparkles } from 'lucide-react';
+import { ArrowLeft, Check, Sparkles, AlertTriangle } from 'lucide-react';
 import { useHouseGame } from '@/hooks/useHouseGame';
 import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { ParsedPrimitive, ActivePrimitive, HouseGamePrimitive, isCustomPrimitive } from '@/types/houseGame';
@@ -44,10 +44,11 @@ export default function HouseGameConfirm() {
 
   // Initialize checked set from parsed results.
   // high/medium confidence → auto-checked; low confidence → starts unchecked (user must opt in).
+  // Infeasible primitives are never checked.
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => {
     return new Set(
       parsedPrimitives
-        .filter(p => p.confidence === 'high' || p.confidence === 'medium')
+        .filter(p => !p.infeasible && (p.confidence === 'high' || p.confidence === 'medium'))
         .map(p => p.id)
     );
   });
@@ -157,13 +158,14 @@ export default function HouseGameConfirm() {
     }
   };
 
-  // Split into standard (known in PRIMITIVE_MAP) and custom (AI-created)
+  // Split into standard (known in PRIMITIVE_MAP), custom (AI-created), and infeasible (cannot be created)
   const aiFoundPrimitives = parsedPrimitives
     .filter(p => !isCustomPrimitive(p))
     .map(p => PRIMITIVE_MAP[p.id])
     .filter(Boolean) as HouseGamePrimitive[];
 
-  const customPrimitives = parsedPrimitives.filter(isCustomPrimitive);
+  const customPrimitives = parsedPrimitives.filter(p => isCustomPrimitive(p) && !p.infeasible);
+  const infeasiblePrimitives = parsedPrimitives.filter(p => p.infeasible === true);
 
   const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
   const defaultName = isPersonal ? 'My Format' : 'House Game';
@@ -241,7 +243,10 @@ export default function HouseGameConfirm() {
               <Sparkles className="w-5 h-5 text-[#F0EE3A] flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <p className="text-white font-bold text-[13px] leading-snug">
-                  Found {aiFoundPrimitives.length} rule{aiFoundPrimitives.length !== 1 ? 's' : ''} in your description
+                  Found {aiFoundPrimitives.length + customPrimitives.length} rule{(aiFoundPrimitives.length + customPrimitives.length) !== 1 ? 's' : ''} in your description
+                  {infeasiblePrimitives.length > 0 && (
+                    <span className="text-[#F0BB3A]"> · {infeasiblePrimitives.length} can't be created</span>
+                  )}
                 </p>
                 {aiFoundPrimitives.length > 0 && (
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
@@ -356,6 +361,55 @@ export default function HouseGameConfirm() {
                     checked={checkedIds.has(p.id)}
                     onToggle={() => handleToggle(p.id)}
                   />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Rules that cannot be created */}
+        {infeasiblePrimitives.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.14 }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                Can't Be Created
+              </p>
+              <span className="text-[9px] font-black text-[#7D4E0F] bg-[#FEF3C7] px-1.5 py-0.5 rounded-md">
+                {infeasiblePrimitives.length}
+              </span>
+            </div>
+            <div className="bg-[#FFF9E6] border border-[#F0BB3A] rounded-2xl px-4 py-3 mb-2">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-[#B45309] flex-shrink-0 mt-0.5" />
+                <p className="text-[12px] text-[#7D4E0F] leading-snug">
+                  The following rules can't be tracked in the app. You'll need to handle these manually with your group.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {infeasiblePrimitives.map((p, i) => (
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 28, delay: 0.14 + i * 0.05 }}
+                  className="rounded-xl px-4 py-3 border border-[#F0BB3A] bg-[#FFF9E6]"
+                >
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-3.5 h-3.5 text-[#B45309] flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-bold text-[#7D4E0F]">
+                        {p.label ?? p.id.replace('custom_', '').replace(/_/g, ' ')}
+                      </p>
+                      {p.description && (
+                        <p className="text-[11px] text-[#7D4E0F]/70 leading-snug mt-0.5">{p.description}</p>
+                      )}
+                    </div>
+                  </div>
                 </motion.div>
               ))}
             </div>
