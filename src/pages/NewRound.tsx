@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Loader2, Flag, Users, Gamepad2, Sparkles, ToggleLeft, ToggleRight, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,7 @@ interface PlayerData {
 
 export default function NewRound() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isPro } = useSubscription();
   const { createRound } = useCreateSupabaseRound();
   const { courses, createCourse, getDefaultHoles } = useCourses();
@@ -168,6 +169,17 @@ export default function NewRound() {
       setProfileApplied(true);
     }
   }, [profile, profileApplied]);
+
+  // Pre-select format when coming back from AI builder
+  useEffect(() => {
+    const preSelectFormatId = (location.state as { preSelectFormatId?: string } | null)?.preSelectFormatId;
+    if (preSelectFormatId) {
+      setSelectedPersonalFormatId(preSelectFormatId);
+      // Clear state so back-navigation doesn't re-trigger
+      window.history.replaceState({}, '');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Validation
   const canProceedCourse = selectedCourse || (showCourseForm && courseName.trim());

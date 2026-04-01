@@ -1,0 +1,21 @@
+{
+  "id": "session-1775084577505",
+  "startedAt": "2026-04-01T23:02:57.505Z",
+  "cwd": "/Users/rishiclark/Documents/MATCH-Golf",
+  "context": {
+    "lastMatchedPatterns": [
+      "mem-MEMORY-panresponder-scrubber-pattern-",
+      "mem-MEMORY-eas---build",
+      "mem-MEMORY-important-files",
+      "mem-MEMORY-key-conventions",
+      "mem-MEMORY-dev-environment--set-up-2026-0"
+    ]
+  },
+  "metrics": {
+    "edits": 13,
+    "commands": 0,
+    "tasks": 0,
+    "errors": 0
+  },
+  "updatedAt": "2026-04-01T23:23:45.314Z"
+}

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, Sparkles, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Check, Sparkles, AlertTriangle, ArrowRight, Flag } from 'lucide-react';
 import { useHouseGame } from '@/hooks/useHouseGame';
 import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { ParsedPrimitive, ActivePrimitive, HouseGamePrimitive, isCustomPrimitive } from '@/types/houseGame';
@@ -32,6 +32,9 @@ export default function HouseGameConfirm() {
   const { saving: groupSaving, saveHouseGame } = useHouseGame(isPersonal ? null : groupId ?? null);
   const { saving: personalSaving, saveFormat } = usePersonalGameFormats();
   const saving = isPersonal ? personalSaving : groupSaving;
+
+  // After successful save — shows the Step 3 success screen
+  const [savedFormatId, setSavedFormatId] = useState<string | null>(null);
 
   // Game name — auto-generated from description, user can edit
   const [gameName, setGameName] = useState<string>(() => {
@@ -136,8 +139,7 @@ export default function HouseGameConfirm() {
       });
       if (id) {
         hapticSuccess();
-        toast.success('Format saved!');
-        navigate(returnTo ?? '/', { replace: true });
+        setSavedFormatId(id);
       } else {
         toast.error('Failed to save — try again');
       }
@@ -150,8 +152,8 @@ export default function HouseGameConfirm() {
       });
       if (ok) {
         hapticSuccess();
-        toast.success('House Game saved!');
-        navigate('/groups', { replace: true });
+        // For group house games, use a sentinel value to show the success screen
+        setSavedFormatId('group');
       } else {
         toast.error('Failed to save — try again');
       }
@@ -491,6 +493,114 @@ export default function HouseGameConfirm() {
           </AnimatePresence>
         </motion.button>
       </div>
+
+      {/* Step 3: Success overlay — appears after saving */}
+      <AnimatePresence>
+        {savedFormatId && (
+          <motion.div
+            key="success-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-[#0A0A0A]/60 backdrop-blur-sm flex items-end z-50"
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+              className="w-full bg-[#0A0A0A] rounded-t-[32px] px-6 pt-6 pb-[40px]"
+            >
+              {/* Drag handle */}
+              <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-7" />
+
+              {/* Check circle with ring animation */}
+              <div className="flex justify-center mb-5">
+                <div className="relative">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 }}
+                    className="w-20 h-20 rounded-full bg-[#F0EE3A] flex items-center justify-center"
+                  >
+                    <Check className="w-9 h-9 text-[#0A0A0A] stroke-[3]" />
+                  </motion.div>
+                  <motion.div
+                    initial={{ scale: 0.6, opacity: 0.6 }}
+                    animate={{ scale: 1.5, opacity: 0 }}
+                    transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
+                    className="absolute inset-0 rounded-full border-2 border-[#F0EE3A]"
+                  />
+                </div>
+              </div>
+
+              {/* Title */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.18 }}
+                className="text-center mb-1"
+              >
+                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#F0EE3A] mb-1">
+                  {isPersonal ? 'Format Created' : 'House Game Set'}
+                </p>
+                <h2 className="text-[28px] font-black tracking-[-0.04em] text-white leading-none">
+                  {gameName || (isPersonal ? 'My Format' : 'House Game')}
+                </h2>
+                <p className="text-white/50 text-[13px] mt-2 leading-snug">
+                  {checkedIds.size} rule{checkedIds.size !== 1 ? 's' : ''} ready to play
+                </p>
+              </motion.div>
+
+              {/* Divider */}
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 0.28, duration: 0.4 }}
+                className="h-px bg-white/10 my-5"
+              />
+
+              {/* CTAs */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex flex-col gap-3"
+              >
+                {/* Primary: Start a Round */}
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    if (isPersonal && savedFormatId !== 'group') {
+                      navigate('/new-round', {
+                        state: { preSelectFormatId: savedFormatId },
+                        replace: true,
+                      });
+                    } else {
+                      // Group house game — just go to new round
+                      navigate('/new-round', { replace: true });
+                    }
+                  }}
+                  className="w-full h-[58px] bg-[#F0EE3A] rounded-2xl flex items-center justify-center gap-3 font-black text-[16px] text-[#0A0A0A] tracking-[-0.02em]"
+                >
+                  <Flag className="w-5 h-5" />
+                  <span>Start a Round Now</span>
+                  <ArrowRight className="w-4 h-4 ml-auto" />
+                </motion.button>
+
+                {/* Secondary: Done / back */}
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => navigate(returnTo ?? '/', { replace: true })}
+                  className="w-full h-[50px] rounded-2xl flex items-center justify-center font-bold text-[14px] text-white/50"
+                >
+                  {returnTo ? 'Back to New Round' : 'Done'}
+                </motion.button>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

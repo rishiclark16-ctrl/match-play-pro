@@ -1,0 +1,120 @@
+[
+  {
+    "id": "mem-MEMORY-project",
+    "key": "project",
+    "content": "React + Capacitor iOS golf scoring app. Full context in CLAUDE.md (auto-loaded each session).",
+    "summary": "Project",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/rishiclark/.claude/projects/-Users-rishiclark-Documents-MATCH-Golf/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1775081063580
+  },
+  {
+    "id": "mem-MEMORY-key-facts",
+    "key": "key-facts",
+    "content": "- Package manager: Bun (always use `bun`, not npm/yarn)\n- Supabase project: puqgbsxabcyxrbwwoznn\n- Bundle ID: dev.matchgolf.app\n- iOS: open App.xcworkspace (not .xcodeproj)\n- RevenueCat key already in Xcode build settings — don't touch",
+    "summary": "Key Facts",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/rishiclark/.claude/projects/-Users-rishiclark-Documents-MATCH-Golf/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1775081063580
+  },
+  {
+    "id": "mem-MEMORY-dev-environment--set-up-2026-0",
+    "key": "dev-environment-set-up-2026-02-18-",
+    "content": "- Node 25.6.1, Bun 1.3.9, CocoaPods 1.16.2 installed via Homebrew\n- `bun install` and `pod install` completed\n- .env configured with Supabase credentials\n- Xcode not yet installed (user needs to download from App Store)",
+    "summary": "Dev Environment (set up 2026-02-18)",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/rishiclark/.claude/projects/-Users-rishiclark-Documents-MATCH-Golf/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1775081063580
+  },
+  {
+    "id": "mem-MEMORY-stack",
+    "key": "stack",
+    "content": "- React Native / Expo SDK 54 managed workflow, TypeScript strict\n- Supabase (auth, postgres, storage, edge functions)\n- expo-av for Audio playback/recording\n- expo-audio (useAudioRecorder) for recording\n- @expo/vector-icons Ionicons — installed, used throughout\n- EAS Build configured (eas.json present)",
+    "summary": "Stack",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/rishiclark/.claude/projects/-Users-rishiclark-outloud/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1775081063582
+  },
+  {
+    "id": "mem-MEMORY-key-conventions",
+    "key": "key-conventions",
+    "content": "- Colors: bg `#1C1410`, card `#251A14`, coral `#FF6B4A`, cream `#FAF0E6`, muted `#B09080`/`#7A5A4A`\n- Font: Georgia everywhere\n- All icons are Ionicons — NO emoji characters in the UI\n- Recording duration: fixed 30s (`DURATION = 30` constant in RecordScreen), no selector",
+    "summary": "Key conventions",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/rishiclark/.claude/projects/-Users-rishiclark-outloud/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1775081063582
+  },
+  {
+    "id": "mem-MEMORY-important-files",
+    "key": "important-files",
+    "content": "- `src/components/ScreenHeader.tsx` — shared header with back/close icons; `rightAction` accepts `{ label?, icon?, onPress }`\n- `src/components/ThoughtCard.tsx` — feed card with tap-to-seek progress bar\n- `src/components/BottomNav.tsx` — tab bar with Ionicons\n- `src/screens/ListeningScreen.tsx` — full-screen player with PanResponder scrubber\n- `src/screens/RecordScreen.tsx` — recording screen, fixed 30s\n- `src/screens/FriendsScreen.tsx` + `FindFriendsScreen.tsx` — friend discovery\n- `src/lib/sav",
+    "summary": "Important files",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/rishiclark/.claude/projects/-Users-rishiclark-outloud/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1775081063582
+  },
+  {
+    "id": "mem-MEMORY-panresponder-scrubber-pattern-",
+    "key": "panresponder-scrubber-pattern-listeningscreen-",
+    "content": "- `durationMsRef` kept in sync with `durationMs` state so PanResponder closures always see current duration\n- `scrubStartProgressRef` stores progress at drag start; `dx / SCRUBBER_WIDTH` applied as delta\n- `SCRUBBER_WIDTH = SCREEN_WIDTH - 48` module-level constant (safe in PanResponder closures)\n- Pause on grant, seek+resume on release",
+    "summary": "PanResponder scrubber pattern (ListeningScreen)",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/rishiclark/.claude/projects/-Users-rishiclark-outloud/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1775081063582
+  },
+  {
+    "id": "mem-MEMORY-eas---build",
+    "key": "eas-build",
+    "content": "- `eas build --platform ios --profile preview` for TestFlight builds\n- App slug: outloud, bundle id in app.json",
+    "summary": "EAS / build",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/rishiclark/.claude/projects/-Users-rishiclark-outloud/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1775081063582
+  },
+  {
+    "id": "insight-1775082914630-a89o",
+    "key": "frequent-edit-unknown",
+    "content": "File unknown was edited 29 times this session — likely a hot path worth monitoring.",
+    "summary": "Frequently edited: unknown (29x)",
+    "namespace": "insights",
+    "type": "procedural",
+    "metadata": {
+      "sourceFile": "unknown",
+      "editCount": 29,
+      "autoGenerated": true
+    },
+    "createdAt": 1775082914630
+  }
+]

@@ -38,85 +38,255 @@ function getPasswordStrength(password: string) {
   return { score, label: 'Strong', color: '#22C55E' };
 }
 
+// ─── Pre-computed star data (stable across renders) ──────────────────────────
+const STARS = Array.from({ length: 58 }, (_, i) => ({
+  x: ((i * 17.3 + Math.sin(i * 2.1) * 40 + 50) % 95) + 2,
+  y: ((i * 11.7 + Math.cos(i * 1.9) * 20 + 10) % 60) + 2,
+  size: i % 7 === 0 ? 2.5 : i % 3 === 0 ? 1.8 : 1.1,
+  delay: (i * 0.38) % 5.5,
+  dur: 1.4 + (i % 5) * 0.55,
+  opacity: 0.3 + (i % 4) * 0.15,
+}));
+
+// Ball arc keyframe positions (parabolic path left→apex→right)
+const BALL_LEFT:   string[] = ['3%',  '20%', '50%', '80%', '97%'];
+const BALL_BOTTOM: string[] = ['30%', '48%', '62%', '50%', '32%'];
+const BALL_TIMES = [0, 0.25, 0.5, 0.75, 1];
+
 // ─── Animated golf course SVG background ─────────────────────────────────────
 function GolfBackground() {
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {/* Deep gradient sky */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A] via-[#0f1a0d] to-[#0A0A0A]" />
+      {/* Sky gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#040805] via-[#07100a] to-[#0d1a0c]" />
 
-      {/* Subtle grid lines */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid)" />
-      </svg>
+      {/* ── Aurora blobs (Framer Motion HTML — reliable on all platforms) ── */}
+      <motion.div
+        className="absolute top-[2%] left-[10%] w-80 h-80 rounded-full bg-[#F0EE3A] blur-[110px] pointer-events-none"
+        animate={{ scale: [1, 1.18, 1], opacity: [0.07, 0.13, 0.07], y: [0, -14, 0] }}
+        transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute top-[22%] right-[4%] w-60 h-60 rounded-full bg-[#22C55E] blur-[90px] pointer-events-none"
+        animate={{ scale: [1, 1.2, 1], opacity: [0.05, 0.1, 0.05], y: [0, 12, 0] }}
+        transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+      />
+      <motion.div
+        className="absolute top-[8%] right-[28%] w-44 h-44 rounded-full bg-[#60A5FA] blur-[80px] pointer-events-none"
+        animate={{ scale: [1, 1.15, 1], opacity: [0.04, 0.08, 0.04], y: [0, -8, 0] }}
+        transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+      />
 
-      {/* Rolling hills silhouette */}
+      {/* ── Stars (Framer Motion HTML) ── */}
+      {STARS.map((s, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full bg-white pointer-events-none"
+          style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size }}
+          animate={{ opacity: [s.opacity * 0.15, s.opacity, s.opacity * 0.15], scale: [1, 1.5, 1] }}
+          transition={{ duration: s.dur, delay: s.delay, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      ))}
+
+      {/* ── Shooting stars (Framer Motion HTML) ── */}
+      <motion.div
+        className="absolute top-[11%] left-0 w-28 h-px bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none"
+        style={{ rotate: 15 }}
+        animate={{ x: ['-10%', '120%'], opacity: [0, 1, 0] }}
+        transition={{ duration: 1.0, delay: 5, repeat: Infinity, repeatDelay: 13, ease: 'easeIn' }}
+      />
+      <motion.div
+        className="absolute top-[20%] left-0 w-20 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent pointer-events-none"
+        style={{ rotate: 12 }}
+        animate={{ x: ['-10%', '120%'], opacity: [0, 0.7, 0] }}
+        transition={{ duration: 0.8, delay: 11, repeat: Infinity, repeatDelay: 19, ease: 'easeIn' }}
+      />
+
+      {/* ── Crescent moon ── */}
+      <div className="absolute top-[7%] right-[13%] pointer-events-none">
+        <div className="relative w-9 h-9">
+          <div className="absolute inset-0 rounded-full bg-[#fffde8] shadow-[0_0_20px_rgba(255,253,210,0.6),0_0_50px_rgba(255,253,210,0.2)]" />
+          {/* Cut-out to create crescent */}
+          <div className="absolute top-0 right-1 w-7 h-9 rounded-full bg-[#040805]" />
+        </div>
+      </div>
+
+      {/* ── Flying golf ball with comet trail (Framer Motion HTML) ── */}
+      {/* Trail dots — progressively more offset behind ball */}
+      {([
+        { size: 8,  opacity: [0, 0.5, 0],  color: '#F0EE3A', dDelay: 0.18 },
+        { size: 6,  opacity: [0, 0.35, 0], color: '#F0EE3A', dDelay: 0.32 },
+        { size: 4,  opacity: [0, 0.2, 0],  color: '#F0EE3A', dDelay: 0.46 },
+      ] as const).map((trail, ti) => (
+        <motion.div
+          key={`trail-${ti}`}
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            width: trail.size,
+            height: trail.size,
+            backgroundColor: trail.color,
+            filter: 'blur(1px)',
+            marginLeft: -trail.size / 2,
+            marginBottom: -trail.size / 2,
+          }}
+          animate={{
+            left: BALL_LEFT,
+            bottom: BALL_BOTTOM,
+            opacity: trail.opacity,
+          }}
+          transition={{
+            duration: 4.2,
+            repeat: Infinity,
+            repeatDelay: 1.8,
+            ease: 'easeInOut',
+            times: BALL_TIMES,
+            delay: trail.dDelay,
+          }}
+        />
+      ))}
+      {/* Main ball */}
+      <motion.div
+        className="absolute pointer-events-none"
+        style={{
+          width: 14,
+          height: 14,
+          borderRadius: '50%',
+          backgroundColor: '#ffffff',
+          boxShadow: '0 0 8px rgba(255,255,255,0.9), 0 0 20px rgba(240,238,58,0.6), 0 0 40px rgba(240,238,58,0.3)',
+          marginLeft: -7,
+          marginBottom: -7,
+        }}
+        animate={{
+          left: BALL_LEFT,
+          bottom: BALL_BOTTOM,
+          opacity: [0, 1, 1, 1, 0],
+        }}
+        transition={{
+          duration: 4.2,
+          repeat: Infinity,
+          repeatDelay: 1.8,
+          ease: 'easeInOut',
+          times: BALL_TIMES,
+        }}
+      />
+      {/* Ghost ball — offset for continuous feel */}
+      <motion.div
+        className="absolute pointer-events-none"
+        style={{
+          width: 10,
+          height: 10,
+          borderRadius: '50%',
+          backgroundColor: 'rgba(255,255,255,0.3)',
+          marginLeft: -5,
+          marginBottom: -5,
+        }}
+        animate={{
+          left: BALL_LEFT,
+          bottom: BALL_BOTTOM,
+          opacity: [0, 0.3, 0.3, 0.3, 0],
+        }}
+        transition={{
+          duration: 4.2,
+          repeat: Infinity,
+          repeatDelay: 1.8,
+          ease: 'easeInOut',
+          times: BALL_TIMES,
+          delay: 2.1,
+        }}
+      />
+
+      {/* ── SVG course scene — only static + SVG SMIL animations ── */}
       <svg
-        className="absolute bottom-0 left-0 w-full"
-        viewBox="0 0 390 280"
+        className="absolute bottom-0 left-0 w-full pointer-events-none"
+        viewBox="0 0 390 330"
         preserveAspectRatio="xMidYMax slice"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Far hills */}
-        <path
-          d="M0 220 Q60 160 120 180 Q180 200 240 155 Q300 110 360 145 L390 140 L390 280 L0 280 Z"
-          fill="#0d1f0b"
-          opacity="0.7"
-        />
-        {/* Mid fairway */}
-        <path
-          d="M0 245 Q50 210 110 225 Q170 240 230 200 Q290 160 360 185 L390 180 L390 280 L0 280 Z"
-          fill="#0f2410"
-          opacity="0.85"
-        />
-        {/* Foreground rough */}
-        <path
-          d="M0 265 Q80 250 150 258 Q220 266 280 245 Q330 230 390 248 L390 280 L0 280 Z"
-          fill="#122813"
-        />
-        {/* Flag pin */}
-        <motion.g
-          animate={{ rotate: [-2, 2, -2] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: '260px 190px' }}
-        >
-          <line x1="260" y1="185" x2="260" y2="215" stroke="#ffffff" strokeWidth="1.2" opacity="0.6" />
-          <path d="M260 185 L272 190 L260 195 Z" fill="#F0EE3A" opacity="0.9" />
-        </motion.g>
-        {/* Golf ball */}
-        <circle cx="200" cy="248" r="3" fill="white" opacity="0.5" />
+        <defs>
+          <radialGradient id="hg1" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#F0EE3A" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#F0EE3A" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* Terrain layers */}
+        <path d="M0 240 Q35 200 75 212 Q115 224 155 193 Q200 160 240 178 Q278 196 310 173 Q345 150 390 168 L390 330 L0 330 Z" fill="#080f08" opacity="0.55" />
+        <path d="M0 258 Q52 226 98 241 Q148 257 198 220 Q252 183 308 208 Q352 226 390 216 L390 330 L0 330 Z" fill="#0b180b" opacity="0.78" />
+        <path d="M0 274 Q68 253 128 263 Q188 274 242 246 Q298 218 362 236 L390 230 L390 330 L0 330 Z" fill="#0f200f" />
+        <path d="M0 291 Q82 277 150 284 Q218 293 270 270 Q322 253 390 267 L390 330 L0 330 Z" fill="#122512" />
+        <rect x="0" y="307" width="390" height="23" fill="#0d1e0d" />
+
+        {/* ── Flag pin 1 (left) ── */}
+        <circle cx="128" cy="276" r="22" fill="#F0EE3A" opacity="0.06">
+          <animate attributeName="r" values="16;24;16" dur="3s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.04;0.16;0.04" dur="3s" repeatCount="indefinite" />
+        </circle>
+        <ellipse cx="128" cy="279" rx="5" ry="2" fill="#060d06" stroke="#2a4a2a" strokeWidth="1" />
+        <line x1="128" y1="244" x2="128" y2="279" stroke="rgba(255,255,255,0.75)" strokeWidth="1.2" />
+        {/* Flag — SVG SMIL animateTransform (works in all browsers) */}
+        <path d="M128 244 L148 251 L128 258 Z" fill="#F0EE3A">
+          <animateTransform
+            attributeName="transform" type="rotate"
+            values="0 128 244; 6 128 244; -3 128 244; 8 128 244; 0 128 244"
+            dur="2.4s" repeatCount="indefinite"
+          />
+        </path>
+
+        {/* ── Flag pin 2 (right) ── */}
+        <circle cx="293" cy="256" r="20" fill="#F0EE3A" opacity="0.06">
+          <animate attributeName="r" values="14;22;14" dur="4s" repeatCount="indefinite" begin="-2s" />
+          <animate attributeName="opacity" values="0.04;0.14;0.04" dur="4s" repeatCount="indefinite" begin="-2s" />
+        </circle>
+        <ellipse cx="293" cy="260" rx="5" ry="2" fill="#060d06" stroke="#2a4a2a" strokeWidth="1" />
+        <line x1="293" y1="225" x2="293" y2="260" stroke="rgba(255,255,255,0.75)" strokeWidth="1.2" />
+        <path d="M293 225 L313 232 L293 239 Z" fill="#F0EE3A">
+          <animateTransform
+            attributeName="transform" type="rotate"
+            values="0 293 225; -7 293 225; 4 293 225; -5 293 225; 0 293 225"
+            dur="3s" repeatCount="indefinite"
+          />
+        </path>
+
+        {/* ── Grass blades — SVG SMIL animateTransform ── */}
+        {[8,28,50,72,94,116,138,162,184,206,228,250,272,296,318,340,362,382].map((x, i) => {
+          const h = 6 + (i % 4) * 3;
+          const angle = 5 + (i % 4) * 2;
+          const neg = 3 + (i % 3) * 2;
+          const dur = `${2.0 + (i % 5) * 0.4}s`;
+          const begin = `${(i * 0.22) % 2}s`;
+          return (
+            <g key={x}>
+              <line x1={x} y1={308} x2={x - 2} y2={308 - h} stroke="#1d3d1d" strokeWidth="1.8" strokeLinecap="round">
+                <animateTransform attributeName="transform" type="rotate"
+                  values={`0 ${x} 308; ${angle} ${x} 308; 0 ${x} 308; ${-neg} ${x} 308; 0 ${x} 308`}
+                  dur={dur} repeatCount="indefinite" begin={begin} />
+              </line>
+              <line x1={x+8} y1={311} x2={x+11} y2={311 - h + 2} stroke="#193619" strokeWidth="1.2" strokeLinecap="round">
+                <animateTransform attributeName="transform" type="rotate"
+                  values={`0 ${x+8} 311; ${-angle} ${x+8} 311; 0 ${x+8} 311; ${neg} ${x+8} 311; 0 ${x+8} 311`}
+                  dur={`${1.8 + (i%4)*0.38}s`} repeatCount="indefinite" begin={`${(i * 0.3) % 2.5}s`} />
+              </line>
+            </g>
+          );
+        })}
+
+        {/* Faint horizon glow */}
+        <line x1="0" y1="291" x2="390" y2="274" stroke="#F0EE3A" strokeWidth="0.6" opacity="0.08" />
       </svg>
 
-      {/* Animated dot particles */}
-      {[...Array(8)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-0.5 h-0.5 rounded-full bg-white/20"
-          style={{
-            left: `${12 + i * 11}%`,
-            top: `${15 + (i % 3) * 12}%`,
-          }}
-          animate={{
-            y: [0, -8, 0],
-            opacity: [0.15, 0.4, 0.15],
-          }}
-          transition={{
-            duration: 3 + i * 0.4,
-            repeat: Infinity,
-            delay: i * 0.3,
-            ease: 'easeInOut',
-          }}
-        />
-      ))}
+      {/* Subtle grid overlay */}
+      <svg className="absolute inset-0 w-full h-full opacity-[0.03] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="gp" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#gp)" />
+      </svg>
 
-      {/* Glow behind logo */}
-      <div className="absolute top-[18%] left-1/2 -translate-x-1/2 w-48 h-48 rounded-full bg-[#F0EE3A]/5 blur-3xl pointer-events-none" />
+      {/* Chartreuse glow behind logo */}
+      <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-[#F0EE3A]/[0.07] blur-[80px] pointer-events-none" />
     </div>
   );
 }

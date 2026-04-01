@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "updatedAt": 1775084577515,
+  "nodeCount": 9,
+  "nodes": {
+    "mem-MEMORY-project": {
+      "id": "mem-MEMORY-project",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1775081063580
+    },
+    "mem-MEMORY-key-facts": {
+      "id": "mem-MEMORY-key-facts",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1775081063580
+    },
+    "mem-MEMORY-dev-environment--set-up-2026-0": {
+      "id": "mem-MEMORY-dev-environment--set-up-2026-0",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1775081063580
+    },
+    "mem-MEMORY-stack": {
+      "id": "mem-MEMORY-stack",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1775081063582
+    },
+    "mem-MEMORY-key-conventions": {
+      "id": "mem-MEMORY-key-conventions",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1775081063582
+    },
+    "mem-MEMORY-important-files": {
+      "id": "mem-MEMORY-important-files",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1775081063582
+    },
+    "mem-MEMORY-panresponder-scrubber-pattern-": {
+      "id": "mem-MEMORY-panresponder-scrubber-pattern-",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1775081063582
+    },
+    "mem-MEMORY-eas---build": {
+      "id": "mem-MEMORY-eas---build",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1775081063582
+    },
+    "insight-1775082914630-a89o": {
+      "id": "insight-1775082914630-a89o",
+      "category": "insights",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1775082914630
+    }
+  },
+  "edges": [
+    {
+      "sourceId": "mem-MEMORY-project",
+      "targetId": "mem-MEMORY-key-facts",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-key-facts",
+      "targetId": "mem-MEMORY-dev-environment--set-up-2026-0",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-stack",
+      "targetId": "mem-MEMORY-key-conventions",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-key-conventions",
+      "targetId": "mem-MEMORY-important-files",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-important-files",
+      "targetId": "mem-MEMORY-panresponder-scrubber-pattern-",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-panresponder-scrubber-pattern-",
+      "targetId": "mem-MEMORY-eas---build",
+      "type": "temporal",
+      "weight": 0.5
+    }
+  ],
+  "pageRanks": {
+    "mem-MEMORY-project": 0.053361054190450084,
+    "mem-MEMORY-key-facts": 0.09871796451015036,
+    "mem-MEMORY-dev-environment--set-up-2026-0": 0.13727132627495217,
+    "mem-MEMORY-stack": 0.053361054190450084,
+    "mem-MEMORY-key-conventions": 0.09871796451015036,
+    "mem-MEMORY-important-files": 0.13727132627495217,
+    "mem-MEMORY-panresponder-scrubber-pattern-": 0.17004176714632285,
+    "mem-MEMORY-eas---build": 0.19789648871212182,
+    "insight-1775082914630-a89o": 0.053361054190450084
+  }
+}

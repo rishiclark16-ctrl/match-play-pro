@@ -58,7 +58,7 @@ export default function Onboarding() {
     if (homeCourseName) updates.home_course_name = homeCourseName;
     await updateProfile(updates);
     setSaving(false);
-    navigate('/', { replace: true, state: { showTutorial: true } });
+    navigate('/', { replace: true, state: { showTutorial: true, fromOnboarding: true } });
   };
 
   const handleContinue = () => {
@@ -101,7 +101,7 @@ export default function Onboarding() {
             onClick={handleSkip}
             className="text-[13px] font-bold text-muted-foreground py-1 px-2"
           >
-            Skip
+            {isLastStep ? 'Skip' : 'Skip'}
           </button>
         </div>
       </header>
@@ -324,7 +324,7 @@ export default function Onboarding() {
             ) : isLastStep ? (
               <>
                 <Check className="w-5 h-5" />
-                <span>Finish Setup</span>
+                <span>Start Playing!</span>
               </>
             ) : (
               <>

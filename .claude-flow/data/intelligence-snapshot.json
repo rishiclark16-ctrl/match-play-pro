@@ -1,0 +1,188 @@
+[
+  {
+    "timestamp": 1775082914639,
+    "nodes": 9,
+    "edges": 6,
+    "pageRankSum": 1,
+    "confidences": [
+      0.53,
+      0.6200000000000001,
+      0.55,
+      0.56,
+      0.6100000000000001,
+      0.55,
+      0.55,
+      0.55,
+      0.5
+    ],
+    "accessCounts": [
+      1,
+      4,
+      1,
+      2,
+      3,
+      1,
+      1,
+      1,
+      0
+    ],
+    "topPatterns": [
+      {
+        "id": "mem-MEMORY-eas---build",
+        "summary": "EAS / build",
+        "confidence": 0.55,
+        "pageRank": 0.19789648871212182,
+        "accessCount": 1
+      },
+      {
+        "id": "mem-MEMORY-panresponder-scrubber-pattern-",
+        "summary": "PanResponder scrubber pattern (ListeningScreen)",
+        "confidence": 0.55,
+        "pageRank": 0.17004176714632285,
+        "accessCount": 1
+      },
+      {
+        "id": "mem-MEMORY-key-facts",
+        "summary": "Key Facts",
+        "confidence": 0.6200000000000001,
+        "pageRank": 0.09871796451015036,
+        "accessCount": 4
+      },
+      {
+        "id": "mem-MEMORY-key-conventions",
+        "summary": "Key conventions",
+        "confidence": 0.6100000000000001,
+        "pageRank": 0.09871796451015036,
+        "accessCount": 3
+      },
+      {
+        "id": "mem-MEMORY-dev-environment--set-up-2026-0",
+        "summary": "Dev Environment (set up 2026-02-18)",
+        "confidence": 0.55,
+        "pageRank": 0.13727132627495217,
+        "accessCount": 1
+      },
+      {
+        "id": "mem-MEMORY-important-files",
+        "summary": "Important files",
+        "confidence": 0.55,
+        "pageRank": 0.13727132627495217,
+        "accessCount": 1
+      },
+      {
+        "id": "mem-MEMORY-stack",
+        "summary": "Stack",
+        "confidence": 0.56,
+        "pageRank": 0.053361054190450084,
+        "accessCount": 2
+      },
+      {
+        "id": "mem-MEMORY-project",
+        "summary": "Project",
+        "confidence": 0.53,
+        "pageRank": 0.053361054190450084,
+        "accessCount": 1
+      },
+      {
+        "id": "insight-1775082914630-a89o",
+        "summary": "Frequently edited: unknown (29x)",
+        "confidence": 0.5,
+        "pageRank": 0.053361054190450084,
+        "accessCount": 0
+      }
+    ]
+  },
+  {
+    "timestamp": 1775084470416,
+    "nodes": 9,
+    "edges": 6,
+    "pageRankSum": 1,
+    "confidences": [
+      0.5,
+      0.53,
+      0.53,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "accessCounts": [
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "topPatterns": [
+      {
+        "id": "mem-MEMORY-eas---build",
+        "summary": "EAS / build",
+        "confidence": 0.5,
+        "pageRank": 0.19789648871212182,
+        "accessCount": 0
+      },
+      {
+        "id": "mem-MEMORY-panresponder-scrubber-pattern-",
+        "summary": "PanResponder scrubber pattern (ListeningScreen)",
+        "confidence": 0.5,
+        "pageRank": 0.17004176714632285,
+        "accessCount": 0
+      },
+      {
+        "id": "mem-MEMORY-dev-environment--set-up-2026-0",
+        "summary": "Dev Environment (set up 2026-02-18)",
+        "confidence": 0.53,
+        "pageRank": 0.13727132627495217,
+        "accessCount": 1
+      },
+      {
+        "id": "mem-MEMORY-important-files",
+        "summary": "Important files",
+        "confidence": 0.5,
+        "pageRank": 0.13727132627495217,
+        "accessCount": 0
+      },
+      {
+        "id": "mem-MEMORY-key-facts",
+        "summary": "Key Facts",
+        "confidence": 0.53,
+        "pageRank": 0.09871796451015036,
+        "accessCount": 1
+      },
+      {
+        "id": "mem-MEMORY-key-conventions",
+        "summary": "Key conventions",
+        "confidence": 0.5,
+        "pageRank": 0.09871796451015036,
+        "accessCount": 0
+      },
+      {
+        "id": "mem-MEMORY-project",
+        "summary": "Project",
+        "confidence": 0.5,
+        "pageRank": 0.053361054190450084,
+        "accessCount": 0
+      },
+      {
+        "id": "mem-MEMORY-stack",
+        "summary": "Stack",
+        "confidence": 0.5,
+        "pageRank": 0.053361054190450084,
+        "accessCount": 0
+      },
+      {
+        "id": "insight-1775082914630-a89o",
+        "summary": "Frequently edited: unknown (29x)",
+        "confidence": 0.5,
+        "pageRank": 0.053361054190450084,
+        "accessCount": 0
+      }
+    ]
+  }
+]
