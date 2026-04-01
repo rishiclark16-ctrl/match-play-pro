@@ -2,18 +2,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useSubscription, TIER_LIMITS, Subscription } from './useSubscription';
 
-// Hoisted mocks - these need to be defined before vi.mock
-const { mockSupabaseClient, mockUser } = vi.hoisted(() => ({
-  mockSupabaseClient: {
-    from: vi.fn(),
-    channel: vi.fn(() => ({
-      on: vi.fn().mockReturnThis(),
-      subscribe: vi.fn().mockReturnThis(),
-    })),
-    removeChannel: vi.fn(),
-  },
-  mockUser: { id: 'test-user-id', email: 'test@test.com' },
-}));
+// Mock objects - defined before vi.mock so they're available in factory functions
+const mockSupabaseClient = {
+  from: vi.fn(),
+  channel: vi.fn(() => ({
+    on: vi.fn().mockReturnThis(),
+    subscribe: vi.fn().mockReturnThis(),
+  })),
+  removeChannel: vi.fn(),
+};
+const mockUser = { id: 'test-user-id', email: 'test@test.com' };
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: mockSupabaseClient,
@@ -25,6 +23,14 @@ vi.mock('./useAuth', () => ({
 
 vi.mock('@capacitor/core', () => ({
   Capacitor: { isNativePlatform: () => false },
+  registerPlugin: () => ({}),
+  WebPlugin: class WebPlugin {},
+}));
+
+vi.mock('@capacitor/haptics', () => ({
+  Haptics: { impact: vi.fn(), notification: vi.fn(), vibrate: vi.fn(), selectionStart: vi.fn(), selectionChanged: vi.fn(), selectionEnd: vi.fn() },
+  ImpactStyle: { Heavy: 'HEAVY', Medium: 'MEDIUM', Light: 'LIGHT' },
+  NotificationType: { Success: 'SUCCESS', Warning: 'WARNING', Error: 'ERROR' },
 }));
 
 vi.mock('@/services/purchases', () => ({

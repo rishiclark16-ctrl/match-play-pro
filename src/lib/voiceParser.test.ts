@@ -267,13 +267,9 @@ describe('parseVoiceInput', () => {
       });
 
       it('should convert "snowman" to 8', () => {
-        // Note: snowman is defined as relative term in golfTerms (+8 to par)
-        // Parser calculates: par(4) + 8 = 12, but golf convention is snowman = 8 absolute
-        // This test documents current behavior - the parser treats snowman as par+8
+        // snowman = 8 absolute (golf convention)
         const result = parseVoiceInput('Michael snowman', players, 4);
-        // The parser currently returns 12 (par + 8), not 8
-        // To get an 8, use the numeric input: "Michael 8"
-        expect(result.scores[0].score).toBe(12);
+        expect(result.scores[0].score).toBe(8);
       });
 
       it('should convert "hole in one" to 1', () => {

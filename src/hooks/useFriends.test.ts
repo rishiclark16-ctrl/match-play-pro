@@ -2,18 +2,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useFriends } from './useFriends';
 
-// Hoisted mocks - these need to be defined before vi.mock
-const { mockSupabaseClient, mockUser } = vi.hoisted(() => ({
-  mockSupabaseClient: {
-    from: vi.fn(),
-    channel: vi.fn(() => ({
-      on: vi.fn().mockReturnThis(),
-      subscribe: vi.fn().mockReturnThis(),
-    })),
-    removeChannel: vi.fn(),
-  },
-  mockUser: { id: 'user-123', email: 'test@test.com' },
-}));
+// Mock objects - defined before vi.mock so they're available in factory functions
+const mockSupabaseClient = {
+  from: vi.fn(),
+  channel: vi.fn(() => ({
+    on: vi.fn().mockReturnThis(),
+    subscribe: vi.fn().mockReturnThis(),
+  })),
+  removeChannel: vi.fn(),
+};
+const mockUser = { id: 'user-123', email: 'test@test.com' };
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: mockSupabaseClient,

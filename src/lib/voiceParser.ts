@@ -814,8 +814,6 @@ export function parseVoiceCorrection(
     /(\w+)(?:'s)?(?:\s+score)?\s+(?:should|needs to)\s+be\s+(?:a\s+)?(\w+|\d+)/i,
     // "that should be Y for X"
     /(?:that|it)\s+should\s+be\s+(?:a\s+)?(\w+|\d+)\s+for\s+(\w+)/i,
-    // "X got Y" as a simple re-statement (fallback correction intent)
-    /(?:no\s+)?(\w+)\s+(?:actually\s+)?(?:had|got|made|shot)\s+(?:a\s+)?(\w+|\d+)/i,
   ];
 
   for (const pattern of correctionPatterns) {

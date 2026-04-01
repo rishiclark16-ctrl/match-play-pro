@@ -2,18 +2,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useGroups } from './useGroups';
 
-// Hoisted mocks - these need to be defined before vi.mock
-const { mockSupabaseClient, mockUser } = vi.hoisted(() => ({
-  mockSupabaseClient: {
-    from: vi.fn(),
-    channel: vi.fn(() => ({
-      on: vi.fn().mockReturnThis(),
-      subscribe: vi.fn().mockReturnThis(),
-    })),
-    removeChannel: vi.fn(),
-  },
-  mockUser: { id: 'user-123', email: 'test@test.com' },
-}));
+// Mock objects - defined before vi.mock so they're available in factory functions
+const mockSupabaseClient = {
+  from: vi.fn(),
+  channel: vi.fn(() => ({
+    on: vi.fn().mockReturnThis(),
+    subscribe: vi.fn().mockReturnThis(),
+  })),
+  removeChannel: vi.fn(),
+};
+const mockUser = { id: 'user-123', email: 'test@test.com' };
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: mockSupabaseClient,
@@ -315,7 +313,7 @@ describe('useGroups', () => {
     it('should return null if user not authenticated', async () => {
       // Override useAuth mock for this test
       const useAuthMock = await import('./useAuth');
-      vi.mocked(useAuthMock.useAuth).mockReturnValue({ user: null } as ReturnType<typeof useAuthMock.useAuth>);
+      (useAuthMock.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ user: null });
 
       mockSupabaseClient.from.mockImplementation(() => ({
         select: vi.fn().mockReturnValue({
@@ -338,7 +336,7 @@ describe('useGroups', () => {
       expect(newGroup).toBeNull();
 
       // Restore mock
-      vi.mocked(useAuthMock.useAuth).mockReturnValue({ user: mockUser } as ReturnType<typeof useAuthMock.useAuth>);
+      (useAuthMock.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ user: mockUser });
     });
   });
 
