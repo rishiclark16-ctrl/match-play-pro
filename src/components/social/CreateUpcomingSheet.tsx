@@ -290,14 +290,14 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
             <label className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2 block">
               Tee Time
             </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="relative overflow-hidden">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
               <input
                 type="datetime-local"
                 value={teeTime}
                 onChange={e => setTeeTime(e.target.value)}
                 min={minDateTime}
-                className="w-full bg-white rounded-xl px-4 pl-9 py-3 text-[14px] outline-none border border-border/40 text-foreground font-medium"
+                className="w-full max-w-full box-border bg-white rounded-xl px-4 pl-9 py-3 text-[14px] outline-none border border-border/40 text-foreground font-medium appearance-none [&::-webkit-datetime-edit]:overflow-hidden [&::-webkit-datetime-edit-fields-wrapper]:max-w-full"
               />
             </div>
           </div>
