@@ -13,14 +13,15 @@ const navItems = [
 ];
 
 // Routes where bottom nav should be hidden
-const HIDDEN_ROUTES = ['/new-round', '/auth'];
+const HIDDEN_ROUTES = ['/new-round', '/auth', '/my-formats/confirm'];
 
 export function BottomNav() {
   const location = useLocation();
 
   // Check if we should hide the nav
   const shouldHide = HIDDEN_ROUTES.some(route => location.pathname === route) ||
-    location.pathname.startsWith('/round/');
+    location.pathname.startsWith('/round/') ||
+    location.pathname.endsWith('/house-game/confirm');
 
   if (shouldHide) return null;
 

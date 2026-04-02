@@ -184,15 +184,31 @@ export default function HouseGameConfirm() {
           >
             <ArrowLeft className="w-4 h-4 text-foreground" />
           </motion.button>
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              {isPersonal ? 'My Format' : 'House Game'}
+              {isPersonal ? 'My Format' : 'House Game'} · {checkedIds.size} rule{checkedIds.size !== 1 ? 's' : ''}
             </p>
             <h1 className="text-[22px] font-black tracking-[-0.04em] text-foreground leading-none">Confirm Rules</h1>
           </div>
-          <div className="ml-auto bg-foreground text-[#F0EE3A] text-[9px] font-black tracking-[0.1em] px-2 py-1 rounded-lg">
-            PRO
-          </div>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handleSave}
+            disabled={checkedIds.size === 0 || saving}
+            className="ml-auto bg-foreground text-background rounded-xl px-4 py-2 font-bold text-[13px] flex items-center gap-1.5 disabled:opacity-40 flex-shrink-0"
+          >
+            {saving ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                className="w-4 h-4 rounded-full border-2 border-background border-t-transparent"
+              />
+            ) : (
+              <>
+                <Check className="w-4 h-4" />
+                <span>Save</span>
+              </>
+            )}
+          </motion.button>
         </div>
       </header>
 
@@ -449,50 +465,6 @@ export default function HouseGameConfirm() {
         </motion.div>
       </main>
 
-      {/* CTA */}
-      <div className="flex-shrink-0 px-6 pt-4 pb-[34px] bg-[#F8F8F6] border-t border-border/30">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[12px] text-muted-foreground">
-            {checkedIds.size} rule{checkedIds.size !== 1 ? 's' : ''} selected
-          </span>
-        </div>
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={handleSave}
-          disabled={checkedIds.size === 0 || saving}
-          className="w-full bg-foreground text-background rounded-2xl h-[54px] font-bold text-[15px] flex items-center justify-center gap-2 disabled:opacity-40"
-        >
-          <AnimatePresence mode="wait">
-            {saving ? (
-              <motion.div
-                key="saving"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center gap-2"
-              >
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                  className="w-5 h-5 rounded-full border-2 border-background border-t-transparent"
-                />
-                <span>Saving{isPersonal ? ' format' : ' your game'}...</span>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="idle"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center gap-2"
-              >
-                <Check className="w-5 h-5" />
-                <span>{isPersonal ? 'Save My Format' : 'Looks Good — Save My House Game'}</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.button>
-      </div>
 
       {/* Step 3: Success overlay — appears after saving */}
       <AnimatePresence>

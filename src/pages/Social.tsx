@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Rss, Users, UserPlus, Hash, AtSign, Phone, ScanLine, Contact, Crown, QrCode, ChevronDown } from 'lucide-react';
+import { Rss, Users, UserPlus, Hash, AtSign, Phone, ScanLine, Contact, Crown, QrCode, ChevronDown, Calendar } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useProfile } from '@/hooks/useProfile';
 import { useFriends } from '@/hooks/useFriends';
@@ -14,11 +14,12 @@ import { QRCodeScanner } from '@/components/friends/QRCodeScanner';
 import { ContactSyncSheet } from '@/components/friends/ContactSyncSheet';
 import { PaywallModal } from '@/components/subscription';
 import { SocialFeedTab } from '@/components/social/SocialFeedTab';
+import { UpcomingRoundsTab } from '@/components/social/UpcomingRoundsTab';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 
-type Tab = 'feed' | 'friends';
+type Tab = 'feed' | 'upcoming' | 'friends';
 
 export default function Social() {
   const navigate = useNavigate();
@@ -36,7 +37,8 @@ export default function Social() {
     removeFriend,
   } = useFriends();
 
-  const [activeTab, setActiveTab] = useState<Tab>('feed');
+  const initialTab = (searchParams.get('tab') as Tab) || 'feed';
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [searchValue, setSearchValue] = useState('');
   const [searchType, setSearchType] = useState<'code' | 'email' | 'phone'>('code');
   const [isSending, setIsSending] = useState(false);
@@ -135,6 +137,12 @@ export default function Social() {
     }
   };
 
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'feed', label: 'Feed' },
+    { id: 'upcoming', label: 'Upcoming' },
+    { id: 'friends', label: friends.length > 0 ? `Friends · ${friends.length}` : 'Friends' },
+  ];
+
   const headerContent = (
     <div className="pt-safe-content pb-3 px-6 border-b-2 border-foreground">
       <div className="flex items-center justify-between mb-3">
@@ -165,12 +173,9 @@ export default function Social() {
         </div>
       </div>
 
-      {/* Tab switcher — underline style */}
+      {/* Tab switcher — 3 tabs */}
       <div className="flex gap-0 border-b border-border/0 -mx-6 px-6">
-        {([
-          { id: 'feed' as Tab, label: 'Feed' },
-          { id: 'friends' as Tab, label: friends.length > 0 ? `Friends · ${friends.length}` : 'Friends' },
-        ] as const).map(({ id, label }) => (
+        {tabs.map(({ id, label }) => (
           <button
             key={id}
             onClick={() => { setActiveTab(id); hapticLight(); }}
@@ -195,7 +200,7 @@ export default function Social() {
   return (
     <AppLayout header={headerContent} mainClassName="pb-nav bg-[#F8F8F6]">
       <AnimatePresence mode="wait">
-        {activeTab === 'feed' ? (
+        {activeTab === 'feed' && (
           <motion.div
             key="feed"
             initial={{ opacity: 0, x: -10 }}
@@ -205,7 +210,21 @@ export default function Social() {
           >
             <SocialFeedTab />
           </motion.div>
-        ) : (
+        )}
+
+        {activeTab === 'upcoming' && (
+          <motion.div
+            key="upcoming"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            transition={{ duration: 0.15 }}
+          >
+            <UpcomingRoundsTab />
+          </motion.div>
+        )}
+
+        {activeTab === 'friends' && (
           <motion.div
             key="friends"
             initial={{ opacity: 0, x: 10 }}
@@ -214,7 +233,7 @@ export default function Social() {
             transition={{ duration: 0.15 }}
             className="pt-4"
           >
-            {/* Pending Requests — most urgent, shown first */}
+            {/* Pending Requests */}
             {pendingRequests.length > 0 && (
               <section className="mb-4">
                 <div className="flex items-center gap-2 px-6 mb-2">
@@ -240,7 +259,7 @@ export default function Social() {
               </section>
             )}
 
-            {/* Add Friend — primary action */}
+            {/* Add Friend */}
             <section className="mb-4">
               <div className="flex items-center justify-between px-6 mb-2">
                 <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Add a Friend</p>
@@ -304,7 +323,7 @@ export default function Social() {
               </div>
             </section>
 
-            {/* Friend Code — compact by default */}
+            {/* Friend Code */}
             <section className="mb-4">
               <motion.button
                 whileTap={{ scale: 0.98 }}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface RoundDetailParticipant {
+  playerId: string;
   profileId: string | null;
   name: string;
   avatarUrl: string | null;
@@ -53,6 +54,7 @@ export function useRoundDetailForSheet(roundId: string | null) {
           status: r.status,
           completedAt: r.completed_at ?? r.updated_at ?? null,
           participants: players.map((p: any) => ({
+            playerId: p.id,
             profileId: p.profile_id,
             name: (p.profiles as any)?.full_name ?? p.name ?? 'Guest',
             avatarUrl: (p.profiles as any)?.avatar_url ?? null,

@@ -1,6 +1,4 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
@@ -81,17 +79,6 @@ function AppContent() {
       <OnboardingRedirect />
       <OfflineBanner />
       {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
-      <Toaster />
-      <Sonner
-        position="top-center"
-        toastOptions={{
-          style: {
-            background: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
-            color: 'hsl(var(--foreground))',
-          },
-        }}
-      />
       <Routes>
         {/* Auth page - public */}
         <Route

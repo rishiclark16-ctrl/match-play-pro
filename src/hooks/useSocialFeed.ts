@@ -12,6 +12,7 @@ export interface FeedRoundItem {
   participantIds: string[];
   participantNames: string[];
   commentCount: number;
+  games: any[];
 }
 
 export function useSocialFeed() {
@@ -39,6 +40,7 @@ export function useSocialFeed() {
         participantIds: row.participant_ids ?? [],
         participantNames: row.participant_names ?? [],
         commentCount: Number(row.comment_count ?? 0),
+        games: Array.isArray(row.games) ? row.games : [],
       }));
       setItems(mapped);
     } catch (err: any) {

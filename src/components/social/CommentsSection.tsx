@@ -77,7 +77,7 @@ export function CommentsSection({ roundId }: CommentsSectionProps) {
                 {c.authorId === user?.id && (
                   <button
                     onClick={() => deleteComment(c.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg hover:bg-muted"
+                    className="opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-1 rounded-lg hover:bg-muted"
                   >
                     <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>

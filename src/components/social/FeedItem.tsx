@@ -1,11 +1,14 @@
 import { motion } from 'framer-motion';
-import { MessageCircle, Flag } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { formatGameType } from '@/lib/formatGameType';
+import { cn } from '@/lib/utils';
 import type { FeedRoundItem } from '@/hooks/useSocialFeed';
 
 interface FeedItemProps {
   item: FeedRoundItem;
   onPress: () => void;
+  currentUserId?: string;
 }
 
 function timeAgo(iso: string): string {
@@ -21,33 +24,41 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export function FeedItem({ item, onPress }: FeedItemProps) {
+export function FeedItem({ item, onPress, currentUserId }: FeedItemProps) {
   const playerCount = item.participantIds.filter(Boolean).length || 1;
-  // Build first names for the chip row
   const firstNames = item.participantNames.map(n => n.split(' ')[0]);
   const shownNames = firstNames.slice(0, 5);
   const overflowCount = firstNames.length - shownNames.length;
+
+  const userPlayed = currentUserId ? item.participantIds.includes(currentUserId) : false;
 
   const dateStr = new Date(item.completedAt).toLocaleDateString('en-US', {
     weekday: 'short', month: 'short', day: 'numeric',
   });
 
+  // Extract unique game types
+  const gameTypes = item.games
+    .map((g: any) => g.type as string)
+    .filter((t, i, arr) => t && arr.indexOf(t) === i);
+
   return (
     <motion.button
       whileTap={{ scale: 0.985 }}
       onClick={onPress}
-      className="w-full text-left bg-white rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.07),0_0_0_1px_rgba(0,0,0,0.03)]"
+      className={cn(
+        'w-full text-left bg-white rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.07),0_0_0_1px_rgba(0,0,0,0.03)]',
+        userPlayed && 'border-l-[3px] border-l-[#F0EE3A]'
+      )}
     >
-      {/* Top accent line — always gold */}
-      <div className="h-[3px] bg-[#F0EE3A]" />
+      {/* Top accent line */}
+      <div className={cn('h-[3px]', userPlayed ? 'bg-[#F0EE3A]' : 'bg-[#F0EE3A]/60')} />
 
       <div className="p-4">
-        {/* Course name — hero element */}
+        {/* Course name */}
         <div className="flex items-start justify-between gap-2 mb-1.5">
           <h3 className="text-[17px] font-black tracking-[-0.03em] text-foreground leading-tight flex-1">
             {item.courseName}
           </h3>
-          {/* Comment count badge */}
           {item.commentCount > 0 && (
             <div className="flex items-center gap-1 bg-muted rounded-lg px-2 py-1 flex-shrink-0 mt-0.5">
               <MessageCircle className="w-3 h-3 text-muted-foreground" />
@@ -57,14 +68,33 @@ export function FeedItem({ item, onPress }: FeedItemProps) {
         </div>
 
         {/* Date */}
-        <p className="text-[11px] text-muted-foreground/70 mb-3 font-medium">{dateStr}</p>
+        <p className="text-[11px] text-muted-foreground/70 mb-2 font-medium">{dateStr}</p>
+
+        {/* Game type badges */}
+        {gameTypes.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {gameTypes.map(type => (
+              <span
+                key={type}
+                className="text-[10px] font-bold bg-foreground/[0.06] text-foreground/60 px-2 py-0.5 rounded-md"
+              >
+                {formatGameType(type)}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Player name chips */}
         <div className="flex flex-wrap gap-1.5 mb-4">
           {shownNames.map((name, i) => (
             <span
               key={i}
-              className="text-[11px] font-bold bg-[#F8F8F6] border border-border/60 text-foreground px-2.5 py-1 rounded-lg"
+              className={cn(
+                'text-[11px] font-bold border px-2.5 py-1 rounded-lg',
+                currentUserId && item.participantIds[i] === currentUserId
+                  ? 'bg-[#F0EE3A]/10 border-[#F0EE3A]/40 text-foreground'
+                  : 'bg-[#F8F8F6] border-border/60 text-foreground'
+              )}
             >
               {name}
             </span>

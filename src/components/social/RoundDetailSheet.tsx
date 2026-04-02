@@ -2,8 +2,11 @@ import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { CommentsSection } from './CommentsSection';
+import { ScorecardGrid } from './ScorecardGrid';
+import { ReactionBar } from './ReactionBar';
 import { useRoundDetailForSheet } from '@/hooks/useRoundDetailForSheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { formatGameType } from '@/lib/formatGameType';
 
 interface RoundDetailSheetProps {
   roundId: string | null;
@@ -73,11 +76,46 @@ export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailS
                   ))}
                 </div>
               )}
+
+              {/* Games played */}
+              {detail.games.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-white/10">
+                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white/30 mb-2">Games</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {detail.games.map((g: any, i: number) => (
+                      <span key={i} className="text-[11px] font-bold bg-white/[0.08] text-white/70 px-2.5 py-1 rounded-lg">
+                        {formatGameType(g.type)}
+                        {g.amount ? ` · $${g.amount}` : ''}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <p className="text-white/40 text-[13px]">Loading...</p>
           )}
         </div>
+
+        {/* Reactions */}
+        {roundId && detail && (
+          <div className="px-4 pt-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">Reactions</p>
+            <div className="bg-white rounded-2xl p-3">
+              <ReactionBar roundId={roundId} />
+            </div>
+          </div>
+        )}
+
+        {/* Scorecard */}
+        {detail && detail.scores.length > 0 && (
+          <div className="px-4 pt-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">Scorecard</p>
+            <div className="bg-white rounded-2xl p-3 overflow-hidden">
+              <ScorecardGrid detail={detail} />
+            </div>
+          </div>
+        )}
 
         {/* Comments section */}
         {detail && (

@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flag } from 'lucide-react';
 import { useSocialFeed } from '@/hooks/useSocialFeed';
+import { useAuth } from '@/hooks/useAuth';
 import { FeedItem } from './FeedItem';
 import { FeedItemSkeleton } from './FeedItemSkeleton';
 import { RoundDetailSheet } from './RoundDetailSheet';
 import { SeasonLeaderboard } from './SeasonLeaderboard';
 
 export function SocialFeedTab() {
+  const { user } = useAuth();
   const { items, loading, error, refetch } = useSocialFeed();
   const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null);
   const selectedItem = items.find(i => i.roundId === selectedRoundId);
@@ -64,6 +66,7 @@ export function SocialFeedTab() {
                   <FeedItem
                     item={item}
                     onPress={() => setSelectedRoundId(item.roundId)}
+                    currentUserId={user?.id}
                   />
                 </motion.div>
               ))}
