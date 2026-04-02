@@ -1,12 +1,15 @@
 import { PlayerWithScores, GameConfig, HoleInfo, Score, Press } from '@/types/golf';
 import { calculateSkins, SkinsResult } from './skins';
 import { calculateNassau, NassauResult } from './nassau';
+import { calculateHouseGame } from './houseGame';
+import { buildScoringConfig } from '@/lib/houseGame/engine';
 import { PlayerMoney, PropBet } from '@/types/betting';
 
 interface MoneyBreakdown {
   skins: number;
   nassau: number;
   wolf: number;
+  houseGame: number;
   propBets: number;
   total: number;
 }
@@ -37,7 +40,7 @@ export function calculateLiveMoney(
   
   // Initialize breakdown for each player
   players.forEach(p => {
-    breakdown.set(p.id, { skins: 0, nassau: 0, wolf: 0, propBets: 0, total: 0 });
+    breakdown.set(p.id, { skins: 0, nassau: 0, wolf: 0, houseGame: 0, propBets: 0, total: 0 });
   });
 
   // Filter scores up to the current hole
@@ -210,6 +213,34 @@ export function calculateLiveMoney(
               }
             }
           });
+        }
+        break;
+      }
+
+      case 'house': {
+        if (game.activePrimitives && game.activePrimitives.length > 0 && holeInfo.length > 0) {
+          try {
+            const config = buildScoringConfig(game.activePrimitives);
+            const totalHoles = (holeInfo.length <= 9 ? 9 : 18) as 9 | 18;
+            const houseResult = calculateHouseGame(
+              relevantScores,
+              players,
+              holeInfo,
+              config,
+              113, // default slope
+              totalHoles,
+              game.bbbResults,
+            );
+            houseResult.standings.forEach(standing => {
+              const pb = breakdown.get(standing.playerId);
+              if (pb) {
+                pb.houseGame += standing.netEarnings;
+                pb.total += standing.netEarnings;
+              }
+            });
+          } catch {
+            // Ignore errors from malformed configs
+          }
         }
         break;
       }

@@ -132,12 +132,48 @@ function parseClaudeJson(text: string): any[] {
   }
 }
 
+// Validate custom primitive IDs: only alphanumeric + underscores, 3-40 chars
+const CUSTOM_ID_REGEX = /^custom_[a-z0-9_]{3,40}$/;
+
+// Strip HTML/script tags from user-facing strings
+function stripHtml(s: string): string {
+  return s.replace(/<[^>]*>/g, '').trim();
+}
+
+// Validate primitive values by ID — reject unexpected types
+function sanitizeValue(id: string, value: any): any {
+  // Number-valued primitives
+  const numberIds = new Set([
+    'press_auto_x_down', 'bonus_birdie_unit', 'bonus_eagle_unit',
+    'casual_gimme_distance', 'casual_mulligans', 'settlement_unit_value',
+    'settlement_max_loss_cap', 'handicap_max_cap', 'press_max_per_round',
+    'carryover_cap', 'group_min_players', 'group_sub_in',
+    'group_wolf_lone_multiplier',
+  ]);
+  if (numberIds.has(id)) {
+    const n = typeof value === 'number' ? value : null;
+    // Clamp to reasonable range
+    if (n !== null && (n < 0 || n > 10000)) return null;
+    return n;
+  }
+  // Select-valued primitives
+  if (id === 'bonus_par3_special') {
+    return ['double', 'half', 'separate_pot'].includes(value) ? value : null;
+  }
+  // Custom primitives: only allow number or null
+  if (id.startsWith('custom_')) {
+    return typeof value === 'number' ? Math.min(Math.max(value, 0), 100000) : null;
+  }
+  // All others: null
+  return null;
+}
+
 function sanitizePrimitives(items: any[]) {
   return items
     .filter(item =>
       item &&
       typeof item.id === 'string' &&
-      (VALID_IDS.has(item.id) || (item.custom === true && item.id.startsWith('custom_') && typeof item.label === 'string')) &&
+      (VALID_IDS.has(item.id) || (item.custom === true && CUSTOM_ID_REGEX.test(item.id) && typeof item.label === 'string')) &&
       ['high', 'medium', 'low'].includes(item.confidence)
     )
     .map(item => {
@@ -146,14 +182,31 @@ function sanitizePrimitives(items: any[]) {
           id: item.id,
           custom: true as const,
           ...(item.infeasible === true ? { infeasible: true as const } : {}),
-          label: String(item.label).slice(0, 60),
-          description: typeof item.description === 'string' ? item.description.slice(0, 200) : item.label,
-          value: typeof item.value === 'number' ? item.value : null,
+          label: stripHtml(String(item.label)).slice(0, 60),
+          description: stripHtml(typeof item.description === 'string' ? item.description : item.label).slice(0, 200),
+          value: sanitizeValue(item.id, item.value),
           confidence: item.confidence,
         };
       }
-      return { id: item.id, value: item.value ?? null, confidence: item.confidence };
+      return { id: item.id, value: sanitizeValue(item.id, item.value), confidence: item.confidence };
     });
+}
+
+// Simple in-memory rate limiter (per-instance, resets on cold start)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 15; // max calls per window
+const RATE_WINDOW_MS = 60_000; // 1 minute
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(userId);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT) return false;
+  entry.count++;
+  return true;
 }
 
 serve(async (req) => {
@@ -162,6 +215,29 @@ serve(async (req) => {
   }
 
   try {
+    // Auth check — require valid Supabase JWT
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required.' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Decode JWT to get user ID for rate limiting (without full verification — Supabase gateway handles that)
+    let userId = 'anon';
+    try {
+      const payload = JSON.parse(atob(authHeader.split('.')[1]));
+      userId = payload.sub || 'anon';
+    } catch { /* fallback to anon rate limit bucket */ }
+
+    if (!checkRateLimit(userId)) {
+      return new Response(
+        JSON.stringify({ error: 'Too many requests. Please wait a minute.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { description } = await req.json();
 
     if (!description || typeof description !== 'string' || description.trim().length < 5) {
@@ -170,6 +246,9 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Cap description length to prevent abuse
+    const truncatedDescription = description.trim().slice(0, 2000);
 
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
     if (!anthropicKey) {
@@ -195,7 +274,7 @@ serve(async (req) => {
           model,
           max_tokens: 1024,
           system: SYSTEM_PROMPT,
-          messages: [{ role: 'user', content: description.trim() }],
+          messages: [{ role: 'user', content: truncatedDescription }],
         }),
       });
       if (res.ok) {

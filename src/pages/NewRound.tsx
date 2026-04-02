@@ -107,6 +107,40 @@ export default function NewRound() {
     ?? (groupAssignedFormat?.id === selectedPersonalFormatId ? groupAssignedFormat : null)
     ?? null;
 
+  // When a format is selected, it controls all scoring — disable manual toggles
+  const formatActive = !!selectedPersonalFormat;
+
+  // Store previous toggle state so we can restore on deselect
+  const [savedToggles, setSavedToggles] = useState<{
+    strokePlay: boolean; matchPlay: boolean; skinsEnabled: boolean;
+    nassauEnabled: boolean; stablefordEnabled: boolean; bestBallEnabled: boolean; wolfEnabled: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    if (formatActive) {
+      // Save current toggles and disable them all
+      setSavedToggles({ strokePlay, matchPlay, skinsEnabled, nassauEnabled, stablefordEnabled, bestBallEnabled, wolfEnabled });
+      setStrokePlay(false);
+      setMatchPlay(false);
+      setSkinsEnabled(false);
+      setNassauEnabled(false);
+      setStablefordEnabled(false);
+      setBestBallEnabled(false);
+      setWolfEnabled(false);
+    } else if (savedToggles) {
+      // Restore previous toggles
+      setStrokePlay(savedToggles.strokePlay);
+      setMatchPlay(savedToggles.matchPlay);
+      setSkinsEnabled(savedToggles.skinsEnabled);
+      setNassauEnabled(savedToggles.nassauEnabled);
+      setStablefordEnabled(savedToggles.stablefordEnabled);
+      setBestBallEnabled(savedToggles.bestBallEnabled);
+      setWolfEnabled(savedToggles.wolfEnabled);
+      setSavedToggles(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formatActive]);
+
   // Ghost player — active when house game or personal format has handicap_ghost_player primitive
   const ghostPrimitiveActive =
     (houseGame?.activePrimitives?.some(p => p.id === 'handicap_ghost_player') && houseGameEnabled) ||
@@ -170,11 +204,34 @@ export default function NewRound() {
     }
   }, [profile, profileApplied]);
 
-  // Pre-select format when coming back from AI builder
+  // Pre-select format when coming back from AI builder — restore saved form state
   useEffect(() => {
     const preSelectFormatId = (location.state as { preSelectFormatId?: string } | null)?.preSelectFormatId;
     if (preSelectFormatId) {
       setSelectedPersonalFormatId(preSelectFormatId);
+
+      // Restore form state saved before navigating to the AI builder
+      try {
+        const saved = sessionStorage.getItem('newRoundState');
+        if (saved) {
+          const s = JSON.parse(saved);
+          if (s.selectedCourse) setSelectedCourse(s.selectedCourse);
+          if (s.courseName) setCourseName(s.courseName);
+          if (s.holeCount) setHoleCount(s.holeCount);
+          if (s.players?.length) {
+            setPlayers(s.players);
+            setProfileApplied(true);
+          }
+          if (s.handicapMode) setHandicapMode(s.handicapMode);
+          if (s.strokePlay !== undefined) setStrokePlay(s.strokePlay);
+          if (s.matchPlay !== undefined) setMatchPlay(s.matchPlay);
+          if (s.stakes) setStakes(s.stakes);
+          sessionStorage.removeItem('newRoundState');
+        }
+      } catch { /* ignore parse errors */ }
+
+      // Jump straight to format step
+      setStep('format');
       // Clear state so back-navigation doesn't re-trigger
       window.history.replaceState({}, '');
     }
@@ -453,12 +510,17 @@ export default function NewRound() {
         });
       }
 
+      // When a house game format is active, disable stroke play so the scorecard
+      // shows the format's scoring (skins, nassau, etc.) instead of redundant stroke totals
+      const hasHouseGame = games.some(g => g.type === 'house');
+      const effectiveStrokePlay = hasHouseGame ? false : strokePlay;
+
       const result = await createRound({
         courseId: selectedCourse.id,
         courseName: selectedCourse.name,
         holes: holeCount,
         holeInfo,
-        strokePlay,
+        strokePlay: effectiveStrokePlay,
         matchPlay,
         stakes: stakes ? Number(stakes) : undefined,
         slope: selectedCourse.slope,
@@ -738,7 +800,17 @@ export default function NewRound() {
               personalFormats={personalFormats}
               selectedPersonalFormatId={selectedPersonalFormatId}
               onPersonalFormatSelect={setSelectedPersonalFormatId}
-              onBuildNewFormat={() => navigate('/my-formats/new', { state: { returnTo: '/new-round' } })}
+              onBuildNewFormat={() => {
+                // Save form state so we can restore it when coming back from the AI builder
+                try {
+                  sessionStorage.setItem('newRoundState', JSON.stringify({
+                    selectedCourse, courseName, holeCount, players, handicapMode, strokePlay, matchPlay, stakes,
+                  }));
+                } catch { /* quota exceeded — proceed without saving */ }
+                navigate('/my-formats/new', { state: { returnTo: '/new-round' } });
+              }}
+              formatActive={formatActive}
+              selectedFormatName={selectedPersonalFormat?.name}
               groupAssignedFormat={groupAssignedFormat}
               onUseThisGame={handleUseThisGame}
               isPro={isPro}
@@ -770,8 +842,8 @@ export default function NewRound() {
           <motion.button
             whileTap={{ scale: 0.98 }}
             onClick={handleStartRound}
-            disabled={(!strokePlay && !matchPlay) || isCreating}
-            animate={{ opacity: ((!strokePlay && !matchPlay) || isCreating) ? 0.4 : 1 }}
+            disabled={(!formatActive && !strokePlay && !matchPlay) || isCreating}
+            animate={{ opacity: ((!formatActive && !strokePlay && !matchPlay) || isCreating) ? 0.4 : 1 }}
             transition={{ duration: 0.2 }}
             className="w-full bg-foreground text-background rounded-2xl h-[52px] font-bold text-[15px] flex items-center justify-center gap-2"
           >

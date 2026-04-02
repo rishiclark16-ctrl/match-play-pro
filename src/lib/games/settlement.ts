@@ -2,6 +2,7 @@ import { Player, Settlement, GameConfig, WolfHoleResult } from '@/types/golf';
 import { SkinsResult } from './skins';
 import { NassauResult } from './nassau';
 import { calculateWolfStandings } from './wolf';
+import { HouseGameResult } from './houseGame';
 import { PropBet } from '@/types/betting';
 
 export interface NetSettlement {
@@ -20,7 +21,8 @@ export function calculateSettlement(
   matchPlayStakes?: number,
   wolfResults?: WolfHoleResult[],
   wolfStakes?: number,
-  propBets?: PropBet[]
+  propBets?: PropBet[],
+  houseGameResult?: HouseGameResult,
 ): NetSettlement[] {
   // Build a ledger of who owes whom
   const ledger: Record<string, Record<string, number>> = {};
@@ -127,6 +129,33 @@ export function calculateSettlement(
         }
       });
     });
+  }
+
+  // Process house game earnings
+  if (houseGameResult && houseGameResult.standings.length > 0) {
+    const winners = houseGameResult.standings.filter(s => s.netEarnings > 0);
+    const losers = houseGameResult.standings.filter(s => s.netEarnings < 0);
+    const totalWinnings = winners.reduce((sum, w) => sum + w.netEarnings, 0);
+
+    if (totalWinnings > 0) {
+      losers.forEach(loser => {
+        let lossToDistribute = Math.abs(loser.netEarnings);
+
+        winners.forEach((winner, idx) => {
+          if (lossToDistribute <= 0) return;
+          const isLast = idx === winners.length - 1;
+          const payment = isLast
+            ? Math.round(lossToDistribute * 100) / 100
+            : Math.round((winner.netEarnings / totalWinnings) * Math.abs(loser.netEarnings) * 100) / 100;
+          const actualPayment = Math.min(lossToDistribute, payment);
+
+          if (ledger[loser.playerId]?.[winner.playerId] !== undefined) {
+            ledger[loser.playerId][winner.playerId] += actualPayment;
+          }
+          lossToDistribute -= actualPayment;
+        });
+      });
+    }
   }
 
   // Net out the ledger (A owes B $10, B owes A $4 = A owes B $6)

@@ -6,6 +6,8 @@ import { getSkinsHoleContext, StrokesPerHoleMap } from '@/lib/games/skins';
 import { getNassauHoleContext } from '@/lib/games/nassau';
 import { getBestBallHoleContext } from '@/lib/games/bestball';
 import { getWolfHoleContext } from '@/lib/games/wolf';
+import { calculateHouseGame } from '@/lib/games/houseGame';
+import { buildScoringConfig } from '@/lib/houseGame/engine';
 import { getStrokesPerHole } from '@/lib/handicapUtils';
 import { cn } from '@/lib/utils';
 
@@ -106,6 +108,35 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
     );
   }, [wolfGame, players, currentHole]);
 
+  // House game context — skins pot + active bonuses for this hole
+  const houseGameEntry = round.games?.find(g => g.type === 'house');
+  const houseContext = useMemo(() => {
+    if (!houseGameEntry?.activePrimitives?.length || !round.holeInfo?.length) return null;
+    try {
+      const config = buildScoringConfig(houseGameEntry.activePrimitives);
+      if (!config.skins && !config.nassau) return null; // only show if there's a pot to display
+      const totalHoles = (round.holes <= 9 ? 9 : 18) as 9 | 18;
+      const houseResult = calculateHouseGame(
+        scores, players, round.holeInfo, config, round.slope ?? 113, totalHoles, houseGameEntry.bbbResults,
+      );
+      const holeResult = houseResult.holeResults.find(r => r.holeNumber === currentHole);
+      const bonuses = holeResult?.activeBonuses ?? [];
+
+      // Show skins pot context from house skins sub-result
+      let potMessage: string | null = null;
+      if (houseResult.skinsResult) {
+        const carryovers = houseResult.skinsResult.carryover;
+        const potPerSkin = houseResult.skinsResult.potPerSkin;
+        const potValue = potPerSkin * (1 + carryovers);
+        potMessage = carryovers > 0
+          ? `$${potValue} on the line (${carryovers} carryover${carryovers > 1 ? 's' : ''})`
+          : `$${potPerSkin} on the line`;
+      }
+
+      return { bonuses, potMessage };
+    } catch { return null; }
+  }, [houseGameEntry, scores, players, round.holeInfo, currentHole, round.holes, round.slope]);
+
   // Calculate what each player needs this hole (after opponent has scored)
   const playerNeeds = useMemo(() => {
     if (players.length !== 2) return [];
@@ -164,7 +195,7 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
     }).filter(Boolean);
   }, [players, scores, currentHole, currentHoleInfo.par]);
 
-  const hasContent = strokeAllocations.length > 0 || skinsContext || nassauContext || bestBallContext || wolfContext;
+  const hasContent = strokeAllocations.length > 0 || skinsContext || nassauContext || bestBallContext || wolfContext || houseContext;
 
   if (!hasContent) return null;
 
@@ -326,6 +357,34 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
                   </span>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* House Game Context */}
+          {houseContext && (
+            <div className="space-y-1.5">
+              {houseContext.potMessage && (
+                <div className="flex items-center gap-2 text-sm px-3 py-2 bg-[#FFFBEB] border-l-4 border-[#F0EE3A] rounded-r-xl">
+                  <Coins className="w-4 h-4 text-amber-600" />
+                  <span className="font-medium">
+                    <span className="font-black text-foreground">{houseContext.potMessage}</span>
+                  </span>
+                </div>
+              )}
+              {houseContext.bonuses.length > 0 && (
+                <div className="flex flex-wrap gap-1 px-1">
+                  {houseContext.bonuses.map((b, i) => (
+                    <span key={`${b}-${i}`} className="text-[10px] font-bold bg-[#F0EE3A] text-[#0A0A0A] px-2 py-0.5 rounded-full">
+                      {b === 'bonus_par5_double' ? '2× Par 5' :
+                       b === 'bonus_birdie_unit' ? 'Birdie Bonus' :
+                       b === 'bonus_eagle_unit' ? 'Eagle Bonus' :
+                       b === 'bonus_last_hole_double' ? '2× Last Hole' :
+                       b === 'bonus_greenie' ? 'Greenie' :
+                       b.replace(/^bonus_/, '').replace(/_/g, ' ')}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

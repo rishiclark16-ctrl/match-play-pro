@@ -32,7 +32,9 @@ export function calculateSkins(
   holesPlayed: number,
   stakesPerSkin: number,
   carryover: boolean = true,
-  strokesPerHole?: StrokesPerHoleMap
+  strokesPerHole?: StrokesPerHoleMap,
+  carryoverCap?: number | null,
+  jackpot18?: boolean,
 ): SkinsResult {
   const results: SkinResult[] = [];
   let currentCarryover = 0;
@@ -67,6 +69,34 @@ export function calculateSkins(
       results.push({ holeNumber: hole, winnerId: null, value: 0 });
       if (carryover) {
         currentCarryover += 1;
+        // Apply carryover cap if configured
+        if (carryoverCap != null && carryoverCap > 0 && currentCarryover > carryoverCap) {
+          currentCarryover = carryoverCap;
+        }
+      }
+    }
+  }
+
+  // Jackpot on 18: if carryover remains after the last hole, award to hole 18 winner
+  if (jackpot18 && currentCarryover > 0 && holesPlayed >= 18) {
+    const hole18Scores = scores.filter(s => s.holeNumber === 18);
+    if (hole18Scores.length >= players.length) {
+      const sorted18 = [...hole18Scores].sort((a, b) =>
+        getNetScore(a, strokesPerHole) - getNetScore(b, strokesPerHole)
+      );
+      const lowestNet = getNetScore(sorted18[0], strokesPerHole);
+      const winners18 = sorted18.filter(s => getNetScore(s, strokesPerHole) === lowestNet);
+      if (winners18.length === 1) {
+        const winnerId = winners18[0].playerId;
+        playerSkins[winnerId] += currentCarryover;
+        // Update last result to reflect jackpot
+        const lastResult = results.find(r => r.holeNumber === 18);
+        if (lastResult && lastResult.winnerId === winnerId) {
+          lastResult.value += currentCarryover;
+        } else {
+          results.push({ holeNumber: 18, winnerId, value: currentCarryover });
+        }
+        currentCarryover = 0;
       }
     }
   }

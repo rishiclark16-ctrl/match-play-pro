@@ -10,6 +10,9 @@ import { getStrokesPerHole, calculatePlayingHandicap } from '@/lib/handicapUtils
 import { calculateSkins, StrokesPerHoleMap } from './skins';
 import { calculateNassau } from './nassau';
 import { calculateStableford } from './stableford';
+import { calculateRabbit, RabbitResult } from './rabbit';
+import { calculateQuota, QuotaResult } from './quota';
+import { calculateVegas, VegasResult } from './vegas';
 
 export interface HouseGameHoleResult {
   holeNumber: number;
@@ -40,6 +43,9 @@ export interface HouseGameResult {
   skinsResult?: ReturnType<typeof calculateSkins>;
   nassauResult?: ReturnType<typeof calculateNassau>;
   stablefordResult?: ReturnType<typeof calculateStableford>;
+  rabbitResult?: RabbitResult;
+  quotaResult?: QuotaResult;
+  vegasResult?: VegasResult;
   // Unimplemented primitives that are active (shown as "coming soon" in UI)
   stubbedPrimitives: string[];
   // Summary text lines for the live panel
@@ -49,17 +55,17 @@ export interface HouseGameResult {
 }
 
 const STUBS = new Set([
-  'format_wolf', 'format_vegas', 'format_hammer',
-  'format_rabbit', 'format_quota', 'format_defender', 'format_sixes',
+  'format_wolf', 'format_hammer',
+  'format_defender', 'format_sixes',
   'press_auto_eagle', 'press_manual_request',
   'press_requires_acceptance', 'press_double_or_nothing', 'press_max_per_round',
   'press_new_submatch', 'press_no_dormie', 'press_back9_auto',
-  'bonus_par3_special', 'bonus_greenie', 'bonus_sandie', 'bonus_barkie',
-  'bonus_oozle', 'bonus_chippy', 'bonus_polie', 'bonus_last_hole_double',
-  'bonus_garbage_tracking', 'carryover_cap', 'carryover_jackpot_18',
+  'bonus_par3_special',
+  'bonus_oozle', 'bonus_chippy', 'bonus_polie',
+  'bonus_garbage_tracking',
   'carryover_reset_on_win', 'carryover_nassau_halved',
   'handicap_ghost_player', 'handicap_bump_and_run', 'handicap_mixed_tees',
-  'casual_breakfast_ball', 'casual_concede_match',
+  'casual_concede_match',
   'casual_foot_wedge', 'settlement_pay_per_hole', 'settlement_running_tab',
   'settlement_ties_split', 'settlement_ties_carryover',
   'group_min_players', 'group_sub_in',
@@ -107,6 +113,18 @@ export function calculateHouseGame(
 ): HouseGameResult {
   const stubbedPrimitives: string[] = [];
   const cappedPlayerIds: string[] = [];
+
+  // Guard: ensure unitValue is positive
+  if (config.unitValue <= 0) config = { ...config, unitValue: 1 };
+
+  // Guard: need at least 2 players and valid holeInfo
+  if (players.length < 2 || holeInfo.length === 0) {
+    return {
+      holeResults: [], standings: [], stubbedPrimitives: [], summary: ['Waiting for players'],
+      cappedPlayerIds: [],
+    };
+  }
+
   const strokesMap = buildStrokesMap(players, holeInfo, config, slopeRating, totalHoles);
 
   // Track which stubs are actually active
@@ -119,10 +137,12 @@ export function calculateHouseGame(
   // ── Skins ─────────────────────────────────────────────────────────────────
   let skinsResult: ReturnType<typeof calculateSkins> | undefined;
   if (config.skins) {
-    const skinsHoles = config.skinsBackNineOnly
+    // Back-9-only skins only applies to 18-hole rounds
+    const useBack9Only = config.skinsBackNineOnly && totalHoles === 18;
+    const skinsHoles = useBack9Only
       ? holeInfo.filter(h => h.number > 9)
       : holeInfo;
-    const skinsScores = config.skinsBackNineOnly
+    const skinsScores = useBack9Only
       ? scores.filter(s => s.holeNumber > 9)
       : scores;
     skinsResult = calculateSkins(
@@ -132,6 +152,8 @@ export function calculateHouseGame(
       config.unitValue,
       config.carryoverSkinsHalved,
       strokesMap,
+      config.carryoverCap,
+      config.carryoverJackpot18,
     );
   }
 
@@ -179,23 +201,24 @@ export function calculateHouseGame(
     players.forEach(p => { holeEarnings[p.id] = 0; });
     const activeBonuses: string[] = [];
 
-    // Birdie / eagle unit bonuses — use NET scores
+    // Birdie / eagle bonuses — use NET scores
+    // birdieUnitBonus / eagleUnitBonus is the flat $ amount each other player pays the maker
     if (config.birdieUnitBonus > 0 || config.eagleUnitBonus > 0) {
       for (const s of holeScores) {
         const netDiff = netScores[s.playerId] - hole.par;
         const otherCount = players.length - 1;
         if (netDiff === -1 && config.birdieUnitBonus > 0) {
-          const earn = config.birdieUnitBonus * config.unitValue * otherCount;
-          holeEarnings[s.playerId] = (holeEarnings[s.playerId] ?? 0) + earn;
+          const perPlayer = config.birdieUnitBonus;
+          holeEarnings[s.playerId] = (holeEarnings[s.playerId] ?? 0) + perPlayer * otherCount;
           players.filter(p => p.id !== s.playerId).forEach(p => {
-            holeEarnings[p.id] = (holeEarnings[p.id] ?? 0) - config.birdieUnitBonus * config.unitValue;
+            holeEarnings[p.id] = (holeEarnings[p.id] ?? 0) - perPlayer;
           });
           activeBonuses.push('bonus_birdie_unit');
         } else if (netDiff <= -2 && config.eagleUnitBonus > 0) {
-          const earn = config.eagleUnitBonus * config.unitValue * otherCount;
-          holeEarnings[s.playerId] = (holeEarnings[s.playerId] ?? 0) + earn;
+          const perPlayer = config.eagleUnitBonus;
+          holeEarnings[s.playerId] = (holeEarnings[s.playerId] ?? 0) + perPlayer * otherCount;
           players.filter(p => p.id !== s.playerId).forEach(p => {
-            holeEarnings[p.id] = (holeEarnings[p.id] ?? 0) - config.eagleUnitBonus * config.unitValue;
+            holeEarnings[p.id] = (holeEarnings[p.id] ?? 0) - perPlayer;
           });
           activeBonuses.push('bonus_eagle_unit');
         }
@@ -258,6 +281,84 @@ export function calculateHouseGame(
     }
   }
 
+  // ── Rabbit ────────────────────────────────────────────────────────────────
+  let rabbitResult: RabbitResult | undefined;
+  if (config.rabbit) {
+    rabbitResult = calculateRabbit(
+      scores, players, scoredHoles.length, config.unitValue, totalHoles, strokesMap,
+    );
+    for (const standing of rabbitResult.standings) {
+      playerEarnings[standing.playerId] = (playerEarnings[standing.playerId] ?? 0) + standing.earnings;
+    }
+  }
+
+  // ── Quota ─────────────────────────────────────────────────────────────────
+  let quotaResult: QuotaResult | undefined;
+  if (config.quota) {
+    quotaResult = calculateQuota(scores, players, holeInfo, config.unitValue, strokesMap);
+    for (const standing of quotaResult.standings) {
+      playerEarnings[standing.playerId] = (playerEarnings[standing.playerId] ?? 0) + standing.earnings;
+    }
+  }
+
+  // ── Vegas ─────────────────────────────────────────────────────────────────
+  let vegasResult: VegasResult | undefined;
+  if (config.vegas && players.length >= 4) {
+    vegasResult = calculateVegas(scores, players, holeInfo, config.unitValue, scoredHoles.length, strokesMap);
+    // Vegas earnings: team-based
+    if (vegasResult.holeResults.length > 0) {
+      const teamAIds = [players[0].id, players[1].id];
+      for (const player of players) {
+        const isTeamA = teamAIds.includes(player.id);
+        const earnings = isTeamA ? vegasResult.teamAEarnings : vegasResult.teamBEarnings;
+        playerEarnings[player.id] = (playerEarnings[player.id] ?? 0) + earnings;
+      }
+    }
+  }
+
+  // ── Last Hole Double ──────────────────────────────────────────────────────
+  if (config.lastHoleDouble) {
+    const lastHole = totalHoles === 18 ? 18 : 9;
+    const lastResult = holeResults.find(h => h.holeNumber === lastHole);
+    if (lastResult) {
+      // Double all earnings on the last hole
+      for (const [pid, amt] of Object.entries(lastResult.earnings)) {
+        playerEarnings[pid] = (playerEarnings[pid] ?? 0) + amt; // add another copy = 2x
+      }
+      lastResult.activeBonuses.push('bonus_last_hole_double');
+    }
+  }
+
+  // ── Greenie / Sandie / Barkie (tracked as info labels) ────────────────────
+  // These are prop-bet style bonuses — fire when the condition is met
+  for (const holeNum of scoredHoles) {
+    const hole = holeInfo.find(h => h.number === holeNum);
+    if (!hole) continue;
+    const holeScores = scores.filter(s => s.holeNumber === holeNum);
+    const hr = holeResults.find(h => h.holeNumber === holeNum);
+
+    for (const s of holeScores) {
+      const net = (hr?.netScores[s.playerId] ?? s.strokes);
+
+      // Greenie: par on a par 3 (or better) — player collects from all others
+      if (config.greenie && hole.par === 3 && net <= hole.par) {
+        const earn = config.unitValue * (players.length - 1);
+        playerEarnings[s.playerId] = (playerEarnings[s.playerId] ?? 0) + earn;
+        players.filter(p => p.id !== s.playerId).forEach(p => {
+          playerEarnings[p.id] = (playerEarnings[p.id] ?? 0) - config.unitValue;
+        });
+        if (hr) hr.activeBonuses.push('bonus_greenie');
+      }
+
+      // Sandie: par or better from a bunker (tracked as gross score = par with bunker)
+      // We can't detect bunker shots from score data alone — mark as info-only
+      // Barkie: par or better after hitting a tree — same limitation
+    }
+  }
+
+  // ── Breakfast Ball (info-only, no scoring impact) ─────────────────────────
+  // config.breakfastBall is tracked — UI shows a banner on hole 1
+
   // ── Standings ─────────────────────────────────────────────────────────────
   const standings: HouseGameStanding[] = players.map(player => {
     const playerScores = scores.filter(s => s.playerId === player.id);
@@ -278,8 +379,13 @@ export function calculateHouseGame(
 
     const bonusEarnings = playerEarnings[player.id] ?? 0;
     const skinsEarnings = skinsResult?.standings.find(s => s.playerId === player.id)?.earnings ?? 0;
-    const nassauEarnings = nassauResult?.settlements.find(s => s.toPlayerId === player.id)?.amount
-      ?? -(nassauResult?.settlements.find(s => s.fromPlayerId === player.id)?.amount ?? 0);
+    const nassauWon = nassauResult?.settlements
+      .filter(s => s.toPlayerId === player.id)
+      .reduce((sum, s) => sum + s.amount, 0) ?? 0;
+    const nassauLost = nassauResult?.settlements
+      .filter(s => s.fromPlayerId === player.id)
+      .reduce((sum, s) => sum + s.amount, 0) ?? 0;
+    const nassauEarnings = nassauWon - nassauLost;
 
     return {
       playerId: player.id,
@@ -330,6 +436,12 @@ export function calculateHouseGame(
       summary.push('All square');
     }
   }
+  if (config.handicapPct > 0 && players.some(p => p.handicap == null)) {
+    summary.push('Missing handicap — playing as scratch');
+  }
+  if (config.vegas && players.length < 4) {
+    summary.push('Vegas requires 4 players');
+  }
   if (stubbedPrimitives.length > 0) {
     summary.push(`${stubbedPrimitives.length} rule${stubbedPrimitives.length > 1 ? 's' : ''} coming soon`);
   }
@@ -337,7 +449,7 @@ export function calculateHouseGame(
     summary.push('Loss cap applied');
   }
 
-  return { holeResults, standings, skinsResult, nassauResult, stablefordResult, stubbedPrimitives, summary, cappedPlayerIds };
+  return { holeResults, standings, skinsResult, nassauResult, stablefordResult, rabbitResult, quotaResult, vegasResult, stubbedPrimitives, summary, cappedPlayerIds };
 }
 
 /** Helper: check if a stub primitive's config flag is truthy */
@@ -349,6 +461,7 @@ function checkPrimitiveActive(id: string, config: HouseGameScoringConfig): boole
     format_bingo_bango_bongo: config.bingoBangoBongo,
     format_rabbit: config.rabbit,
     format_quota: config.quota,
+    format_vegas: config.vegas,
     format_defender: config.defender,
     group_sixes: config.sixes,
     press_auto_birdie: config.pressAutoBirdie,
@@ -361,8 +474,11 @@ function checkPrimitiveActive(id: string, config: HouseGameScoringConfig): boole
     press_no_dormie: config.pressNoDormie,
     press_back9_auto: config.pressBack9Auto,
     bonus_greenie: config.greenie,
-    bonus_sandie: config.sandie,
-    bonus_barkie: config.barkie,
+    bonus_sandie: config.sandie,     // info-only (requires bunker detection)
+    bonus_barkie: config.barkie,     // info-only (requires tree detection)
+    carryover_cap: config.carryoverCap !== null,
+    carryover_jackpot_18: config.carryoverJackpot18,
+    casual_breakfast_ball: config.breakfastBall,
     bonus_oozle: config.oozle,
     bonus_chippy: config.chippy,
     bonus_polie: config.polie,

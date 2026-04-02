@@ -62,6 +62,8 @@ interface FormatStepProps {
   selectedPersonalFormatId?: string | null;
   onPersonalFormatSelect?: (id: string | null) => void;
   onBuildNewFormat?: () => void;
+  formatActive?: boolean;
+  selectedFormatName?: string;
   groupAssignedFormat?: PersonalGameFormat | null;
   onUseThisGame?: (format: PersonalGameFormat) => void;
   isPro?: boolean;
@@ -105,6 +107,8 @@ export function FormatStep({
   personalFormats,
   selectedPersonalFormatId,
   onPersonalFormatSelect,
+  formatActive,
+  selectedFormatName,
   onBuildNewFormat,
   groupAssignedFormat,
   onUseThisGame,
@@ -273,9 +277,52 @@ export function FormatStep({
         </>
       )}
 
-      {/* Scoring Section */}
-      <p className={sectionLabel}>Scoring Format</p>
+      {/* Format Active Banner */}
+      {formatActive && (() => {
+        const selectedFmt = personalFormats?.find(f => f.id === selectedPersonalFormatId) ?? groupAssignedFormat;
+        const rulePills = selectedFmt
+          ? summarizeScoringConfig(buildConfig(selectedFmt.activePrimitives), 6)
+          : [];
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-[#0A0A0A] rounded-2xl p-4 mb-3 mt-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#F0EE3A]/20 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-4 h-4 text-[#F0EE3A]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-black text-white truncate">
+                  {selectedFormatName ?? 'Format'} is active
+                </p>
+                <p className="text-[11px] text-white/50 mt-0.5">
+                  Your format controls all scoring, bets &amp; handicaps
+                </p>
+              </div>
+            </div>
+            {rulePills.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {rulePills.map((pill, i) => (
+                  <span
+                    key={i}
+                    className="text-[10px] font-bold bg-white/10 text-white/70 px-2.5 py-1 rounded-full"
+                  >
+                    {pill}
+                  </span>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        );
+      })()}
 
+      {/* Scoring Section — hidden when format controls scoring */}
+      {!formatActive && <p className={sectionLabel}>Scoring Format</p>}
+
+      {!formatActive && (
+      <>
       {/* Stroke Play */}
       <motion.div
         initial={{ opacity: 0, y: 6 }}
@@ -717,6 +764,9 @@ export function FormatStep({
             </motion.div>
           )}
         </motion.div>
+      )}
+
+      </>
       )}
 
       {/* Paywall Modal */}
