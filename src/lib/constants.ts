@@ -129,3 +129,16 @@ export const NASSAU_MAX_PLAYERS = 2;
 
 /** Minimum fuzzy match similarity for voice recognition */
 export const FUZZY_MATCH_MAX_DISTANCE = 1;
+
+// =============================================================================
+// DOMAIN URLS
+// =============================================================================
+
+/** Auth redirect domain (Apple Sign-In callback) */
+export const AUTH_REDIRECT_DOMAIN = 'https://matchgolf.dev';
+
+/** App deep links domain */
+export const APP_LINKS_DOMAIN = 'https://matchgolf.app';
+
+/** Marketing site domain (privacy policy, terms) */
+export const MARKETING_DOMAIN = 'https://matchgolf.info';

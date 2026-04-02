@@ -10,6 +10,14 @@ export interface LeaderboardEntry {
   roundCount: number;
 }
 
+interface RpcLeaderboardRow {
+  friend_profile_id: string;
+  friend_name: string | null;
+  friend_avatar: string | null;
+  net_amount: number;
+  round_count: number;
+}
+
 export function useSeasonLeaderboard() {
   const { user } = useAuth();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
@@ -24,7 +32,7 @@ export function useSeasonLeaderboard() {
       });
       if (error) throw error;
       setEntries(
-        (data ?? []).map((r: any) => ({
+        (data as RpcLeaderboardRow[] ?? []).map((r) => ({
           friendProfileId: r.friend_profile_id,
           friendName: r.friend_name ?? 'Unknown',
           friendAvatar: r.friend_avatar ?? null,

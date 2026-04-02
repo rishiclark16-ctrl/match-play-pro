@@ -12,6 +12,7 @@
 
 import { ActivePrimitive } from '@/types/houseGame';
 import { buildScoringConfig } from '@/lib/houseGame/engine';
+import { logger } from '@/lib/logger';
 
 // ─── ScoringConfig type ───────────────────────────────────────────────────────
 
@@ -130,9 +131,12 @@ export function validateConfig(activePrimitives: ActivePrimitive[]): ConfigValid
  *   casual_no_blood, casual_mulligans, casual_gimme_distance,
  *   settlement_unit_value, settlement_net_out, settlement_rain_shortened
  */
-export function buildConfig(activePrimitives: ActivePrimitive[]): ScoringConfig {
+export function buildConfig(activePrimitives: ActivePrimitive[]): ScoringConfig & { warnings: string[] } {
   // Delegate raw primitive → flat flag conversion to existing engine
   const c = buildScoringConfig(activePrimitives);
+
+  // Track which stub features were selected so the UI can inform users
+  const warnings: string[] = [];
 
   // ── Active formats ─────────────────────────────────────────────────────────
   const activeFormats: string[] = [];
@@ -142,14 +146,36 @@ export function buildConfig(activePrimitives: ActivePrimitive[]): ScoringConfig 
   if (c.stableford) activeFormats.push('stableford');
 
   // STUB: formats below are logged + ignored in scoring
-  if (c.wolf)           { activeFormats.push('wolf');             console.warn('[HouseGame STUB] format_wolf not yet implemented'); }
-  if (c.vegas)          { console.warn('[HouseGame STUB] format_vegas not yet implemented'); }
-  if (c.hammer)         { console.warn('[HouseGame STUB] format_hammer not yet implemented'); }
-  if (c.bingoBangoBongo){ activeFormats.push('bingo_bango_bongo'); }
-  if (c.rabbit)         { console.warn('[HouseGame STUB] format_rabbit not yet implemented'); }
-  if (c.quota)          { console.warn('[HouseGame STUB] format_quota not yet implemented'); }
-  if (c.defender)       { console.warn('[HouseGame STUB] format_defender not yet implemented'); }
-  if (c.sixes)          { console.warn('[HouseGame STUB] group_sixes not yet implemented'); }
+  if (c.wolf) {
+    activeFormats.push('wolf');
+    logger.warn('[HouseGame] Wolf format not yet implemented in AI builder');
+    warnings.push('Wolf format is not yet available in AI-built games. Use the standard Wolf game instead.');
+  }
+  if (c.vegas) {
+    logger.warn('[HouseGame] Vegas format not yet implemented in AI builder');
+    warnings.push('Vegas format is not yet available in AI-built games. Use the standard Vegas game instead.');
+  }
+  if (c.hammer) {
+    logger.warn('[HouseGame] Hammer format not yet implemented in AI builder');
+    warnings.push('Hammer format is not yet available in AI-built games.');
+  }
+  if (c.bingoBangoBongo) { activeFormats.push('bingo_bango_bongo'); }
+  if (c.rabbit) {
+    logger.warn('[HouseGame] Rabbit format not yet implemented in AI builder');
+    warnings.push('Rabbit format is not yet available in AI-built games.');
+  }
+  if (c.quota) {
+    logger.warn('[HouseGame] Quota format not yet implemented in AI builder');
+    warnings.push('Quota format is not yet available in AI-built games.');
+  }
+  if (c.defender) {
+    logger.warn('[HouseGame] Defender format not yet implemented in AI builder');
+    warnings.push('Defender format is not yet available in AI-built games.');
+  }
+  if (c.sixes) {
+    logger.warn('[HouseGame] Sixes group format not yet implemented');
+    warnings.push('Sixes group format is not yet available in AI-built games.');
+  }
 
   // ── Press rules ────────────────────────────────────────────────────────────
   let pressTrigger: PressRules['trigger'] = 'none';
@@ -164,36 +190,76 @@ export function buildConfig(activePrimitives: ActivePrimitive[]): ScoringConfig 
   } else if (c.pressBack9Auto) {
     pressTrigger = 'back9';
     // STUB: press_back9_auto
-    console.warn('[HouseGame STUB] press_back9_auto not yet wired');
+    logger.warn('[HouseGame] Back-9 auto-press not yet wired');
+    warnings.push('Back-9 auto-press is not yet supported. Presses will need to be triggered manually.');
   }
 
   // STUB: remaining press options (safe defaults: no enforcement)
-  if (c.pressManualRequest)    console.warn('[HouseGame STUB] press_manual_request not yet wired');
-  if (c.pressRequiresAcceptance) console.warn('[HouseGame STUB] press_requires_acceptance not yet wired');
-  if (c.pressDoubleOrNothing)  console.warn('[HouseGame STUB] press_double_or_nothing not yet wired');
-  if (c.pressMaxPerRound !== null) console.warn('[HouseGame STUB] press_max_per_round not yet wired');
-  if (c.pressNewSubmatch)      console.warn('[HouseGame STUB] press_new_submatch not yet wired');
-  if (c.pressNoDormie)         console.warn('[HouseGame STUB] press_no_dormie not yet wired');
+  if (c.pressManualRequest) {
+    logger.warn('[HouseGame] Manual press requests not yet wired');
+    warnings.push('Manual press requests are not yet supported.');
+  }
+  if (c.pressRequiresAcceptance) {
+    logger.warn('[HouseGame] Press acceptance requirement not yet wired');
+    warnings.push('Press acceptance requirement is not yet enforced.');
+  }
+  if (c.pressDoubleOrNothing) {
+    logger.warn('[HouseGame] Press double-or-nothing not yet wired');
+    warnings.push('Double-or-nothing press is not yet supported.');
+  }
+  if (c.pressMaxPerRound !== null) {
+    logger.warn('[HouseGame] Max presses per round not yet wired');
+    warnings.push('Max presses per round limit is not yet enforced.');
+  }
+  if (c.pressNewSubmatch) {
+    logger.warn('[HouseGame] Press sub-match creation not yet wired');
+    warnings.push('Press sub-match creation is not yet supported.');
+  }
+  if (c.pressNoDormie) {
+    logger.warn('[HouseGame] No-dormie press rule not yet wired');
+    warnings.push('No-dormie press rule is not yet enforced.');
+  }
 
   // ── Multipliers ────────────────────────────────────────────────────────────
   // IMPLEMENTED: par5Double, birdieUnits, eagleUnits — handled inside calculateHouseGame
   // STUB: par3Special rules beyond par5Double
-  if (c.par3Special !== 'none') console.warn('[HouseGame STUB] bonus_par3_special not yet wired into per-hole scoring');
-  if (c.lastHoleDouble)         console.warn('[HouseGame STUB] bonus_last_hole_double not yet wired');
+  if (c.par3Special !== 'none') {
+    logger.warn('[HouseGame] Par-3 special rules not yet wired into per-hole scoring');
+    warnings.push('Par-3 special rules (double/half/separate pot) are not yet applied during scoring.');
+  }
+  if (c.lastHoleDouble) {
+    logger.warn('[HouseGame] Last hole double not yet wired');
+    warnings.push('Last hole double value is not yet applied during scoring.');
+  }
 
   // ── Carryover rules ────────────────────────────────────────────────────────
   // IMPLEMENTED: carryoverSkinsHalved — passed to calculateSkins as carryover=true
   // STUB: remaining carryover options (safe defaults: disabled)
-  if (c.carryoverCap !== null)   console.warn('[HouseGame STUB] carryover_cap not yet wired');
-  if (c.carryoverJackpot18)      console.warn('[HouseGame STUB] carryover_jackpot_18 not yet wired');
-  if (c.carryoverResetOnWin)     console.warn('[HouseGame STUB] carryover_reset_on_win not yet wired');
-  if (c.carryoverNassauHalved)   console.warn('[HouseGame STUB] carryover_nassau_halved not yet wired');
+  if (c.carryoverCap !== null) {
+    logger.warn('[HouseGame] Carryover cap not yet wired');
+    warnings.push('Carryover cap is not yet enforced. Skins can carry over without limit.');
+  }
+  if (c.carryoverJackpot18) {
+    logger.warn('[HouseGame] Jackpot on hole 18 not yet wired');
+    warnings.push('Jackpot on hole 18 is not yet applied automatically.');
+  }
+  if (c.carryoverResetOnWin) {
+    logger.warn('[HouseGame] Carryover reset-on-win not yet wired');
+    warnings.push('Carryover reset-on-win is not yet enforced.');
+  }
+  if (c.carryoverNassauHalved) {
+    logger.warn('[HouseGame] Nassau carryover (halved) not yet wired');
+    warnings.push('Nassau carryover (halved) is not yet applied.');
+  }
 
   // ── Handicap ───────────────────────────────────────────────────────────────
   // IMPLEMENTED: percentage (100/90/80/75/0), useStrokeIndex, ghostPlayer
   // STUB: mixedTees, bumpAndRun
   // handicap_mixed_tees is handled via per-player TeeSet in usePlayersWithScores
-  if (c.handicapBumpAndRun) console.warn('[HouseGame STUB] handicap_bump_and_run not yet wired');
+  if (c.handicapBumpAndRun) {
+    logger.warn('[HouseGame] Bump-and-run handicap not yet wired');
+    warnings.push('Bump-and-run handicap adjustment is not yet supported.');
+  }
 
   // ── Garbage bets ───────────────────────────────────────────────────────────
   const garbageBets: string[] = [];
@@ -205,29 +271,54 @@ export function buildConfig(activePrimitives: ActivePrimitive[]): ScoringConfig 
   if (c.polie)    garbageBets.push('polie');
   // STUB: garbage bets show in settlement section but aren't tracked hole-by-hole yet
   if (garbageBets.length > 0) {
-    console.warn(`[HouseGame STUB] Garbage bets [${garbageBets.join(', ')}] listed but not tracked hole-by-hole`);
+    logger.warn('[HouseGame] Garbage bets listed but not tracked hole-by-hole', {
+      data: { bets: garbageBets },
+    });
+    warnings.push(`Garbage bets (${garbageBets.join(', ')}) will appear at settlement but are not tracked hole-by-hole during the round.`);
   }
   if (c.garbageTracking) {
     garbageBets.push('garbage_tracking');
-    console.warn('[HouseGame STUB] bonus_garbage_tracking aggregate tracking not yet wired');
+    logger.warn('[HouseGame] Aggregate garbage tracking not yet wired');
+    warnings.push('Aggregate garbage bet tracking is not yet supported.');
   }
 
   // ── Settlement extras ──────────────────────────────────────────────────────
   // IMPLEMENTED: unitValue, netOut (pairwise netting is always on; this flag adds a UI banner),
   //              rainShortened (proportional nassau if round closed early)
   // STUB: remaining settlement options
-  if (c.payPerHole)   console.warn('[HouseGame STUB] settlement_pay_per_hole not yet wired');
-  if (c.runningTab)   console.warn('[HouseGame STUB] settlement_running_tab not yet wired');
+  if (c.payPerHole) {
+    logger.warn('[HouseGame] Pay-per-hole settlement not yet wired');
+    warnings.push('Pay-per-hole settlement is not yet supported. Settlement will be calculated at end of round.');
+  }
+  if (c.runningTab) {
+    logger.warn('[HouseGame] Running tab not yet wired');
+    warnings.push('Running tab display is not yet supported.');
+  }
   // settlement_max_loss_cap — implemented in calculateHouseGame
-  if (c.tiesCarryover) console.warn('[HouseGame STUB] settlement_ties_carryover not yet wired');
+  if (c.tiesCarryover) {
+    logger.warn('[HouseGame] Ties carryover not yet wired');
+    warnings.push('Ties carryover rule is not yet enforced. Ties will be split by default.');
+  }
 
   // ── Group rules ────────────────────────────────────────────────────────────
   // STUB: all group rules
-  if (c.teamsFixed)    console.warn('[HouseGame STUB] group_teams_fixed not yet wired');
-  if (c.teamsRotating) console.warn('[HouseGame STUB] group_teams_rotating not yet wired');
-  if (c.pointBank)     console.warn('[HouseGame STUB] group_point_bank not yet wired');
+  if (c.teamsFixed) {
+    logger.warn('[HouseGame] Fixed teams not yet wired');
+    warnings.push('Fixed team assignments are not yet supported in AI-built games.');
+  }
+  if (c.teamsRotating) {
+    logger.warn('[HouseGame] Rotating teams not yet wired');
+    warnings.push('Rotating team assignments are not yet supported in AI-built games.');
+  }
+  if (c.pointBank) {
+    logger.warn('[HouseGame] Point bank not yet wired');
+    warnings.push('Point bank group format is not yet supported.');
+  }
   // group_pickup_rule — handled at score entry (pickup = par + 2 + handicap strokes)
-  if (c.subIn !== null) console.warn('[HouseGame STUB] group_sub_in not yet wired');
+  if (c.subIn !== null) {
+    logger.warn('[HouseGame] Sub-in rule not yet wired');
+    warnings.push('Player substitution rule is not yet supported.');
+  }
 
   return {
     activeFormats,
@@ -270,6 +361,7 @@ export function buildConfig(activePrimitives: ActivePrimitive[]): ScoringConfig 
       tieRule: c.tiesCarryover ? 'carryover' : 'split',
     },
     garbageBets,
+    warnings,
   };
 }
 

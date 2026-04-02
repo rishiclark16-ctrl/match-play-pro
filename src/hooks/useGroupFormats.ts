@@ -13,7 +13,7 @@ export interface GroupFormatAssignment {
   format: PersonalGameFormat;
 }
 
-function transformFormat(db: any): PersonalGameFormat {
+function transformFormat(db: Record<string, unknown>): PersonalGameFormat {
   return {
     id: db.id,
     ownerId: db.owner_id,
@@ -50,7 +50,7 @@ export function useGroupFormats(groupId: string | null) {
       if (!data || !data.personal_game_formats) {
         setAssignment(null);
       } else {
-        const fmt = data.personal_game_formats as any;
+        const fmt = data.personal_game_formats as unknown as Record<string, unknown>;
         setAssignment({
           id: data.id,
           groupId: data.group_id,

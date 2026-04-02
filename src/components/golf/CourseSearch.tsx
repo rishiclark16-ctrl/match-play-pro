@@ -52,6 +52,7 @@ export function CourseSearch({ courses, onSelectCourse, onCreateNew, onSelectApi
         <input
           type="text"
           placeholder="Search golf courses..."
+          aria-label="Search golf courses"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="flex-1 py-4 bg-transparent border-0 focus:ring-0 text-sm placeholder:text-muted-foreground outline-none ml-3"

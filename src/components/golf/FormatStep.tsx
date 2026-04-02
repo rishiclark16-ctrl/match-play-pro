@@ -304,9 +304,9 @@ export function FormatStep({
             </div>
             {rulePills.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
-                {rulePills.map((pill, i) => (
+                {rulePills.map((pill) => (
                   <span
-                    key={i}
+                    key={pill}
                     className="text-[10px] font-bold bg-white/10 text-white/70 px-2.5 py-1 rounded-full"
                   >
                     {pill}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Users, Trash2, Edit2, Loader2, Crown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,11 +11,12 @@ import { GroupLedgerView } from '@/components/groups/GroupLedgerView';
 import { PaywallModal, ProBadge } from '@/components/subscription';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { cn } from '@/lib/utils';
 
 export default function Groups() {
   const navigate = useNavigate();
-  const { groups, loading, deleteGroup } = useGroups();
+  const { groups, loading, deleteGroup, refetch: refetchGroups } = useGroups();
   const [showCreateSheet, setShowCreateSheet] = useState(false);
   const [editingGroup, setEditingGroup] = useState<GolfGroup | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -53,6 +54,12 @@ export default function Groups() {
 
     setDeletingId(null);
   };
+
+  const handleRefresh = useCallback(async () => {
+    hapticLight();
+    await refetchGroups();
+    hapticSuccess();
+  }, [refetchGroups]);
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -113,31 +120,32 @@ export default function Groups() {
       </header>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-nav" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <PullToRefresh onRefresh={handleRefresh} className="flex-1 relative z-10 px-4 pb-nav">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-foreground" />
           </div>
         ) : groups.length === 0 ? (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="py-20 flex flex-col items-center text-center"
+            className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-2 mt-6 flex flex-col items-center text-center py-12 px-6"
           >
-            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mb-4">
               <Users className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h2 className="text-xl font-black tracking-[-0.03em] mb-2">No groups yet</h2>
-            <p className="text-sm text-muted-foreground max-w-[240px] mb-6">
+            <h3 className="text-[13px] font-bold text-foreground mb-1">No groups yet</h3>
+            <p className="text-[12px] text-muted-foreground max-w-[240px] leading-relaxed">
               Create a group with your regular golf buddies for faster round setup.
             </p>
-            <button
+            <motion.button
+              whileTap={{ scale: 0.98 }}
               onClick={handleCreateGroup}
-              className="bg-foreground text-background rounded-2xl px-6 py-3 font-bold flex items-center gap-2"
+              className="bg-foreground text-background rounded-2xl px-6 py-3 font-bold text-sm flex items-center gap-2 mt-5"
             >
               <Plus className="h-4 w-4" />
               Create Your First Group
-            </button>
+            </motion.button>
           </motion.div>
         ) : (
           <div className="mt-4">
@@ -208,7 +216,7 @@ export default function Groups() {
             </AnimatePresence>
           </div>
         )}
-      </div>
+      </PullToRefresh>
 
       <CreateGroupSheet
         open={showCreateSheet}

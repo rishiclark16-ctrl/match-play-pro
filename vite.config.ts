@@ -116,6 +116,9 @@ export default defineConfig(({ mode }) => ({
     // Pass the release version to the client for Sentry initialization
     'import.meta.env.VITE_SENTRY_RELEASE': JSON.stringify(RELEASE_VERSION),
   },
+  test: {
+    exclude: ['tests/e2e/**', 'node_modules/**'],
+  },
   build: {
     // Generate source maps for Sentry uploads (will be deleted after upload)
     sourcemap: mode === "production",

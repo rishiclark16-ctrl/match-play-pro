@@ -51,12 +51,14 @@ export function UpcomingRoundsTab() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-12 bg-white rounded-2xl"
+            className="text-center py-12 px-6 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
           >
-            <Calendar className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-[14px] font-bold text-foreground mb-1">No upcoming rounds</p>
+            <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
+              <Calendar className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-[13px] font-bold text-foreground mb-1">No upcoming rounds</h3>
             <p className="text-[12px] text-muted-foreground leading-relaxed max-w-[240px] mx-auto">
-              Schedule a round with friends to plan your next game and chat before you play
+              Schedule a round with friends to plan your next game and chat before you play.
             </p>
           </motion.div>
         ) : (

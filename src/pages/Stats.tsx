@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, useInView, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import {
@@ -14,10 +14,12 @@ import {
   Award,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { computeAllTimeStats } from '@/lib/statCalculations';
+import { hapticLight, hapticSuccess } from '@/lib/haptics';
 
 interface ScoreDistribution {
   eagles: number;
@@ -148,8 +150,7 @@ export default function Stats() {
   const [stats, setStats] = useState<GolfStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchStats() {
+  const fetchStats = useCallback(async () => {
       if (!user) return;
 
       try {
@@ -353,11 +354,18 @@ export default function Stats() {
       } finally {
         setLoading(false);
       }
-    }
+  }, [user]);
 
+  useEffect(() => {
     setLoading(true);
     fetchStats();
-  }, [user, location.key]);
+  }, [fetchStats, location.key]);
+
+  const handleRefresh = useCallback(async () => {
+    hapticLight();
+    await fetchStats();
+    hapticSuccess();
+  }, [fetchStats]);
 
   if (loading) {
     return (
@@ -402,21 +410,22 @@ export default function Stats() {
 
   return (
     <AppLayout header={headerContent} mainClassName="pb-nav">
+      <PullToRefresh onRefresh={handleRefresh}>
       <AnimatePresence mode="wait">
         {!hasData ? (
           <motion.div
             key="empty"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={spring}
-            className="flex flex-col items-center justify-center py-24 px-6 text-center"
+            className="mx-6 mt-6 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex flex-col items-center justify-center py-12 px-6 text-center"
           >
-            <div className="w-20 h-20 rounded-3xl bg-foreground flex items-center justify-center mx-auto mb-6">
-              <BarChart3 className="w-9 h-9 text-[#F0EE3A]" />
+            <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mb-4">
+              <BarChart3 className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-black tracking-[-0.03em] mb-2">No Stats Yet</h3>
-            <p className="text-sm text-muted-foreground max-w-[240px] mx-auto leading-relaxed">
+            <h3 className="text-[13px] font-bold text-foreground mb-1">No stats yet</h3>
+            <p className="text-[12px] text-muted-foreground max-w-[240px] leading-relaxed">
               Play some rounds with friends to start tracking your wins, money, and scoring trends.
             </p>
           </motion.div>
@@ -818,6 +827,7 @@ export default function Stats() {
           </motion.div>
         )}
       </AnimatePresence>
+      </PullToRefresh>
     </AppLayout>
   );
 }

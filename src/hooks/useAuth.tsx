@@ -85,6 +85,8 @@ export function useAuth() {
   };
 
   const signOut = async () => {
+    // Remove all realtime subscriptions before signing out
+    supabase.removeAllChannels();
     const { error } = await supabase.auth.signOut();
     return { error };
   };

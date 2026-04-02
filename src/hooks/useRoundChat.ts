@@ -12,6 +12,15 @@ export interface RoundMessage {
   createdAt: string;
 }
 
+interface ChatRow {
+  id: string;
+  round_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+  profiles: { full_name: string | null; avatar_url: string | null } | null;
+}
+
 export function useRoundChat(roundId: string | null) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<RoundMessage[]>([]);
@@ -37,7 +46,7 @@ export function useRoundChat(roundId: string | null) {
 
       if (error) throw error;
       setMessages(
-        (data ?? []).map((row: any) => ({
+        ((data ?? []) as unknown as ChatRow[]).map((row) => ({
           id: row.id,
           roundId: row.round_id,
           authorId: row.author_id,

@@ -21,7 +21,7 @@ export interface ParsedPrimitive {
 
 /** Type guard — true when a primitive was AI-created, not from the standard VALID_IDS set */
 export function isCustomPrimitive(p: ActivePrimitive | ParsedPrimitive): boolean {
-  return !!(p as any).custom || p.id.startsWith('custom_');
+  return !!p.custom || p.id.startsWith('custom_');
 }
 
 export interface HouseGame {

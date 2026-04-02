@@ -93,7 +93,7 @@ export default function JoinRound() {
             <div className="w-16 h-16 rounded-2xl bg-foreground flex items-center justify-center mx-auto mb-4">
               <Eye className="w-7 h-7 text-[#F0EE3A]" />
             </div>
-            <h2 className="text-[20px] font-black tracking-[-0.04em] text-foreground mb-2">Join a Round</h2>
+            <h2 className="text-[20px] font-black tracking-[-0.04em] text-foreground mb-2">Watch a Round</h2>
             <p className="text-[14px] text-muted-foreground">
               Enter the round code to follow along in real-time
             </p>

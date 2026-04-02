@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Calendar, MessageCircle, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import type { UpcomingRound } from '@/hooks/useUpcomingRounds';
@@ -33,6 +34,7 @@ function teeTimeRelative(iso: string | null): string | null {
 }
 
 export function UpcomingRoundCard({ round, onPress, currentUserId }: UpcomingRoundCardProps) {
+  const navigate = useNavigate();
   const firstNames = round.participantNames.map(n => n.split(' ')[0]);
   const shownNames = firstNames.slice(0, 5);
   const overflowCount = firstNames.length - shownNames.length;
@@ -72,19 +74,34 @@ export function UpcomingRoundCard({ round, onPress, currentUserId }: UpcomingRou
 
         {/* Player chips */}
         <div className="flex flex-wrap gap-1.5 mb-3">
-          {shownNames.map((name, i) => (
-            <span
-              key={i}
-              className={cn(
-                'text-[11px] font-bold border px-2.5 py-1 rounded-lg',
-                currentUserId && round.participantIds[i] === currentUserId
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-foreground'
-                  : 'bg-[#F8F8F6] border-border/60 text-foreground'
-              )}
-            >
-              {name}
-            </span>
-          ))}
+          {shownNames.map((name, i) => {
+            const pid = round.participantIds[i];
+            const isClickable = !!pid && pid !== currentUserId;
+            const chipClass = cn(
+              'text-[11px] font-bold border px-2.5 py-1 rounded-lg',
+              currentUserId && pid === currentUserId
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-foreground'
+                : 'bg-[#F8F8F6] border-border/60 text-foreground'
+            );
+
+            if (isClickable) {
+              return (
+                <button
+                  key={pid}
+                  onClick={(e) => { e.stopPropagation(); navigate(`/profile/${pid}`); }}
+                  className={cn(chipClass, 'active:opacity-70 transition-opacity')}
+                >
+                  {name}
+                </button>
+              );
+            }
+
+            return (
+              <span key={pid ?? `name-${i}`} className={chipClass}>
+                {name}
+              </span>
+            );
+          })}
           {overflowCount > 0 && (
             <span className="text-[11px] font-bold bg-muted text-muted-foreground px-2.5 py-1 rounded-lg">
               +{overflowCount}

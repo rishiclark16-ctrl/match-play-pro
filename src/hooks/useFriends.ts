@@ -474,6 +474,7 @@ export function useFriends() {
     hasMore,
     error,
     sendFriendRequest,
+    sendFriendRequestByProfileId: createFriendship,
     sendFriendRequestByEmail,
     sendFriendRequestByPhone,
     acceptFriendRequest,

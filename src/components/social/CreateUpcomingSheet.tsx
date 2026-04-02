@@ -158,8 +158,12 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
       setSelectedFriends([]);
       onCreated();
       onClose();
-    } catch (err: any) {
-      console.error('CreateUpcomingSheet error:', err?.message ?? err, err?.details, err?.hint);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const errObj = err as Record<string, unknown>;
+      const details = errObj?.details;
+      const hint = errObj?.hint;
+      console.error('CreateUpcomingSheet error:', msg, details, hint);
       hapticError();
     } finally {
       setSubmitting(false);

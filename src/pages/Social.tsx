@@ -396,15 +396,19 @@ export default function Social() {
                   <div className="animate-spin h-8 w-8 border-2 border-foreground border-t-transparent rounded-full" />
                 </div>
               ) : friends.length === 0 ? (
-                <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 flex flex-col items-center justify-center py-12 text-center px-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 flex flex-col items-center justify-center py-12 text-center px-6"
+                >
                   <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mb-4">
                     <Users className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <h3 className="font-bold text-foreground mb-1">No friends yet</h3>
-                  <p className="text-sm text-muted-foreground max-w-[240px]">
+                  <h3 className="text-[13px] font-bold text-foreground mb-1">No friends yet</h3>
+                  <p className="text-[12px] text-muted-foreground max-w-[240px] leading-relaxed">
                     Share your friend code or QR with golf buddies to connect and track each other's rounds.
                   </p>
-                </div>
+                </motion.div>
               ) : (
                 <div className="space-y-2">
                   {friends.map((friend, index) => (

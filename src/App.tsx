@@ -38,6 +38,7 @@ const MyFormatsList = lazy(() => import("./pages/MyFormatsList"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Support = lazy(() => import("./pages/Support"));
+const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 
 const queryClient = new QueryClient();
 
@@ -168,6 +169,16 @@ function AppContent() {
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="default" />}>
                 <Profile />
+              </Suspense>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/profile/:profileId"
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <PublicProfile />
               </Suspense>
             </AuthGuard>
           }

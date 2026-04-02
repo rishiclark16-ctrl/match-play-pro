@@ -4,6 +4,7 @@ import { useAuth } from './useAuth';
 import { PropBetType } from '@/types/betting';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
+import { logger } from '@/lib/logger';
 import {
   checkProStatus,
   getCustomerInfo,
@@ -104,13 +105,13 @@ export function useSubscription(): UseSubscriptionReturn {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching subscription:', error);
+        logger.error('Error fetching subscription', error);
         setSubscription(null);
       } else {
         setSubscription(data as Subscription | null);
       }
     } catch (err) {
-      console.error('Error fetching subscription:', err);
+      logger.error('Error fetching subscription', err);
       setSubscription(null);
     } finally {
       setIsLoading(false);
@@ -123,14 +124,14 @@ export function useSubscription(): UseSubscriptionReturn {
 
     try {
       const rcIsPro = await checkProStatus();
-      console.log('[Subscription] RevenueCat pro status:', rcIsPro);
+      logger.debug('RevenueCat pro status', { data: { rcIsPro } });
       setNativeIsPro(rcIsPro);
 
       // If RevenueCat says pro, try to sync to database
       if (rcIsPro) {
         const info = await getCustomerInfo();
         if (info) {
-          console.log('[Subscription] Syncing RevenueCat status to database:', info);
+          logger.debug('Syncing RevenueCat status to database', { data: { info } });
           const synced = await syncSubscriptionToSupabase(info);
           if (synced) {
             // Re-fetch from DB to pick up the synced data
@@ -139,7 +140,7 @@ export function useSubscription(): UseSubscriptionReturn {
         }
       }
     } catch (err) {
-      console.error('[Subscription] Native status check failed:', err);
+      logger.error('Native status check failed', err);
     }
   }, [user, fetchSubscription]);
 
@@ -190,7 +191,7 @@ export function useSubscription(): UseSubscriptionReturn {
 
     App.addListener('appStateChange', ({ isActive }) => {
       if (isActive) {
-        console.log('[Subscription] App resumed — refreshing subscription status');
+        logger.debug('App resumed — refreshing subscription status');
         fetchSubscription();
         checkNativeStatus();
       }

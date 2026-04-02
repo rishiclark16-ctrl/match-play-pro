@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { HouseGame, ActivePrimitive, ParsedPrimitive } from '@/types/houseGame';
 
-function transformHouseGame(db: any): HouseGame {
+function transformHouseGame(db: Record<string, unknown>): HouseGame {
   return {
     id: db.id,
     groupId: db.group_id,
@@ -50,8 +50,8 @@ export function useHouseGame(groupId: string | null) {
 
       if (fetchError) throw fetchError;
       setHouseGame(data ? transformHouseGame(data) : null);
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to load house game');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load house game');
     } finally {
       setLoading(false);
     }
@@ -86,8 +86,8 @@ export function useHouseGame(groupId: string | null) {
       if (upsertError) throw upsertError;
       if (data) setHouseGame(transformHouseGame(data));
       return true;
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to save house game');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save house game');
       return false;
     } finally {
       setSaving(false);
@@ -106,8 +106,8 @@ export function useHouseGame(groupId: string | null) {
       if (fnError) throw fnError;
       if (!data?.primitives || !Array.isArray(data.primitives)) return [];
       return data.primitives as ParsedPrimitive[];
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to parse game description');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to parse game description');
       return null;
     } finally {
       setParsing(false);

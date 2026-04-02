@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { CommentsSection } from './CommentsSection';
 import { ScorecardGrid } from './ScorecardGrid';
@@ -15,6 +16,7 @@ interface RoundDetailSheetProps {
 }
 
 export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailSheetProps) {
+  const navigate = useNavigate();
   const { detail, loading } = useRoundDetailForSheet(roundId);
 
   return (
@@ -61,19 +63,30 @@ export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailS
               {/* Players row */}
               {detail.participants.length > 0 && (
                 <div className="mt-4 flex items-center gap-2 flex-wrap">
-                  {detail.participants.map((p, i) => (
-                    <div key={i} className="flex items-center gap-1.5 bg-white/[0.08] rounded-xl px-2.5 py-1.5">
-                      <Avatar className="w-5 h-5 rounded-full flex-shrink-0">
-                        <AvatarImage src={p.avatarUrl ?? undefined} />
-                        <AvatarFallback className="rounded-full text-[8px] font-black bg-white/20 text-white">
-                          {p.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-[11px] font-bold text-white/80">
-                        {p.name.split(' ')[0]}
-                      </span>
-                    </div>
-                  ))}
+                  {detail.participants.map((p) => {
+                    const isClickable = !!p.profileId && !p.isGuest;
+                    const Wrapper = isClickable ? motion.button : 'div' as unknown as typeof motion.button;
+                    return (
+                      <Wrapper
+                        key={p.playerId}
+                        {...(isClickable ? {
+                          whileTap: { scale: 0.95 },
+                          onClick: () => { onClose(); navigate(`/profile/${p.profileId}`); },
+                        } : {})}
+                        className={`flex items-center gap-1.5 bg-white/[0.08] rounded-xl px-2.5 py-1.5 ${isClickable ? 'cursor-pointer active:bg-white/[0.14] transition-colors' : ''}`}
+                      >
+                        <Avatar className="w-5 h-5 rounded-full flex-shrink-0">
+                          <AvatarImage src={p.avatarUrl ?? undefined} />
+                          <AvatarFallback className="rounded-full text-[8px] font-black bg-white/20 text-white">
+                            {p.name.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-[11px] font-bold text-white/80">
+                          {p.name.split(' ')[0]}
+                        </span>
+                      </Wrapper>
+                    );
+                  })}
                 </div>
               )}
 
@@ -82,9 +95,9 @@ export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailS
                 <div className="mt-4 pt-3 border-t border-white/10">
                   <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white/30 mb-2">Games</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {detail.games.map((g: any, i: number) => (
-                      <span key={i} className="text-[11px] font-bold bg-white/[0.08] text-white/70 px-2.5 py-1 rounded-lg">
-                        {formatGameType(g.type)}
+                    {detail.games.map((g: Record<string, unknown>, i: number) => (
+                      <span key={`${String(g.type)}-${i}`} className="text-[11px] font-bold bg-white/[0.08] text-white/70 px-2.5 py-1 rounded-lg">
+                        {formatGameType(g.type as string)}
                         {g.amount ? ` · $${g.amount}` : ''}
                       </span>
                     ))}

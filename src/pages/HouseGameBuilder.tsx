@@ -33,14 +33,14 @@ export default function HouseGameBuilder() {
   const isPersonal = !groupId;
   const navigate = useNavigate();
   const location = useLocation();
-  const returnTo = (location.state as any)?.returnTo as string | undefined;
+  const returnTo = (location.state as Record<string, unknown> | null)?.returnTo as string | undefined;
   const { isPro, isLoading: subLoading } = useSubscription();
   const { parsing: groupParsing, parseDescription: groupParseDescription } = useHouseGame(isPersonal ? null : groupId ?? null);
   const { formats, loading: formatsLoading, parsing: personalParsing, parseDescription: personalParseDescription } = usePersonalGameFormats();
   const parsing = isPersonal ? personalParsing : groupParsing;
   const parseDescription = isPersonal ? personalParseDescription : groupParseDescription;
   const [description, setDescription] = useState<string>(() => {
-    return (location.state as any)?.prefillDescription ?? '';
+    return ((location.state as Record<string, unknown> | null)?.prefillDescription as string) ?? '';
   });
   const [isListening, setIsListening] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
@@ -277,9 +277,9 @@ export default function HouseGameBuilder() {
         >
           <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">Try an example</p>
           <div className="grid grid-cols-2 gap-2">
-            {EXAMPLES.map((ex, i) => (
+            {EXAMPLES.map((ex) => (
               <motion.button
-                key={i}
+                key={ex.label}
                 whileTap={{ scale: 0.96 }}
                 onClick={() => { setDescription(ex.text); setParseError(null); hapticLight(); }}
                 className="text-left bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-3 py-3 border-2 border-transparent active:border-foreground/20 transition-colors"

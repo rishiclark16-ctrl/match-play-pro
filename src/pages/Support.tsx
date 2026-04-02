@@ -111,7 +111,7 @@ export default function Support() {
             <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">FAQ</p>
             <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
               {faqs.map((faq, index) => (
-                <div key={index}>
+                <div key={faq.question}>
                   <details className="group">
                     <summary className="flex items-center gap-3 px-4 py-3.5 cursor-pointer list-none">
                       <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0">

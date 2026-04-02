@@ -40,11 +40,11 @@ function getCardBg(score: number | undefined, par: number, netScore: number | un
   if (score === undefined) return 'bg-white';
   const s = useNet && netScore !== undefined ? netScore : score;
   const diff = s - par;
-  if (diff <= -2) return 'bg-[#DCFCE7]';
-  if (diff === -1) return 'bg-[#F0FFF4] border border-green-100';
+  if (diff <= -2) return 'bg-score-eagle';
+  if (diff === -1) return 'bg-score-birdie border border-green-100';
   if (diff === 0) return 'bg-white';
-  if (diff === 1) return 'bg-[#FFFBEB]';
-  return 'bg-[#FEF2F2]';
+  if (diff === 1) return 'bg-score-bogey';
+  return 'bg-score-double';
 }
 
 function getScoreNumColor(score: number | undefined, par: number, netScore: number | undefined, useNet: boolean): string {

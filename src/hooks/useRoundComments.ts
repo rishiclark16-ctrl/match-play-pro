@@ -12,6 +12,15 @@ export interface RoundComment {
   createdAt: string;
 }
 
+interface CommentRow {
+  id: string;
+  round_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+  profiles: { full_name: string | null; avatar_url: string | null } | null;
+}
+
 export function useRoundComments(roundId: string | null) {
   const { user } = useAuth();
   const [comments, setComments] = useState<RoundComment[]>([]);
@@ -36,7 +45,7 @@ export function useRoundComments(roundId: string | null) {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      const mapped: RoundComment[] = (data ?? []).map((row: any) => ({
+      const mapped: RoundComment[] = ((data ?? []) as unknown as CommentRow[]).map((row) => ({
         id: row.id,
         roundId: row.round_id,
         authorId: row.author_id,

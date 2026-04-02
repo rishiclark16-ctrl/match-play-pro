@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatGameType } from '@/lib/formatGameType';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,7 @@ function timeAgo(iso: string): string {
 }
 
 export function FeedItem({ item, onPress, currentUserId }: FeedItemProps) {
+  const navigate = useNavigate();
   const playerCount = item.participantIds.filter(Boolean).length || 1;
   const firstNames = item.participantNames.map(n => n.split(' ')[0]);
   const shownNames = firstNames.slice(0, 5);
@@ -38,7 +40,7 @@ export function FeedItem({ item, onPress, currentUserId }: FeedItemProps) {
 
   // Extract unique game types
   const gameTypes = item.games
-    .map((g: any) => g.type as string)
+    .map((g: Record<string, unknown>) => g.type as string)
     .filter((t, i, arr) => t && arr.indexOf(t) === i);
 
   return (
@@ -86,19 +88,34 @@ export function FeedItem({ item, onPress, currentUserId }: FeedItemProps) {
 
         {/* Player name chips */}
         <div className="flex flex-wrap gap-1.5 mb-4">
-          {shownNames.map((name, i) => (
-            <span
-              key={i}
-              className={cn(
-                'text-[11px] font-bold border px-2.5 py-1 rounded-lg',
-                currentUserId && item.participantIds[i] === currentUserId
-                  ? 'bg-[#F0EE3A]/10 border-[#F0EE3A]/40 text-foreground'
-                  : 'bg-[#F8F8F6] border-border/60 text-foreground'
-              )}
-            >
-              {name}
-            </span>
-          ))}
+          {shownNames.map((name, i) => {
+            const pid = item.participantIds[i];
+            const isClickable = !!pid && pid !== currentUserId;
+            const chipClass = cn(
+              'text-[11px] font-bold border px-2.5 py-1 rounded-lg',
+              currentUserId && pid === currentUserId
+                ? 'bg-[#F0EE3A]/10 border-[#F0EE3A]/40 text-foreground'
+                : 'bg-[#F8F8F6] border-border/60 text-foreground'
+            );
+
+            if (isClickable) {
+              return (
+                <button
+                  key={pid}
+                  onClick={(e) => { e.stopPropagation(); navigate(`/profile/${pid}`); }}
+                  className={cn(chipClass, 'active:opacity-70 transition-opacity')}
+                >
+                  {name}
+                </button>
+              );
+            }
+
+            return (
+              <span key={pid ?? `name-${i}`} className={chipClass}>
+                {name}
+              </span>
+            );
+          })}
           {overflowCount > 0 && (
             <span className="text-[11px] font-bold bg-muted text-muted-foreground px-2.5 py-1 rounded-lg">
               +{overflowCount}

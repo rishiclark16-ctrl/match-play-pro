@@ -45,12 +45,14 @@ export function SocialFeedTab() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-12 bg-white rounded-2xl"
+            className="text-center py-12 px-6 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
           >
-            <Flag className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-[14px] font-bold text-foreground mb-1">No rounds yet</p>
+            <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
+              <Flag className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-[13px] font-bold text-foreground mb-1">No rounds yet</h3>
             <p className="text-[12px] text-muted-foreground leading-relaxed max-w-[220px] mx-auto">
-              Completed rounds from you and your friends will show up here
+              Completed rounds from you and your friends will show up here.
             </p>
           </motion.div>
         ) : (

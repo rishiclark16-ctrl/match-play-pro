@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { registerSW } from "virtual:pwa-register";
 import { initSentry } from "./lib/sentry";
+import { logger } from "./lib/logger";
 import App from "./App.tsx";
 import "./index.css";
 
@@ -16,11 +17,11 @@ if (!isCapacitor && 'serviceWorker' in navigator) {
   registerSW({
     onRegistered(registration) {
       if (registration) {
-        console.log('Service Worker registered');
+        logger.info('Service Worker registered');
       }
     },
     onRegisterError(error) {
-      console.error('Service Worker registration failed:', error);
+      logger.error('Service Worker registration failed', error);
     },
   });
 }
@@ -28,12 +29,12 @@ if (!isCapacitor && 'serviceWorker' in navigator) {
 // Global error handlers for uncaught errors
 window.addEventListener('error', (event) => {
   // Sentry will catch these automatically, but we can add custom handling
-  console.error('Uncaught error:', event.error);
+  logger.error('Uncaught error', event.error);
 });
 
 window.addEventListener('unhandledrejection', (event) => {
   // Sentry will catch these automatically, but we can add custom handling
-  console.error('Unhandled promise rejection:', event.reason);
+  logger.error('Unhandled promise rejection', event.reason);
 });
 
 createRoot(document.getElementById("root")!).render(<App />);

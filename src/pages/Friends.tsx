@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, UserPlus, Users, Hash, AtSign, Phone, ScanLine, Contact, Crown, Copy, QrCode } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { useProfile } from '@/hooks/useProfile';
 import { useFriends } from '@/hooks/useFriends';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -30,6 +31,7 @@ export default function Friends() {
     acceptFriendRequest,
     declineFriendRequest,
     removeFriend,
+    refetch: refetchFriends,
   } = useFriends();
 
   const [searchValue, setSearchValue] = useState('');
@@ -164,6 +166,12 @@ export default function Friends() {
     }
   };
 
+  const handleRefresh = useCallback(async () => {
+    hapticLight();
+    await refetchFriends();
+    hapticSuccess();
+  }, [refetchFriends]);
+
   const handleQRScan = (code: string) => {
     setScannerOpen(false);
     hapticSuccess();
@@ -212,6 +220,7 @@ export default function Friends() {
       header={headerContent}
       mainClassName="pb-nav bg-[#F8F8F6]"
     >
+      <PullToRefresh onRefresh={handleRefresh}>
       {/* Your Friend Code */}
       <motion.section
         initial={{ opacity: 0, y: 10 }}
@@ -379,15 +388,27 @@ export default function Friends() {
             <div className="animate-spin h-8 w-8 border-2 border-foreground border-t-transparent rounded-full" />
           </div>
         ) : friends.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 flex flex-col items-center justify-center py-12 text-center px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 flex flex-col items-center justify-center py-12 text-center px-6"
+          >
             <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mb-4">
               <Users className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="font-bold text-foreground mb-1">No friends yet</h3>
-            <p className="text-sm text-muted-foreground max-w-[240px]">
+            <h3 className="text-[13px] font-bold text-foreground mb-1">No friends yet</h3>
+            <p className="text-[12px] text-muted-foreground max-w-[240px] leading-relaxed">
               Share your friend code or QR with golf buddies to connect and track each other's rounds.
             </p>
-          </div>
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="bg-foreground text-background rounded-2xl px-6 py-3 font-bold text-sm flex items-center gap-2 mt-5"
+            >
+              <UserPlus className="h-4 w-4" />
+              Add Your First Friend
+            </motion.button>
+          </motion.div>
         ) : (
           <div className="space-y-2">
             {friends.map((friend, index) => (
@@ -427,6 +448,7 @@ export default function Friends() {
         onOpenChange={setShowPaywall}
         feature="Unlimited Friends"
       />
+      </PullToRefresh>
     </AppLayout>
   );
 }

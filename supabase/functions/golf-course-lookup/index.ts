@@ -69,6 +69,9 @@ serve(async (req) => {
       );
     }
 
+    // Auth is handled by Supabase's verify_jwt setting on this function.
+    // No need for getUser() — course search is not user-specific.
+
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
     const query = url.searchParams.get('query');

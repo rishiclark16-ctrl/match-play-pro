@@ -11,6 +11,7 @@
 
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 // Define the plugin interface
 interface RevenueCatPlugin {
@@ -115,7 +116,7 @@ export async function initializePurchases(userId: string): Promise<boolean> {
     isInitialized = true;
     return true;
   } catch (error) {
-    console.error('[Purchases] Failed to initialize:', error);
+    logger.error('Failed to initialize purchases', error);
     return false;
   }
 }
@@ -132,7 +133,7 @@ export async function getOfferings(): Promise<PurchaseOffering | null> {
     const response = await RevenueCat.getOfferings();
 
     if (response.error || !response.availablePackages) {
-      console.warn('[Purchases] No offerings available');
+      logger.warn('No offerings available');
       return null;
     }
 
@@ -165,7 +166,7 @@ export async function getOfferings(): Promise<PurchaseOffering | null> {
         : undefined,
     };
   } catch (error) {
-    console.error('[Purchases] Failed to get offerings:', error);
+    logger.error('Failed to get offerings', error);
     return null;
   }
 }
@@ -185,25 +186,25 @@ export async function purchasePackage(packageIdentifier: string): Promise<Purcha
       return { success: false, cancelled: true };
     }
 
-    console.log('[Purchases] Purchase response:', JSON.stringify(response));
+    logger.debug('Purchase response', { data: { response } });
 
     const customerInfo = response.customerInfo
       ? parseCustomerInfo(response.customerInfo)
       : undefined;
 
-    console.log('[Purchases] Parsed customerInfo:', JSON.stringify(customerInfo));
+    logger.debug('Parsed customerInfo', { data: { customerInfo } });
 
     // Sync to Supabase
     if (customerInfo) {
       const synced = await syncSubscriptionToSupabase(customerInfo);
-      console.log('[Purchases] Sync result:', synced);
+      logger.debug('Sync result', { data: { synced } });
     } else {
-      console.warn('[Purchases] No customerInfo returned from purchase');
+      logger.warn('No customerInfo returned from purchase');
     }
 
     return { success: response.success, customerInfo };
   } catch (error) {
-    console.error('[Purchases] Purchase failed:', error);
+    logger.error('Purchase failed', error);
     return { success: false, error: error instanceof Error ? error.message : 'Purchase failed' };
   }
 }
@@ -230,7 +231,7 @@ export async function restorePurchases(): Promise<PurchaseResult> {
 
     return { success: response.success, customerInfo };
   } catch (error) {
-    console.error('[Purchases] Restore failed:', error);
+    logger.error('Restore failed', error);
     return { success: false, error: error instanceof Error ? error.message : 'Restore failed' };
   }
 }
@@ -247,7 +248,7 @@ export async function getCustomerInfo(): Promise<CustomerInfo | null> {
     const response = await RevenueCat.getCustomerInfo();
     return parseCustomerInfo(response);
   } catch (error) {
-    console.error('[Purchases] Failed to get customer info:', error);
+    logger.error('Failed to get customer info', error);
     return null;
   }
 }
@@ -264,7 +265,7 @@ export async function checkProStatus(): Promise<boolean> {
     const response = await RevenueCat.checkProStatus();
     return response.isPro;
   } catch (error) {
-    console.error('[Purchases] Failed to check pro status:', error);
+    logger.error('Failed to check pro status', error);
     return false;
   }
 }
@@ -287,10 +288,12 @@ function parseCustomerInfo(response: CustomerInfoResponse): CustomerInfo {
  */
 export async function syncSubscriptionToSupabase(customerInfo: CustomerInfo): Promise<boolean> {
   try {
-    console.log('[Purchases] Syncing to Supabase:', {
-      isPro: customerInfo.isPro,
-      activeSubscription: customerInfo.activeSubscription,
-      expirationDate: customerInfo.expirationDate,
+    logger.debug('Syncing to Supabase', {
+      data: {
+        isPro: customerInfo.isPro,
+        activeSubscription: customerInfo.activeSubscription,
+        expirationDate: customerInfo.expirationDate,
+      },
     });
 
     const { data, error } = await supabase.functions.invoke('sync-subscription', {
@@ -303,14 +306,14 @@ export async function syncSubscriptionToSupabase(customerInfo: CustomerInfo): Pr
     });
 
     if (error) {
-      console.error('[Purchases] Failed to sync to Supabase:', error);
+      logger.error('Failed to sync to Supabase', error);
       return false;
     }
 
-    console.log('[Purchases] Sync successful:', data);
+    logger.debug('Sync successful', { data: { result: data } });
     return true;
   } catch (error) {
-    console.error('[Purchases] Sync error:', error);
+    logger.error('Sync error', error);
     return false;
   }
 }
@@ -327,7 +330,7 @@ export async function openManagementUrl(): Promise<boolean> {
     const response = await RevenueCat.openManagementUrl();
     return response.success;
   } catch (error) {
-    console.error('[Purchases] Failed to open management URL:', error);
+    logger.error('Failed to open management URL', error);
     return false;
   }
 }

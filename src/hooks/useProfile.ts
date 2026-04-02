@@ -7,6 +7,7 @@ export interface NotificationPreferences {
   pressTriggered: boolean;
   tabSettled: boolean;
   tabAddedTo: boolean;
+  friendStartedRound: boolean;
 }
 
 export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
@@ -14,6 +15,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   pressTriggered: true,
   tabSettled: true,
   tabAddedTo: true,
+  friendStartedRound: true,
 };
 
 export interface Profile {

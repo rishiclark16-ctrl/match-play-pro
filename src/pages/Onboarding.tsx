@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, ChevronRight, Check } from 'lucide-react';
-import { useProfile } from '@/hooks/useProfile';
+import { useProfile, ProfileUpdate } from '@/hooks/useProfile';
 import { HomeCourseSelector } from '@/components/profile/HomeCourseSelector';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
@@ -51,7 +51,7 @@ export default function Onboarding() {
 
   const finish = async () => {
     setSaving(true);
-    const updates: Record<string, any> = { has_onboarded: true };
+    const updates: ProfileUpdate = { has_onboarded: true };
     if (handicap !== '') updates.handicap = Number(handicap);
     if (teePreference) updates.tee_preference = teePreference;
     if (homeCourseId) updates.home_course_id = homeCourseId;
@@ -201,6 +201,8 @@ export default function Onboarding() {
                 </p>
                 <input
                   type="number"
+                  inputMode="decimal"
+                  aria-label="Handicap index"
                   value={handicap}
                   onChange={e => setHandicap(e.target.value)}
                   placeholder="0.0"

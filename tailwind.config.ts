@@ -80,6 +80,13 @@ export default {
           foreground: "hsl(var(--card-foreground))",
           elevated: "hsl(var(--card-elevated))",
         },
+        score: {
+          eagle: "hsl(var(--score-eagle))",
+          birdie: "hsl(var(--score-birdie))",
+          par: "hsl(var(--score-par))",
+          bogey: "hsl(var(--score-bogey))",
+          double: "hsl(var(--score-double))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

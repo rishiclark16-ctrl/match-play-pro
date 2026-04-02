@@ -169,6 +169,8 @@ export function GameSettingsSheet({
                     <DollarSign className="w-4 h-4 text-muted-foreground" />
                     <Input
                       type="number"
+                      inputMode="numeric"
+                      aria-label="Skins stakes per hole"
                       value={skinsGame.stakes}
                       onChange={(e) => updateGame('skins', { stakes: Number(e.target.value) || 0 })}
                       className="bg-muted/50 rounded-xl border-0 py-2 px-3 text-foreground w-20 text-center font-bold"
@@ -240,6 +242,8 @@ export function GameSettingsSheet({
                       <DollarSign className="w-4 h-4 text-muted-foreground" />
                       <Input
                         type="number"
+                        inputMode="numeric"
+                        aria-label="Nassau stakes per bet"
                         value={nassauGame.stakes}
                         onChange={(e) => updateGame('nassau', { stakes: Number(e.target.value) || 0 })}
                         className="bg-muted/50 rounded-xl border-0 py-2 px-3 text-foreground w-20 text-center font-bold"
@@ -430,6 +434,8 @@ export function GameSettingsSheet({
                       <DollarSign className="w-4 h-4 text-muted-foreground" />
                       <Input
                         type="number"
+                        inputMode="numeric"
+                        aria-label="Wolf stakes per point"
                         value={wolfGame.stakes}
                         onChange={(e) => updateGame('wolf', { stakes: Number(e.target.value) || 0 })}
                         className="bg-muted/50 rounded-xl border-0 py-2 px-3 text-foreground w-20 text-center font-bold"

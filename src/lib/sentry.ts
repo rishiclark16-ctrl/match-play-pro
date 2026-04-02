@@ -23,9 +23,9 @@ export function initSentry() {
     // Performance monitoring
     tracesSampleRate: IS_PRODUCTION ? 0.1 : 1.0, // 10% in prod, 100% in dev
 
-    // Session replay (optional, can be enabled later)
-    replaysSessionSampleRate: 0,
-    replaysOnErrorSampleRate: IS_PRODUCTION ? 0.1 : 0,
+    // Session replay
+    replaysSessionSampleRate: IS_PRODUCTION ? 0.01 : 0, // 1% of production sessions
+    replaysOnErrorSampleRate: IS_PRODUCTION ? 0.1 : 0,  // 10% of error sessions
 
     // Filter out noisy errors
     ignoreErrors: [

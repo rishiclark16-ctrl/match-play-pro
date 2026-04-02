@@ -10,7 +10,7 @@ export async function parseHouseGameDescription(description: string): Promise<Pa
       // Extract actual response body from FunctionsHttpError (context is a Response object)
       let detail = '';
       try {
-        const ctx = (error as any).context;
+        const ctx = (error as Record<string, unknown>).context;
         if (ctx instanceof Response) {
           detail = await ctx.clone().text();
         } else if (ctx && typeof ctx === 'object') {

@@ -13,11 +13,11 @@ export function ValueInput({
   onChange,
 }: {
   primitive: HouseGamePrimitive;
-  value: any;
-  onChange: (v: any) => void;
+  value: unknown;
+  onChange: (v: unknown) => void;
 }) {
   const { valueType, valueConfig, defaultValue } = primitive;
-  const current = value ?? defaultValue;
+  const current = (value ?? defaultValue) as string | number;
 
   if (valueType === 'select' && valueConfig?.options) {
     return (
@@ -84,9 +84,9 @@ export function PrimitiveRow({
   primitive: HouseGamePrimitive;
   checked: boolean;
   confidence?: 'high' | 'medium' | 'low';
-  value?: any;
+  value?: unknown;
   onToggle: () => void;
-  onValueChange: (v: any) => void;
+  onValueChange: (v: unknown) => void;
 }) {
   const isLow = confidence === 'low';
 
@@ -163,8 +163,8 @@ export function CustomPrimitiveRow({
   checked: boolean;
   onToggle: () => void;
 }) {
-  const label = (primitive as any).label ?? primitive.id.replace('custom_', '').replace(/_/g, ' ');
-  const description = (primitive as any).description ?? '';
+  const label = primitive.label ?? primitive.id.replace('custom_', '').replace(/_/g, ' ');
+  const description = primitive.description ?? '';
   const value = primitive.value;
 
   return (
@@ -226,9 +226,9 @@ export function CategorySection({
   primitives: HouseGamePrimitive[];
   checkedIds: Set<string>;
   confidenceMap?: Map<string, 'high' | 'medium' | 'low'>;
-  valueMap: Map<string, any>;
+  valueMap: Map<string, unknown>;
   onToggle: (id: string) => void;
-  onValueChange: (id: string, v: any) => void;
+  onValueChange: (id: string, v: unknown) => void;
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);

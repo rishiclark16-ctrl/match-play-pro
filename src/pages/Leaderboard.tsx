@@ -557,8 +557,8 @@ export default function Leaderboard() {
                     <span className="ml-auto text-[10px] font-bold text-muted-foreground">Settle manually</span>
                   </div>
                   {customRules.map((rule) => {
-                    const label = (rule as any).label ?? rule.id.replace('custom_', '').replace(/_/g, ' ');
-                    const desc = (rule as any).description ?? '';
+                    const label = rule.label ?? rule.id.replace('custom_', '').replace(/_/g, ' ');
+                    const desc = rule.description ?? '';
                     const val = rule.value;
                     return (
                       <div key={rule.id} className="px-4 py-3 border-b border-border/10 last:border-b-0">

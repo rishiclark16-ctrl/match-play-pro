@@ -183,6 +183,38 @@ export function useCreateSupabaseRound() {
             type: 'roundInvites',
           });
         }
+
+        // Notify friends that a round has started (so they can watch live)
+        const allPlayerProfileIds = new Set(
+          input.players.filter(p => p.profileId).map(p => p.profileId as string)
+        );
+        allPlayerProfileIds.add(userId); // include creator
+        try {
+          const { data: friendships } = await supabase
+            .from('friendships')
+            .select('user_id, friend_id')
+            .eq('status', 'accepted')
+            .or(`user_id.eq.${userId},friend_id.eq.${userId}`);
+
+          if (friendships && friendships.length > 0) {
+            const friendIds = friendships
+              .map(f => f.user_id === userId ? f.friend_id : f.user_id)
+              .filter(id => !allPlayerProfileIds.has(id)); // don't notify players already in the round
+
+            if (friendIds.length > 0) {
+              const creatorName = input.players[0]?.name ?? 'A friend';
+              sendPushToProfiles({
+                profileIds: friendIds,
+                title: 'Friend Playing Now',
+                body: `${creatorName} started a round at ${input.courseName}`,
+                data: { roundId, route: `/round/${roundId}?spectator=true` },
+                type: 'friendStartedRound',
+              });
+            }
+          }
+        } catch {
+          // Friend notification is non-critical
+        }
       } catch (playersOrGhostErr) {
         // Bug H-3: players insert (or ghost score generation) failed — delete the
         // orphaned round row so the DB is left in a consistent state.

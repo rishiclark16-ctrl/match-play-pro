@@ -12,7 +12,7 @@ interface SaveFormatInput {
   isPublic?: boolean;
 }
 
-function transformFormat(db: any): PersonalGameFormat {
+function transformFormat(db: Record<string, unknown>): PersonalGameFormat {
   return {
     id: db.id,
     ownerId: db.owner_id,
@@ -46,8 +46,8 @@ export function usePersonalGameFormats() {
         .order('created_at', { ascending: false });
       if (fetchError) throw fetchError;
       setFormats((data ?? []).map(transformFormat));
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to load formats');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load formats');
     } finally {
       setLoading(false);
     }
@@ -101,8 +101,8 @@ export function usePersonalGameFormats() {
         }
         return null;
       }
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to save format');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save format');
       return null;
     } finally {
       setSaving(false);
@@ -120,8 +120,8 @@ export function usePersonalGameFormats() {
       if (error) throw error;
       setFormats(prev => prev.filter(f => f.id !== id));
       return true;
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to delete format');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to delete format');
       return false;
     }
   }, [user]);
@@ -137,8 +137,8 @@ export function usePersonalGameFormats() {
       if (error) throw error;
       setFormats(prev => prev.map(f => f.id === id ? { ...f, isPublic } : f));
       return true;
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to update format');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to update format');
       return false;
     }
   }, [user]);

@@ -27,7 +27,7 @@ export function useRoundReactions(roundId: string | null) {
 
       if (!error && data) {
         setReactions(
-          (data as any[]).map(r => ({
+          (data as Record<string, unknown>[]).map(r => ({
             type: r.reaction_type as ReactionType,
             count: Number(r.count),
             viewerReacted: Boolean(r.viewer_reacted),

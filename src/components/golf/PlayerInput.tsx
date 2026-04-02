@@ -50,6 +50,7 @@ export function PlayerInput({
                 value={name}
                 onChange={(e) => onNameChange(e.target.value)}
                 className="pl-10 py-5 bg-muted/50 border-0 rounded-xl"
+                aria-label={`Player ${index + 1} name`}
               />
             </div>
 
@@ -57,10 +58,12 @@ export function PlayerInput({
               <div className="space-y-1">
                 <Input
                   type="number"
+                  inputMode="decimal"
                   placeholder="Handicap (e.g., 12 or -3 for +3)"
                   value={handicap ?? ''}
                   onChange={(e) => onHandicapChange(e.target.value ? Number(e.target.value) : undefined)}
                   className="py-5 font-mono bg-muted/50 border-0 rounded-xl"
+                  aria-label="Handicap index"
                   min={-10}
                   max={54}
                   step="0.1"
@@ -73,10 +76,12 @@ export function PlayerInput({
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
+                  inputMode="numeric"
                   placeholder="0"
                   value={manualStrokes ?? 0}
                   onChange={(e) => onManualStrokesChange?.(e.target.value ? Number(e.target.value) : 0)}
                   className="py-5 font-mono w-20 text-center bg-muted/50 border-0 rounded-xl"
+                  aria-label="Strokes received"
                   min={0}
                   max={36}
                 />
@@ -90,6 +95,7 @@ export function PlayerInput({
             <motion.button
               whileTap={{ scale: 0.88 }}
               onClick={onRemove}
+              aria-label={`Remove player ${index + 1}`}
               className="w-10 h-10 rounded-xl bg-[#FEF2F2] flex items-center justify-center text-[#EF4444]"
             >
               <X className="w-4 h-4" />

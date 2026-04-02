@@ -302,8 +302,8 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
                       const lines = summarizeConfig(config).slice(0, 3);
                       return lines.length > 0 ? (
                         <ul className="space-y-0.5">
-                          {lines.map((line, i) => (
-                            <li key={i} className="text-[12px] text-muted-foreground flex items-center gap-1.5">
+                          {lines.map((line) => (
+                            <li key={line} className="text-[12px] text-muted-foreground flex items-center gap-1.5">
                               <span className="w-1 h-1 rounded-full bg-muted-foreground/50 flex-shrink-0" />
                               {line}
                             </li>

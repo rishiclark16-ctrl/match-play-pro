@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useDeleteRound } from '@/hooks/useDeleteRound';
 import { useSpectatorRounds } from '@/hooks/useSpectatorRounds';
+import { useFriendActivity, FriendLiveRound } from '@/hooks/useFriendActivity';
 import { useOffline } from '@/contexts/OfflineContext';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
@@ -42,8 +43,16 @@ function B_RoundCard({
   currentHole?: number;
 }) {
   const isActive = round.status === 'active';
-  const games: string[] = Array.isArray((round as any).games)
-    ? (round as any).games.map((g: any) => (typeof g === 'string' ? g : g?.type ?? g?.name ?? ''))
+  const roundGames = (round as Round & { games?: unknown[] }).games;
+  const games: string[] = Array.isArray(roundGames)
+    ? roundGames.map((g: unknown) => {
+        if (typeof g === 'string') return g;
+        if (g && typeof g === 'object') {
+          const obj = g as Record<string, unknown>;
+          return String(obj.type ?? obj.name ?? '');
+        }
+        return '';
+      })
     : [];
 
   const holesTotal = round.holes ?? 18;
@@ -92,6 +101,7 @@ function B_RoundCard({
               whileTap={{ scale: 0.9 }}
               onClick={handleDeleteClick}
               disabled={isDeleting}
+              aria-label="Delete round"
               className={cn(
                 'w-7 h-7 rounded-lg flex items-center justify-center',
                 isActive
@@ -200,7 +210,7 @@ export default function Home() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showTutorial, setShowTutorial] = useState(
-    (location.state as any)?.showTutorial === true
+    (location.state as Record<string, unknown> | null)?.showTutorial === true
   );
   const { deleteRound: deleteLocalRound } = useRounds();
   const { user } = useAuth();
@@ -208,6 +218,7 @@ export default function Home() {
   const { joinRound, loading: joinLoading, error: joinError, clearError } = useJoinRound();
   const { deleteRound: deleteSupabaseRound } = useDeleteRound();
   const { spectatorRounds, spectatorStats, leaveSpectating, fetchSpectatorRounds } = useSpectatorRounds();
+  const { liveRounds: friendLiveRounds, refetch: refetchFriendActivity } = useFriendActivity();
   const { isOnline, isSyncing, pendingCount, backgroundSyncSupported, syncNow } = useOffline();
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinCode, setJoinCode] = useState('');
@@ -258,7 +269,7 @@ export default function Home() {
 
   const handlePullRefresh = async () => {
     hapticLight();
-    await Promise.all([refetchRounds(), fetchSpectatorRounds()]);
+    await Promise.all([refetchRounds(), fetchSpectatorRounds(), refetchFriendActivity()]);
     hapticSuccess();
   };
 
@@ -298,6 +309,7 @@ export default function Home() {
       <motion.button
         whileTap={{ scale: 0.95 }}
         onClick={() => { hapticLight(); navigate('/profile'); }}
+        aria-label="Open profile"
         className="relative touch-manipulation cursor-pointer select-none"
         style={{ WebkitTapHighlightColor: 'transparent' }}
       >
@@ -356,6 +368,7 @@ export default function Home() {
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 onClick={() => { hapticLight(); navigate('/new-round'); }}
+                aria-label="Start new round"
                 className="w-full bg-foreground rounded-2xl px-[22px] py-[18px] flex items-center justify-between touch-manipulation cursor-pointer select-none"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
@@ -384,6 +397,7 @@ export default function Home() {
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 onClick={() => { hapticLight(); setShowJoinModal(true); }}
+                aria-label="Watch a live round"
                 className="w-full bg-white rounded-2xl px-[22px] py-[14px] flex items-center justify-between shadow-[0_1px_3px_rgba(0,0,0,0.06)] touch-manipulation cursor-pointer select-none"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
@@ -396,6 +410,61 @@ export default function Home() {
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </motion.button>
             </motion.div>
+
+            {/* Friends Playing Now */}
+            {friendLiveRounds.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="mb-6"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Friends Playing Now</p>
+                </div>
+                <div className="space-y-2">
+                  {friendLiveRounds.map((fr) => (
+                    <motion.button
+                      key={fr.roundId}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={async () => {
+                        hapticLight();
+                        if (user) {
+                          try {
+                            await supabase.from('round_spectators').upsert(
+                              { round_id: fr.roundId, profile_id: user.id },
+                              { onConflict: 'round_id,profile_id' }
+                            );
+                          } catch { /* non-critical */ }
+                        }
+                        navigate(`/round/${fr.roundId}?spectator=true`);
+                      }}
+                      className="w-full bg-white rounded-2xl px-4 py-3.5 flex items-center gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)] text-left"
+                    >
+                      <Avatar className="w-9 h-9 rounded-xl flex-shrink-0">
+                        <AvatarImage src={fr.creatorAvatar ?? undefined} />
+                        <AvatarFallback className="rounded-xl text-[11px] font-black bg-muted">
+                          {fr.creatorName.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-bold text-foreground truncate">{fr.courseName}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {fr.playerNames.slice(0, 3).join(', ')}
+                          {fr.playerNames.length > 3 && ` +${fr.playerNames.length - 3}`}
+                          {fr.currentHole > 0 && ` · Hole ${fr.currentHole}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <Eye className="w-3.5 h-3.5 text-[#22C55E]" />
+                        <span className="text-[11px] font-bold text-[#22C55E]">Watch</span>
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
 
             {/* Round Lists */}
             {loadingRounds ? (

@@ -45,7 +45,7 @@ export function MixedTeesSheet({ isOpen, onClose, teeSets, onUpdateTeeSets }: Mi
     onUpdateTeeSets(teeSets.filter(t => t.id !== id));
   };
 
-  const updateTee = (id: string, field: keyof TeeSet, value: any) => {
+  const updateTee = (id: string, field: keyof TeeSet, value: TeeSet[keyof TeeSet]) => {
     onUpdateTeeSets(teeSets.map(t => t.id === id ? { ...t, [field]: value } : t));
   };
 

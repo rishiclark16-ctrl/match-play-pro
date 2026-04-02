@@ -65,11 +65,11 @@ export function QuickScoreButtons({
     }
 
     const diff = currentScore - par;
-    if (diff <= -2) return 'bg-[#DCFCE7] border border-[#86EFAC]';
-    if (diff === -1) return 'bg-[#F0FFF4] border border-[#BBF7D0]';
+    if (diff <= -2) return 'bg-score-eagle border border-[#86EFAC]';
+    if (diff === -1) return 'bg-score-birdie border border-[#BBF7D0]';
     if (diff === 0) return 'bg-white border border-[#E5E7EB]';
-    if (diff === 1) return 'bg-[#FFFBEB] border border-[#FDE68A]';
-    return 'bg-[#FEF2F2] border border-[#FECACA]';
+    if (diff === 1) return 'bg-score-bogey border border-[#FDE68A]';
+    return 'bg-score-double border border-[#FECACA]';
   };
 
   // Score text color relative to par

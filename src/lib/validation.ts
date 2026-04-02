@@ -180,6 +180,15 @@ export const createPropBetSchema = z.object({
   description: z.string().max(200).optional().transform((val) => val ? sanitizeString(val) : undefined),
 });
 
+/**
+ * Settlement input validation
+ */
+export const settlementSchema = z.object({
+  fromPlayerId: uuidSchema,
+  toPlayerId: uuidSchema,
+  amount: z.number().positive('Settlement amount must be positive').max(10000, 'Settlement amount too large'),
+});
+
 // Validation helper functions
 
 export type ValidationSuccess<T> = { success: true; data: T; error?: undefined };

@@ -13,7 +13,7 @@ const navItems = [
 ];
 
 // Routes where bottom nav should be hidden
-const HIDDEN_ROUTES = ['/new-round', '/auth', '/my-formats/confirm'];
+const HIDDEN_ROUTES = ['/new-round', '/auth', '/onboarding', '/my-formats/confirm'];
 
 export function BottomNav() {
   const location = useLocation();

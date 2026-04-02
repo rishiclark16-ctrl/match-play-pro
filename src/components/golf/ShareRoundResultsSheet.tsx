@@ -173,9 +173,20 @@ export function ShareRoundResultsSheet({
     setIsSending(true);
     hapticLight();
 
-    // TODO: Implement in-app friend notification via Supabase
-    // For now, show a success message
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Send push notification to selected friends
+    const friendIds = Array.from(selectedFriendIds);
+    try {
+      const { sendPushToProfiles } = await import('@/lib/pushUtils');
+      await sendPushToProfiles({
+        profileIds: friendIds,
+        title: 'Round Results Shared',
+        body: `Check out the results from ${round?.course_name ?? 'a recent round'}!`,
+        data: { roundId: round?.id },
+        type: 'round_invites',
+      });
+    } catch {
+      // Push is non-critical — continue with success flow
+    }
 
     hapticSuccess();
     toast.success(`Shared with ${selectedFriendIds.size} friend${selectedFriendIds.size > 1 ? 's' : ''}!`);

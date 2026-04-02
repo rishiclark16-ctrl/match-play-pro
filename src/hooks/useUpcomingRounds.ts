@@ -16,6 +16,40 @@ export interface UpcomingRound {
   createdAt: string;
 }
 
+interface RpcUpcomingRow {
+  round_id: string;
+  course_name: string;
+  tee_time?: string | null;
+  creator_id: string;
+  creator_name?: string | null;
+  creator_avatar?: string | null;
+  invited_ids?: string[];
+  participant_ids?: string[];
+  participant_names?: string[];
+  message_count?: number;
+  created_at: string;
+}
+
+interface FallbackPlayerProfile {
+  full_name?: string | null;
+  avatar_url?: string | null;
+}
+
+interface FallbackPlayer {
+  id: string;
+  profile_id: string | null;
+  name: string | null;
+  profiles: FallbackPlayerProfile | null;
+}
+
+interface FallbackRound {
+  id: string;
+  course_name: string;
+  created_by: string;
+  created_at: string;
+  players: FallbackPlayer[];
+}
+
 export function useUpcomingRounds() {
   const { user } = useAuth();
   const [rounds, setRounds] = useState<UpcomingRound[]>([]);
@@ -34,7 +68,7 @@ export function useUpcomingRounds() {
 
       if (!rpcError && data) {
         setRounds(
-          (data as any[]).map(row => ({
+          (data as RpcUpcomingRow[]).map(row => ({
             roundId: row.round_id,
             courseName: row.course_name,
             teeTime: row.tee_time ?? null,
@@ -64,17 +98,17 @@ export function useUpcomingRounds() {
 
       if (fallbackError) throw fallbackError;
 
-      const mapped: UpcomingRound[] = (fallbackData ?? [])
-        .filter((r: any) => {
+      const mapped: UpcomingRound[] = ((fallbackData ?? []) as unknown as FallbackRound[])
+        .filter((r) => {
           const createdByMe = r.created_by === user.id;
-          const participating = (r.players ?? []).some((p: any) => p.profile_id === user.id);
+          const participating = (r.players ?? []).some((p) => p.profile_id === user.id);
           return createdByMe || participating;
         })
-        .map((r: any) => {
+        .map((r) => {
           const players = r.players ?? [];
-          const creatorPlayer = players.find((p: any) => p.profile_id === r.created_by);
-          const creatorName = (creatorPlayer?.profiles as any)?.full_name ?? creatorPlayer?.name ?? 'Unknown';
-          const creatorAvatar = (creatorPlayer?.profiles as any)?.avatar_url ?? null;
+          const creatorPlayer = players.find((p) => p.profile_id === r.created_by);
+          const creatorName = creatorPlayer?.profiles?.full_name ?? creatorPlayer?.name ?? 'Unknown';
+          const creatorAvatar = creatorPlayer?.profiles?.avatar_url ?? null;
 
           return {
             roundId: r.id,
@@ -85,20 +119,20 @@ export function useUpcomingRounds() {
             creatorAvatar,
             invitedIds: [],
             participantIds: players
-              .map((p: any) => p.profile_id)
-              .filter(Boolean),
+              .map((p) => p.profile_id)
+              .filter(Boolean) as string[],
             participantNames: players
-              .map((p: any) => (p.profiles as any)?.full_name ?? p.name)
-              .filter(Boolean),
+              .map((p) => p.profiles?.full_name ?? p.name)
+              .filter(Boolean) as string[],
             messageCount: 0,
             createdAt: r.created_at,
           };
         });
 
       setRounds(mapped);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('useUpcomingRounds error:', err);
-      setError(err.message ?? 'Failed to load upcoming rounds');
+      setError(err instanceof Error ? err.message : 'Failed to load upcoming rounds');
     } finally {
       setLoading(false);
     }

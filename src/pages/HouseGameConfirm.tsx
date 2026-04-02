@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Check, Sparkles, AlertTriangle, ArrowRight, Flag } from 'lucide-react';
@@ -7,7 +7,7 @@ import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { ParsedPrimitive, ActivePrimitive, HouseGamePrimitive, isCustomPrimitive } from '@/types/houseGame';
 import { PRIMITIVE_MAP, PRIMITIVES_BY_CATEGORY, CATEGORY_LABELS, CATEGORY_ORDER } from '@/lib/houseGame/primitives';
 import { PrimitiveRow, CategorySection, CustomPrimitiveRow } from '@/components/golf/HouseGamePrimitives';
-import { validateConfig } from '@/engine/HouseGameEngine';
+import { validateConfig, buildConfig } from '@/engine/HouseGameEngine';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { toast } from 'sonner';
 
@@ -57,8 +57,8 @@ export default function HouseGameConfirm() {
   });
 
   // Value map: id → current value (starts from parsed or default)
-  const [valueMap, setValueMap] = useState<Map<string, any>>(() => {
-    const m = new Map<string, any>();
+  const [valueMap, setValueMap] = useState<Map<string, unknown>>(() => {
+    const m = new Map<string, unknown>();
     for (const p of parsedPrimitives) {
       if (p.value !== null && p.value !== undefined) m.set(p.id, p.value);
     }
@@ -69,6 +69,29 @@ export default function HouseGameConfirm() {
   const confidenceMap = new Map<string, 'high' | 'medium' | 'low'>(
     parsedPrimitives.map(p => [p.id, p.confidence])
   );
+
+  // Compute stub warnings for currently checked primitives
+  const configWarnings = useMemo(() => {
+    if (checkedIds.size === 0) return [];
+    const customMap = new Map<string, ParsedPrimitive>(
+      parsedPrimitives.filter(isCustomPrimitive).map(p => [p.id, p])
+    );
+    const activePrimitives: ActivePrimitive[] = Array.from(checkedIds).map(id => {
+      const custom = customMap.get(id);
+      if (custom) {
+        return {
+          id,
+          custom: true as const,
+          label: custom.label,
+          description: custom.description,
+          value: valueMap.get(id) ?? custom.value ?? null,
+        };
+      }
+      return { id, value: valueMap.get(id) ?? PRIMITIVE_MAP[id]?.defaultValue ?? null };
+    });
+    const { warnings } = buildConfig(activePrimitives);
+    return warnings;
+  }, [checkedIds, valueMap, parsedPrimitives]);
 
   const handleToggle = useCallback((id: string) => {
     setCheckedIds(prev => {
@@ -90,7 +113,7 @@ export default function HouseGameConfirm() {
     });
   }, [valueMap]);
 
-  const handleValueChange = useCallback((id: string, v: any) => {
+  const handleValueChange = useCallback((id: string, v: unknown) => {
     setValueMap(prev => {
       const next = new Map(prev);
       next.set(id, v);
@@ -232,6 +255,32 @@ export default function HouseGameConfirm() {
             className="w-full bg-white border-2 border-foreground/20 focus:border-foreground rounded-xl px-4 py-3 text-[15px] font-bold text-foreground placeholder:text-muted-foreground/50 outline-none transition-colors"
           />
         </motion.div>
+
+        {/* Stub feature warnings */}
+        {configWarnings.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.035 }}
+            className="bg-[#FFF3CD] border border-[#F0BB3A] rounded-2xl px-4 py-3"
+          >
+            <div className="flex items-start gap-2 mb-1.5">
+              <AlertTriangle className="w-4 h-4 text-[#B45309] flex-shrink-0 mt-0.5" />
+              <p className="text-[#7D4E0F] font-bold text-[13px]">
+                {configWarnings.length === 1
+                  ? 'One selected rule has limited support'
+                  : `${configWarnings.length} selected rules have limited support`}
+              </p>
+            </div>
+            <ul className="space-y-1 ml-6">
+              {configWarnings.map((w) => (
+                <li key={w} className="text-[#7D4E0F]/80 text-[12px] leading-snug list-disc">
+                  {w}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
 
         {/* 0-match warning */}
         {parsedPrimitives.length === 0 && description && (

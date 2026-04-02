@@ -12,7 +12,20 @@ export interface FeedRoundItem {
   participantIds: string[];
   participantNames: string[];
   commentCount: number;
-  games: any[];
+  games: Record<string, unknown>[];
+}
+
+interface RpcFeedRow {
+  round_id: string;
+  course_name: string;
+  completed_at: string;
+  creator_id: string;
+  creator_name: string;
+  creator_avatar: string | null;
+  participant_ids: string[];
+  participant_names: string[];
+  comment_count: number;
+  games: Record<string, unknown>[];
 }
 
 export function useSocialFeed() {
@@ -30,7 +43,7 @@ export function useSocialFeed() {
         viewer_id: user.id,
       });
       if (rpcError) throw rpcError;
-      const mapped: FeedRoundItem[] = (data ?? []).map((row: any) => ({
+      const mapped: FeedRoundItem[] = (data as RpcFeedRow[] ?? []).map((row) => ({
         roundId: row.round_id,
         courseName: row.course_name,
         completedAt: row.completed_at,
@@ -43,9 +56,9 @@ export function useSocialFeed() {
         games: Array.isArray(row.games) ? row.games : [],
       }));
       setItems(mapped);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('useSocialFeed error:', err);
-      setError(err.message ?? 'Failed to load feed');
+      setError(err instanceof Error ? err.message : 'Failed to load feed');
     } finally {
       setLoading(false);
     }

@@ -636,8 +636,8 @@ export default function RoundComplete() {
                 <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-foreground">Ghost Pot</span>
                 <span className="ml-auto text-[14px] font-black text-foreground">${ghostPotAmount.toFixed(0)}</span>
               </div>
-              {ghostPotEntries.map((s, i) => (
-                <div key={i} className="flex items-center justify-between px-4 py-2.5 border-b border-border/10 last:border-b-0">
+              {ghostPotEntries.map((s) => (
+                <div key={`${s.fromPlayerId}-${s.toPlayerId}`} className="flex items-center justify-between px-4 py-2.5 border-b border-border/10 last:border-b-0">
                   <span className="text-[13px] text-muted-foreground">
                     {s.fromPlayerName.split(' ')[0]} → pot
                   </span>
@@ -663,8 +663,8 @@ export default function RoundComplete() {
                 </div>
                 <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-foreground">House Game</span>
               </div>
-              {houseGameSettlements.map((s, i) => (
-                <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-border/10 last:border-b-0">
+              {houseGameSettlements.map((s) => (
+                <div key={`${s.fromPlayerId}-${s.toPlayerId}`} className="flex items-center justify-between px-4 py-3 border-b border-border/10 last:border-b-0">
                   <span className="text-[13px] font-semibold text-foreground">
                     {s.fromPlayerName.split(' ')[0]} → {s.toPlayerName.split(' ')[0]}
                   </span>
@@ -702,8 +702,8 @@ export default function RoundComplete() {
                   <span className="ml-auto text-[10px] font-bold text-muted-foreground">Settle manually</span>
                 </div>
                 {customRules.map((rule, i) => {
-                  const label = (rule as any).label ?? rule.id.replace('custom_', '').replace(/_/g, ' ');
-                  const desc = (rule as any).description ?? '';
+                  const label = rule.label ?? rule.id.replace('custom_', '').replace(/_/g, ' ');
+                  const desc = rule.description ?? '';
                   const val = rule.value;
                   return (
                     <div key={rule.id} className="px-4 py-3 border-b border-border/10 last:border-b-0">

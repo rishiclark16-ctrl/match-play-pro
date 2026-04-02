@@ -34,7 +34,7 @@ export default function HouseGameEdit() {
   const [hasActiveRound, setHasActiveRound] = useState(false);
 
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
-  const [valueMap, setValueMap] = useState<Map<string, any>>(new Map());
+  const [valueMap, setValueMap] = useState<Map<string, unknown>>(new Map());
   const [initialized, setInitialized] = useState(false);
   const [gameName, setGameName] = useState<string>('');
 
@@ -43,7 +43,7 @@ export default function HouseGameEdit() {
     const source = isPersonal ? personalFormat : houseGame;
     if (source && !initialized) {
       const ids = new Set(source.activePrimitives.map(p => p.id));
-      const vals = new Map<string, any>();
+      const vals = new Map<string, unknown>();
       for (const p of source.activePrimitives) {
         if (p.value !== null && p.value !== undefined) vals.set(p.id, p.value);
       }
@@ -100,7 +100,7 @@ export default function HouseGameEdit() {
     });
   }, []);
 
-  const handleValueChange = useCallback((id: string, v: any) => {
+  const handleValueChange = useCallback((id: string, v: unknown) => {
     setValueMap(prev => {
       const next = new Map(prev);
       next.set(id, v);

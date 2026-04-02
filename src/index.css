@@ -60,6 +60,13 @@
     --danger-foreground: 0 0% 100%;
     --danger-muted: 0 60% 96%;
 
+    /* Score state backgrounds — for score pills/cards relative to par */
+    --score-eagle: 142 76% 92%;
+    --score-birdie: 142 76% 92%;
+    --score-par: 60 5% 97%;
+    --score-bogey: 48 96% 93%;
+    --score-double: 0 86% 97%;
+
     /* Gold / Chartreuse yellow accent — use sparingly */
     --gold: 59 86% 57%;
     --gold-foreground: 0 0% 4%;
@@ -132,6 +139,13 @@
     --gold: 59 86% 57%;
     --gold-foreground: 0 0% 4%;
     --gold-muted: 59 40% 12%;
+
+    /* Score state backgrounds — darker for dark mode */
+    --score-eagle: 142 40% 15%;
+    --score-birdie: 142 40% 15%;
+    --score-par: 0 0% 12%;
+    --score-bogey: 48 40% 15%;
+    --score-double: 0 40% 15%;
 
     --border: 0 0% 18%;
     --border-strong: 0 0% 26%;

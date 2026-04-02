@@ -23,7 +23,20 @@ export interface RoundDetail {
   completedAt: string | null;
   participants: RoundDetailParticipant[];
   scores: RoundDetailScore[];
-  games: any[];
+  games: Record<string, unknown>[];
+}
+
+interface PlayerRow {
+  id: string;
+  profile_id: string | null;
+  name: string | null;
+  profiles: { full_name: string | null; avatar_url: string | null } | null;
+}
+
+interface ScoreRow {
+  player_id: string;
+  hole_number: number;
+  strokes: number | null;
 }
 
 export function useRoundDetailForSheet(roundId: string | null) {
@@ -53,19 +66,19 @@ export function useRoundDetailForSheet(roundId: string | null) {
           courseHoles: r.holes ?? 18,
           status: r.status,
           completedAt: r.completed_at ?? r.updated_at ?? null,
-          participants: players.map((p: any) => ({
+          participants: (players as unknown as PlayerRow[]).map((p) => ({
             playerId: p.id,
             profileId: p.profile_id,
-            name: (p.profiles as any)?.full_name ?? p.name ?? 'Guest',
-            avatarUrl: (p.profiles as any)?.avatar_url ?? null,
+            name: p.profiles?.full_name ?? p.name ?? 'Guest',
+            avatarUrl: p.profiles?.avatar_url ?? null,
             isGuest: !p.profile_id,
           })),
-          scores: scores.map((s: any) => ({
+          scores: (scores as unknown as ScoreRow[]).map((s) => ({
             playerId: s.player_id,
             holeNumber: s.hole_number,
             strokes: s.strokes,
           })),
-          games: Array.isArray(r.games) ? r.games : [],
+          games: Array.isArray(r.games) ? (r.games as Record<string, unknown>[]) : [],
         });
       } catch (err) {
         console.error('useRoundDetailForSheet error:', err);
