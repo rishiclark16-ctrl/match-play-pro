@@ -103,6 +103,7 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
           games: [],
           rating: firstTee?.course_rating ?? null,
           slope: firstTee?.slope_rating ?? null,
+          tee_time: new Date(teeTime).toISOString(),
         })
         .select('id')
         .single();
