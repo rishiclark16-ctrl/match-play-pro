@@ -81,8 +81,8 @@ export function DashboardMoney({ settlements, players }: DashboardMoneyProps) {
         </div>
 
         <div className="divide-y divide-border/20">
-          {settlements.map((s, i) => (
-            <div key={i} className="flex items-center px-4 py-3">
+          {settlements.map((s) => (
+            <div key={`${s.fromPlayerName}-${s.toPlayerName}`} className="flex items-center px-4 py-3">
               <span className="text-[12px] font-medium flex-1">{s.fromPlayerName}</span>
               <div className="flex items-center gap-2 mx-3">
                 <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />

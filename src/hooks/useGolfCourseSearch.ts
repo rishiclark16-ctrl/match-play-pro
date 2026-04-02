@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { HoleInfo } from '@/types/golf';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface GolfCourseResult {
   id: number;
@@ -54,11 +55,15 @@ export function useGolfCourseSearch() {
     setError(null);
 
     try {
+      // Get the user's session token for authenticated edge function calls
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/golf-course-lookup?action=search&query=${encodeURIComponent(query)}`,
         {
           headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            'Authorization': `Bearer ${token}`,
           },
         }
       );
@@ -70,7 +75,6 @@ export function useGolfCourseSearch() {
       const data = await response.json();
       setSearchResults(data.courses || []);
     } catch (err) {
-      // Search error handled
       setError(err instanceof Error ? err.message : 'Search failed');
       setSearchResults([]);
     } finally {
@@ -83,11 +87,14 @@ export function useGolfCourseSearch() {
     setError(null);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/golf-course-lookup?action=details&id=${courseId}`,
         {
           headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            'Authorization': `Bearer ${token}`,
           },
         }
       );

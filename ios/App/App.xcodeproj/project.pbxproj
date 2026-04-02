@@ -18,6 +18,7 @@
 		CD8EE7E92F2BD9C8006E8011 /* RevenueCatManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD8EE7E72F2BD9C8006E8011 /* RevenueCatManager.swift */; };
 		CD8EE7EA2F2BD9C8006E8011 /* RevenueCatPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD8EE7E82F2BD9C8006E8011 /* RevenueCatPlugin.swift */; };
 		CD8EE7EB2F2BD9C8006E8011 /* RevenueCatPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = CD8EE7EC2F2BD9C8006E8011 /* RevenueCatPlugin.m */; };
+		CD8EE7EF2F2BD9C8006E8011 /* MatchBridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD8EE7EE2F2BD9C8006E8011 /* MatchBridgeViewController.swift */; };
 		FC0C362B9A06C8EC476B4704 /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C50720F0A12BAAECEB051AD /* Pods_App.framework */; };
 /* End PBXBuildFile section */
 
@@ -39,6 +40,7 @@
 		CD8EE7E72F2BD9C8006E8011 /* RevenueCatManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevenueCatManager.swift; sourceTree = "<group>"; };
 		CD8EE7E82F2BD9C8006E8011 /* RevenueCatPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevenueCatPlugin.swift; sourceTree = "<group>"; };
 		CD8EE7EC2F2BD9C8006E8011 /* RevenueCatPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RevenueCatPlugin.m; sourceTree = "<group>"; };
+		CD8EE7EE2F2BD9C8006E8011 /* MatchBridgeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchBridgeViewController.swift; sourceTree = "<group>"; };
 		CD8EE7ED2F2BD9C8006E8011 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -79,6 +81,7 @@
 				CD8EE7E72F2BD9C8006E8011 /* RevenueCatManager.swift */,
 				CD8EE7E82F2BD9C8006E8011 /* RevenueCatPlugin.swift */,
 				CD8EE7EC2F2BD9C8006E8011 /* RevenueCatPlugin.m */,
+				CD8EE7EE2F2BD9C8006E8011 /* MatchBridgeViewController.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC3091FED79650016851F /* SceneDelegate.swift */,
@@ -232,6 +235,7 @@
 				CD8EE7E92F2BD9C8006E8011 /* RevenueCatManager.swift in Sources */,
 				CD8EE7EA2F2BD9C8006E8011 /* RevenueCatPlugin.swift in Sources */,
 				CD8EE7EB2F2BD9C8006E8011 /* RevenueCatPlugin.m in Sources */,
+				CD8EE7EF2F2BD9C8006E8011 /* MatchBridgeViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
