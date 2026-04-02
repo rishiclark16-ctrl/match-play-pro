@@ -175,13 +175,24 @@ export default function Stats() {
 
         const { data: roundsData } = await supabase
           .from('rounds')
-          .select('id, course_name, status, games, stakes')
+          .select('id, course_name, status, games, stakes, hole_info')
           .in('id', roundIds);
 
         const { data: allScoresData } = await supabase
           .from('scores')
-          .select('id, round_id, player_id, hole_number, strokes, par')
+          .select('id, round_id, player_id, hole_number, strokes')
           .in('round_id', roundIds);
+
+        // Build a lookup: roundId -> holeNumber -> par (from hole_info)
+        const parLookup: Record<string, Record<number, number>> = {};
+        if (roundsData) {
+          roundsData.forEach(round => {
+            const holes = Array.isArray(round.hole_info) ? (round.hole_info as { number: number; par: number }[]) : [];
+            const map: Record<number, number> = {};
+            holes.forEach(h => { if (h.number && h.par) map[h.number] = h.par; });
+            parLookup[round.id] = map;
+          });
+        }
 
         let holesWon = 0;
         let holesPlayed = 0;
@@ -195,9 +206,11 @@ export default function Stats() {
           // Score distribution for user's own scores
           allScoresData.forEach(score => {
             if (!playerIds.includes(score.player_id ?? '')) return;
-            if (!score.strokes || !score.par) return;
+            if (!score.strokes) return;
+            const par = parLookup[score.round_id ?? '']?.[score.hole_number] ?? 0;
+            if (!par) return;
 
-            const diff = score.strokes - score.par;
+            const diff = score.strokes - par;
             scoreDistribution.total++;
             scoredHoles++;
             totalStrokesVsPar += diff;
@@ -269,7 +282,7 @@ export default function Stats() {
                       player_id: s.player_id ?? '',
                       hole_number: s.hole_number,
                       strokes: s.strokes,
-                      par: s.par ?? 0,
+                      par: parLookup[round.id]?.[s.hole_number] ?? 0,
                     }))
                 : [];
               return {

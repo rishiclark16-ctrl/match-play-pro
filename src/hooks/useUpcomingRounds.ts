@@ -51,17 +51,15 @@ export function useUpcomingRounds() {
         return;
       }
 
-      // Fallback: direct query (rounds.created_by references auth.users, not profiles,
-      // so we can't join profiles directly — get creator info from the players list instead)
+      // Fallback: direct query — get pending rounds where user is a participant
       const { data: fallbackData, error: fallbackError } = await supabase
         .from('rounds')
         .select(`
-          id, course_name, tee_time, created_by, created_at, invited_player_ids,
+          id, course_name, created_by, created_at,
           players(id, profile_id, name, profiles:profile_id(full_name, avatar_url))
         `)
         .in('status', ['pending'])
-        .not('tee_time', 'is', null)
-        .order('tee_time', { ascending: true })
+        .order('created_at', { ascending: false })
         .limit(20);
 
       if (fallbackError) throw fallbackError;
@@ -69,13 +67,11 @@ export function useUpcomingRounds() {
       const mapped: UpcomingRound[] = (fallbackData ?? [])
         .filter((r: any) => {
           const createdByMe = r.created_by === user.id;
-          const invited = (r.invited_player_ids ?? []).includes(user.id);
           const participating = (r.players ?? []).some((p: any) => p.profile_id === user.id);
-          return createdByMe || invited || participating;
+          return createdByMe || participating;
         })
         .map((r: any) => {
           const players = r.players ?? [];
-          // Find the creator in the players list
           const creatorPlayer = players.find((p: any) => p.profile_id === r.created_by);
           const creatorName = (creatorPlayer?.profiles as any)?.full_name ?? creatorPlayer?.name ?? 'Unknown';
           const creatorAvatar = (creatorPlayer?.profiles as any)?.avatar_url ?? null;
@@ -83,11 +79,11 @@ export function useUpcomingRounds() {
           return {
             roundId: r.id,
             courseName: r.course_name,
-            teeTime: r.tee_time,
+            teeTime: null,
             creatorId: r.created_by,
             creatorName,
             creatorAvatar,
-            invitedIds: r.invited_player_ids ?? [],
+            invitedIds: [],
             participantIds: players
               .map((p: any) => p.profile_id)
               .filter(Boolean),

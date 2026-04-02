@@ -45,7 +45,8 @@ const GOLF_VIDEOS = [
   '/videos/golf-bg-3.mp4',
 ];
 
-const VIDEO_CROSSFADE = 1.2; // seconds for crossfade transition
+const VIDEO_CROSSFADE = 1.8; // seconds for crossfade transition
+const CROSSFADE_LEAD = 2.0; // start crossfade this many seconds before video ends
 
 function GolfCanvas() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -54,32 +55,58 @@ function GolfCanvas() {
     useRef<HTMLVideoElement>(null),
     useRef<HTMLVideoElement>(null),
   ];
+  const transitionScheduled = useRef(false);
 
   useEffect(() => {
-    // Start playing the first video
-    const first = videoRefs[0].current;
-    if (first) {
-      first.play().catch(() => {});
-    }
-
-    // When the active video ends, crossfade to the next
-    const handleEnded = (index: number) => () => {
-      const nextIdx = (index + 1) % GOLF_VIDEOS.length;
-      setActiveIndex(nextIdx);
-      const nextVideo = videoRefs[nextIdx].current;
-      if (nextVideo) {
-        nextVideo.currentTime = 0;
-        nextVideo.play().catch(() => {});
+    // Start playing the first video and preload all others
+    videoRefs.forEach((ref, i) => {
+      const el = ref.current;
+      if (!el) return;
+      if (i === 0) {
+        el.play().catch(() => {});
+      } else {
+        // Preload by loading enough data
+        el.load();
       }
+    });
+
+    // Poll timeupdate to start crossfade before current video ends
+    const handleTimeUpdate = (index: number) => () => {
+      const el = videoRefs[index].current;
+      if (!el || transitionScheduled.current) return;
+      const remaining = el.duration - el.currentTime;
+      if (remaining <= CROSSFADE_LEAD && remaining > 0) {
+        transitionScheduled.current = true;
+        const nextIdx = (index + 1) % GOLF_VIDEOS.length;
+        // Start next video playing underneath before fading
+        const nextVideo = videoRefs[nextIdx].current;
+        if (nextVideo) {
+          nextVideo.currentTime = 0;
+          nextVideo.play().catch(() => {});
+        }
+        setActiveIndex(nextIdx);
+      }
+    };
+
+    // When video ends, pause it (next is already playing)
+    const handleEnded = (index: number) => () => {
+      const el = videoRefs[index].current;
+      if (el) el.pause();
+      transitionScheduled.current = false;
     };
 
     const cleanups: (() => void)[] = [];
     videoRefs.forEach((ref, i) => {
       const el = ref.current;
       if (el) {
-        const handler = handleEnded(i);
-        el.addEventListener('ended', handler);
-        cleanups.push(() => el.removeEventListener('ended', handler));
+        const tuHandler = handleTimeUpdate(i);
+        const endHandler = handleEnded(i);
+        el.addEventListener('timeupdate', tuHandler);
+        el.addEventListener('ended', endHandler);
+        cleanups.push(() => {
+          el.removeEventListener('timeupdate', tuHandler);
+          el.removeEventListener('ended', endHandler);
+        });
       }
     });
 
@@ -95,9 +122,9 @@ function GolfCanvas() {
           src={src}
           muted
           playsInline
-          preload={i === 0 ? 'auto' : 'metadata'}
+          preload="auto"
           animate={{ opacity: activeIndex === i ? 1 : 0 }}
-          transition={{ duration: VIDEO_CROSSFADE, ease: 'easeInOut' }}
+          transition={{ duration: VIDEO_CROSSFADE, ease: [0.4, 0, 0.2, 1] }}
           className="absolute inset-0 w-full h-full object-cover"
         />
       ))}
@@ -496,17 +523,6 @@ export default function Auth() {
           >
             {/* Brand — vertically centered in top ~60% */}
             <div className="flex-1 flex flex-col items-center justify-center px-8 pb-12">
-
-              {/* App icon */}
-              <motion.img
-                src="/app-icon.png"
-                alt="MATCH"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ ...spring, delay: 0.1 }}
-                className="w-[80px] h-[80px] rounded-[26px] mb-6"
-                style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 20px 60px rgba(0,0,0,0.8)' }}
-              />
 
               {/* Wordmark */}
               <motion.h1

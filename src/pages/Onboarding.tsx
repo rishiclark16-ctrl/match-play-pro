@@ -101,7 +101,7 @@ export default function Onboarding() {
             onClick={handleSkip}
             className="text-[13px] font-bold text-muted-foreground py-1 px-2"
           >
-            {isLastStep ? 'Skip' : 'Skip'}
+            {isLastStep ? 'Finish' : 'Skip'}
           </button>
         </div>
       </header>

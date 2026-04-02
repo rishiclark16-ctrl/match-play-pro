@@ -62,7 +62,7 @@ export function AppTutorial({ onDone }: AppTutorialProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex flex-col justify-center bg-black/60 backdrop-blur-sm"
     >
       {/* Dismiss button */}
       <div className="absolute top-safe-content right-6 pt-4">
