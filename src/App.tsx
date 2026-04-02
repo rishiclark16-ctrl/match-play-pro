@@ -23,6 +23,7 @@ const JoinRound = lazy(() => import("./pages/JoinRound"));
 const Scorecard = lazy(() => import("./pages/Scorecard"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const RoundComplete = lazy(() => import("./pages/RoundComplete"));
+const RoundDashboard = lazy(() => import("./pages/RoundDashboard"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Friends = lazy(() => import("./pages/Friends"));
@@ -137,6 +138,16 @@ function AppContent() {
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="list" />}>
                 <Leaderboard />
+              </Suspense>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/round/:id/dashboard"
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <RoundDashboard />
               </Suspense>
             </AuthGuard>
           }

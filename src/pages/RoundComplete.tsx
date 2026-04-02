@@ -251,7 +251,8 @@ export default function RoundComplete() {
       round.stakes,
       wolfGame?.wolfResults,
       wolfGame?.stakes,
-      propBets
+      propBets,
+      gameResults?.houseGameResult,
     );
   }, [round, playersWithScores, rawPlayers, gameResults, matchPlayResult, propBets]);
 
@@ -547,7 +548,7 @@ export default function RoundComplete() {
 
       {/* Scrollable Content */}
       <main
-        className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-52"
+        className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-48"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {/* Winner Card */}
@@ -864,6 +865,7 @@ export default function RoundComplete() {
 
       {/* Bottom Buttons */}
       <RoundCompleteActions
+        roundId={id}
         isSharing={isSharing}
         shareMode={shareMode}
         onShareImage={handleShareImage}
