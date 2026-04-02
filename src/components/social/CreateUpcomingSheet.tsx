@@ -109,37 +109,45 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
 
       if (roundError) throw roundError;
 
-      // Add creator as a player
-      const playerInserts = [
+      // Add creator as a player (order_index is required NOT NULL)
+      const playerInserts: Array<{
+        round_id: string;
+        profile_id: string;
+        name: string;
+        handicap: number | null;
+        order_index: number;
+      }> = [
         {
           round_id: roundData.id,
           profile_id: user.id,
           name: profile?.full_name ?? 'You',
           handicap: profile?.handicap ?? null,
+          order_index: 0,
         },
       ];
 
       // Add invited friends as players too so they show up in the round
       if (selectedFriends.length > 0) {
-        // Fetch friend profiles to get their names
         const { data: friendProfiles } = await supabase
           .from('profiles')
           .select('id, full_name, handicap')
           .in('id', selectedFriends);
 
         if (friendProfiles) {
-          for (const fp of friendProfiles) {
+          friendProfiles.forEach((fp, i) => {
             playerInserts.push({
               round_id: roundData.id,
               profile_id: fp.id,
               name: fp.full_name ?? 'Invited',
               handicap: fp.handicap ?? null,
+              order_index: i + 1,
             });
-          }
+          });
         }
       }
 
-      await supabase.from('players').insert(playerInserts);
+      const { error: playerError } = await supabase.from('players').insert(playerInserts);
+      if (playerError) throw playerError;
 
       hapticSuccess();
 
@@ -151,7 +159,7 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
       onCreated();
       onClose();
     } catch (err: any) {
-      console.error('CreateUpcomingSheet error:', err);
+      console.error('CreateUpcomingSheet error:', err?.message ?? err, err?.details, err?.hint);
       hapticError();
     } finally {
       setSubmitting(false);
@@ -169,15 +177,15 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
     <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <SheetContent
         side="bottom"
-        className="[&>button]:hidden rounded-t-3xl p-0 max-h-[92vh] overflow-y-auto bg-[#F8F8F6]"
+        className="[&>button]:hidden rounded-t-3xl p-0 max-h-[90vh] overflow-y-auto bg-[#F8F8F6]"
       >
         {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-0">
+        <div className="flex justify-center pt-3 pb-1">
           <div className="w-9 h-1 bg-foreground/15 rounded-full" />
         </div>
 
         {/* Dark hero header */}
-        <div className="bg-[#0A0A0A] mx-4 mt-3 rounded-2xl p-5 relative overflow-hidden">
+        <div className="bg-[#0A0A0A] mx-4 mt-2 rounded-2xl p-5 relative overflow-hidden">
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={onClose}
@@ -196,7 +204,7 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
         </div>
 
         {/* Form */}
-        <div className="px-4 pt-5 pb-4 space-y-4">
+        <div className="px-4 pt-5 pb-6 space-y-5">
           {/* Course search */}
           <div>
             <label className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2 block">
@@ -347,18 +355,21 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
           </div>
 
           {/* Create button */}
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            onClick={handleCreate}
-            disabled={!selectedCourse || !teeTime || submitting}
-            className="w-full bg-emerald-600 text-white rounded-xl py-3.5 font-bold text-[14px] disabled:opacity-40 flex items-center justify-center gap-2"
-          >
-            <Calendar className="w-4 h-4" />
-            {submitting ? 'Scheduling...' : 'Schedule Round'}
-          </motion.button>
+          <div className="pt-2">
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={handleCreate}
+              disabled={!selectedCourse || !teeTime || submitting}
+              className="w-full bg-emerald-600 text-white rounded-2xl py-4 font-bold text-[15px] disabled:opacity-40 flex items-center justify-center gap-2"
+            >
+              <Calendar className="w-4.5 h-4.5" />
+              {submitting ? 'Scheduling...' : 'Schedule Round'}
+            </motion.button>
+          </div>
         </div>
 
-        <div style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }} />
+        {/* Bottom safe area spacer — Capacitor safe-area-inset is 0, use hardcoded 34px */}
+        <div className="h-[34px]" />
       </SheetContent>
     </Sheet>
   );
