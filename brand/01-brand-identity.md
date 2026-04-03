@@ -3,7 +3,7 @@
 ## App Name & Tagline
 - **Name:** MATCH
 - **Full Name:** MATCH — Golf Scoring
-- **Tagline:** Score. Bet. Settle Up.
+- **Tagline:** Score. Bet. Win.
 - **Category:** Sports / Golf
 - **Platform:** iOS (primary)
 

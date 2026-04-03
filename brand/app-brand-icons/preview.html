@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MATCH Golf — App Icon Concepts</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1a;
+    font-family: -apple-system, 'Inter', sans-serif;
+    color: #fff;
+    padding: 40px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 48px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 48px;
+    max-width: 960px;
+  }
+  .concept {
+    text-align: center;
+  }
+  .icon-wrapper {
+    width: 200px;
+    height: 200px;
+    border-radius: 44px;
+    overflow: hidden;
+    margin: 0 auto 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .icon-wrapper svg {
+    width: 200px;
+    height: 200px;
+  }
+  .label {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  .desc {
+    color: #999;
+    font-size: 12px;
+    line-height: 1.4;
+    max-width: 200px;
+    margin: 0 auto;
+  }
+  .small-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .small-icon {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .small-icon svg {
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<h1>MATCH Golf — Icon Concepts</h1>
+<p class="subtitle">6 directions. Pick the one that feels right. Each shown at app size + small previews.</p>
+
+<div class="grid">
+
+<!-- CONCEPT 1: Flag Hero — Big flag, M secondary -->
+<div class="concept">
+  <div class="icon-wrapper">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="200" fill="#0A0A0A"/>
+      <!-- Flagstick -->
+      <rect x="62" y="28" width="8" height="140" rx="4" fill="#FFFFFF"/>
+      <!-- Large flag -->
+      <polygon points="70,32 120,52 70,72" fill="#F0EE3A"/>
+      <!-- Ground line / hole -->
+      <ellipse cx="66" cy="168" rx="28" ry="6" fill="#333"/>
+      <!-- Small M hint at bottom right -->
+      <text x="145" y="170" font-family="Inter, -apple-system, sans-serif" font-weight="900" font-size="36" fill="#FFFFFF" text-anchor="middle">M</text>
+    </svg>
+  </div>
+  <div class="label">1. Flag Hero</div>
+  <div class="desc">Giant golf flag is the star. Small M anchors the brand in the corner.</div>
+  <div class="small-row">
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="60" height="60" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><rect x="62" y="28" width="8" height="140" rx="4" fill="#FFF"/><polygon points="70,32 120,52 70,72" fill="#F0EE3A"/><ellipse cx="66" cy="168" rx="28" ry="6" fill="#333"/><text x="145" y="170" font-family="sans-serif" font-weight="900" font-size="36" fill="#FFF" text-anchor="middle">M</text></svg></div>
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><rect x="62" y="28" width="8" height="140" rx="4" fill="#FFF"/><polygon points="70,32 120,52 70,72" fill="#F0EE3A"/><ellipse cx="66" cy="168" rx="28" ry="6" fill="#333"/><text x="145" y="170" font-family="sans-serif" font-weight="900" font-size="36" fill="#FFF" text-anchor="middle">M</text></svg></div>
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><rect x="62" y="28" width="8" height="140" rx="4" fill="#FFF"/><polygon points="70,32 120,52 70,72" fill="#F0EE3A"/><ellipse cx="66" cy="168" rx="28" ry="6" fill="#333"/><text x="145" y="170" font-family="sans-serif" font-weight="900" font-size="36" fill="#FFF" text-anchor="middle">M</text></svg></div>
+  </div>
+</div>
+
+<!-- CONCEPT 2: Pin in the Hole -->
+<div class="concept">
+  <div class="icon-wrapper">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="200" fill="#0A0A0A"/>
+      <!-- Hole circle -->
+      <ellipse cx="100" cy="148" rx="40" ry="12" fill="#222"/>
+      <ellipse cx="100" cy="148" rx="30" ry="8" fill="#111"/>
+      <!-- Flagstick -->
+      <rect x="96" y="36" width="7" height="116" rx="3.5" fill="#FFFFFF"/>
+      <!-- Flag -->
+      <polygon points="103,36 153,56 103,76" fill="#F0EE3A"/>
+      <!-- Ball near hole -->
+      <circle cx="72" cy="140" r="10" fill="#FFFFFF"/>
+      <circle cx="69" cy="137" r="1.5" fill="#DDD"/>
+      <circle cx="74" cy="136" r="1.5" fill="#DDD"/>
+      <circle cx="72" cy="141" r="1.5" fill="#DDD"/>
+    </svg>
+  </div>
+  <div class="label">2. Pin + Ball</div>
+  <div class="desc">Classic golf pin with ball near the hole. Instantly reads "golf" to anyone.</div>
+  <div class="small-row">
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="60" height="60" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><ellipse cx="100" cy="148" rx="40" ry="12" fill="#222"/><ellipse cx="100" cy="148" rx="30" ry="8" fill="#111"/><rect x="96" y="36" width="7" height="116" rx="3.5" fill="#FFF"/><polygon points="103,36 153,56 103,76" fill="#F0EE3A"/><circle cx="72" cy="140" r="10" fill="#FFF"/></svg></div>
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><ellipse cx="100" cy="148" rx="40" ry="12" fill="#222"/><ellipse cx="100" cy="148" rx="30" ry="8" fill="#111"/><rect x="96" y="36" width="7" height="116" rx="3.5" fill="#FFF"/><polygon points="103,36 153,56 103,76" fill="#F0EE3A"/><circle cx="72" cy="140" r="10" fill="#FFF"/></svg></div>
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><ellipse cx="100" cy="148" rx="40" ry="12" fill="#222"/><rect x="96" y="36" width="7" height="116" rx="3.5" fill="#FFF"/><polygon points="103,36 153,56 103,76" fill="#F0EE3A"/><circle cx="72" cy="140" r="10" fill="#FFF"/></svg></div>
+  </div>
+</div>
+
+<!-- CONCEPT 3: Bold Flag Only -->
+<div class="concept">
+  <div class="icon-wrapper">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="200" fill="#0A0A0A"/>
+      <!-- Thick flagstick -->
+      <rect x="50" y="30" width="10" height="148" rx="5" fill="#FFFFFF"/>
+      <!-- Big bold flag -->
+      <polygon points="60,30 155,65 60,100" fill="#F0EE3A"/>
+      <!-- Base/ground -->
+      <rect x="30" y="168" width="50" height="4" rx="2" fill="#444"/>
+    </svg>
+  </div>
+  <div class="label">3. Bold Flag</div>
+  <div class="desc">Pure, oversized golf flag. Maximum simplicity. The chartreuse does all the work.</div>
+  <div class="small-row">
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="60" height="60" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><rect x="50" y="30" width="10" height="148" rx="5" fill="#FFF"/><polygon points="60,30 155,65 60,100" fill="#F0EE3A"/><rect x="30" y="168" width="50" height="4" rx="2" fill="#444"/></svg></div>
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><rect x="50" y="30" width="10" height="148" rx="5" fill="#FFF"/><polygon points="60,30 155,65 60,100" fill="#F0EE3A"/><rect x="30" y="168" width="50" height="4" rx="2" fill="#444"/></svg></div>
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><rect x="50" y="30" width="10" height="148" rx="5" fill="#FFF"/><polygon points="60,30 155,65 60,100" fill="#F0EE3A"/><rect x="30" y="168" width="50" height="4" rx="2" fill="#444"/></svg></div>
+  </div>
+</div>
+
+<!-- CONCEPT 4: Scorecard Grid -->
+<div class="concept">
+  <div class="icon-wrapper">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="200" fill="#0A0A0A"/>
+      <!-- Scorecard grid - 3x3 -->
+      <g transform="translate(36, 36)">
+        <!-- Row 1 -->
+        <rect x="0" y="0" width="36" height="36" rx="6" fill="#1E1E1E"/>
+        <rect x="44" y="0" width="36" height="36" rx="6" fill="#1E1E1E"/>
+        <rect x="88" y="0" width="36" height="36" rx="6" fill="#1E1E1E"/>
+        <!-- Row 2 -->
+        <rect x="0" y="44" width="36" height="36" rx="6" fill="#1E1E1E"/>
+        <rect x="44" y="44" width="36" height="36" rx="6" fill="#F0EE3A"/>
+        <rect x="88" y="44" width="36" height="36" rx="6" fill="#1E1E1E"/>
+        <!-- Row 3 -->
+        <rect x="0" y="88" width="36" height="36" rx="6" fill="#1E1E1E"/>
+        <rect x="88" y="88" width="36" height="36" rx="6" fill="#1E1E1E"/>
+        <rect x="44" y="88" width="36" height="36" rx="6" fill="#1E1E1E"/>
+        <!-- Numbers -->
+        <text x="18" y="24" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="16" fill="#666" text-anchor="middle">4</text>
+        <text x="62" y="24" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="16" fill="#666" text-anchor="middle">5</text>
+        <text x="106" y="24" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="16" fill="#666" text-anchor="middle">3</text>
+        <text x="18" y="68" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="16" fill="#666" text-anchor="middle">5</text>
+        <text x="62" y="68" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="16" fill="#0A0A0A" text-anchor="middle">3</text>
+        <text x="106" y="68" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="16" fill="#666" text-anchor="middle">4</text>
+        <text x="18" y="112" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="16" fill="#666" text-anchor="middle">4</text>
+        <text x="62" y="112" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="16" fill="#666" text-anchor="middle">6</text>
+        <text x="106" y="112" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="16" fill="#666" text-anchor="middle">5</text>
+      </g>
+    </svg>
+  </div>
+  <div class="label">4. Scorecard</div>
+  <div class="desc">Mini scorecard grid. One birdie highlighted in chartreuse. Says "scoring app."</div>
+  <div class="small-row">
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="60" height="60" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><g transform="translate(36,36)"><rect x="0" y="0" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="44" y="0" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="88" y="0" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="0" y="44" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="44" y="44" width="36" height="36" rx="6" fill="#F0EE3A"/><rect x="88" y="44" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="0" y="88" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="44" y="88" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="88" y="88" width="36" height="36" rx="6" fill="#1E1E1E"/></g></svg></div>
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><g transform="translate(36,36)"><rect x="0" y="0" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="44" y="0" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="88" y="0" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="0" y="44" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="44" y="44" width="36" height="36" rx="6" fill="#F0EE3A"/><rect x="88" y="44" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="0" y="88" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="44" y="88" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="88" y="88" width="36" height="36" rx="6" fill="#1E1E1E"/></g></svg></div>
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><g transform="translate(36,36)"><rect x="0" y="0" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="44" y="0" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="88" y="0" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="0" y="44" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="44" y="44" width="36" height="36" rx="6" fill="#F0EE3A"/><rect x="88" y="44" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="0" y="88" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="44" y="88" width="36" height="36" rx="6" fill="#1E1E1E"/><rect x="88" y="88" width="36" height="36" rx="6" fill="#1E1E1E"/></g></svg></div>
+  </div>
+</div>
+
+<!-- CONCEPT 5: Flag in Circle / Green -->
+<div class="concept">
+  <div class="icon-wrapper">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="200" fill="#0A0A0A"/>
+      <!-- Circle representing the green -->
+      <circle cx="100" cy="108" r="60" fill="#1B7832" opacity="0.25"/>
+      <circle cx="100" cy="108" r="42" fill="#1B7832" opacity="0.2"/>
+      <!-- Flagstick -->
+      <rect x="96" y="40" width="7" height="100" rx="3.5" fill="#FFFFFF"/>
+      <!-- Flag -->
+      <polygon points="103,40 148,58 103,76" fill="#F0EE3A"/>
+      <!-- Hole -->
+      <ellipse cx="100" cy="140" rx="16" ry="5" fill="#111"/>
+    </svg>
+  </div>
+  <div class="label">5. The Green</div>
+  <div class="desc">Pin flag on a putting green. Subtle green glow adds depth while staying flat.</div>
+  <div class="small-row">
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="60" height="60" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><circle cx="100" cy="108" r="60" fill="#1B7832" opacity="0.25"/><circle cx="100" cy="108" r="42" fill="#1B7832" opacity="0.2"/><rect x="96" y="40" width="7" height="100" rx="3.5" fill="#FFF"/><polygon points="103,40 148,58 103,76" fill="#F0EE3A"/><ellipse cx="100" cy="140" rx="16" ry="5" fill="#111"/></svg></div>
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><circle cx="100" cy="108" r="60" fill="#1B7832" opacity="0.25"/><circle cx="100" cy="108" r="42" fill="#1B7832" opacity="0.2"/><rect x="96" y="40" width="7" height="100" rx="3.5" fill="#FFF"/><polygon points="103,40 148,58 103,76" fill="#F0EE3A"/><ellipse cx="100" cy="140" rx="16" ry="5" fill="#111"/></svg></div>
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><circle cx="100" cy="108" r="60" fill="#1B7832" opacity="0.25"/><rect x="96" y="40" width="7" height="100" rx="3.5" fill="#FFF"/><polygon points="103,40 148,58 103,76" fill="#F0EE3A"/><ellipse cx="100" cy="140" rx="16" ry="5" fill="#111"/></svg></div>
+  </div>
+</div>
+
+<!-- CONCEPT 6: Dollar Flag — Golf + Betting -->
+<div class="concept">
+  <div class="icon-wrapper">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="200" fill="#0A0A0A"/>
+      <!-- Flagstick -->
+      <rect x="56" y="28" width="8" height="144" rx="4" fill="#FFFFFF"/>
+      <!-- Flag with $ -->
+      <polygon points="64,28 148,58 64,88" fill="#F0EE3A"/>
+      <text x="98" y="66" font-family="Inter, -apple-system, sans-serif" font-weight="900" font-size="32" fill="#0A0A0A" text-anchor="middle">$</text>
+      <!-- Ground -->
+      <rect x="36" y="168" width="48" height="4" rx="2" fill="#444"/>
+    </svg>
+  </div>
+  <div class="label">6. Money Flag</div>
+  <div class="desc">Golf flag with $ on it. Communicates "golf + betting" — what makes MATCH unique.</div>
+  <div class="small-row">
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="60" height="60" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><rect x="56" y="28" width="8" height="144" rx="4" fill="#FFF"/><polygon points="64,28 148,58 64,88" fill="#F0EE3A"/><text x="98" y="66" font-family="sans-serif" font-weight="900" font-size="32" fill="#0A0A0A" text-anchor="middle">$</text><rect x="36" y="168" width="48" height="4" rx="2" fill="#444"/></svg></div>
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><rect x="56" y="28" width="8" height="144" rx="4" fill="#FFF"/><polygon points="64,28 148,58 64,88" fill="#F0EE3A"/><text x="98" y="66" font-family="sans-serif" font-weight="900" font-size="32" fill="#0A0A0A" text-anchor="middle">$</text><rect x="36" y="168" width="48" height="4" rx="2" fill="#444"/></svg></div>
+    <div class="small-icon"><svg viewBox="0 0 200 200" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#0A0A0A"/><rect x="56" y="28" width="8" height="144" rx="4" fill="#FFF"/><polygon points="64,28 148,58 64,88" fill="#F0EE3A"/><text x="98" y="66" font-family="sans-serif" font-weight="900" font-size="32" fill="#0A0A0A" text-anchor="middle">$</text><rect x="36" y="168" width="48" height="4" rx="2" fill="#444"/></svg></div>
+  </div>
+</div>
+
+</div>
+
+</body>
+</html>

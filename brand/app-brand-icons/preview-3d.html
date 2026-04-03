@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MATCH Golf — 3D Icon Concepts</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #fff;
+    padding: 40px;
+  }
+  h1 { font-size: 28px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.02em; }
+  .subtitle { color: #888; font-size: 14px; margin-bottom: 48px; max-width: 600px; line-height: 1.6; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 56px;
+    max-width: 1100px;
+  }
+  .grid.row2 { margin-top: 56px; grid-template-columns: repeat(2, 1fr); max-width: 720px; }
+  .concept { text-align: center; }
+  .icon-wrapper {
+    width: 240px; height: 240px;
+    border-radius: 52px;
+    overflow: hidden;
+    margin: 0 auto 16px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    position: relative;
+  }
+  .label { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+  .desc { color: #999; font-size: 12px; line-height: 1.5; max-width: 240px; margin: 0 auto; }
+  .small-row { display: flex; justify-content: center; gap: 10px; margin-top: 14px; align-items: end; }
+  .small-icon { border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .small-icon svg, .small-icon .icon-inner { display: block; }
+  .sm { border-radius: 9px; }
+  .xs { border-radius: 5px; }
+
+  /* ============================================= */
+  /* CONCEPT 1: Gummy/Plush 3D MATCH              */
+  /* ============================================= */
+  .c1 {
+    width: 100%; height: 100%;
+    background: linear-gradient(145deg, #141414 0%, #0A0A0A 50%, #050505 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .c1::before {
+    content: '';
+    position: absolute;
+    top: -40%; left: -20%;
+    width: 140%; height: 80%;
+    background: radial-gradient(ellipse, rgba(240,238,58,0.08) 0%, transparent 60%);
+  }
+  .c1 .word {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 56px;
+    letter-spacing: -1px;
+    position: relative;
+    z-index: 1;
+  }
+  .c1 .word .letter {
+    display: inline-block;
+    color: #fff;
+    text-shadow:
+      0 2px 0 #ccc,
+      0 4px 0 #aaa,
+      0 6px 0 #888,
+      0 8px 12px rgba(0,0,0,0.4);
+  }
+  .c1 .word .letter.accent {
+    color: #F0EE3A;
+    text-shadow:
+      0 2px 0 #c9c730,
+      0 4px 0 #a3a126,
+      0 6px 0 #7d7b1d,
+      0 8px 12px rgba(240,238,58,0.3);
+  }
+  .c1 .sub {
+    font-size: 11px; font-weight: 600;
+    color: #555; letter-spacing: 4px;
+    margin-top: 8px; z-index: 1; position: relative;
+  }
+  .c1 .sub .dot-accent { color: #F0EE3A; }
+
+  /* ============================================= */
+  /* CONCEPT 2: Golf Ball with MATCH emboss        */
+  /* ============================================= */
+  .c2 {
+    width: 100%; height: 100%;
+    background: linear-gradient(160deg, #111 0%, #0A0A0A 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .c2 .ball {
+    width: 170px; height: 170px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #f8f8f8 0%, #e0e0e0 30%, #bbb 60%, #999 85%, #777 100%);
+    position: relative;
+    box-shadow:
+      inset -8px -8px 20px rgba(0,0,0,0.3),
+      inset 4px 4px 10px rgba(255,255,255,0.4),
+      0 12px 30px rgba(0,0,0,0.5),
+      0 4px 8px rgba(0,0,0,0.3);
+  }
+  .c2 .ball::before {
+    content: '';
+    position: absolute;
+    top: 8%; left: 15%;
+    width: 35%; height: 25%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.7) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .c2 .ball .dimples {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    opacity: 0.15;
+  }
+  .c2 .ball .dimple {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,0,0,0.4) 0%, transparent 70%);
+  }
+  .c2 .ball .text {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 30px;
+    letter-spacing: -0.5px;
+    color: rgba(80, 80, 80, 0.6);
+    text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .c2 .ball .text .a { color: rgba(180, 178, 30, 0.7); }
+  .c2 .ball .sub {
+    position: absolute;
+    top: 62%; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 7px;
+    letter-spacing: 2.5px;
+    color: rgba(80, 80, 80, 0.5);
+    white-space: nowrap;
+  }
+  .c2 .shadow {
+    position: absolute;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px; height: 16px;
+    background: radial-gradient(ellipse, rgba(0,0,0,0.4) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  /* ============================================= */
+  /* CONCEPT 3: Glassmorphic floating card         */
+  /* ============================================= */
+  .c3 {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #0f1a0f 0%, #0A0A0A 40%, #0a0a12 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .c3 .glow1 {
+    position: absolute; top: -30%; right: -20%;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(240,238,58,0.15) 0%, transparent 60%);
+    border-radius: 50%;
+  }
+  .c3 .glow2 {
+    position: absolute; bottom: -20%; left: -10%;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(27,120,50,0.15) 0%, transparent 60%);
+    border-radius: 50%;
+  }
+  .c3 .card {
+    width: 180px; height: 140px;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    transform: perspective(400px) rotateY(-8deg) rotateX(4deg);
+    box-shadow:
+      0 8px 32px rgba(0,0,0,0.3),
+      inset 0 1px 0 rgba(255,255,255,0.1);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative; z-index: 1;
+  }
+  .c3 .card .match {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 34px;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+  .c3 .card .match .a { color: #F0EE3A; }
+  .c3 .card .scores {
+    display: flex; gap: 5px; margin-top: 8px;
+  }
+  .c3 .card .scores .dot {
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 9px;
+    color: #fff;
+  }
+  .c3 .card .scores .birdie { background: rgba(27,120,50,0.8); }
+  .c3 .card .scores .par { background: rgba(255,255,255,0.1); color: #888; }
+  .c3 .card .scores .bogey { background: rgba(245,158,11,0.8); }
+  .c3 .card .money {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 12px;
+    color: #22C55E;
+    margin-top: 6px;
+  }
+
+  /* ============================================= */
+  /* CONCEPT 4: Neon/Chrome MATCH                  */
+  /* ============================================= */
+  .c4 {
+    width: 100%; height: 100%;
+    background: linear-gradient(160deg, #0d0d0d 0%, #070707 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .c4::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(240,238,58,0.12) 0%, transparent 50%);
+    border-radius: 50%;
+  }
+  .c4 .word {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 52px;
+    letter-spacing: -1px;
+    position: relative; z-index: 1;
+    color: transparent;
+    background: linear-gradient(180deg, #fff 0%, #bbb 50%, #888 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  }
+  .c4 .word .a-glow {
+    position: relative;
+    -webkit-text-fill-color: transparent;
+    background: linear-gradient(180deg, #F0EE3A 0%, #c9c730 50%, #8a881e 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  .c4 .neon-line {
+    width: 160px; height: 2px;
+    background: #F0EE3A;
+    margin-top: 10px;
+    border-radius: 1px;
+    box-shadow:
+      0 0 4px #F0EE3A,
+      0 0 12px rgba(240,238,58,0.4),
+      0 0 24px rgba(240,238,58,0.2);
+    z-index: 1;
+    position: relative;
+  }
+  .c4 .sub {
+    font-size: 10px; font-weight: 700;
+    color: #555; letter-spacing: 5px;
+    margin-top: 10px; z-index: 1; position: relative;
+  }
+
+  /* ============================================= */
+  /* CONCEPT 5: Embossed/Debossed premium leather  */
+  /* ============================================= */
+  .c5 {
+    width: 100%; height: 100%;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(255,255,255,0.008) 2px,
+        rgba(255,255,255,0.008) 4px
+      ),
+      linear-gradient(160deg, #1a1a18 0%, #111110 40%, #0d0d0c 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .c5 .word {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 54px;
+    letter-spacing: -1px;
+    color: #1a1a18;
+    text-shadow:
+      0 -1px 0 rgba(0,0,0,0.6),
+      0 1px 1px rgba(255,255,255,0.08);
+    position: relative; z-index: 1;
+  }
+  .c5 .word .accent {
+    color: #2a2a20;
+    text-shadow:
+      0 -1px 0 rgba(0,0,0,0.6),
+      0 1px 1px rgba(240,238,58,0.15);
+  }
+  .c5 .gold-inlay {
+    width: 140px; height: 1.5px;
+    background: linear-gradient(90deg, transparent, #F0EE3A, transparent);
+    margin-top: 8px;
+    opacity: 0.5;
+    z-index: 1; position: relative;
+  }
+  .c5 .sub {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 5px;
+    margin-top: 8px; z-index: 1; position: relative;
+    color: #1a1a18;
+    text-shadow:
+      0 -1px 0 rgba(0,0,0,0.4),
+      0 1px 0 rgba(240,238,58,0.08);
+  }
+  .c5 .stitch {
+    position: absolute;
+    inset: 12px;
+    border: 1px dashed rgba(255,255,255,0.04);
+    border-radius: 44px;
+    pointer-events: none;
+  }
+
+</style>
+</head>
+<body>
+
+<h1>MATCH Golf — 3D Concepts</h1>
+<p class="subtitle">
+  5 very different directions inspired by 2026 trends: soft 3D plush, golf ball realism, glassmorphism, neon chrome, and premium emboss. All keep the MATCH wordmark + chartreuse A.
+</p>
+
+<div class="grid">
+
+<!-- CONCEPT 1: Gummy/Plush 3D -->
+<div class="concept">
+  <div class="icon-wrapper">
+    <div class="c1">
+      <div class="word">
+        <span class="letter">M</span><span class="letter accent">A</span><span class="letter">T</span><span class="letter">C</span><span class="letter">H</span>
+      </div>
+      <div class="sub">SCORE. BET. WIN<span class="dot-accent">.</span></div>
+    </div>
+  </div>
+  <div class="label">1. Plush 3D</div>
+  <div class="desc">Soft, gummy extruded letters with depth. The hottest icon trend — tactile and premium. Chartreuse A with matching 3D shadow stack.</div>
+  <div class="small-row">
+    <div class="small-icon" style="width:60px;height:60px;border-radius:14px;overflow:hidden;">
+      <div class="c1" style="font-size:0;">
+        <div class="word" style="font-size:14px;letter-spacing:0;">
+          <span class="letter">M</span><span class="letter accent">A</span><span class="letter">T</span><span class="letter">C</span><span class="letter">H</span>
+        </div>
+      </div>
+    </div>
+    <div class="small-icon sm" style="width:40px;height:40px;overflow:hidden;">
+      <div class="c1" style="font-size:0;">
+        <div class="word" style="font-size:10px;letter-spacing:0;">
+          <span class="letter">M</span><span class="letter accent">A</span><span class="letter">T</span><span class="letter">C</span><span class="letter">H</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONCEPT 2: Golf Ball -->
+<div class="concept">
+  <div class="icon-wrapper">
+    <div class="c2">
+      <div class="shadow"></div>
+      <div class="ball">
+        <div class="dimples">
+          <div class="dimple" style="width:10px;height:10px;top:12%;left:20%;"></div>
+          <div class="dimple" style="width:8px;height:8px;top:8%;left:35%;"></div>
+          <div class="dimple" style="width:10px;height:10px;top:15%;left:50%;"></div>
+          <div class="dimple" style="width:8px;height:8px;top:10%;left:65%;"></div>
+          <div class="dimple" style="width:9px;height:9px;top:20%;left:75%;"></div>
+          <div class="dimple" style="width:10px;height:10px;top:25%;left:15%;"></div>
+          <div class="dimple" style="width:9px;height:9px;top:28%;left:30%;"></div>
+          <div class="dimple" style="width:10px;height:10px;top:25%;left:60%;"></div>
+          <div class="dimple" style="width:8px;height:8px;top:30%;left:80%;"></div>
+          <div class="dimple" style="width:10px;height:10px;top:65%;left:18%;"></div>
+          <div class="dimple" style="width:9px;height:9px;top:70%;left:35%;"></div>
+          <div class="dimple" style="width:10px;height:10px;top:68%;left:52%;"></div>
+          <div class="dimple" style="width:8px;height:8px;top:72%;left:68%;"></div>
+          <div class="dimple" style="width:10px;height:10px;top:75%;left:80%;"></div>
+          <div class="dimple" style="width:9px;height:9px;top:80%;left:25%;"></div>
+          <div class="dimple" style="width:10px;height:10px;top:82%;left:55%;"></div>
+          <div class="dimple" style="width:8px;height:8px;top:85%;left:72%;"></div>
+        </div>
+        <div class="text">M<span class="a">A</span>TCH</div>
+        <div class="sub">SCORE. BET. WIN.</div>
+      </div>
+    </div>
+  </div>
+  <div class="label">2. Golf Ball</div>
+  <div class="desc">Realistic 3D golf ball with MATCH embossed. Unmistakably golf. The ball IS the icon.</div>
+  <div class="small-row">
+    <div class="small-icon" style="width:60px;height:60px;border-radius:14px;overflow:hidden;">
+      <div class="c2">
+        <div class="ball" style="width:42px;height:42px;">
+          <div class="text" style="font-size:8px;">M<span class="a">A</span>TCH</div>
+        </div>
+      </div>
+    </div>
+    <div class="small-icon sm" style="width:40px;height:40px;overflow:hidden;">
+      <div class="c2">
+        <div class="ball" style="width:28px;height:28px;">
+          <div class="text" style="font-size:5.5px;">M<span class="a">A</span>TCH</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONCEPT 3: Glassmorphic Card -->
+<div class="concept">
+  <div class="icon-wrapper">
+    <div class="c3">
+      <div class="glow1"></div>
+      <div class="glow2"></div>
+      <div class="card">
+        <div class="match">M<span class="a">A</span>TCH</div>
+        <div class="scores">
+          <div class="dot birdie">3</div>
+          <div class="dot par">4</div>
+          <div class="dot bogey">5</div>
+          <div class="dot par">4</div>
+          <div class="dot birdie">2</div>
+        </div>
+        <div class="money">+$14</div>
+      </div>
+    </div>
+  </div>
+  <div class="label">3. Glass Scorecard</div>
+  <div class="desc">Frosted glass card floating in space with scores + money. Scoring app feel meets premium depth.</div>
+  <div class="small-row">
+    <div class="small-icon" style="width:60px;height:60px;border-radius:14px;overflow:hidden;">
+      <div class="c3">
+        <div class="glow1" style="width:50px;height:50px;"></div>
+        <div class="glow2" style="width:40px;height:40px;"></div>
+        <div class="card" style="width:44px;height:34px;border-radius:8px;transform:perspective(400px) rotateY(-6deg) rotateX(3deg);">
+          <div class="match" style="font-size:9px;">M<span class="a">A</span>TCH</div>
+          <div class="scores" style="gap:2px;margin-top:3px;">
+            <div class="dot birdie" style="width:5px;height:5px;font-size:0;border-radius:2px;"></div>
+            <div class="dot par" style="width:5px;height:5px;font-size:0;border-radius:2px;"></div>
+            <div class="dot bogey" style="width:5px;height:5px;font-size:0;border-radius:2px;"></div>
+            <div class="dot par" style="width:5px;height:5px;font-size:0;border-radius:2px;"></div>
+            <div class="dot birdie" style="width:5px;height:5px;font-size:0;border-radius:2px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="small-icon sm" style="width:40px;height:40px;overflow:hidden;">
+      <div class="c3">
+        <div class="glow1" style="width:30px;height:30px;"></div>
+        <div class="card" style="width:30px;height:22px;border-radius:5px;transform:perspective(400px) rotateY(-5deg) rotateX(2deg);">
+          <div class="match" style="font-size:6px;">M<span class="a">A</span>TCH</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="grid row2">
+
+<!-- CONCEPT 4: Neon Chrome -->
+<div class="concept">
+  <div class="icon-wrapper">
+    <div class="c4">
+      <div class="word">M<span class="a-glow">A</span>TCH</div>
+      <div class="neon-line"></div>
+      <div class="sub">SCORE. BET. WIN.</div>
+    </div>
+  </div>
+  <div class="label">4. Chrome & Neon</div>
+  <div class="desc">Metallic chrome gradient on the letters, neon chartreuse glow line. Premium tech meets sports energy.</div>
+  <div class="small-row">
+    <div class="small-icon" style="width:60px;height:60px;border-radius:14px;overflow:hidden;">
+      <div class="c4">
+        <div class="word" style="font-size:13px;">M<span class="a-glow">A</span>TCH</div>
+        <div class="neon-line" style="width:38px;height:1.5px;margin-top:4px;"></div>
+      </div>
+    </div>
+    <div class="small-icon sm" style="width:40px;height:40px;overflow:hidden;">
+      <div class="c4">
+        <div class="word" style="font-size:9px;">M<span class="a-glow">A</span>TCH</div>
+        <div class="neon-line" style="width:26px;height:1px;margin-top:3px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONCEPT 5: Embossed Premium -->
+<div class="concept">
+  <div class="icon-wrapper">
+    <div class="c5">
+      <div class="stitch"></div>
+      <div class="word">M<span class="accent">A</span>TCH</div>
+      <div class="gold-inlay"></div>
+      <div class="sub">SCORE · BET · WIN</div>
+    </div>
+  </div>
+  <div class="label">5. Embossed Premium</div>
+  <div class="desc">Dark debossed letters on textured surface, gold inlay line. Like a premium leather scorecard holder. Quiet luxury.</div>
+  <div class="small-row">
+    <div class="small-icon" style="width:60px;height:60px;border-radius:14px;overflow:hidden;">
+      <div class="c5">
+        <div class="stitch" style="inset:3px;border-radius:11px;"></div>
+        <div class="word" style="font-size:13px;">M<span class="accent">A</span>TCH</div>
+        <div class="gold-inlay" style="width:36px;margin-top:3px;"></div>
+      </div>
+    </div>
+    <div class="small-icon sm" style="width:40px;height:40px;overflow:hidden;">
+      <div class="c5">
+        <div class="word" style="font-size:9px;">M<span class="accent">A</span>TCH</div>
+        <div class="gold-inlay" style="width:24px;margin-top:2px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- Home screen simulation -->
+<div style="margin-top: 64px;">
+  <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Home Screen Context (60px)</h2>
+  <div style="background: #1c1c1e; border-radius: 24px; padding: 32px; display: inline-flex; gap: 28px; align-items: start;">
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#34C759,#30D158);margin-bottom:6px;"></div>
+      <span style="font-size:10px;color:#999;">Messages</span>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;overflow:hidden;margin-bottom:6px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+        <div class="c1" style="font-size:0;">
+          <div class="word" style="font-size:14px;letter-spacing:0;">
+            <span class="letter">M</span><span class="letter accent">A</span><span class="letter">T</span><span class="letter">C</span><span class="letter">H</span>
+          </div>
+        </div>
+      </div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Plush</span>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;overflow:hidden;margin-bottom:6px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+        <div class="c2">
+          <div class="ball" style="width:42px;height:42px;">
+            <div class="text" style="font-size:8px;">M<span class="a">A</span>TCH</div>
+          </div>
+        </div>
+      </div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Ball</span>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;overflow:hidden;margin-bottom:6px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+        <div class="c3">
+          <div class="glow1" style="width:50px;height:50px;"></div>
+          <div class="card" style="width:44px;height:34px;border-radius:8px;transform:perspective(400px) rotateY(-6deg) rotateX(3deg);">
+            <div class="match" style="font-size:9px;">M<span class="a">A</span>TCH</div>
+            <div class="scores" style="gap:2px;margin-top:3px;">
+              <div class="dot birdie" style="width:5px;height:5px;font-size:0;border-radius:2px;"></div>
+              <div class="dot par" style="width:5px;height:5px;font-size:0;border-radius:2px;"></div>
+              <div class="dot bogey" style="width:5px;height:5px;font-size:0;border-radius:2px;"></div>
+              <div class="dot par" style="width:5px;height:5px;font-size:0;border-radius:2px;"></div>
+              <div class="dot birdie" style="width:5px;height:5px;font-size:0;border-radius:2px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Glass</span>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;overflow:hidden;margin-bottom:6px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+        <div class="c4">
+          <div class="word" style="font-size:13px;">M<span class="a-glow">A</span>TCH</div>
+          <div class="neon-line" style="width:38px;height:1.5px;margin-top:4px;"></div>
+        </div>
+      </div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Chrome</span>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;overflow:hidden;margin-bottom:6px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+        <div class="c5">
+          <div class="word" style="font-size:13px;">M<span class="accent">A</span>TCH</div>
+          <div class="gold-inlay" style="width:36px;margin-top:3px;"></div>
+        </div>
+      </div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Emboss</span>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#5856D6,#AF52DE);margin-bottom:6px;"></div>
+      <span style="font-size:10px;color:#999;">Photos</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

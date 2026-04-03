@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MATCH Golf — More Icon Concepts</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;800;900&family=JetBrains+Mono:wght@700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #fff;
+    padding: 40px;
+  }
+  h1 { font-size: 28px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.02em; }
+  .subtitle { color: #888; font-size: 14px; margin-bottom: 52px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 56px;
+    max-width: 1060px;
+  }
+  .grid + .grid { margin-top: 56px; }
+  .concept { text-align: center; }
+  .iw {
+    width: 220px; height: 220px;
+    border-radius: 48px;
+    overflow: hidden;
+    margin: 0 auto 14px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    position: relative;
+  }
+  .label { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .desc { color: #999; font-size: 11.5px; line-height: 1.5; max-width: 220px; margin: 0 auto; }
+  .smalls { display: flex; justify-content: center; gap: 10px; margin-top: 12px; align-items: end; }
+  .si { overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+  .r14 { border-radius: 14px; }
+  .r9 { border-radius: 9px; }
+
+  /* ============================================= */
+  /* 1. CROSSED CLUBS                              */
+  /* ============================================= */
+  .clubs {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #111 0%, #0A0A0A 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .clubs .club {
+    position:absolute;
+    width: 8px; height: 180px;
+    border-radius: 4px;
+    top: 50%; left: 50%;
+  }
+  .clubs .club-1 {
+    background: linear-gradient(180deg, #e0e0e0 0%, #aaa 40%, #666 70%, #444 100%);
+    transform: translate(-50%,-50%) rotate(35deg);
+    box-shadow: 2px 3px 10px rgba(0,0,0,0.4);
+  }
+  .clubs .club-2 {
+    background: linear-gradient(180deg, #ddd 0%, #aaa 40%, #666 70%, #444 100%);
+    transform: translate(-50%,-50%) rotate(-35deg);
+    box-shadow: -2px 3px 10px rgba(0,0,0,0.4);
+  }
+  .clubs .head-1, .clubs .head-2 {
+    position:absolute;
+    width: 28px; height: 16px;
+    border-radius: 4px 12px 12px 4px;
+    background: linear-gradient(160deg, #ccc 0%, #999 50%, #666 100%);
+  }
+  .clubs .head-1 {
+    bottom: 16%; left: 26%;
+    transform: rotate(35deg);
+    box-shadow: 2px 3px 8px rgba(0,0,0,0.3);
+  }
+  .clubs .head-2 {
+    bottom: 16%; right: 26%;
+    transform: rotate(-35deg) scaleX(-1);
+    box-shadow: -2px 3px 8px rgba(0,0,0,0.3);
+  }
+  .clubs .center-ball {
+    position:absolute;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    width:36px;height:36px;
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #F0EE3A 0%, #d4d230 40%, #a8a620 80%);
+    box-shadow:
+      inset -3px -3px 8px rgba(0,0,0,0.2),
+      inset 2px 2px 4px rgba(255,255,255,0.3),
+      0 4px 12px rgba(240,238,58,0.3);
+    z-index:2;
+  }
+
+  /* ============================================= */
+  /* 2. TROPHY / CUP                               */
+  /* ============================================= */
+  .trophy {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #0f0f0f 0%, #080808 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .trophy .glow {
+    position:absolute;top:30%;left:50%;transform:translateX(-50%);
+    width:180px;height:180px;
+    background:radial-gradient(circle,rgba(240,238,58,0.08) 0%,transparent 60%);
+    border-radius:50%;
+  }
+  .trophy .cup-body {
+    position:relative;z-index:1;
+    width:90px;height:80px;
+    background: linear-gradient(160deg, #f7f540 0%, #F0EE3A 25%, #d4d230 50%, #b8b625 80%);
+    border-radius: 0 0 40px 40px;
+    box-shadow:
+      inset -6px -6px 14px rgba(0,0,0,0.2),
+      inset 3px 3px 6px rgba(255,255,255,0.3),
+      0 8px 24px rgba(240,238,58,0.25);
+  }
+  .trophy .cup-body::before {
+    content:'';position:absolute;
+    top:0;left:-18px;
+    width:22px;height:44px;
+    border:5px solid;
+    border-color: #c9c730;
+    border-right:none;
+    border-radius:20px 0 0 20px;
+  }
+  .trophy .cup-body::after {
+    content:'';position:absolute;
+    top:0;right:-18px;
+    width:22px;height:44px;
+    border:5px solid;
+    border-color: #c9c730;
+    border-left:none;
+    border-radius:0 20px 20px 0;
+  }
+  .trophy .cup-rim {
+    position:absolute;top:-4px;left:-6px;right:-6px;height:14px;
+    background: linear-gradient(180deg, #f9f66a, #F0EE3A, #c9c730);
+    border-radius:6px 6px 0 0;
+    box-shadow: inset 0 2px 3px rgba(255,255,255,0.3);
+  }
+  .trophy .cup-stem {
+    position:relative;z-index:1;
+    width:14px;height:22px;
+    background: linear-gradient(180deg, #b8b625, #8a881e);
+    margin:0 auto;
+    border-radius:0 0 3px 3px;
+  }
+  .trophy .cup-base {
+    position:relative;z-index:1;
+    width:50px;height:10px;
+    background: linear-gradient(180deg, #d4d230, #a8a620);
+    margin:0 auto;
+    border-radius:3px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+  }
+  .trophy .star {
+    position:absolute;
+    z-index:2;
+    top:50%;left:50%;
+    transform:translate(-50%,-65%);
+    font-size:28px;
+    color:rgba(0,0,0,0.15);
+    text-shadow: 0 1px 0 rgba(255,255,255,0.2);
+  }
+
+  /* ============================================= */
+  /* 3. LEADERBOARD BARS                           */
+  /* ============================================= */
+  .leader {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #111 0%, #0A0A0A 100%);
+    display:flex;align-items:flex-end;justify-content:center;
+    padding-bottom:36px;
+    gap:10px;
+    position:relative;overflow:hidden;
+  }
+  .leader .bar {
+    border-radius:8px 8px 0 0;
+    position:relative;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.2);
+  }
+  .leader .b1 {
+    width:44px;height:80px;
+    background: linear-gradient(180deg, #555 0%, #333 100%);
+  }
+  .leader .b2 {
+    width:44px;height:130px;
+    background: linear-gradient(180deg, #f7f540, #F0EE3A, #c9c730);
+    box-shadow:
+      0 -4px 16px rgba(240,238,58,0.2),
+      inset -3px 0 8px rgba(0,0,0,0.1),
+      inset 3px 0 8px rgba(255,255,255,0.15);
+  }
+  .leader .b3 {
+    width:44px;height:100px;
+    background: linear-gradient(180deg, #444 0%, #2a2a2a 100%);
+  }
+  .leader .bar .rank {
+    position:absolute;top:10px;left:50%;transform:translateX(-50%);
+    font-family:'JetBrains Mono',monospace;font-weight:800;font-size:18px;
+    color:rgba(255,255,255,0.5);
+  }
+  .leader .b2 .rank { color:rgba(0,0,0,0.25); }
+  .leader .bar .money {
+    position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:9px;
+    white-space:nowrap;
+  }
+  .leader .b1 .money { color: #888; }
+  .leader .b2 .money { color: rgba(0,0,0,0.3); }
+  .leader .b3 .money { color: #666; }
+  .leader .crown {
+    position:absolute;
+    top:24px;left:50%;transform:translateX(-50%);
+    font-size:24px;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    z-index:2;
+  }
+
+  /* ============================================= */
+  /* 4. FLAMING TEE                                */
+  /* ============================================= */
+  .tee-icon {
+    width:100%;height:100%;
+    background: linear-gradient(160deg, #0f0f0f 0%, #080808 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .tee-icon .heat-glow {
+    position:absolute;bottom:20%;left:50%;transform:translateX(-50%);
+    width:160px;height:160px;
+    background:radial-gradient(circle, rgba(240,238,58,0.1) 0%, rgba(239,68,68,0.05) 40%, transparent 70%);
+    border-radius:50%;
+  }
+  .tee-icon .tee-body {
+    position:relative;z-index:1;
+    display:flex;flex-direction:column;align-items:center;
+  }
+  .tee-icon .tee-top {
+    width:22px;height:10px;
+    background: linear-gradient(180deg, #f0f0f0, #ddd, #bbb);
+    border-radius:4px 4px 0 0;
+    box-shadow: inset 0 2px 3px rgba(255,255,255,0.3);
+  }
+  .tee-icon .tee-shaft {
+    width:8px;height:100px;
+    background: linear-gradient(90deg, #ccc 0%, #fff 30%, #ddd 60%, #aaa 100%);
+    border-radius:0 0 4px 4px;
+    box-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+  }
+  .tee-icon .tee-ball {
+    position:absolute;
+    top:-28px;left:50%;transform:translateX(-50%);
+    width:36px;height:36px;
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 28%, #fff 0%, #eee 30%, #ccc 60%, #aaa 100%);
+    box-shadow:
+      inset -3px -4px 8px rgba(0,0,0,0.15),
+      inset 2px 2px 4px rgba(255,255,255,0.4),
+      0 4px 12px rgba(0,0,0,0.3);
+  }
+  .tee-icon .energy {
+    position:absolute;
+    width:3px;border-radius:2px;
+    background: linear-gradient(180deg, #F0EE3A, rgba(240,238,58,0));
+    z-index:0;
+  }
+  .tee-icon .e1 { height:40px; top:18%; left:30%; transform:rotate(-12deg); opacity:0.6; }
+  .tee-icon .e2 { height:55px; top:12%; left:40%; transform:rotate(-4deg); opacity:0.8; }
+  .tee-icon .e3 { height:50px; top:14%; left:55%; transform:rotate(6deg); opacity:0.7; }
+  .tee-icon .e4 { height:35px; top:20%; left:65%; transform:rotate(14deg); opacity:0.5; }
+  .tee-icon .e5 { height:28px; top:24%; left:48%; transform:rotate(0deg); opacity:0.4; }
+
+  /* ============================================= */
+  /* 5. WALLET / MONEY CLIP                        */
+  /* ============================================= */
+  .wallet {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #0f0f0f 0%, #080808 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .wallet .clip {
+    position:relative;z-index:1;
+    width:120px;height:150px;
+    background: linear-gradient(160deg, #222 0%, #1a1a1a 40%, #141414 100%);
+    border-radius:16px;
+    box-shadow:
+      0 10px 30px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.05),
+      inset 0 -1px 0 rgba(0,0,0,0.3);
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,0.06);
+  }
+  .wallet .bill {
+    position:absolute;
+    width:100px;height:46px;
+    border-radius:6px;
+    left:50%;transform:translateX(-50%);
+  }
+  .wallet .bill-1 {
+    top:18px;
+    background: linear-gradient(160deg, #1B7832 0%, #15652a 100%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .wallet .bill-2 {
+    top:30px;
+    background: linear-gradient(160deg, #1e8838 0%, #187530 100%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .wallet .bill-3 {
+    top:42px;
+    background: linear-gradient(160deg, #22993f 0%, #1B8535 100%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .wallet .bill-1 .dollar, .wallet .bill-2 .dollar, .wallet .bill-3 .dollar {
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    font-family:'JetBrains Mono',monospace;font-weight:800;font-size:14px;
+    color:rgba(255,255,255,0.25);
+  }
+  .wallet .ball-accent {
+    position:absolute;
+    bottom:20px;left:50%;transform:translateX(-50%);
+    width:44px;height:44px;
+    border-radius:50%;
+    background: radial-gradient(circle at 38% 32%, #fff 0%, #eee 30%, #ccc 60%, #aaa 100%);
+    box-shadow:
+      inset -3px -3px 6px rgba(0,0,0,0.15),
+      inset 2px 2px 4px rgba(255,255,255,0.3),
+      0 4px 10px rgba(0,0,0,0.3);
+  }
+  .wallet .ball-accent .stripe-mini {
+    position:absolute;top:50%;left:0;width:100%;height:4px;
+    transform:translateY(-50%);
+    background:linear-gradient(90deg,transparent 10%,#F0EE3A 30%,#F0EE3A 70%,transparent 90%);
+    opacity:0.5;border-radius:1px;
+  }
+
+  /* ============================================= */
+  /* 6. BURNING ACE — card + fire                  */
+  /* ============================================= */
+  .ace {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #0f0f0f 0%, #080808 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .ace .card-glow {
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:200px;height:200px;
+    background:radial-gradient(circle, rgba(240,238,58,0.1) 0%, transparent 60%);
+    border-radius:50%;
+  }
+  .ace .playing-card {
+    position:relative;z-index:1;
+    width:110px;height:155px;
+    background: linear-gradient(160deg, #fafafa 0%, #f0f0f0 50%, #e0e0e0 100%);
+    border-radius:12px;
+    box-shadow:
+      0 10px 30px rgba(0,0,0,0.4),
+      0 2px 4px rgba(0,0,0,0.2),
+      inset 0 1px 0 rgba(255,255,255,0.8);
+    transform: rotate(-5deg);
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    padding:12px;
+  }
+  .ace .playing-card .corner-tl, .ace .playing-card .corner-br {
+    position:absolute;
+    font-family:'Inter',sans-serif;font-weight:900;
+    font-size:14px;color:#1B7832;
+    line-height:1;
+  }
+  .ace .playing-card .corner-tl { top:8px;left:10px; }
+  .ace .playing-card .corner-br { bottom:8px;right:10px;transform:rotate(180deg); }
+  .ace .playing-card .corner-tl .suit, .ace .playing-card .corner-br .suit {
+    font-size:10px;display:block;text-align:center;margin-top:-2px;
+  }
+  .ace .playing-card .center-emblem {
+    width:60px;height:60px;
+    border-radius:50%;
+    background: radial-gradient(circle at 38% 32%, #f7f540, #F0EE3A, #d4d230, #b8b625);
+    box-shadow:
+      inset -3px -4px 8px rgba(0,0,0,0.15),
+      inset 2px 2px 5px rgba(255,255,255,0.3),
+      0 4px 12px rgba(240,238,58,0.2);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .ace .playing-card .center-emblem .dollar {
+    font-family:'JetBrains Mono',monospace;font-weight:900;
+    font-size:28px;color:rgba(0,0,0,0.2);
+    text-shadow:0 1px 0 rgba(255,255,255,0.2);
+  }
+  .ace .spark {
+    position:absolute;
+    width:3px;height:3px;
+    background:#F0EE3A;
+    border-radius:50%;
+    box-shadow:0 0 6px #F0EE3A, 0 0 12px rgba(240,238,58,0.4);
+    z-index:2;
+  }
+  .ace .s1 { top:15%;left:22%; }
+  .ace .s2 { top:10%;right:28%; }
+  .ace .s3 { bottom:20%;left:18%; }
+  .ace .s4 { bottom:15%;right:22%; }
+  .ace .s5 { top:25%;right:15%;width:2px;height:2px; }
+
+</style>
+</head>
+<body>
+
+<h1>MATCH Golf — More Icons (No Text)</h1>
+<p class="subtitle">6 more directions. Bolder, weirder, more distinctive.</p>
+
+<div class="grid">
+
+<!-- 1. CROSSED CLUBS -->
+<div class="concept">
+  <div class="iw">
+    <div class="clubs">
+      <div class="club club-1"></div>
+      <div class="club club-2"></div>
+      <div class="head-1"></div>
+      <div class="head-2"></div>
+      <div class="center-ball"></div>
+    </div>
+  </div>
+  <div class="label">1. Crossed Clubs</div>
+  <div class="desc">Two metallic clubs crossed like swords, chartreuse ball at the center. Classic "crest" energy, but modern and 3D.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="clubs"><div class="club club-1" style="width:3px;height:46px;"></div><div class="club club-2" style="width:3px;height:46px;"></div><div class="center-ball" style="width:10px;height:10px;"></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="clubs"><div class="club club-1" style="width:2px;height:30px;"></div><div class="club club-2" style="width:2px;height:30px;"></div><div class="center-ball" style="width:7px;height:7px;"></div></div></div>
+  </div>
+</div>
+
+<!-- 2. TROPHY -->
+<div class="concept">
+  <div class="iw">
+    <div class="trophy">
+      <div class="glow"></div>
+      <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;">
+        <div class="cup-body">
+          <div class="cup-rim"></div>
+          <div class="star">&#9733;</div>
+        </div>
+        <div class="cup-stem"></div>
+        <div class="cup-base"></div>
+      </div>
+    </div>
+  </div>
+  <div class="label">2. Trophy</div>
+  <div class="desc">Chartreuse 3D trophy cup. Says "competition" and "winning." The gold-ish color ties to money without being literal.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="trophy"><div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;"><div class="cup-body" style="width:24px;height:20px;border-radius:0 0 10px 10px;"><div class="cup-rim" style="height:4px;top:-1px;left:-2px;right:-2px;border-radius:2px 2px 0 0;"></div></div><div class="cup-stem" style="width:4px;height:6px;"></div><div class="cup-base" style="width:14px;height:3px;border-radius:1px;"></div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="trophy"><div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;"><div class="cup-body" style="width:16px;height:14px;border-radius:0 0 7px 7px;"><div class="cup-rim" style="height:3px;top:-1px;left:-1px;right:-1px;border-radius:1px 1px 0 0;"></div></div><div class="cup-stem" style="width:3px;height:4px;"></div><div class="cup-base" style="width:10px;height:2px;border-radius:1px;"></div></div></div></div>
+  </div>
+</div>
+
+<!-- 3. LEADERBOARD -->
+<div class="concept">
+  <div class="iw">
+    <div class="leader">
+      <div class="crown">&#128081;</div>
+      <div class="bar b1"><div class="rank">2</div><div class="money">+$8</div></div>
+      <div class="bar b2"><div class="rank">1</div><div class="money">+$24</div></div>
+      <div class="bar b3"><div class="rank">3</div><div class="money">+$3</div></div>
+    </div>
+  </div>
+  <div class="label">3. Podium</div>
+  <div class="desc">Olympic-style podium with money amounts. Winner bar in chartreuse. Screams "competition + money."</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="leader" style="padding-bottom:10px;gap:3px;"><div class="bar b1" style="width:12px;height:20px;border-radius:3px 3px 0 0;"><div class="rank" style="font-size:6px;top:3px;"></div></div><div class="bar b2" style="width:12px;height:34px;border-radius:3px 3px 0 0;"><div class="rank" style="font-size:6px;top:3px;"></div></div><div class="bar b3" style="width:12px;height:26px;border-radius:3px 3px 0 0;"><div class="rank" style="font-size:6px;top:3px;"></div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="leader" style="padding-bottom:6px;gap:2px;"><div class="bar b1" style="width:8px;height:12px;border-radius:2px 2px 0 0;"></div><div class="bar b2" style="width:8px;height:22px;border-radius:2px 2px 0 0;"></div><div class="bar b3" style="width:8px;height:16px;border-radius:2px 2px 0 0;"></div></div></div>
+  </div>
+</div>
+
+</div>
+
+<div class="grid" style="margin-top:56px;">
+
+<!-- 4. FLAMING TEE -->
+<div class="concept">
+  <div class="iw">
+    <div class="tee-icon">
+      <div class="heat-glow"></div>
+      <div class="energy e1"></div>
+      <div class="energy e2"></div>
+      <div class="energy e3"></div>
+      <div class="energy e4"></div>
+      <div class="energy e5"></div>
+      <div class="tee-body">
+        <div style="position:relative;">
+          <div class="tee-ball"></div>
+          <div class="tee-top"></div>
+        </div>
+        <div class="tee-shaft"></div>
+      </div>
+    </div>
+  </div>
+  <div class="label">4. Hot Tee</div>
+  <div class="desc">Golf ball on a tee with chartreuse energy streaks rising. "Tee it up." Motion and intensity. Feels like something's about to happen.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="tee-icon"><div class="energy e2" style="height:16px;top:14%;left:38%;"></div><div class="energy e3" style="height:14px;top:16%;left:52%;"></div><div class="tee-body"><div style="position:relative;"><div class="tee-ball" style="width:12px;height:12px;top:-10px;"></div><div class="tee-top" style="width:7px;height:3px;"></div></div><div class="tee-shaft" style="width:3px;height:26px;"></div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="tee-icon"><div class="tee-body"><div style="position:relative;"><div class="tee-ball" style="width:8px;height:8px;top:-7px;"></div><div class="tee-top" style="width:5px;height:2px;"></div></div><div class="tee-shaft" style="width:2px;height:16px;"></div></div></div></div>
+  </div>
+</div>
+
+<!-- 5. MONEY CLIP -->
+<div class="concept">
+  <div class="iw">
+    <div class="wallet">
+      <div class="clip">
+        <div class="bill bill-1"><div class="dollar">$20</div></div>
+        <div class="bill bill-2"><div class="dollar">$10</div></div>
+        <div class="bill bill-3"><div class="dollar">$5</div></div>
+        <div class="ball-accent">
+          <div class="stripe-mini"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="label">5. Money Clip</div>
+  <div class="desc">Dark leather money clip with green bills peeking out and a golf ball with chartreuse stripe. "Golf money" in one object.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="wallet"><div class="clip" style="width:34px;height:42px;border-radius:6px;"><div class="bill bill-1" style="width:28px;height:12px;border-radius:3px;top:5px;"></div><div class="bill bill-2" style="width:28px;height:12px;border-radius:3px;top:9px;"></div><div class="ball-accent" style="width:14px;height:14px;bottom:6px;"><div class="stripe-mini" style="height:2px;"></div></div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="wallet"><div class="clip" style="width:22px;height:28px;border-radius:4px;"><div class="bill bill-1" style="width:18px;height:8px;border-radius:2px;top:3px;"></div><div class="ball-accent" style="width:10px;height:10px;bottom:4px;"></div></div></div></div>
+  </div>
+</div>
+
+<!-- 6. ACE CARD -->
+<div class="concept">
+  <div class="iw">
+    <div class="ace">
+      <div class="card-glow"></div>
+      <div class="spark s1"></div>
+      <div class="spark s2"></div>
+      <div class="spark s3"></div>
+      <div class="spark s4"></div>
+      <div class="spark s5"></div>
+      <div class="playing-card">
+        <div class="corner-tl">A<span class="suit">&#9830;</span></div>
+        <div class="corner-br">A<span class="suit">&#9830;</span></div>
+        <div class="center-emblem">
+          <div class="dollar">$</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="label">6. The Ace</div>
+  <div class="desc">Playing card "Ace" with a chartreuse golf-coin center. Sparks around it. Card game meets golf. Betting energy.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="ace"><div class="playing-card" style="width:32px;height:44px;border-radius:5px;transform:rotate(-4deg);padding:4px;"><div class="corner-tl" style="font-size:5px;top:3px;left:4px;"><span class="suit" style="font-size:4px;">&#9830;</span></div><div class="center-emblem" style="width:16px;height:16px;"><div class="dollar" style="font-size:9px;"></div></div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="ace"><div class="playing-card" style="width:22px;height:30px;border-radius:4px;transform:rotate(-3deg);padding:2px;"><div class="center-emblem" style="width:12px;height:12px;"><div class="dollar" style="font-size:7px;"></div></div></div></div></div>
+  </div>
+</div>
+
+</div>
+
+<!-- Home screen -->
+<div style="margin-top:60px;">
+  <h2 style="font-size:18px;font-weight:700;margin-bottom:20px;">Home Screen (60px)</h2>
+  <div style="background:#1c1c1e;border-radius:24px;padding:32px;display:inline-flex;gap:28px;align-items:start;">
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#34C759,#30D158);margin-bottom:6px;"></div>
+      <span style="font-size:10px;color:#999;">Messages</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="clubs"><div class="club club-1" style="width:3px;height:46px;"></div><div class="club club-2" style="width:3px;height:46px;"></div><div class="center-ball" style="width:10px;height:10px;"></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Clubs</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="trophy"><div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;"><div class="cup-body" style="width:24px;height:20px;border-radius:0 0 10px 10px;"><div class="cup-rim" style="height:4px;top:-1px;left:-2px;right:-2px;border-radius:2px 2px 0 0;"></div></div><div class="cup-stem" style="width:4px;height:6px;"></div><div class="cup-base" style="width:14px;height:3px;border-radius:1px;"></div></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Trophy</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="leader" style="padding-bottom:10px;gap:3px;"><div class="bar b1" style="width:12px;height:20px;border-radius:3px 3px 0 0;"></div><div class="bar b2" style="width:12px;height:34px;border-radius:3px 3px 0 0;"></div><div class="bar b3" style="width:12px;height:26px;border-radius:3px 3px 0 0;"></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Podium</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="tee-icon"><div class="energy e2" style="height:16px;top:14%;left:38%;"></div><div class="energy e3" style="height:14px;top:16%;left:52%;"></div><div class="tee-body"><div style="position:relative;"><div class="tee-ball" style="width:12px;height:12px;top:-10px;"></div><div class="tee-top" style="width:7px;height:3px;"></div></div><div class="tee-shaft" style="width:3px;height:26px;"></div></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Tee</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="wallet"><div class="clip" style="width:34px;height:42px;border-radius:6px;"><div class="bill bill-1" style="width:28px;height:12px;border-radius:3px;top:5px;"></div><div class="bill bill-2" style="width:28px;height:12px;border-radius:3px;top:9px;"></div><div class="ball-accent" style="width:14px;height:14px;bottom:6px;"><div class="stripe-mini" style="height:2px;"></div></div></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Clip</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="ace"><div class="playing-card" style="width:32px;height:44px;border-radius:5px;transform:rotate(-4deg);padding:4px;"><div class="corner-tl" style="font-size:5px;top:3px;left:4px;"><span class="suit" style="font-size:4px;">&#9830;</span></div><div class="center-emblem" style="width:16px;height:16px;"><div class="dollar" style="font-size:9px;"></div></div></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Ace</span>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#5856D6,#AF52DE);margin-bottom:6px;"></div>
+      <span style="font-size:10px;color:#999;">Photos</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

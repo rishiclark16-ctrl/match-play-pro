@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MATCH Golf — Golf-Centric Icons</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;800;900&family=JetBrains+Mono:wght@700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #fff;
+    padding: 40px;
+  }
+  h1 { font-size: 28px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.02em; }
+  .subtitle { color: #888; font-size: 14px; margin-bottom: 52px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 56px;
+    max-width: 1060px;
+  }
+  .grid + .grid { margin-top: 56px; }
+  .concept { text-align: center; }
+  .iw {
+    width: 220px; height: 220px;
+    border-radius: 48px;
+    overflow: hidden;
+    margin: 0 auto 14px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  }
+  .label { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .desc { color: #999; font-size: 11.5px; line-height: 1.5; max-width: 220px; margin: 0 auto; }
+  .smalls { display: flex; justify-content: center; gap: 10px; margin-top: 12px; align-items: end; }
+  .si { overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+  .r14 { border-radius: 14px; }
+  .r9 { border-radius: 9px; }
+
+  /* ============================================= */
+  /* 1. IRON FACE — club head-on impact             */
+  /* ============================================= */
+  .iron {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #0d0d0d 0%, #080808 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .iron .impact-ring {
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:160px;height:160px;border-radius:50%;
+    border:2px solid rgba(240,238,58,0.15);
+  }
+  .iron .impact-ring-2 {
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:120px;height:120px;border-radius:50%;
+    border:1px solid rgba(240,238,58,0.08);
+  }
+  .iron .club-face {
+    width:90px;height:110px;
+    background: linear-gradient(160deg, #e0e0e0 0%, #ccc 20%, #aaa 50%, #888 80%, #666 100%);
+    border-radius:12px 12px 20px 20px;
+    position:relative;z-index:1;
+    box-shadow:
+      inset -4px -6px 12px rgba(0,0,0,0.2),
+      inset 3px 3px 6px rgba(255,255,255,0.3),
+      0 8px 24px rgba(0,0,0,0.4);
+  }
+  .iron .club-face .grooves {
+    position:absolute;top:25%;left:15%;right:15%;
+    display:flex;flex-direction:column;gap:4px;
+  }
+  .iron .club-face .groove {
+    height:2px;
+    background:linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent);
+    border-radius:1px;
+  }
+  .iron .club-face .sweet-spot {
+    position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);
+    width:24px;height:24px;border-radius:50%;
+    background:radial-gradient(circle, rgba(240,238,58,0.6) 0%, rgba(240,238,58,0) 70%);
+    box-shadow:0 0 12px rgba(240,238,58,0.3);
+  }
+  .iron .club-face .number {
+    position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+    font-family:'Inter',sans-serif;font-weight:900;font-size:22px;
+    color:rgba(0,0,0,0.15);text-shadow:0 1px 0 rgba(255,255,255,0.15);
+  }
+
+  /* ============================================= */
+  /* 2. DIVOT — grass chunk flying                  */
+  /* ============================================= */
+  .divot {
+    width:100%;height:100%;
+    background: linear-gradient(180deg, #0e1a0e 0%, #0A0A0A 40%);
+    display:flex;align-items:flex-end;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .divot .sky-glow {
+    position:absolute;top:0;left:0;right:0;height:40%;
+    background:linear-gradient(180deg, rgba(240,238,58,0.04), transparent);
+  }
+  .divot .ground {
+    width:100%;height:38%;
+    background: linear-gradient(180deg, #1B7832 0%, #145022 40%, #0e3a18 100%);
+    position:relative;
+  }
+  .divot .ground::before {
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg, #1B7832, #22993f, #1B7832);
+  }
+  .divot .chunk {
+    position:absolute;
+    background: linear-gradient(160deg, #22993f, #1B7832, #145022);
+    border-radius:4px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.3);
+  }
+  .divot .ch1 { width:28px;height:14px;top:28%;left:30%;transform:rotate(-20deg); }
+  .divot .ch2 { width:20px;height:10px;top:22%;left:48%;transform:rotate(15deg); }
+  .divot .ch3 { width:16px;height:8px;top:32%;right:28%;transform:rotate(-10deg); }
+  .divot .dirt { position:absolute;width:4px;height:4px;border-radius:50%;background:#5a3a1a; }
+  .divot .d1 { top:35%;left:35%; }
+  .divot .d2 { top:26%;left:55%; }
+  .divot .d3 { top:38%;right:32%; }
+  .divot .ball-flight {
+    position:absolute;top:18%;right:22%;
+    width:22px;height:22px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff 0%, #eee 30%, #ccc 70%);
+    box-shadow:
+      inset -2px -2px 4px rgba(0,0,0,0.1),
+      0 2px 8px rgba(0,0,0,0.3);
+  }
+  .divot .trail {
+    position:absolute;
+    height:2px;border-radius:1px;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,0.15));
+  }
+  .divot .tr1 { top:22%;right:38%;width:30px;transform:rotate(-15deg); }
+  .divot .tr2 { top:20%;right:42%;width:20px;transform:rotate(-18deg);opacity:0.5; }
+
+  /* ============================================= */
+  /* 3. GLOVE — golf glove making a fist            */
+  /* ============================================= */
+  .glove {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #0f0f0f 0%, #080808 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .glove .glow {
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:180px;height:180px;
+    background:radial-gradient(circle, rgba(240,238,58,0.06) 0%, transparent 60%);
+    border-radius:50%;
+  }
+  .glove .hand {
+    position:relative;z-index:1;
+    width:120px;height:130px;
+  }
+  .glove .palm {
+    position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+    width:90px;height:80px;
+    background:linear-gradient(160deg, #f8f8f8 0%, #eee 40%, #ddd 80%);
+    border-radius:16px 16px 20px 20px;
+    box-shadow:
+      inset -4px -4px 10px rgba(0,0,0,0.08),
+      inset 2px 2px 4px rgba(255,255,255,0.5),
+      0 6px 18px rgba(0,0,0,0.3);
+  }
+  .glove .palm .logo-patch {
+    position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+    width:30px;height:14px;
+    background:linear-gradient(160deg, #F0EE3A, #d4d230);
+    border-radius:4px;
+    box-shadow:inset 0 -1px 2px rgba(0,0,0,0.1);
+  }
+  .glove .finger {
+    position:absolute;
+    background:linear-gradient(160deg, #f5f5f5 0%, #e8e8e8 50%, #ddd 100%);
+    border-radius:10px;
+    box-shadow:
+      inset -2px -2px 4px rgba(0,0,0,0.06),
+      inset 1px 1px 2px rgba(255,255,255,0.4),
+      0 2px 6px rgba(0,0,0,0.15);
+  }
+  .glove .f1 { width:20px;height:44px;left:8px;bottom:65px;transform:rotate(8deg); }
+  .glove .f2 { width:20px;height:52px;left:26px;bottom:72px;transform:rotate(3deg); }
+  .glove .f3 { width:20px;height:50px;left:46px;bottom:74px;transform:rotate(-1deg); }
+  .glove .f4 { width:18px;height:42px;left:66px;bottom:68px;transform:rotate(-6deg); }
+  .glove .thumb {
+    position:absolute;
+    width:24px;height:38px;
+    background:linear-gradient(120deg, #f0f0f0 0%, #e0e0e0 50%, #d0d0d0 100%);
+    border-radius:12px;
+    left:-6px;bottom:30px;
+    transform:rotate(25deg);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  .glove .velcro {
+    position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);
+    width:70px;height:8px;
+    background:linear-gradient(90deg, #ddd, #ccc, #ddd);
+    border-radius:0 0 6px 6px;
+  }
+
+  /* ============================================= */
+  /* 4. BALL MARKER — coin on green                 */
+  /* ============================================= */
+  .marker {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #0a120a 0%, #080808 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .marker .green-surface {
+    position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 50% 50%, #1a5c2a 0%, #145022 40%, #0e3a18 80%, #0a2a10 100%);
+  }
+  .marker .grain {
+    position:absolute;inset:0;
+    background:
+      repeating-linear-gradient(95deg, transparent, transparent 3px, rgba(0,0,0,0.03) 3px, rgba(0,0,0,0.03) 4px);
+  }
+  .marker .coin {
+    position:relative;z-index:1;
+    width:110px;height:110px;border-radius:50%;
+    background:linear-gradient(145deg, #f7f540 0%, #F0EE3A 30%, #d4d230 55%, #b8b625 80%);
+    box-shadow:
+      inset -5px -5px 12px rgba(0,0,0,0.2),
+      inset 3px 3px 6px rgba(255,255,255,0.3),
+      0 4px 12px rgba(0,0,0,0.4),
+      0 0 0 3px rgba(0,0,0,0.15);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .marker .coin::before {
+    content:'';position:absolute;
+    top:6%;left:12%;width:35%;height:25%;
+    background:radial-gradient(ellipse, rgba(255,255,255,0.4) 0%, transparent 70%);
+    border-radius:50%;
+  }
+  .marker .coin .edge {
+    position:absolute;inset:5px;border-radius:50%;
+    border:2px solid rgba(0,0,0,0.08);
+  }
+  .marker .coin .edge2 {
+    position:absolute;inset:9px;border-radius:50%;
+    border:1px solid rgba(0,0,0,0.05);
+  }
+  .marker .coin .emboss {
+    font-family:'Inter',sans-serif;font-weight:900;font-size:11px;
+    color:rgba(0,0,0,0.15);text-shadow:0 1px 0 rgba(255,255,255,0.15);
+    letter-spacing:3px;
+    position:relative;z-index:1;
+  }
+  .marker .ball-shadow {
+    position:absolute;z-index:2;
+    top:22%;right:26%;
+    width:36px;height:36px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff 0%, #eee 30%, #ccc 60%, #aaa 100%);
+    box-shadow:
+      inset -3px -3px 6px rgba(0,0,0,0.12),
+      inset 2px 2px 3px rgba(255,255,255,0.4),
+      0 3px 8px rgba(0,0,0,0.4);
+  }
+
+  /* ============================================= */
+  /* 5. SWING ARC — motion trail                    */
+  /* ============================================= */
+  .swing {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #0d0d0d 0%, #080808 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .swing svg { position:absolute;inset:0;width:100%;height:100%; }
+
+  /* ============================================= */
+  /* 6. 18TH HOLE — the number 18                   */
+  /* ============================================= */
+  .eighteen {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #0d0d0d 0%, #080808 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .eighteen .bg-glow {
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:200px;height:200px;
+    background:radial-gradient(circle, rgba(240,238,58,0.06) 0%, transparent 60%);
+    border-radius:50%;
+  }
+  .eighteen .num {
+    font-family:'JetBrains Mono',monospace;font-weight:900;
+    font-size:120px;letter-spacing:-6px;
+    position:relative;z-index:1;
+    color:transparent;
+    background:linear-gradient(180deg, #fff 0%, #ccc 40%, #888 100%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+  }
+  .eighteen .flag-accent {
+    position:absolute;top:20%;right:26%;z-index:2;
+  }
+  .eighteen .flag-accent .pole {
+    width:4px;height:50px;
+    background:linear-gradient(90deg, #ddd, #fff, #ccc);
+    border-radius:2px;
+    margin-left:auto;margin-right:2px;
+  }
+  .eighteen .flag-accent .flg {
+    width:28px;height:20px;
+    background:linear-gradient(160deg, #f7f540, #F0EE3A, #d4d230);
+    clip-path:polygon(0% 0%, 100% 30%, 100% 70%, 0% 100%);
+    margin-top:-50px;margin-left:4px;
+    box-shadow:2px 2px 6px rgba(0,0,0,0.2);
+  }
+  .eighteen .sub {
+    position:absolute;bottom:22%;left:50%;transform:translateX(-50%);
+    font-family:'Inter',sans-serif;font-weight:700;font-size:13px;
+    color:#444;letter-spacing:6px;z-index:1;
+  }
+
+  /* ============================================= */
+  /* 7. PIN SHEET — the caddie's secret weapon      */
+  /* ============================================= */
+  .pinsheet {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #111 0%, #0A0A0A 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .pinsheet .paper {
+    position:relative;z-index:1;
+    width:130px;height:155px;
+    background:linear-gradient(180deg, #f8f6f0 0%, #f0ede5 100%);
+    border-radius:4px;
+    box-shadow:
+      0 8px 24px rgba(0,0,0,0.4),
+      0 2px 4px rgba(0,0,0,0.2);
+    transform:rotate(2deg);
+    padding:12px;
+  }
+  .pinsheet .paper .header {
+    font-family:'Inter',sans-serif;font-weight:900;font-size:8px;
+    color:#333;letter-spacing:2px;text-align:center;
+    margin-bottom:6px;text-transform:uppercase;
+    border-bottom:1px solid #ddd;
+    padding-bottom:4px;
+  }
+  .pinsheet .hole-row {
+    display:flex;align-items:center;gap:4px;
+    margin-bottom:3px;
+  }
+  .pinsheet .hole-num {
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:7px;
+    color:#999;width:12px;text-align:right;
+  }
+  .pinsheet .hole-bar {
+    flex:1;height:6px;border-radius:3px;
+  }
+  .pinsheet .hb-birdie { background:linear-gradient(90deg, #1B7832, #22993f); }
+  .pinsheet .hb-par { background:#ddd; }
+  .pinsheet .hb-bogey { background:linear-gradient(90deg, #d99a1e, #F59E0B); }
+  .pinsheet .hb-eagle { background:linear-gradient(90deg, #c9c730, #F0EE3A); }
+  .pinsheet .hb-double { background:linear-gradient(90deg, #c93030, #EF4444); }
+  .pinsheet .total-row {
+    margin-top:6px;padding-top:4px;
+    border-top:1px solid #ddd;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .pinsheet .total-label {
+    font-family:'Inter',sans-serif;font-weight:800;font-size:7px;
+    color:#333;letter-spacing:1px;
+  }
+  .pinsheet .total-money {
+    font-family:'JetBrains Mono',monospace;font-weight:800;font-size:9px;
+    color:#1B7832;
+  }
+  .pinsheet .paper-curl {
+    position:absolute;bottom:0;right:0;
+    width:20px;height:20px;
+    background:linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.04) 50%);
+    border-radius:0 0 4px 0;
+  }
+  .pinsheet .pencil {
+    position:absolute;z-index:2;
+    bottom:15%;right:12%;
+    width:6px;height:60px;
+    background:linear-gradient(90deg, #F0EE3A, #d4d230);
+    border-radius:1px 1px 0 0;
+    transform:rotate(-30deg);
+    box-shadow:2px 2px 6px rgba(0,0,0,0.3);
+  }
+  .pinsheet .pencil::before {
+    content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
+    width:0;height:0;
+    border-left:3px solid transparent;
+    border-right:3px solid transparent;
+    border-top:8px solid #333;
+  }
+  .pinsheet .pencil::after {
+    content:'';position:absolute;top:0;left:0;right:0;height:8px;
+    background:#aaa;border-radius:1px 1px 0 0;
+  }
+
+  /* ============================================= */
+  /* 8. DIMPLE PATTERN — abstract ball texture      */
+  /* ============================================= */
+  .dimples {
+    width:100%;height:100%;
+    background: #0A0A0A;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .dimples .pattern {
+    position:absolute;inset:0;
+    display:grid;
+    grid-template-columns:repeat(8,1fr);
+    grid-template-rows:repeat(8,1fr);
+    gap:3px;
+    padding:14px;
+  }
+  .dimples .dot {
+    border-radius:50%;
+    background:rgba(255,255,255,0.04);
+    box-shadow:inset 0 1px 2px rgba(255,255,255,0.02);
+  }
+  .dimples .dot.lit {
+    background:radial-gradient(circle, rgba(240,238,58,0.5) 0%, rgba(240,238,58,0.1) 60%, transparent 100%);
+    box-shadow:0 0 6px rgba(240,238,58,0.2);
+  }
+  .dimples .dot.green-lit {
+    background:radial-gradient(circle, rgba(34,197,94,0.4) 0%, rgba(34,197,94,0.08) 60%, transparent 100%);
+    box-shadow:0 0 4px rgba(34,197,94,0.15);
+  }
+
+</style>
+</head>
+<body>
+
+<h1>MATCH Golf — Pure Golf Energy</h1>
+<p class="subtitle">8 golf-centric concepts. Things you'd only see in a golfer's world.</p>
+
+<div class="grid">
+
+<!-- 1. IRON FACE -->
+<div class="concept">
+  <div class="iw">
+    <div class="iron">
+      <div class="impact-ring"></div>
+      <div class="impact-ring-2"></div>
+      <div class="club-face">
+        <div class="grooves">
+          <div class="groove"></div><div class="groove"></div><div class="groove"></div>
+          <div class="groove"></div><div class="groove"></div><div class="groove"></div>
+          <div class="groove"></div><div class="groove"></div>
+        </div>
+        <div class="sweet-spot"></div>
+        <div class="number">7</div>
+      </div>
+    </div>
+  </div>
+  <div class="label">1. Iron Face</div>
+  <div class="desc">Head-on view of a 7-iron face with grooves, chartreuse sweet spot glowing. Impact rings radiating out. Pure golf DNA.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="iron"><div class="club-face" style="width:26px;height:32px;border-radius:4px 4px 6px 6px;"><div class="sweet-spot" style="width:8px;height:8px;top:40%;"></div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="iron"><div class="club-face" style="width:18px;height:22px;border-radius:3px 3px 4px 4px;"><div class="sweet-spot" style="width:6px;height:6px;top:38%;"></div></div></div></div>
+  </div>
+</div>
+
+<!-- 2. DIVOT -->
+<div class="concept">
+  <div class="iw">
+    <div class="divot">
+      <div class="sky-glow"></div>
+      <div class="trail tr1"></div>
+      <div class="trail tr2"></div>
+      <div class="ball-flight"></div>
+      <div class="chunk ch1"></div>
+      <div class="chunk ch2"></div>
+      <div class="chunk ch3"></div>
+      <div class="dirt d1"></div>
+      <div class="dirt d2"></div>
+      <div class="dirt d3"></div>
+      <div class="ground"></div>
+    </div>
+  </div>
+  <div class="label">2. Pure Strike</div>
+  <div class="desc">Ball launching off the turf, divot chunks flying, grass exploding. The split-second of a perfect iron shot. Dynamic, alive.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="divot"><div class="ball-flight" style="width:8px;height:8px;top:20%;right:24%;"></div><div class="chunk ch1" style="width:8px;height:4px;top:32%;left:28%;"></div><div class="chunk ch2" style="width:6px;height:3px;top:28%;left:46%;"></div><div class="ground" style="height:35%;"></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="divot"><div class="ball-flight" style="width:6px;height:6px;top:22%;right:22%;"></div><div class="ground" style="height:32%;"></div></div></div>
+  </div>
+</div>
+
+<!-- 3. GLOVE -->
+<div class="concept">
+  <div class="iw">
+    <div class="glove">
+      <div class="glow"></div>
+      <div class="hand">
+        <div class="thumb"></div>
+        <div class="finger f1"></div>
+        <div class="finger f2"></div>
+        <div class="finger f3"></div>
+        <div class="finger f4"></div>
+        <div class="palm">
+          <div class="logo-patch"></div>
+        </div>
+        <div class="velcro"></div>
+      </div>
+    </div>
+  </div>
+  <div class="label">3. The Glove</div>
+  <div class="desc">White golf glove with a chartreuse logo patch. Every golfer puts one on before they play. The ritual. Personal, intimate.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="glove"><div class="hand" style="transform:scale(0.35);"><div class="thumb"></div><div class="finger f1"></div><div class="finger f2"></div><div class="finger f3"></div><div class="finger f4"></div><div class="palm"><div class="logo-patch"></div></div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="glove"><div class="hand" style="transform:scale(0.24);"><div class="thumb"></div><div class="finger f1"></div><div class="finger f2"></div><div class="finger f3"></div><div class="finger f4"></div><div class="palm"><div class="logo-patch"></div></div></div></div></div>
+  </div>
+</div>
+
+</div>
+
+<div class="grid">
+
+<!-- 4. BALL MARKER -->
+<div class="concept">
+  <div class="iw">
+    <div class="marker">
+      <div class="green-surface"></div>
+      <div class="grain"></div>
+      <div class="ball-shadow"></div>
+      <div class="coin">
+        <div class="edge"></div>
+        <div class="edge2"></div>
+        <div class="emboss">MATCH</div>
+      </div>
+    </div>
+  </div>
+  <div class="label">4. Ball Marker</div>
+  <div class="desc">Chartreuse ball marker coin on the green with a ball nearby. Every golfer carries one. "MATCH" subtly embossed. Premium and personal.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="marker"><div class="green-surface"></div><div class="grain"></div><div class="ball-shadow" style="width:10px;height:10px;top:20%;right:22%;"></div><div class="coin" style="width:30px;height:30px;"><div class="edge" style="inset:2px;"></div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="marker"><div class="green-surface"></div><div class="coin" style="width:20px;height:20px;"></div></div></div>
+  </div>
+</div>
+
+<!-- 5. SWING ARC -->
+<div class="concept">
+  <div class="iw">
+    <div class="swing">
+      <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+        <!-- Swing arc trail -->
+        <defs>
+          <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#F0EE3A;stop-opacity:0"/>
+            <stop offset="50%" style="stop-color:#F0EE3A;stop-opacity:0.6"/>
+            <stop offset="100%" style="stop-color:#F0EE3A;stop-opacity:0"/>
+          </linearGradient>
+        </defs>
+        <!-- Arc path -->
+        <path d="M 40,40 Q 110,20 170,70 Q 200,95 180,140 Q 160,170 130,185"
+              fill="none" stroke="url(#arcGrad)" stroke-width="4" stroke-linecap="round"/>
+        <!-- Secondary ghost arc -->
+        <path d="M 50,50 Q 110,30 165,75"
+              fill="none" stroke="rgba(240,238,58,0.15)" stroke-width="8" stroke-linecap="round"/>
+        <!-- Impact point -->
+        <circle cx="130" cy="185" r="8" fill="rgba(240,238,58,0.3)"/>
+        <circle cx="130" cy="185" r="4" fill="#F0EE3A">
+        </circle>
+        <!-- Ball launching -->
+        <circle cx="148" cy="168" r="7" fill="#fff" filter="url(#ballShadow)"/>
+        <line x1="134" y1="182" x2="155" y2="158" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-dasharray="3,3"/>
+        <!-- Golfer silhouette (minimal) -->
+        <circle cx="95" cy="100" r="10" fill="rgba(255,255,255,0.12)"/>
+        <line x1="95" y1="110" x2="95" y2="150" stroke="rgba(255,255,255,0.12)" stroke-width="4" stroke-linecap="round"/>
+        <line x1="95" y1="150" x2="82" y2="178" stroke="rgba(255,255,255,0.1)" stroke-width="3" stroke-linecap="round"/>
+        <line x1="95" y1="150" x2="108" y2="178" stroke="rgba(255,255,255,0.1)" stroke-width="3" stroke-linecap="round"/>
+        <!-- Club in hand -->
+        <line x1="95" y1="125" x2="130" y2="185" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+  <div class="label">5. The Swing</div>
+  <div class="desc">Chartreuse swing arc with a ghost silhouette golfer. Ball launching at impact. Motion, energy, the essence of the game.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="swing"><svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ag2" x1="0%" y1="0%" x2="100%"><stop offset="0%" style="stop-color:#F0EE3A;stop-opacity:0"/><stop offset="60%" style="stop-color:#F0EE3A;stop-opacity:0.6"/><stop offset="100%" style="stop-color:#F0EE3A;stop-opacity:0"/></linearGradient></defs><path d="M 40,40 Q 110,20 170,70 Q 200,95 180,140 Q 160,170 130,185" fill="none" stroke="url(#ag2)" stroke-width="6" stroke-linecap="round"/><circle cx="130" cy="185" r="5" fill="#F0EE3A"/><circle cx="148" cy="168" r="5" fill="#fff"/></svg></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="swing"><svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg"><path d="M 40,40 Q 110,20 170,70 Q 200,95 180,140 Q 160,170 130,185" fill="none" stroke="#F0EE3A" stroke-width="8" stroke-linecap="round" opacity="0.5"/><circle cx="130" cy="185" r="6" fill="#F0EE3A"/><circle cx="150" cy="166" r="6" fill="#fff"/></svg></div></div>
+  </div>
+</div>
+
+<!-- 6. 18 -->
+<div class="concept">
+  <div class="iw">
+    <div class="eighteen">
+      <div class="bg-glow"></div>
+      <div class="flag-accent">
+        <div class="flg"></div>
+        <div class="pole"></div>
+      </div>
+      <div class="num">18</div>
+      <div class="sub">HOLES</div>
+    </div>
+  </div>
+  <div class="label">6. Eighteen</div>
+  <div class="desc">Giant chrome "18" with a small chartreuse flag accent. The universal golf number. Simple, bold, unmistakable.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="eighteen"><div class="num" style="font-size:32px;letter-spacing:-2px;">18</div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="eighteen"><div class="num" style="font-size:22px;letter-spacing:-1px;">18</div></div></div>
+  </div>
+</div>
+
+</div>
+
+<div class="grid">
+
+<!-- 7. PIN SHEET -->
+<div class="concept">
+  <div class="iw">
+    <div class="pinsheet">
+      <div class="paper">
+        <div class="header">Scorecard</div>
+        <div class="hole-row"><div class="hole-num">1</div><div class="hole-bar hb-birdie"></div></div>
+        <div class="hole-row"><div class="hole-num">2</div><div class="hole-bar hb-par"></div></div>
+        <div class="hole-row"><div class="hole-num">3</div><div class="hole-bar hb-bogey"></div></div>
+        <div class="hole-row"><div class="hole-num">4</div><div class="hole-bar hb-par"></div></div>
+        <div class="hole-row"><div class="hole-num">5</div><div class="hole-bar hb-eagle"></div></div>
+        <div class="hole-row"><div class="hole-num">6</div><div class="hole-bar hb-par"></div></div>
+        <div class="hole-row"><div class="hole-num">7</div><div class="hole-bar hb-double"></div></div>
+        <div class="hole-row"><div class="hole-num">8</div><div class="hole-bar hb-birdie"></div></div>
+        <div class="hole-row"><div class="hole-num">9</div><div class="hole-bar hb-par"></div></div>
+        <div class="total-row">
+          <div class="total-label">TOTAL</div>
+          <div class="total-money">+$18</div>
+        </div>
+        <div class="paper-curl"></div>
+      </div>
+      <div class="pencil"></div>
+    </div>
+  </div>
+  <div class="label">7. Scorecard</div>
+  <div class="desc">Paper scorecard with color-coded hole bars, pencil, and money total at the bottom. The physical thing, digitized. A golfer's artifact.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="pinsheet"><div class="paper" style="width:36px;height:42px;padding:4px;border-radius:2px;transform:rotate(1deg);"><div class="header" style="font-size:3px;letter-spacing:1px;margin-bottom:2px;padding-bottom:2px;"></div><div class="hole-row" style="margin-bottom:1px;gap:1px;"><div class="hole-bar hb-birdie" style="height:2px;border-radius:1px;"></div></div><div class="hole-row" style="margin-bottom:1px;gap:1px;"><div class="hole-bar hb-par" style="height:2px;border-radius:1px;"></div></div><div class="hole-row" style="margin-bottom:1px;gap:1px;"><div class="hole-bar hb-bogey" style="height:2px;border-radius:1px;"></div></div><div class="hole-row" style="margin-bottom:1px;gap:1px;"><div class="hole-bar hb-par" style="height:2px;border-radius:1px;"></div></div><div class="hole-row" style="margin-bottom:1px;gap:1px;"><div class="hole-bar hb-eagle" style="height:2px;border-radius:1px;"></div></div><div class="hole-row" style="margin-bottom:1px;gap:1px;"><div class="hole-bar hb-par" style="height:2px;border-radius:1px;"></div></div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="pinsheet"><div class="paper" style="width:24px;height:28px;padding:3px;border-radius:2px;transform:none;"><div class="hole-row" style="margin-bottom:1px;"><div class="hole-bar hb-birdie" style="height:1.5px;border-radius:1px;"></div></div><div class="hole-row" style="margin-bottom:1px;"><div class="hole-bar hb-par" style="height:1.5px;border-radius:1px;"></div></div><div class="hole-row" style="margin-bottom:1px;"><div class="hole-bar hb-bogey" style="height:1.5px;border-radius:1px;"></div></div><div class="hole-row" style="margin-bottom:1px;"><div class="hole-bar hb-eagle" style="height:1.5px;border-radius:1px;"></div></div><div class="hole-row" style="margin-bottom:1px;"><div class="hole-bar hb-par" style="height:1.5px;border-radius:1px;"></div></div></div></div></div>
+  </div>
+</div>
+
+<!-- 8. DIMPLE PATTERN -->
+<div class="concept">
+  <div class="iw">
+    <div class="dimples">
+      <div class="pattern">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot lit"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot lit"></div><div class="dot lit"></div><div class="dot lit"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot lit"></div><div class="dot lit"></div><div class="dot lit"></div><div class="dot lit"></div><div class="dot green-lit"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot lit"></div><div class="dot lit"></div><div class="dot green-lit"></div><div class="dot green-lit"></div><div class="dot green-lit"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot green-lit"></div><div class="dot green-lit"></div><div class="dot green-lit"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot green-lit"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+    </div>
+  </div>
+  <div class="label">8. Dimple Grid</div>
+  <div class="desc">Golf ball dimple pattern as an abstract grid. Chartreuse to green gradient forming a diagonal streak — like a ball's flight path. Subtle, techy, unique.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="dimples"><div class="pattern" style="grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);gap:2px;padding:8px;"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot lit"></div><div class="dot lit"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot lit"></div><div class="dot lit"></div><div class="dot green-lit"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot green-lit"></div><div class="dot green-lit"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot green-lit"></div><div class="dot"></div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="dimples"><div class="pattern" style="grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:2px;padding:6px;"><div class="dot"></div><div class="dot lit"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot lit"></div><div class="dot green-lit"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot green-lit"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot green-lit"></div></div></div></div>
+  </div>
+</div>
+
+</div>
+
+<!-- Home screen -->
+<div style="margin-top:60px;">
+  <h2 style="font-size:18px;font-weight:700;margin-bottom:20px;">Home Screen (60px)</h2>
+  <div style="background:#1c1c1e;border-radius:24px;padding:32px;display:inline-flex;gap:24px;align-items:start;flex-wrap:wrap;max-width:700px;">
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#34C759,#30D158);margin-bottom:6px;"></div>
+      <span style="font-size:10px;color:#999;">Messages</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="iron"><div class="club-face" style="width:26px;height:32px;border-radius:4px 4px 6px 6px;"><div class="sweet-spot" style="width:8px;height:8px;top:40%;"></div></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Iron</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="divot"><div class="ball-flight" style="width:8px;height:8px;top:20%;right:24%;"></div><div class="chunk ch1" style="width:8px;height:4px;top:32%;left:28%;"></div><div class="ground" style="height:35%;"></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Strike</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="glove"><div class="hand" style="transform:scale(0.35);"><div class="thumb"></div><div class="finger f1"></div><div class="finger f2"></div><div class="finger f3"></div><div class="finger f4"></div><div class="palm"><div class="logo-patch"></div></div></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Glove</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="marker"><div class="green-surface"></div><div class="grain"></div><div class="ball-shadow" style="width:10px;height:10px;top:20%;right:22%;"></div><div class="coin" style="width:30px;height:30px;"><div class="edge" style="inset:2px;"></div></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Marker</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="swing"><svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ag3" x1="0%" y1="0%" x2="100%"><stop offset="0%" style="stop-color:#F0EE3A;stop-opacity:0"/><stop offset="60%" style="stop-color:#F0EE3A;stop-opacity:0.6"/><stop offset="100%" style="stop-color:#F0EE3A;stop-opacity:0"/></linearGradient></defs><path d="M 40,40 Q 110,20 170,70 Q 200,95 180,140 Q 160,170 130,185" fill="none" stroke="url(#ag3)" stroke-width="6" stroke-linecap="round"/><circle cx="130" cy="185" r="5" fill="#F0EE3A"/><circle cx="148" cy="168" r="5" fill="#fff"/></svg></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Swing</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="eighteen"><div class="num" style="font-size:32px;letter-spacing:-2px;">18</div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">18</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="pinsheet"><div class="paper" style="width:36px;height:42px;padding:4px;border-radius:2px;transform:rotate(1deg);"><div class="hole-row" style="margin-bottom:1px;gap:1px;"><div class="hole-bar hb-birdie" style="height:2px;border-radius:1px;"></div></div><div class="hole-row" style="margin-bottom:1px;gap:1px;"><div class="hole-bar hb-par" style="height:2px;border-radius:1px;"></div></div><div class="hole-row" style="margin-bottom:1px;gap:1px;"><div class="hole-bar hb-bogey" style="height:2px;border-radius:1px;"></div></div><div class="hole-row" style="margin-bottom:1px;gap:1px;"><div class="hole-bar hb-par" style="height:2px;border-radius:1px;"></div></div><div class="hole-row" style="margin-bottom:1px;gap:1px;"><div class="hole-bar hb-eagle" style="height:2px;border-radius:1px;"></div></div><div class="hole-row" style="margin-bottom:1px;gap:1px;"><div class="hole-bar hb-par" style="height:2px;border-radius:1px;"></div></div></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Card</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="dimples"><div class="pattern" style="grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);gap:2px;padding:8px;"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot lit"></div><div class="dot lit"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot lit"></div><div class="dot lit"></div><div class="dot green-lit"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot green-lit"></div><div class="dot green-lit"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot green-lit"></div><div class="dot"></div></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Grid</span>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#007AFF,#5AC8FA);margin-bottom:6px;"></div>
+      <span style="font-size:10px;color:#999;">Safari</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

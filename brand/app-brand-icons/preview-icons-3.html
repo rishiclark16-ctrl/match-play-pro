@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MATCH Golf — Even More Icons</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;800;900&family=JetBrains+Mono:wght@700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #fff;
+    padding: 40px;
+  }
+  h1 { font-size: 28px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.02em; }
+  .subtitle { color: #888; font-size: 14px; margin-bottom: 52px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 56px;
+    max-width: 1060px;
+  }
+  .grid + .grid { margin-top: 56px; }
+  .concept { text-align: center; }
+  .iw {
+    width: 220px; height: 220px;
+    border-radius: 48px;
+    overflow: hidden;
+    margin: 0 auto 14px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  }
+  .label { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .desc { color: #999; font-size: 11.5px; line-height: 1.5; max-width: 220px; margin: 0 auto; }
+  .smalls { display: flex; justify-content: center; gap: 10px; margin-top: 12px; align-items: end; }
+  .si { overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+  .r14 { border-radius: 14px; }
+  .r9 { border-radius: 9px; }
+
+  /* ============================================= */
+  /* 1. RADAR / RANGEFINDER                        */
+  /* ============================================= */
+  .radar {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #0a0f0a 0%, #080808 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .radar .ring { position:absolute;border-radius:50%;border:1px solid rgba(34,197,94,0.1);top:50%;left:50%;transform:translate(-50%,-50%); }
+  .radar .r1 { width:200px;height:200px; }
+  .radar .r2 { width:150px;height:150px;border-color:rgba(34,197,94,0.15); }
+  .radar .r3 { width:100px;height:100px;border-color:rgba(34,197,94,0.2); }
+  .radar .r4 { width:50px;height:50px;border-color:rgba(34,197,94,0.25); }
+  .radar .sweep {
+    position:absolute;top:50%;left:50%;
+    width:100px;height:2px;
+    background:linear-gradient(90deg,rgba(240,238,58,0.8),transparent);
+    transform-origin:0 50%;
+    transform:rotate(-30deg);
+    box-shadow:0 0 8px rgba(240,238,58,0.3);
+  }
+  .radar .pin {
+    position:absolute;
+    width:8px;height:8px;border-radius:50%;
+    background:#F0EE3A;
+    box-shadow:0 0 8px #F0EE3A, 0 0 20px rgba(240,238,58,0.4);
+  }
+  .radar .pin-1 { top:30%;right:32%; }
+  .radar .pin-2 { bottom:35%;left:28%; }
+  .radar .center-dot {
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:12px;height:12px;border-radius:50%;
+    background:#22C55E;
+    box-shadow:0 0 8px rgba(34,197,94,0.6);
+  }
+  .radar .dist {
+    position:absolute;top:31%;right:22%;
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10px;
+    color:#F0EE3A;opacity:0.7;
+  }
+
+  /* ============================================= */
+  /* 2. BURNING MONEY — $100 on fire               */
+  /* ============================================= */
+  .burn {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #0f0a05 0%, #080808 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .burn .heat {
+    position:absolute;bottom:0;left:0;right:0;height:60%;
+    background:linear-gradient(180deg, transparent 0%, rgba(240,238,58,0.04) 50%, rgba(239,68,68,0.03) 100%);
+  }
+  .burn .bill {
+    position:relative;z-index:1;
+    width:130px;height:60px;
+    background: linear-gradient(160deg, #1B8535 0%, #1B7832 40%, #156828 80%);
+    border-radius:6px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    display:flex;align-items:center;justify-content:center;
+    transform:rotate(-3deg);
+  }
+  .burn .bill .dollar {
+    font-family:'JetBrains Mono',monospace;font-weight:900;font-size:32px;
+    color:rgba(255,255,255,0.2);
+    text-shadow:0 1px 0 rgba(255,255,255,0.1);
+  }
+  .burn .bill .border-inset {
+    position:absolute;inset:4px;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:3px;
+  }
+  .burn .flame {
+    position:absolute;z-index:2;
+    border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;
+  }
+  .burn .f1 { width:20px;height:35px;background:linear-gradient(180deg,rgba(240,238,58,0.9),rgba(239,68,68,0.6),transparent);top:20%;left:35%;transform:rotate(-8deg); }
+  .burn .f2 { width:16px;height:28px;background:linear-gradient(180deg,rgba(255,255,200,0.8),rgba(240,238,58,0.7),transparent);top:18%;left:42%;transform:rotate(5deg); }
+  .burn .f3 { width:22px;height:40px;background:linear-gradient(180deg,rgba(240,238,58,0.8),rgba(245,158,11,0.6),transparent);top:16%;right:35%;transform:rotate(3deg); }
+  .burn .f4 { width:14px;height:24px;background:linear-gradient(180deg,rgba(255,255,150,0.7),rgba(240,238,58,0.5),transparent);top:22%;right:30%;transform:rotate(-6deg); }
+  .burn .f5 { width:18px;height:32px;background:linear-gradient(180deg,rgba(240,238,58,0.7),rgba(239,68,68,0.4),transparent);top:19%;left:50%;transform:translateX(-50%) rotate(2deg); }
+
+  /* ============================================= */
+  /* 3. DIAMOND / GEM                              */
+  /* ============================================= */
+  .gem {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #0a0a0f 0%, #080808 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .gem .glow {
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:200px;height:200px;
+    background:radial-gradient(circle, rgba(240,238,58,0.08) 0%, transparent 60%);
+    border-radius:50%;
+  }
+  .gem .diamond {
+    position:relative;z-index:1;
+    width:120px;height:120px;
+    transform:rotate(45deg);
+    background: linear-gradient(135deg, #f7f540 0%, #F0EE3A 25%, #d4d230 50%, #8a881e 100%);
+    border-radius:16px;
+    box-shadow:
+      inset -8px -8px 16px rgba(0,0,0,0.2),
+      inset 4px 4px 8px rgba(255,255,255,0.3),
+      0 10px 30px rgba(240,238,58,0.25),
+      0 0 60px rgba(240,238,58,0.1);
+  }
+  .gem .diamond::before {
+    content:'';position:absolute;
+    top:8%;left:8%;width:40%;height:40%;
+    background:linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 70%);
+    border-radius:8px;
+  }
+  .gem .diamond .inner {
+    position:absolute;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%) rotate(-45deg);
+    width:50px;height:50px;
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #fff 0%, #eee 30%, #ccc 60%, #aaa 100%);
+    box-shadow:
+      inset -3px -3px 6px rgba(0,0,0,0.15),
+      inset 2px 2px 3px rgba(255,255,255,0.4),
+      0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  /* ============================================= */
+  /* 4. SLOT MACHINE — 3 reels                     */
+  /* ============================================= */
+  .slots {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #111 0%, #0A0A0A 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .slots .machine {
+    position:relative;z-index:1;
+    background: linear-gradient(180deg, #1e1e1e, #151515);
+    border-radius:16px;
+    padding:12px;
+    box-shadow:
+      0 8px 24px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.06);
+  }
+  .slots .reels {
+    display:flex;gap:6px;
+  }
+  .slots .reel {
+    width:44px;height:56px;
+    background: linear-gradient(180deg, #0a0a0a, #111);
+    border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
+    position:relative;
+    overflow:hidden;
+  }
+  .slots .reel::before {
+    content:'';position:absolute;top:0;left:0;right:0;height:30%;
+    background:linear-gradient(180deg, rgba(0,0,0,0.4), transparent);
+  }
+  .slots .reel::after {
+    content:'';position:absolute;bottom:0;left:0;right:0;height:30%;
+    background:linear-gradient(0deg, rgba(0,0,0,0.4), transparent);
+  }
+  .slots .reel .symbol {
+    font-size:28px;position:relative;z-index:1;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+  }
+  .slots .win-line {
+    position:absolute;
+    left:8px;right:8px;top:50%;
+    height:2px;
+    background:#F0EE3A;
+    box-shadow:0 0 6px #F0EE3A, 0 0 12px rgba(240,238,58,0.3);
+    transform:translateY(-50%);
+    z-index:5;
+  }
+  .slots .lights {
+    display:flex;justify-content:center;gap:4px;margin-top:8px;
+  }
+  .slots .light {
+    width:6px;height:6px;border-radius:50%;
+  }
+  .slots .l-on { background:#F0EE3A;box-shadow:0 0 4px #F0EE3A; }
+  .slots .l-off { background:#333; }
+
+  /* ============================================= */
+  /* 5. COMPASS / COURSE MAP                       */
+  /* ============================================= */
+  .compass {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #0a0f0a 0%, #080808 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .compass .outer-ring {
+    width:170px;height:170px;border-radius:50%;
+    background: linear-gradient(160deg, #222 0%, #1a1a1a 50%, #111 100%);
+    box-shadow:
+      0 8px 24px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.05),
+      inset 0 -1px 0 rgba(0,0,0,0.3);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  .compass .inner {
+    width:140px;height:140px;border-radius:50%;
+    background: radial-gradient(circle at 45% 40%, #1a3d1a 0%, #143014 30%, #0e240e 60%, #091a09 100%);
+    position:relative;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+  }
+  .compass .fairway {
+    position:absolute;
+    width:16px;bottom:20%;left:50%;transform:translateX(-50%);
+    height:60%;
+    background: linear-gradient(180deg, #1B7832, #22993f, #1B7832);
+    border-radius:20px 20px 6px 6px;
+    opacity:0.7;
+  }
+  .compass .green-circle {
+    position:absolute;
+    top:16%;left:50%;transform:translateX(-50%);
+    width:28px;height:24px;
+    background:radial-gradient(ellipse, #22993f 0%, #1B7832 100%);
+    border-radius:50%;
+    opacity:0.8;
+  }
+  .compass .pin-dot {
+    position:absolute;
+    top:20%;left:50%;transform:translateX(-50%);
+    width:8px;height:8px;border-radius:50%;
+    background:#F0EE3A;
+    box-shadow:0 0 6px #F0EE3A, 0 0 14px rgba(240,238,58,0.4);
+    z-index:2;
+  }
+  .compass .you-dot {
+    position:absolute;
+    bottom:24%;left:50%;transform:translateX(-50%);
+    width:10px;height:10px;border-radius:50%;
+    background:#22C55E;
+    box-shadow:0 0 6px rgba(34,197,94,0.6);
+    z-index:2;
+  }
+  .compass .you-pulse {
+    position:absolute;
+    bottom:21%;left:50%;transform:translateX(-50%);
+    width:20px;height:20px;border-radius:50%;
+    border:2px solid rgba(34,197,94,0.3);
+    z-index:1;
+  }
+  .compass .dist-label {
+    position:absolute;
+    top:50%;left:50%;transform:translate(-50%,-50%);
+    font-family:'JetBrains Mono',monospace;font-weight:800;font-size:14px;
+    color:rgba(240,238,58,0.6);
+    z-index:3;
+  }
+  .compass .tick { position:absolute;background:rgba(255,255,255,0.15);width:1px; }
+  .compass .t-n { height:8px;top:4px;left:50%;transform:translateX(-50%); }
+  .compass .t-s { height:8px;bottom:4px;left:50%;transform:translateX(-50%); }
+  .compass .t-e { width:8px;height:1px;right:4px;top:50%;transform:translateY(-50%); }
+  .compass .t-w { width:8px;height:1px;left:4px;top:50%;transform:translateY(-50%); }
+
+  /* ============================================= */
+  /* 6. HANDSHAKE / FIST BUMP                      */
+  /* ============================================= */
+  .shake {
+    width:100%;height:100%;
+    background: linear-gradient(155deg, #0f0f0f 0%, #080808 100%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .shake .impact-glow {
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:160px;height:160px;
+    background:radial-gradient(circle, rgba(240,238,58,0.12) 0%, transparent 50%);
+    border-radius:50%;
+  }
+  .shake .fist {
+    position:relative;z-index:1;
+  }
+  .shake .fist-l, .shake .fist-r {
+    position:absolute;
+    width:60px;height:50px;
+    border-radius:12px;
+    top:50%;
+  }
+  .shake .fist-l {
+    right:52%;transform:translateY(-50%);
+    background: linear-gradient(160deg, #e8e0d0 0%, #d4c8b4 50%, #bfb09a 100%);
+    border-radius:14px 8px 8px 14px;
+    box-shadow:
+      inset -3px -3px 8px rgba(0,0,0,0.15),
+      inset 2px 2px 4px rgba(255,255,255,0.2),
+      -4px 4px 12px rgba(0,0,0,0.3);
+  }
+  .shake .fist-r {
+    left:52%;transform:translateY(-50%);
+    background: linear-gradient(200deg, #e8e0d0 0%, #d4c8b4 50%, #bfb09a 100%);
+    border-radius:8px 14px 14px 8px;
+    box-shadow:
+      inset 3px -3px 8px rgba(0,0,0,0.15),
+      inset -2px 2px 4px rgba(255,255,255,0.2),
+      4px 4px 12px rgba(0,0,0,0.3);
+  }
+  /* Finger bumps */
+  .shake .fist-l .knuckle, .shake .fist-r .knuckle {
+    position:absolute;
+    width:14px;height:12px;
+    border-radius:50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(0,0,0,0.05));
+  }
+  .shake .fist-l .k1 { top:6px;right:-2px; }
+  .shake .fist-l .k2 { top:18px;right:-4px; }
+  .shake .fist-l .k3 { top:30px;right:-2px; }
+  .shake .fist-r .k1 { top:6px;left:-2px; }
+  .shake .fist-r .k2 { top:18px;left:-4px; }
+  .shake .fist-r .k3 { top:30px;left:-2px; }
+  .shake .impact {
+    position:absolute;z-index:2;
+    top:50%;left:50%;transform:translate(-50%,-50%);
+  }
+  .shake .spark {
+    position:absolute;
+    width:3px;height:3px;border-radius:50%;
+    background:#F0EE3A;
+    box-shadow:0 0 4px #F0EE3A, 0 0 8px rgba(240,238,58,0.4);
+  }
+  .shake .sp1 { top:-16px;left:-8px; }
+  .shake .sp2 { top:-10px;left:8px; }
+  .shake .sp3 { top:6px;left:-12px; }
+  .shake .sp4 { top:10px;left:6px; }
+  .shake .sp5 { top:-4px;left:-18px;width:2px;height:2px; }
+  .shake .sp6 { top:2px;left:14px;width:2px;height:2px; }
+  .shake .center-flash {
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:16px;height:16px;border-radius:50%;
+    background:radial-gradient(circle, rgba(240,238,58,0.8) 0%, rgba(240,238,58,0) 70%);
+  }
+
+</style>
+</head>
+<body>
+
+<h1>MATCH Golf — Round 3</h1>
+<p class="subtitle">Going wilder. 6 more concepts exploring different visual metaphors.</p>
+
+<div class="grid">
+
+<!-- 1. RADAR -->
+<div class="concept">
+  <div class="iw">
+    <div class="radar">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="ring r4"></div>
+      <div class="sweep"></div>
+      <div class="center-dot"></div>
+      <div class="pin pin-1"></div>
+      <div class="pin pin-2"></div>
+      <div class="dist">148y</div>
+    </div>
+  </div>
+  <div class="label">1. Rangefinder</div>
+  <div class="desc">Golf radar with a chartreuse sweep line, pin targets, and yardage. High-tech, tactical. Different from anything in the App Store.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="radar"><div class="ring r2" style="width:44px;height:44px;"></div><div class="ring r3" style="width:28px;height:28px;"></div><div class="sweep" style="width:26px;transform:rotate(-30deg);"></div><div class="center-dot" style="width:5px;height:5px;"></div><div class="pin pin-1" style="width:4px;height:4px;top:28%;right:30%;"></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="radar"><div class="ring r3" style="width:22px;height:22px;"></div><div class="sweep" style="width:16px;transform:rotate(-30deg);"></div><div class="center-dot" style="width:4px;height:4px;"></div><div class="pin pin-1" style="width:3px;height:3px;top:28%;right:28%;"></div></div></div>
+  </div>
+</div>
+
+<!-- 2. BURNING MONEY -->
+<div class="concept">
+  <div class="iw">
+    <div class="burn">
+      <div class="heat"></div>
+      <div class="flame f1"></div>
+      <div class="flame f2"></div>
+      <div class="flame f3"></div>
+      <div class="flame f4"></div>
+      <div class="flame f5"></div>
+      <div class="bill">
+        <div class="border-inset"></div>
+        <div class="dollar">$</div>
+      </div>
+    </div>
+  </div>
+  <div class="label">2. Money Burns</div>
+  <div class="desc">Dollar bill with chartreuse flames rising off it. "Money on the line." Visceral, bold, impossible to ignore on a home screen.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="burn"><div class="flame f2" style="width:6px;height:10px;top:20%;left:40%;"></div><div class="flame f3" style="width:7px;height:12px;top:18%;right:35%;"></div><div class="bill" style="width:36px;height:16px;border-radius:3px;transform:rotate(-2deg);"><div class="dollar" style="font-size:10px;">$</div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="burn"><div class="flame f3" style="width:5px;height:8px;top:20%;left:50%;"></div><div class="bill" style="width:24px;height:11px;border-radius:2px;transform:none;"><div class="dollar" style="font-size:7px;">$</div></div></div></div>
+  </div>
+</div>
+
+<!-- 3. DIAMOND -->
+<div class="concept">
+  <div class="iw">
+    <div class="gem">
+      <div class="glow"></div>
+      <div class="diamond">
+        <div class="inner"></div>
+      </div>
+    </div>
+  </div>
+  <div class="label">3. Diamond</div>
+  <div class="desc">Chartreuse diamond (rotated square) with a golf ball embedded in the center. Luxury, premium, stands out against every other golf app.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="gem"><div class="diamond" style="width:34px;height:34px;border-radius:6px;"><div class="inner" style="width:14px;height:14px;"></div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="gem"><div class="diamond" style="width:22px;height:22px;border-radius:4px;"><div class="inner" style="width:10px;height:10px;"></div></div></div></div>
+  </div>
+</div>
+
+</div>
+
+<div class="grid">
+
+<!-- 4. SLOT MACHINE -->
+<div class="concept">
+  <div class="iw">
+    <div class="slots">
+      <div class="machine">
+        <div class="reels">
+          <div class="reel"><div class="symbol">&#9971;</div></div>
+          <div class="reel"><div class="symbol">&#9971;</div></div>
+          <div class="reel"><div class="symbol">&#9971;</div></div>
+        </div>
+        <div class="win-line"></div>
+        <div class="lights">
+          <div class="light l-on"></div>
+          <div class="light l-off"></div>
+          <div class="light l-on"></div>
+          <div class="light l-off"></div>
+          <div class="light l-on"></div>
+          <div class="light l-off"></div>
+          <div class="light l-on"></div>
+          <div class="light l-off"></div>
+          <div class="light l-on"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="label">4. Jackpot</div>
+  <div class="desc">Mini slot machine with 3 golf flag emojis lined up. Win line in chartreuse. "Golf gambling" as a visual punchline.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="slots"><div class="machine" style="padding:4px;border-radius:8px;"><div class="reels" style="gap:2px;"><div class="reel" style="width:14px;height:16px;border-radius:3px;"><div class="symbol" style="font-size:9px;">&#9971;</div></div><div class="reel" style="width:14px;height:16px;border-radius:3px;"><div class="symbol" style="font-size:9px;">&#9971;</div></div><div class="reel" style="width:14px;height:16px;border-radius:3px;"><div class="symbol" style="font-size:9px;">&#9971;</div></div></div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="slots"><div class="machine" style="padding:3px;border-radius:5px;"><div class="reels" style="gap:1px;"><div class="reel" style="width:9px;height:11px;border-radius:2px;"><div class="symbol" style="font-size:6px;">&#9971;</div></div><div class="reel" style="width:9px;height:11px;border-radius:2px;"><div class="symbol" style="font-size:6px;">&#9971;</div></div><div class="reel" style="width:9px;height:11px;border-radius:2px;"><div class="symbol" style="font-size:6px;">&#9971;</div></div></div></div></div></div>
+  </div>
+</div>
+
+<!-- 5. COMPASS / COURSE MAP -->
+<div class="concept">
+  <div class="iw">
+    <div class="compass">
+      <div class="outer-ring">
+        <div class="tick t-n"></div>
+        <div class="tick t-s"></div>
+        <div class="tick t-e"></div>
+        <div class="tick t-w"></div>
+        <div class="inner">
+          <div class="fairway"></div>
+          <div class="green-circle"></div>
+          <div class="pin-dot"></div>
+          <div class="you-pulse"></div>
+          <div class="you-dot"></div>
+          <div class="dist-label">152</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="label">5. Course Map</div>
+  <div class="desc">Bird's-eye hole map in a compass ring. Pin at the green, you at the tee, yardage in chartreuse. GPS meets golf scorecard.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="compass"><div class="outer-ring" style="width:46px;height:46px;"><div class="inner" style="width:38px;height:38px;"><div class="fairway" style="width:5px;height:55%;"></div><div class="green-circle" style="width:8px;height:7px;top:18%;"></div><div class="pin-dot" style="width:4px;height:4px;top:20%;"></div><div class="you-dot" style="width:4px;height:4px;bottom:22%;"></div></div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="compass"><div class="outer-ring" style="width:30px;height:30px;"><div class="inner" style="width:24px;height:24px;"><div class="fairway" style="width:4px;height:50%;"></div><div class="pin-dot" style="width:3px;height:3px;top:22%;"></div><div class="you-dot" style="width:3px;height:3px;bottom:24%;"></div></div></div></div></div>
+  </div>
+</div>
+
+<!-- 6. FIST BUMP -->
+<div class="concept">
+  <div class="iw">
+    <div class="shake">
+      <div class="impact-glow"></div>
+      <div class="fist">
+        <div class="fist-l">
+          <div class="knuckle k1"></div>
+          <div class="knuckle k2"></div>
+          <div class="knuckle k3"></div>
+        </div>
+        <div class="fist-r">
+          <div class="knuckle k1"></div>
+          <div class="knuckle k2"></div>
+          <div class="knuckle k3"></div>
+        </div>
+      </div>
+      <div class="impact">
+        <div class="center-flash"></div>
+        <div class="spark sp1"></div>
+        <div class="spark sp2"></div>
+        <div class="spark sp3"></div>
+        <div class="spark sp4"></div>
+        <div class="spark sp5"></div>
+        <div class="spark sp6"></div>
+      </div>
+    </div>
+  </div>
+  <div class="label">6. Fist Bump</div>
+  <div class="desc">Two fists meeting with chartreuse sparks. "It's a match." Social, competitive, energetic. The gesture every golfer knows.</div>
+  <div class="smalls">
+    <div class="si r14" style="width:60px;height:60px;"><div class="shake"><div class="fist"><div class="fist-l" style="width:18px;height:14px;border-radius:5px 3px 3px 5px;"></div><div class="fist-r" style="width:18px;height:14px;border-radius:3px 5px 5px 3px;"></div></div><div class="impact"><div class="center-flash" style="width:6px;height:6px;"></div><div class="spark sp1" style="width:2px;height:2px;top:-6px;left:-3px;"></div><div class="spark sp2" style="width:2px;height:2px;top:-4px;left:4px;"></div></div></div></div>
+    <div class="si r9" style="width:40px;height:40px;"><div class="shake"><div class="fist"><div class="fist-l" style="width:12px;height:10px;border-radius:4px 2px 2px 4px;"></div><div class="fist-r" style="width:12px;height:10px;border-radius:2px 4px 4px 2px;"></div></div><div class="impact"><div class="center-flash" style="width:4px;height:4px;"></div></div></div></div>
+  </div>
+</div>
+
+</div>
+
+<!-- Home screen -->
+<div style="margin-top:60px;">
+  <h2 style="font-size:18px;font-weight:700;margin-bottom:20px;">Home Screen (60px)</h2>
+  <div style="background:#1c1c1e;border-radius:24px;padding:32px;display:inline-flex;gap:28px;align-items:start;">
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#34C759,#30D158);margin-bottom:6px;"></div>
+      <span style="font-size:10px;color:#999;">Messages</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="radar"><div class="ring r2" style="width:44px;height:44px;"></div><div class="ring r3" style="width:28px;height:28px;"></div><div class="sweep" style="width:26px;transform:rotate(-30deg);"></div><div class="center-dot" style="width:5px;height:5px;"></div><div class="pin pin-1" style="width:4px;height:4px;top:28%;right:30%;"></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Radar</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="burn"><div class="flame f2" style="width:6px;height:10px;top:20%;left:40%;"></div><div class="flame f3" style="width:7px;height:12px;top:18%;right:35%;"></div><div class="bill" style="width:36px;height:16px;border-radius:3px;transform:rotate(-2deg);"><div class="dollar" style="font-size:10px;">$</div></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Burn</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="gem"><div class="diamond" style="width:34px;height:34px;border-radius:6px;"><div class="inner" style="width:14px;height:14px;"></div></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Diamond</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="slots"><div class="machine" style="padding:4px;border-radius:8px;"><div class="reels" style="gap:2px;"><div class="reel" style="width:14px;height:16px;border-radius:3px;"><div class="symbol" style="font-size:9px;">&#9971;</div></div><div class="reel" style="width:14px;height:16px;border-radius:3px;"><div class="symbol" style="font-size:9px;">&#9971;</div></div><div class="reel" style="width:14px;height:16px;border-radius:3px;"><div class="symbol" style="font-size:9px;">&#9971;</div></div></div></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Slots</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="compass"><div class="outer-ring" style="width:46px;height:46px;"><div class="inner" style="width:38px;height:38px;"><div class="fairway" style="width:5px;height:55%;"></div><div class="green-circle" style="width:8px;height:7px;top:18%;"></div><div class="pin-dot" style="width:4px;height:4px;top:20%;"></div><div class="you-dot" style="width:4px;height:4px;bottom:22%;"></div></div></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Map</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="si r14" style="width:60px;height:60px;margin-bottom:6px;"><div class="shake"><div class="fist"><div class="fist-l" style="width:18px;height:14px;border-radius:5px 3px 3px 5px;"></div><div class="fist-r" style="width:18px;height:14px;border-radius:3px 5px 5px 3px;"></div></div><div class="impact"><div class="center-flash" style="width:6px;height:6px;"></div><div class="spark sp1" style="width:2px;height:2px;top:-6px;left:-3px;"></div><div class="spark sp2" style="width:2px;height:2px;top:-4px;left:4px;"></div></div></div></div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Bump</span>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#FF3B30,#FF6B6B);margin-bottom:6px;"></div>
+      <span style="font-size:10px;color:#999;">Music</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

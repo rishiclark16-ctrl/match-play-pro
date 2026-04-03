@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MATCH Golf — Symbolic Icons (No Text)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #fff;
+    padding: 40px;
+  }
+  h1 { font-size: 28px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.02em; }
+  .subtitle { color: #888; font-size: 14px; margin-bottom: 52px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 56px;
+    max-width: 1060px;
+  }
+  .row2 { margin-top: 56px; }
+  .concept { text-align: center; }
+  .icon-wrap {
+    width: 220px; height: 220px;
+    border-radius: 48px;
+    overflow: hidden;
+    margin: 0 auto 14px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  }
+  .label { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .desc { color: #999; font-size: 11.5px; line-height: 1.5; max-width: 220px; margin: 0 auto; }
+  .smalls { display: flex; justify-content: center; gap: 10px; margin-top: 12px; align-items: end; }
+  .sm-icon { overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+  .r14 { border-radius: 14px; }
+  .r9 { border-radius: 9px; }
+  .r5 { border-radius: 5px; }
+
+  /* ============================================= */
+  /* 1. THE HOLE — top-down view                   */
+  /* ============================================= */
+  .hole-icon {
+    width: 100%; height: 100%;
+    background: radial-gradient(circle at 50% 50%, #0d1a0d 0%, #0A0A0A 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .hole-icon .green {
+    width: 170px; height: 170px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 45% 42%, #1a5c2a 0%, #145022 30%, #0e3a18 60%, #0a2a10 100%);
+    position: relative;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  }
+  .hole-icon .cup {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #050505 0%, #111 100%);
+    box-shadow:
+      inset 0 2px 6px rgba(0,0,0,0.8),
+      0 0 0 3px rgba(240,238,58,0.5),
+      0 0 16px rgba(240,238,58,0.2),
+      0 0 40px rgba(240,238,58,0.1);
+  }
+  .hole-icon .ball {
+    position: absolute;
+    top: 24%; right: 22%;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff 0%, #e8e8e8 40%, #ccc 80%);
+    box-shadow:
+      inset -2px -2px 4px rgba(0,0,0,0.15),
+      0 3px 8px rgba(0,0,0,0.3);
+  }
+
+  /* ============================================= */
+  /* 2. 3D GOLF BALL — glossy sphere               */
+  /* ============================================= */
+  .ball-icon {
+    width: 100%; height: 100%;
+    background: linear-gradient(160deg, #111 0%, #0A0A0A 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .ball-icon .sphere {
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 28%, #ffffff 0%, #f0f0f0 15%, #ddd 35%, #bbb 55%, #999 75%, #666 100%);
+    position: relative;
+    box-shadow:
+      inset -10px -10px 25px rgba(0,0,0,0.25),
+      inset 3px 3px 8px rgba(255,255,255,0.3),
+      0 16px 40px rgba(0,0,0,0.5);
+  }
+  .ball-icon .sphere::before {
+    content: '';
+    position: absolute;
+    top: 6%; left: 12%;
+    width: 40%; height: 28%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.8) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .ball-icon .stripe {
+    position: absolute;
+    top: 50%; left: 0;
+    transform: translateY(-50%);
+    width: 100%; height: 18px;
+    background: linear-gradient(90deg, transparent 5%, #F0EE3A 20%, #F0EE3A 80%, transparent 95%);
+    opacity: 0.7;
+    border-radius: 2px;
+  }
+  .ball-icon .floor-shadow {
+    position: absolute;
+    bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 14px;
+    background: radial-gradient(ellipse, rgba(0,0,0,0.35) 0%, transparent 70%);
+  }
+
+  /* ============================================= */
+  /* 3. PLUSH FLAG — 3D soft flag object           */
+  /* ============================================= */
+  .flag-icon {
+    width: 100%; height: 100%;
+    background: linear-gradient(150deg, #111 0%, #0A0A0A 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .flag-icon .pole {
+    position: absolute;
+    left: 42%; top: 14%;
+    width: 10px; height: 72%;
+    background: linear-gradient(90deg, #ddd 0%, #fff 30%, #ddd 60%, #bbb 100%);
+    border-radius: 5px;
+    box-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+  }
+  .flag-icon .pole-cap {
+    position: absolute;
+    left: calc(42% - 2px); top: 11%;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #fff 0%, #ddd 60%, #bbb 100%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .flag-icon .flag {
+    position: absolute;
+    left: calc(42% + 10px); top: 14%;
+    width: 0; height: 0;
+    border-left: 0px solid transparent;
+    border-top: 40px solid transparent;
+    border-bottom: 40px solid transparent;
+  }
+  .flag-icon .flag-body {
+    position: absolute;
+    left: calc(42% + 8px); top: 14%;
+    width: 90px; height: 72px;
+    background: linear-gradient(160deg, #f7f540 0%, #F0EE3A 30%, #d4d230 60%, #b8b625 100%);
+    border-radius: 4px 16px 16px 4px;
+    box-shadow:
+      4px 6px 16px rgba(0,0,0,0.3),
+      inset -4px -4px 10px rgba(0,0,0,0.1),
+      inset 2px 2px 6px rgba(255,255,255,0.3);
+    clip-path: polygon(0% 0%, 85% 10%, 100% 50%, 85% 90%, 0% 100%);
+  }
+  .flag-icon .flag-wave {
+    position: absolute;
+    left: calc(42% + 8px); top: 14%;
+    width: 90px; height: 72px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 30%, rgba(0,0,0,0.05) 60%, rgba(255,255,255,0.1) 100%);
+    clip-path: polygon(0% 0%, 85% 10%, 100% 50%, 85% 90%, 0% 100%);
+    border-radius: 4px 16px 16px 4px;
+  }
+  .flag-icon .ground {
+    position: absolute;
+    bottom: 12%; left: 50%;
+    transform: translateX(-50%);
+    width: 100px; height: 8px;
+    background: radial-gradient(ellipse, rgba(27,120,50,0.4) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .flag-icon .ground-shadow {
+    position: absolute;
+    bottom: 10%; left: 50%;
+    transform: translateX(-50%);
+    width: 70px; height: 12px;
+    background: radial-gradient(ellipse, rgba(0,0,0,0.3) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  /* ============================================= */
+  /* 4. SCORE BUBBLE — birdie circle               */
+  /* ============================================= */
+  .bubble-icon {
+    width: 100%; height: 100%;
+    background: linear-gradient(150deg, #0d0d0d 0%, #080808 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .bubble-icon .glow {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(34,197,94,0.12) 0%, transparent 60%);
+    border-radius: 50%;
+  }
+  .bubble-icon .orb {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, #2dd870 0%, #22C55E 25%, #1B9F4B 50%, #15803d 75%, #0f6b30 100%);
+    position: relative; z-index: 1;
+    box-shadow:
+      inset -8px -10px 20px rgba(0,0,0,0.3),
+      inset 4px 4px 10px rgba(255,255,255,0.15),
+      0 10px 30px rgba(34,197,94,0.3),
+      0 4px 8px rgba(0,0,0,0.3);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+  }
+  .bubble-icon .orb::before {
+    content: '';
+    position: absolute;
+    top: 8%; left: 18%;
+    width: 35%; height: 22%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.35) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .bubble-icon .orb .num {
+    font-family: 'JetBrains Mono', 'Inter', monospace;
+    font-weight: 900;
+    font-size: 64px;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    line-height: 1;
+    position: relative; z-index: 1;
+  }
+  .bubble-icon .orb .label-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: -2px;
+    position: relative; z-index: 1;
+  }
+  .bubble-icon .ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    border: 2px solid rgba(240,238,58,0.2);
+    z-index: 0;
+  }
+
+  /* ============================================= */
+  /* 5. ABSTRACT SCORECARD — color grid             */
+  /* ============================================= */
+  .grid-icon {
+    width: 100%; height: 100%;
+    background: linear-gradient(150deg, #111 0%, #0A0A0A 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .grid-icon .card-3d {
+    transform: perspective(500px) rotateX(8deg) rotateY(-3deg);
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 5px;
+    padding: 6px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow:
+      0 12px 30px rgba(0,0,0,0.4),
+      0 2px 4px rgba(0,0,0,0.2);
+  }
+  .grid-icon .cell {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    box-shadow: inset 0 -2px 4px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.05);
+  }
+  .grid-icon .c-birdie { background: linear-gradient(160deg, #2dd870, #1B7832); }
+  .grid-icon .c-par { background: linear-gradient(160deg, #2a2a2a, #1a1a1a); }
+  .grid-icon .c-bogey { background: linear-gradient(160deg, #f7b731, #d99a1e); }
+  .grid-icon .c-eagle { background: linear-gradient(160deg, #F0EE3A, #c9c730); }
+  .grid-icon .c-double { background: linear-gradient(160deg, #ef5555, #c93030); }
+  .grid-icon .c-empty { background: rgba(255,255,255,0.03); }
+
+  /* ============================================= */
+  /* 6. DOLLAR BALL — golf ball + $ cutout          */
+  /* ============================================= */
+  .dollar-icon {
+    width: 100%; height: 100%;
+    background: linear-gradient(150deg, #0f0f0f 0%, #080808 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .dollar-icon .glow-bg {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(240,238,58,0.06) 0%, transparent 60%);
+    border-radius: 50%;
+  }
+  .dollar-icon .coin {
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #f7f540 0%, #F0EE3A 30%, #d4d230 50%, #b8b625 75%, #8a881e 100%);
+    position: relative; z-index: 1;
+    box-shadow:
+      inset -6px -8px 18px rgba(0,0,0,0.25),
+      inset 3px 3px 8px rgba(255,255,255,0.3),
+      0 10px 30px rgba(240,238,58,0.2),
+      0 4px 8px rgba(0,0,0,0.3),
+      0 0 0 4px rgba(240,238,58,0.1);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dollar-icon .coin::before {
+    content: '';
+    position: absolute;
+    top: 6%; left: 12%;
+    width: 40%; height: 28%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.4) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .dollar-icon .coin .inner-ring {
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(0,0,0,0.1);
+  }
+  .dollar-icon .coin .symbol {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 72px;
+    color: rgba(0,0,0,0.2);
+    text-shadow: 0 1px 0 rgba(255,255,255,0.2);
+    z-index: 1;
+    position: relative;
+  }
+  .dollar-icon .dimple-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 25% 20%, rgba(0,0,0,0.06) 2px, transparent 2px),
+      radial-gradient(circle at 40% 15%, rgba(0,0,0,0.06) 2px, transparent 2px),
+      radial-gradient(circle at 60% 18%, rgba(0,0,0,0.06) 2px, transparent 2px),
+      radial-gradient(circle at 75% 22%, rgba(0,0,0,0.06) 2px, transparent 2px),
+      radial-gradient(circle at 20% 35%, rgba(0,0,0,0.06) 2px, transparent 2px),
+      radial-gradient(circle at 80% 38%, rgba(0,0,0,0.06) 2px, transparent 2px),
+      radial-gradient(circle at 25% 78%, rgba(0,0,0,0.06) 2px, transparent 2px),
+      radial-gradient(circle at 45% 82%, rgba(0,0,0,0.06) 2px, transparent 2px),
+      radial-gradient(circle at 65% 80%, rgba(0,0,0,0.06) 2px, transparent 2px),
+      radial-gradient(circle at 78% 75%, rgba(0,0,0,0.06) 2px, transparent 2px);
+  }
+
+</style>
+</head>
+<body>
+
+<h1>MATCH Golf — No Words, Pure Icon</h1>
+<p class="subtitle">6 symbolic concepts. No text. Each one should make someone think "golf" or "golf + money" instantly.</p>
+
+<div class="grid">
+
+<!-- 1. THE HOLE -->
+<div class="concept">
+  <div class="icon-wrap">
+    <div class="hole-icon">
+      <div class="green">
+        <div class="cup"></div>
+        <div class="ball"></div>
+      </div>
+    </div>
+  </div>
+  <div class="label">1. The Hole</div>
+  <div class="desc">Top-down view of a putting green. Chartreuse-rimmed cup, ball nearby. Every golfer recognizes this view instantly.</div>
+  <div class="smalls">
+    <div class="sm-icon r14" style="width:60px;height:60px;">
+      <div class="hole-icon">
+        <div class="green" style="width:44px;height:44px;">
+          <div class="cup" style="width:12px;height:12px;"></div>
+          <div class="ball" style="width:7px;height:7px;top:22%;right:20%;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="sm-icon r9" style="width:40px;height:40px;">
+      <div class="hole-icon">
+        <div class="green" style="width:28px;height:28px;">
+          <div class="cup" style="width:8px;height:8px;"></div>
+          <div class="ball" style="width:5px;height:5px;top:22%;right:20%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. GOLF BALL -->
+<div class="concept">
+  <div class="icon-wrap">
+    <div class="ball-icon">
+      <div class="floor-shadow"></div>
+      <div class="sphere">
+        <div class="stripe"></div>
+      </div>
+    </div>
+  </div>
+  <div class="label">2. The Ball</div>
+  <div class="desc">Gorgeous 3D golf ball with a chartreuse alignment stripe. Like a Pro V1 with your brand color. Clean, iconic, premium.</div>
+  <div class="smalls">
+    <div class="sm-icon r14" style="width:60px;height:60px;">
+      <div class="ball-icon">
+        <div class="sphere" style="width:42px;height:42px;">
+          <div class="stripe" style="height:5px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="sm-icon r9" style="width:40px;height:40px;">
+      <div class="ball-icon">
+        <div class="sphere" style="width:28px;height:28px;">
+          <div class="stripe" style="height:4px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. PLUSH FLAG -->
+<div class="concept">
+  <div class="icon-wrap">
+    <div class="flag-icon">
+      <div class="ground-shadow"></div>
+      <div class="ground"></div>
+      <div class="pole"></div>
+      <div class="pole-cap"></div>
+      <div class="flag-body"></div>
+      <div class="flag-wave"></div>
+    </div>
+  </div>
+  <div class="label">3. Plush Flag</div>
+  <div class="desc">Soft 3D golf flag — looks like you could grab it. Chartreuse with depth, highlights, and shadow. The 2026 plush trend applied to golf.</div>
+  <div class="smalls">
+    <div class="sm-icon r14" style="width:60px;height:60px;">
+      <div class="flag-icon">
+        <div class="pole" style="width:3px;height:70%;top:16%;left:38%;"></div>
+        <div class="pole-cap" style="width:5px;height:5px;left:calc(38% - 1px);top:13%;"></div>
+        <div class="flag-body" style="width:24px;height:18px;left:calc(38% + 2px);top:16%;border-radius:2px 6px 6px 2px;"></div>
+      </div>
+    </div>
+    <div class="sm-icon r9" style="width:40px;height:40px;">
+      <div class="flag-icon">
+        <div class="pole" style="width:2px;height:68%;top:18%;left:38%;"></div>
+        <div class="flag-body" style="width:16px;height:12px;left:calc(38% + 1px);top:18%;border-radius:1px 4px 4px 1px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="grid row2">
+
+<!-- 4. SCORE BUBBLE -->
+<div class="concept">
+  <div class="icon-wrap">
+    <div class="bubble-icon">
+      <div class="glow"></div>
+      <div class="ring"></div>
+      <div class="orb">
+        <div class="num">3</div>
+        <div class="label-text">BIRDIE</div>
+      </div>
+    </div>
+  </div>
+  <div class="label">4. Birdie Bubble</div>
+  <div class="desc">Giant 3D score bubble — the birdie "3". Glowing green orb with a chartreuse ring. If you golf, you know what this means.</div>
+  <div class="smalls">
+    <div class="sm-icon r14" style="width:60px;height:60px;">
+      <div class="bubble-icon">
+        <div class="glow" style="width:60px;height:60px;"></div>
+        <div class="orb" style="width:38px;height:38px;">
+          <div class="num" style="font-size:18px;">3</div>
+        </div>
+      </div>
+    </div>
+    <div class="sm-icon r9" style="width:40px;height:40px;">
+      <div class="bubble-icon">
+        <div class="orb" style="width:26px;height:26px;">
+          <div class="num" style="font-size:13px;">3</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. ABSTRACT SCORECARD -->
+<div class="concept">
+  <div class="icon-wrap">
+    <div class="grid-icon">
+      <div class="card-3d">
+        <!-- Row 1 -->
+        <div class="cell c-birdie"></div>
+        <div class="cell c-par"></div>
+        <div class="cell c-bogey"></div>
+        <div class="cell c-par"></div>
+        <div class="cell c-eagle"></div>
+        <div class="cell c-par"></div>
+        <!-- Row 2 -->
+        <div class="cell c-par"></div>
+        <div class="cell c-birdie"></div>
+        <div class="cell c-par"></div>
+        <div class="cell c-double"></div>
+        <div class="cell c-par"></div>
+        <div class="cell c-bogey"></div>
+        <!-- Row 3 -->
+        <div class="cell c-bogey"></div>
+        <div class="cell c-par"></div>
+        <div class="cell c-birdie"></div>
+        <div class="cell c-par"></div>
+        <div class="cell c-par"></div>
+        <div class="cell c-birdie"></div>
+        <!-- Row 4 -->
+        <div class="cell c-par"></div>
+        <div class="cell c-eagle"></div>
+        <div class="cell c-par"></div>
+        <div class="cell c-birdie"></div>
+        <div class="cell c-bogey"></div>
+        <div class="cell c-par"></div>
+        <!-- Row 5 -->
+        <div class="cell c-empty"></div>
+        <div class="cell c-empty"></div>
+        <div class="cell c-empty"></div>
+        <div class="cell c-empty"></div>
+        <div class="cell c-empty"></div>
+        <div class="cell c-empty"></div>
+      </div>
+    </div>
+  </div>
+  <div class="label">5. Score Grid</div>
+  <div class="desc">Abstract 3D scorecard — colored cells for birdie/par/bogey. Empty row = game in progress. Unique, no other golf app does this.</div>
+  <div class="smalls">
+    <div class="sm-icon r14" style="width:60px;height:60px;">
+      <div class="grid-icon">
+        <div class="card-3d" style="gap:2px;padding:3px;border-radius:6px;transform:perspective(500px) rotateX(6deg) rotateY(-2deg);">
+          <div class="cell c-birdie" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-bogey" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-eagle" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-birdie" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-double" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-bogey" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-bogey" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-birdie" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div>
+          <div class="cell c-birdie" style="width:6px;height:6px;border-radius:2px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="sm-icon r9" style="width:40px;height:40px;">
+      <div class="grid-icon">
+        <div class="card-3d" style="gap:1.5px;padding:2px;border-radius:4px;transform:perspective(500px) rotateX(5deg);">
+          <div class="cell c-birdie" style="width:4px;height:4px;border-radius:1px;"></div>
+          <div class="cell c-par" style="width:4px;height:4px;border-radius:1px;"></div>
+          <div class="cell c-bogey" style="width:4px;height:4px;border-radius:1px;"></div>
+          <div class="cell c-par" style="width:4px;height:4px;border-radius:1px;"></div>
+          <div class="cell c-eagle" style="width:4px;height:4px;border-radius:1px;"></div>
+          <div class="cell c-par" style="width:4px;height:4px;border-radius:1px;"></div>
+          <div class="cell c-par" style="width:4px;height:4px;border-radius:1px;"></div>
+          <div class="cell c-birdie" style="width:4px;height:4px;border-radius:1px;"></div>
+          <div class="cell c-par" style="width:4px;height:4px;border-radius:1px;"></div>
+          <div class="cell c-double" style="width:4px;height:4px;border-radius:1px;"></div>
+          <div class="cell c-par" style="width:4px;height:4px;border-radius:1px;"></div>
+          <div class="cell c-bogey" style="width:4px;height:4px;border-radius:1px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6. DOLLAR BALL / COIN -->
+<div class="concept">
+  <div class="icon-wrap">
+    <div class="dollar-icon">
+      <div class="glow-bg"></div>
+      <div class="coin">
+        <div class="inner-ring"></div>
+        <div class="dimple-overlay"></div>
+        <div class="symbol">$</div>
+      </div>
+    </div>
+  </div>
+  <div class="label">6. The Coin</div>
+  <div class="desc">Chartreuse golf-ball-textured coin with $ embossed. Golf ball meets money. Literally "golf betting" as an object.</div>
+  <div class="smalls">
+    <div class="sm-icon r14" style="width:60px;height:60px;">
+      <div class="dollar-icon">
+        <div class="coin" style="width:40px;height:40px;">
+          <div class="inner-ring" style="inset:3px;"></div>
+          <div class="symbol" style="font-size:20px;">$</div>
+        </div>
+      </div>
+    </div>
+    <div class="sm-icon r9" style="width:40px;height:40px;">
+      <div class="dollar-icon">
+        <div class="coin" style="width:26px;height:26px;">
+          <div class="symbol" style="font-size:14px;">$</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- Home screen -->
+<div style="margin-top: 60px;">
+  <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Home Screen (60px)</h2>
+  <div style="background: #1c1c1e; border-radius: 24px; padding: 32px; display: inline-flex; gap: 28px; align-items: start;">
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#34C759,#30D158);margin-bottom:6px;"></div>
+      <span style="font-size:10px;color:#999;">Messages</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="sm-icon r14" style="width:60px;height:60px;margin-bottom:6px;">
+        <div class="hole-icon"><div class="green" style="width:44px;height:44px;"><div class="cup" style="width:12px;height:12px;"></div><div class="ball" style="width:7px;height:7px;top:22%;right:20%;"></div></div></div>
+      </div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Hole</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="sm-icon r14" style="width:60px;height:60px;margin-bottom:6px;">
+        <div class="ball-icon"><div class="sphere" style="width:42px;height:42px;"><div class="stripe" style="height:5px;"></div></div></div>
+      </div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Ball</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="sm-icon r14" style="width:60px;height:60px;margin-bottom:6px;">
+        <div class="flag-icon"><div class="pole" style="width:3px;height:70%;top:16%;left:38%;"></div><div class="pole-cap" style="width:5px;height:5px;left:calc(38% - 1px);top:13%;"></div><div class="flag-body" style="width:24px;height:18px;left:calc(38% + 2px);top:16%;border-radius:2px 6px 6px 2px;"></div></div>
+      </div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Flag</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="sm-icon r14" style="width:60px;height:60px;margin-bottom:6px;">
+        <div class="bubble-icon"><div class="glow" style="width:60px;height:60px;"></div><div class="orb" style="width:38px;height:38px;"><div class="num" style="font-size:18px;">3</div></div></div>
+      </div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Birdie</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="sm-icon r14" style="width:60px;height:60px;margin-bottom:6px;">
+        <div class="grid-icon"><div class="card-3d" style="gap:2px;padding:3px;border-radius:6px;transform:perspective(500px) rotateX(6deg) rotateY(-2deg);"><div class="cell c-birdie" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-bogey" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-eagle" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-birdie" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-double" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-bogey" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-bogey" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-birdie" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-par" style="width:6px;height:6px;border-radius:2px;"></div><div class="cell c-birdie" style="width:6px;height:6px;border-radius:2px;"></div></div></div>
+      </div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Grid</span>
+    </div>
+    <div style="text-align:center;">
+      <div class="sm-icon r14" style="width:60px;height:60px;margin-bottom:6px;">
+        <div class="dollar-icon"><div class="coin" style="width:40px;height:40px;"><div class="inner-ring" style="inset:3px;"></div><div class="symbol" style="font-size:20px;">$</div></div></div>
+      </div>
+      <span style="font-size:10px;color:#fff;font-weight:600;">Coin</span>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#5856D6,#AF52DE);margin-bottom:6px;"></div>
+      <span style="font-size:10px;color:#999;">Photos</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
