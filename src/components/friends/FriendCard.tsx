@@ -1,5 +1,16 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { UserMinus, MapPin, Swords } from 'lucide-react';
 import type { Friend } from '@/hooks/useFriends';
 import { useHeadToHead } from '@/hooks/useHeadToHead';
@@ -11,6 +22,7 @@ interface FriendCardProps {
 }
 
 export function FriendCard({ friend, onRemove, isRemoving }: FriendCardProps) {
+  const [showConfirm, setShowConfirm] = useState(false);
   const { record } = useHeadToHead(friend.id);
 
   const getInitials = (name: string | null) => {
@@ -56,12 +68,32 @@ export function FriendCard({ friend, onRemove, isRemoving }: FriendCardProps) {
       </div>
       <motion.button
         whileTap={{ scale: 0.88 }}
-        onClick={() => onRemove(friend.friendshipId)}
+        onClick={() => setShowConfirm(true)}
         disabled={isRemoving}
         className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground disabled:opacity-40"
       >
         <UserMinus className="h-4 w-4" />
       </motion.button>
+
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Friend</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you'd like to remove {friend.fullName || 'this person'} as a friend?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => onRemove(friend.friendshipId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

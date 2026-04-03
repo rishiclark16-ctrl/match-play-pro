@@ -150,7 +150,7 @@ export function calculateHouseGame(
       players,
       skinsHoles.length,
       config.unitValue,
-      config.carryoverSkinsHalved,
+      true, // Skins always carry over; carryoverSkinsHalved is a modifier, not the toggle
       strokesMap,
       config.carryoverCap,
       config.carryoverJackpot18,
@@ -374,7 +374,7 @@ export function calculateHouseGame(
     // Count holes won across skins + nassau
     let holesWon = 0;
     if (skinsResult) {
-      holesWon += skinsResult.holeResults.filter(h => h.winnerId === player.id).length;
+      holesWon += skinsResult.results.filter(h => h.winnerId === player.id).length;
     }
 
     const bonusEarnings = playerEarnings[player.id] ?? 0;
@@ -461,7 +461,6 @@ function checkPrimitiveActive(id: string, config: HouseGameScoringConfig): boole
     format_bingo_bango_bongo: config.bingoBangoBongo,
     format_rabbit: config.rabbit,
     format_quota: config.quota,
-    format_vegas: config.vegas,
     format_defender: config.defender,
     group_sixes: config.sixes,
     press_auto_birdie: config.pressAutoBirdie,
@@ -487,7 +486,6 @@ function checkPrimitiveActive(id: string, config: HouseGameScoringConfig): boole
     handicap_ghost_player: config.handicapGhostPlayer,
     handicap_bump_and_run: config.handicapBumpAndRun,
     handicap_mixed_tees: config.handicapMixedTees,
-    casual_breakfast_ball: config.breakfastBall,
     casual_preferred_lies: config.preferredLies,
     casual_concede_match: config.concedeMatch,
     casual_foot_wedge: config.footWedge,

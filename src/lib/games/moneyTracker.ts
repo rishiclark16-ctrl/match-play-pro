@@ -272,8 +272,8 @@ export function calculateLiveMoney(
                 pb.total += standing.netEarnings;
               }
             });
-          } catch {
-            // Ignore errors from malformed configs
+          } catch (e) {
+            console.error('[MoneyTracker] House game calc error:', e);
           }
         }
         break;

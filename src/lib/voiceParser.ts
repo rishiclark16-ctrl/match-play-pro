@@ -40,7 +40,7 @@ const wordToNumber: Record<string, number> = {
   'won': 1, 'want': 1, 'juan': 1, 'wun': 1, 'wan': 1,
   'to': 2, 'too': 2, 'tu': 2, 'tuu': 2, 'tew': 2,
   'tree': 3, 'free': 3, 'treat': 3, 'thru': 3, 'thre': 3,
-  'for': 4, 'fore': 4, 'floor': 4, 'ford': 4, 'fower': 4, 'fore': 4,
+  'for': 4, 'fore': 4, 'floor': 4, 'ford': 4, 'fower': 4,
   'fives': 5, 'hive': 5, 'dive': 5,
   'sex': 6, 'sax': 6, 'sits': 6,
   'heaven': 7, 'evan': 7,
