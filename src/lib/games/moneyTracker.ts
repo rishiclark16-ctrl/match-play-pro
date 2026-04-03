@@ -1,6 +1,7 @@
 import { PlayerWithScores, GameConfig, HoleInfo, Score, Press } from '@/types/golf';
 import { calculateSkins, SkinsResult } from './skins';
 import { calculateNassau, NassauResult } from './nassau';
+import { calculateMatchPlay, MatchPlayResult } from './matchPlay';
 import { calculateHouseGame } from './houseGame';
 import { buildScoringConfig } from '@/lib/houseGame/engine';
 import { PlayerMoney, PropBet } from '@/types/betting';
@@ -8,6 +9,7 @@ import { PlayerMoney, PropBet } from '@/types/betting';
 interface MoneyBreakdown {
   skins: number;
   nassau: number;
+  match: number;
   wolf: number;
   houseGame: number;
   propBets: number;
@@ -40,7 +42,7 @@ export function calculateLiveMoney(
   
   // Initialize breakdown for each player
   players.forEach(p => {
-    breakdown.set(p.id, { skins: 0, nassau: 0, wolf: 0, houseGame: 0, propBets: 0, total: 0 });
+    breakdown.set(p.id, { skins: 0, nassau: 0, match: 0, wolf: 0, houseGame: 0, propBets: 0, total: 0 });
   });
 
   // Filter scores up to the current hole
@@ -113,6 +115,38 @@ export function calculateLiveMoney(
         break;
       }
       
+      case 'match': {
+        if (players.length === 2 && game.stakes > 0) {
+          const matchResult = calculateMatchPlay(
+            relevantScores,
+            players,
+            holeInfo,
+            game.useNet ? strokesMap : undefined,
+            (holeInfo.length <= 9 ? 9 : 18) as 9 | 18
+          );
+
+          // Each hole won earns stakes from the opponent
+          matchResult.holeResults.forEach(hr => {
+            if (hr.winnerId) {
+              const loserId = players.find(p => p.id !== hr.winnerId)?.id;
+              if (loserId) {
+                const winnerPb = breakdown.get(hr.winnerId);
+                const loserPb = breakdown.get(loserId);
+                if (winnerPb) {
+                  winnerPb.match += game.stakes;
+                  winnerPb.total += game.stakes;
+                }
+                if (loserPb) {
+                  loserPb.match -= game.stakes;
+                  loserPb.total -= game.stakes;
+                }
+              }
+            }
+          });
+        }
+        break;
+      }
+
       case 'wolf': {
         if (players.length === 4 && game.wolfResults) {
           const relevantResults = game.wolfResults.filter(r => r.holeNumber <= upToHole);

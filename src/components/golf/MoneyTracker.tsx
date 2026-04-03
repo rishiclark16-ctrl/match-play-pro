@@ -58,7 +58,9 @@ export function MoneyTracker({
       breakdown: currentMoney.breakdown.get(player.playerId) || {
         skins: 0,
         nassau: 0,
+        match: 0,
         wolf: 0,
+        houseGame: 0,
         propBets: 0,
         total: 0,
       },

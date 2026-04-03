@@ -781,7 +781,7 @@ export default function Scorecard() {
               scores={roundScores}
               games={round.games || []}
               holeInfo={round.holeInfo}
-              presses={[]}
+              presses={round.presses || []}
               currentHole={currentHole}
               propBets={propBets}
             />

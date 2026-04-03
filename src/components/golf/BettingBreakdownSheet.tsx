@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, TrendingUp, TrendingDown, DollarSign, Target, Flag, Users, Trophy, Sparkles } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, DollarSign, Target, Flag, Users, Trophy, Sparkles, Swords } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { formatMoney, getMoneyColor } from '@/lib/games/moneyTracker';
@@ -8,7 +8,9 @@ import { formatMoney, getMoneyColor } from '@/lib/games/moneyTracker';
 interface MoneyBreakdown {
   skins: number;
   nassau: number;
+  match: number;
   wolf: number;
+  houseGame: number;
   propBets: number;
   total: number;
 }
@@ -31,7 +33,9 @@ interface BettingBreakdownSheetProps {
 const GAME_CONFIG = [
   { key: 'skins', label: 'Skins', icon: Target, color: 'text-amber-500', bgColor: 'bg-amber-500/20' },
   { key: 'nassau', label: 'Nassau', icon: Flag, color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
+  { key: 'match', label: 'Match Play', icon: Swords, color: 'text-orange-500', bgColor: 'bg-orange-500/20' },
   { key: 'wolf', label: 'Wolf', icon: Users, color: 'text-purple-500', bgColor: 'bg-purple-500/20' },
+  { key: 'houseGame', label: 'House Game', icon: Sparkles, color: 'text-pink-500', bgColor: 'bg-pink-500/20' },
   { key: 'propBets', label: 'Side Bets', icon: Trophy, color: 'text-emerald-500', bgColor: 'bg-emerald-500/20' },
 ] as const;
 
@@ -59,7 +63,9 @@ export function BettingBreakdownSheet({
     ...players.flatMap(p => [
       Math.abs(p.breakdown.skins),
       Math.abs(p.breakdown.nassau),
+      Math.abs(p.breakdown.match),
       Math.abs(p.breakdown.wolf),
+      Math.abs(p.breakdown.houseGame),
       Math.abs(p.breakdown.propBets),
     ]),
     1 // minimum to prevent division by zero
