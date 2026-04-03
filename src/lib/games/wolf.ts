@@ -411,11 +411,16 @@ export function calculateWolfSettlements(
   const winners = standings.filter(s => s.earnings > 0).sort((a, b) => b.earnings - a.earnings);
   const losers = standings.filter(s => s.earnings < 0).sort((a, b) => a.earnings - b.earnings);
   
+  // Track remaining budget for each winner to prevent overpayment
+  const winnerBudget = new Map<string, number>();
+  winners.forEach(w => winnerBudget.set(w.playerId, w.earnings));
+
   losers.forEach(loser => {
     let remaining = Math.abs(loser.earnings);
     winners.forEach(winner => {
-      if (remaining > 0 && winner.earnings > 0) {
-        const payment = Math.min(remaining, winner.earnings);
+      const budget = winnerBudget.get(winner.playerId) ?? 0;
+      if (remaining > 0 && budget > 0) {
+        const payment = Math.min(remaining, budget);
         if (payment > 0.01) {
           settlements.push({
             fromPlayerId: loser.playerId,
@@ -423,6 +428,7 @@ export function calculateWolfSettlements(
             amount: Math.round(payment * 100) / 100,
           });
           remaining -= payment;
+          winnerBudget.set(winner.playerId, budget - payment);
         }
       }
     });

@@ -103,7 +103,10 @@ export function calculateSkins(
   
   // Calculate pot value - each player contributes stakes per hole
   const potPerSkin = stakesPerSkin * players.length;
-  const totalPot = holesPlayed * potPerSkin;
+  // Only count holes where all players have scores
+  const fullyPlayedHoles = Array.from({ length: holesPlayed }, (_, i) => i + 1)
+    .filter(hole => scores.filter(s => s.holeNumber === hole).length >= players.length).length;
+  const totalPot = fullyPlayedHoles * potPerSkin;
 
   // Calculate earnings (net winnings/losses)
   // Each player contributes stakesPerSkin only for the holes they actually scored

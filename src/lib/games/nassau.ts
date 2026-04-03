@@ -73,8 +73,10 @@ export function calculateNassau(
   }
   
   const findWinnerAndMargin = (scoreMap: Record<string, number>): { winnerId: string | null; margin: number } => {
-    const entries = Object.entries(scoreMap).filter(([_, s]) => s > 0);
+    const entries = Object.entries(scoreMap);
     if (entries.length < 2) return { winnerId: null, margin: 0 };
+    // If no holes scored yet (all zeros), no winner
+    if (entries.every(([_, s]) => s === 0)) return { winnerId: null, margin: 0 };
     
     const sorted = entries.sort((a, b) => a[1] - b[1]);
     const [leaderId, leaderScore] = sorted[0];

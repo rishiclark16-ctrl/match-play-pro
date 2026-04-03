@@ -423,6 +423,16 @@ export function useVoiceScoring({
     }, 300);
   }, [startListening]);
 
+  // Clean up continuous voice timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (continuousVoiceTimeoutRef.current) {
+        clearTimeout(continuousVoiceTimeoutRef.current);
+        continuousVoiceTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
   const closeVoiceModal = useCallback(() => {
     setShowVoiceModal(false);
     setParseResult(null);

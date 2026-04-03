@@ -226,7 +226,7 @@ export default function Home() {
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return '?';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    return name.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   const { rounds, sharedRounds, roundStats, isLoading: loadingRounds, refetch: refetchRounds } = useRoundsQuery();

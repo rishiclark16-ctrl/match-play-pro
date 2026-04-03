@@ -54,17 +54,6 @@ export default function Social() {
   const friendCode = profile?.friend_code ?? null;
   const userName = profile?.full_name;
 
-  useEffect(() => {
-    const addCode = searchParams.get('add');
-    if (addCode && addCode !== friendCode) {
-      setActiveTab('friends');
-      setSearchValue(addCode.toUpperCase());
-      setSearchType('code');
-      const timer = setTimeout(() => { handleSendRequest(addCode); }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [searchParams, friendCode]);
-
   const handleSendRequest = async (codeOverride?: string) => {
     const value = codeOverride || searchValue.trim();
     if (!value) return;
@@ -87,6 +76,29 @@ export default function Social() {
       toast.error(result.error || 'Failed to send request');
     }
   };
+
+  // Handle deep link from QR code — placed after handleSendRequest to avoid stale closure
+  useEffect(() => {
+    const addCode = searchParams.get('add');
+    if (addCode && addCode !== friendCode) {
+      setActiveTab('friends');
+      setSearchValue(addCode.toUpperCase());
+      setSearchType('code');
+      const timer = setTimeout(() => {
+        sendFriendRequest(addCode).then(result => {
+          if (result.success) {
+            hapticSuccess();
+            toast.success('Friend request sent!');
+            setSearchValue('');
+          } else {
+            hapticError();
+            toast.error(result.error || 'Failed to send request');
+          }
+        });
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, friendCode, sendFriendRequest]);
 
   const handleAccept = async (friendshipId: string) => {
     if (atFriendLimit) { setShowPaywall(true); return; }

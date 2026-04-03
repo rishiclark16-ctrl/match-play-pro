@@ -96,20 +96,6 @@ export default function Friends() {
     }
   };
 
-  // Handle deep link from QR code
-  useEffect(() => {
-    const addCode = searchParams.get('add');
-    if (addCode && addCode !== friendCode) {
-      setSearchValue(addCode.toUpperCase());
-      setSearchType('code');
-      // Auto-send request after a short delay to let UI render
-      const timer = setTimeout(() => {
-        handleSendRequest(addCode);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [searchParams, friendCode]);
-
   const handleSendRequest = async (codeOverride?: string) => {
     const value = codeOverride || searchValue.trim();
     if (!value) return;
@@ -150,6 +136,29 @@ export default function Friends() {
       toast.error(result.error || 'Failed to send request');
     }
   };
+
+  // Handle deep link from QR code — placed after handleSendRequest to avoid stale closure
+  useEffect(() => {
+    const addCode = searchParams.get('add');
+    if (addCode && addCode !== friendCode) {
+      setSearchValue(addCode.toUpperCase());
+      setSearchType('code');
+      const timer = setTimeout(() => {
+        sendFriendRequest(addCode).then(result => {
+          if (result.success) {
+            hapticSuccess();
+            toast.success('Friend request sent!');
+            setSearchValue('');
+            navigate('/friends', { replace: true });
+          } else {
+            hapticError();
+            toast.error(result.error || 'Failed to send request');
+          }
+        });
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, friendCode, sendFriendRequest, navigate]);
 
   const handleAccept = async (friendshipId: string) => {
     // Check friend limit before accepting
@@ -222,13 +231,19 @@ export default function Friends() {
   const handleQRScan = (code: string) => {
     setScannerOpen(false);
     hapticSuccess();
-    // Set search type to code and trigger request
     setSearchType('code');
     setSearchValue(code.toUpperCase());
-    // Auto-send request
-    setTimeout(() => {
-      handleSendRequest(code);
-    }, 100);
+    // Send friend request directly — QR codes always use friend codes
+    sendFriendRequest(code).then(result => {
+      if (result.success) {
+        hapticSuccess();
+        toast.success('Friend request sent!');
+        setSearchValue('');
+      } else {
+        hapticError();
+        toast.error(result.error || 'Failed to send request');
+      }
+    });
   };
 
   const headerContent = (

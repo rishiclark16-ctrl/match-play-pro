@@ -75,14 +75,17 @@ export function calculateVegas(
     let teamAFlipped = false;
     let teamBFlipped = false;
 
-    if (hasBirdie) {
-      if (teamAScore > teamBScore) {
-        teamAScore = flipDigits(teamAScore);
-        teamAFlipped = true;
-      } else if (teamBScore > teamAScore) {
-        teamBScore = flipDigits(teamBScore);
-        teamBFlipped = true;
-      }
+    // Birdie flip: only the winning team's birdie triggers a flip of the losing team's score
+    const teamABirdie = [netScores[0], netScores[1]].some(ns => ns < par);
+    const teamBBirdie = [netScores[2], netScores[3]].some(ns => ns < par);
+    if (teamABirdie && teamAScore < teamBScore) {
+      // Team A is winning and has a birdie — flip Team B's (losing) score
+      teamBScore = flipDigits(teamBScore);
+      teamBFlipped = true;
+    } else if (teamBBirdie && teamBScore < teamAScore) {
+      // Team B is winning and has a birdie — flip Team A's (losing) score
+      teamAScore = flipDigits(teamAScore);
+      teamAFlipped = true;
     }
 
     const pointDiff = teamBScore - teamAScore; // positive = Team A wins

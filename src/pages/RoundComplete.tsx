@@ -141,19 +141,36 @@ export default function RoundComplete() {
         return sum + (s.strokes - (hole?.par || 4));
       }, 0);
 
-      // Calculate net scores
+      // Calculate net scores — respect manual handicap mode and mixed tees
       const parTotal = round.holeInfo.reduce((sum, h) => sum + h.par, 0);
-      const playingHandicap =
-        player.handicap !== undefined
-          ? calculatePlayingHandicap(player.handicap, round.slope || 113, round.holes, round.rating, parTotal)
-          : 0;
+      const isManualMode = round.handicapMode === 'manual';
+      let playingHandicap: number;
+      if (isManualMode) {
+        playingHandicap = player.manualStrokes ?? 0;
+      } else if (player.handicap !== undefined) {
+        // In mixed tees mode, use the player's specific tee data
+        const playerTee = (round.mixedTees && round.teeSets)
+          ? round.teeSets.find(t => t.id === player.teeSetId)
+          : undefined;
+        const slope = playerTee?.slope ?? round.slope ?? 113;
+        const rating = playerTee?.courseRating ?? round.rating;
+        const par = playerTee?.par ?? parTotal;
+        playingHandicap = calculatePlayingHandicap(player.handicap, slope, round.holes, rating, par);
+      } else {
+        playingHandicap = 0;
+      }
       const totalNetStrokes = calculateTotalNetStrokes(
         totalStrokes,
         playingHandicap,
         playerScores.length,
         round.holes
       );
-      const netRelativeToPar = totalNetStrokes - parTotal;
+      // Use par prorated to holes actually played
+      const playedPar = playerScores.reduce((sum, s) => {
+        const hole = round.holeInfo.find(h => h.number === s.holeNumber);
+        return sum + (hole?.par || 4);
+      }, 0);
+      const netRelativeToPar = totalNetStrokes - playedPar;
 
       return {
         ...player,
@@ -417,27 +434,28 @@ export default function RoundComplete() {
 
   // Share handlers
   const handleShareImage = async () => {
+    if (!round) return;
     hapticLight();
     setIsSharing(true);
     setShareMode('image');
 
     const players: Player[] = playersWithScores.map(p => ({
       id: p.id,
-      roundId: round!.id,
+      roundId: round.id,
       name: p.name,
       handicap: p.handicap,
       orderIndex: 0,
     }));
 
     try {
-      await shareResults(round!, players, rawScores);
+      await shareResults(round, players, rawScores);
       hapticSuccess();
       toast.success('Results shared!');
     } catch {
       hapticError();
       toast.error('Failed to share. Trying text instead...');
       try {
-        await shareText(round!, playersWithScores);
+        await shareText(round, playersWithScores);
         hapticSuccess();
         toast.success('Results copied to clipboard!');
       } catch {
@@ -450,12 +468,13 @@ export default function RoundComplete() {
   };
 
   const handleShareText = async () => {
+    if (!round) return;
     hapticLight();
     setIsSharing(true);
     setShareMode('text');
 
     try {
-      await shareText(round!, playersWithScores);
+      await shareText(round, playersWithScores);
       hapticSuccess();
       toast.success(navigator.share ? 'Results shared!' : 'Results copied to clipboard!');
     } catch {

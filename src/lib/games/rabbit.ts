@@ -82,17 +82,17 @@ export function calculateRabbit(
     if (totalHoles === 18 && backRabbitHolder === p.id) segments++;
     timesHeld[p.id] = segments;
 
-    // Loser pays unitValue to each other player per segment held
-    const lost = segments * unitValue * otherCount;
-    // Collect from each segment where someone else held the rabbit
-    let gained = 0;
-    if (frontRabbitHolder && frontRabbitHolder !== p.id) gained += unitValue;
-    if (totalHoles === 18 && backRabbitHolder && backRabbitHolder !== p.id) gained += unitValue;
+    // Winner (rabbit holder) collects unitValue from each other player per segment
+    const won = segments * unitValue * otherCount;
+    // Non-holders pay unitValue per segment where someone else held the rabbit
+    let owed = 0;
+    if (frontRabbitHolder && frontRabbitHolder !== p.id) owed += unitValue;
+    if (totalHoles === 18 && backRabbitHolder && backRabbitHolder !== p.id) owed += unitValue;
 
     return {
       playerId: p.id,
       playerName: p.name,
-      earnings: gained - lost,
+      earnings: won - owed,
       timesHeld: segments,
     };
   }).sort((a, b) => b.earnings - a.earnings);

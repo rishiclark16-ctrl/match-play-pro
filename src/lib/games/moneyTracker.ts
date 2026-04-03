@@ -4,6 +4,7 @@ import { calculateNassau, NassauResult } from './nassau';
 import { calculateMatchPlay, MatchPlayResult } from './matchPlay';
 import { calculateHouseGame } from './houseGame';
 import { buildScoringConfig } from '@/lib/houseGame/engine';
+import { getStrokesPerHole } from '@/lib/handicapUtils';
 import { PlayerMoney, PropBet } from '@/types/betting';
 
 interface MoneyBreakdown {
@@ -53,10 +54,9 @@ export function calculateLiveMoney(
   players.forEach(p => {
     const playerMap = new Map<number, number>();
     if (p.playingHandicap && p.playingHandicap > 0) {
-      holeInfo.forEach(hole => {
-        if (hole.handicap && hole.handicap <= p.playingHandicap!) {
-          playerMap.set(hole.number, 1);
-        }
+      const strokesPerHole = getStrokesPerHole(p.playingHandicap, holeInfo);
+      strokesPerHole.forEach((strokes, holeNum) => {
+        if (strokes > 0) playerMap.set(holeNum, strokes);
       });
     }
     strokesMap.set(p.id, playerMap);

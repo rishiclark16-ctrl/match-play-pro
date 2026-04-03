@@ -24,6 +24,10 @@ export function useAutoAdvance({
   const [allScoredTimestamp, setAllScoredTimestamp] = useState<number | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const currentHoleRef = useRef(currentHole);
+  const onAdvanceRef = useRef(onAdvance);
+  currentHoleRef.current = currentHole;
+  onAdvanceRef.current = onAdvance;
 
   // Manual advance to next hole
   const advanceToNextHole = useCallback(() => {
@@ -70,8 +74,8 @@ export function useAutoAdvance({
               timerRef.current = null;
             }
 
-            const nextHole = currentHole + 1;
-            onAdvance(nextHole);
+            const nextHole = currentHoleRef.current + 1;
+            onAdvanceRef.current(nextHole);
             setAllScoredTimestamp(null);
             hapticSuccess();
             toast.info(`Hole ${nextHole}`, { duration: 1500 });

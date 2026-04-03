@@ -214,10 +214,15 @@ describe('calculateSkins', () => {
     });
 
     it('should calculate correct pot values', () => {
-      const result = calculateSkins([], players, 18, 10);
+      // Create scores for all 4 players on all 18 holes
+      const scores: Score[] = [];
+      for (let h = 1; h <= 18; h++) {
+        players.forEach(p => scores.push(createScore(p.id, h, 4)));
+      }
+      const result = calculateSkins(scores, players, 18, 10);
 
       expect(result.potPerSkin).toBe(40); // 4 players * $10
-      expect(result.totalPot).toBe(720); // 18 holes * $40
+      expect(result.totalPot).toBe(720); // 18 fully-scored holes * $40
     });
   });
 
@@ -348,9 +353,14 @@ describe('9-hole rounds', () => {
   });
 
   it('should scale the total pot to 9 holes', () => {
-    const result = calculateSkins([], players, 9, 1);
+    // Create scores for all 4 players on all 9 holes
+    const scores: Score[] = [];
+    for (let h = 1; h <= 9; h++) {
+      players.forEach(p => scores.push(createScore(p.id, h, 4)));
+    }
+    const result = calculateSkins(scores, players, 9, 1);
 
-    // totalPot = holesPlayed * stakes * numPlayers = 9 * 1 * 4 = 36
+    // totalPot = 9 fully-scored holes * 1 * 4 = 36
     expect(result.totalPot).toBe(36);
     expect(result.potPerSkin).toBe(4); // 4 players * $1
   });

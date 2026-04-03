@@ -128,17 +128,11 @@ describe('calculateRabbit', () => {
       const result = calculateRabbit(scores, players, 9, 10, 9);
       const alice = result.standings.find(s => s.playerId === 'p1')!;
       const bob = result.standings.find(s => s.playerId === 'p2')!;
-      // Alice holds 1 segment, 2 other players pay her 10 each = gained 0, lost 20
-      // Actually: Alice holds front. She loses 1*10*2=20 and gains 0 (nobody else holds).
-      // Bob/Charlie: gained 10 each (from Alice's segment), lost 0
-      // Wait, let me re-read the code...
-      // Loser pays: segments * unitValue * otherCount → Alice pays 1*10*2=20
-      // Gained: for segments where someone ELSE held → Alice gains 0
-      // So Alice earnings = 0 - 20 = -20? That seems backward.
-      // Actually re-reading: the holder PAYS others. The rabbit is a hot potato game.
-      // Whoever holds the rabbit at the end of a segment LOSES.
-      expect(alice.earnings).toBe(-20);
-      expect(bob.earnings).toBe(10);
+      // Alice holds front rabbit — she WINS: collects unitValue from each other player
+      // Alice: won 1*10*2=20, owed 0 = +20
+      // Bob/Charlie: won 0, owed 10 each (Alice held front) = -10 each
+      expect(alice.earnings).toBe(20);
+      expect(bob.earnings).toBe(-10);
     });
 
     it('should zero-sum across all players', () => {
@@ -207,9 +201,9 @@ describe('calculateRabbit', () => {
       ];
       const result = calculateRabbit(scores, twoPlayers, 1, 10, 9);
       expect(result.holeResults[0].holderId).toBe('p1');
-      // Alice holds = loses: 1*10*1=10; Bob gains 10
-      expect(result.standings.find(s => s.playerId === 'p1')?.earnings).toBe(-10);
-      expect(result.standings.find(s => s.playerId === 'p2')?.earnings).toBe(10);
+      // Alice holds = wins: collects 1*10*1=10 from Bob; Bob owes 10
+      expect(result.standings.find(s => s.playerId === 'p1')?.earnings).toBe(10);
+      expect(result.standings.find(s => s.playerId === 'p2')?.earnings).toBe(-10);
     });
 
     it('should handle no scores', () => {
