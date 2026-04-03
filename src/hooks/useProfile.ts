@@ -8,6 +8,7 @@ export interface NotificationPreferences {
   tabSettled: boolean;
   tabAddedTo: boolean;
   friendStartedRound: boolean;
+  roundCompleted: boolean;
 }
 
 export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
@@ -16,6 +17,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   tabSettled: true,
   tabAddedTo: true,
   friendStartedRound: true,
+  roundCompleted: true,
 };
 
 export interface Profile {

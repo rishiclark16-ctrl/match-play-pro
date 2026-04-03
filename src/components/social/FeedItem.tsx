@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { MessageCircle, Trophy } from 'lucide-react';
+import { MessageCircle, Trophy, Swords } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatGameType } from '@/lib/formatGameType';
@@ -52,6 +52,11 @@ export function FeedItem({ item, onPress, currentUserId }: FeedItemProps) {
     .map((g: Record<string, unknown>) => g.type as string)
     .filter((t, i, arr) => t && arr.indexOf(t) === i);
 
+  // Extract result headlines from games (e.g., match play results)
+  const resultHeadlines = item.games
+    .map((g: Record<string, unknown>) => g.resultHeadline as string | undefined)
+    .filter((h): h is string => !!h);
+
   return (
     <motion.button
       whileTap={{ scale: 0.985 }}
@@ -85,6 +90,23 @@ export function FeedItem({ item, onPress, currentUserId }: FeedItemProps) {
               >
                 {formatGameType(type)}
               </span>
+            ))}
+          </div>
+        )}
+
+        {/* Match result headlines */}
+        {resultHeadlines.length > 0 && (
+          <div className="mb-3">
+            {resultHeadlines.map((headline, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2 bg-foreground/[0.04] rounded-xl px-3 py-2.5"
+              >
+                <Swords className="w-4 h-4 text-[#D4A900] flex-shrink-0" />
+                <span className="text-[13px] font-bold text-foreground tracking-[-0.01em]">
+                  {headline}
+                </span>
+              </div>
             ))}
           </div>
         )}

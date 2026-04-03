@@ -167,6 +167,34 @@ export function getMatchPlayStatusBrief(result: MatchPlayResult): string {
 }
 
 /**
+ * Generate a human-readable headline for a completed match play result.
+ * e.g., "Rishi beat Andrew 5&4" or "Match Halved"
+ */
+export function generateMatchPlayHeadline(
+  result: MatchPlayResult,
+  players: { id: string; name: string }[]
+): string | null {
+  if (result.matchStatus === 'not_started' || result.matchStatus === 'ongoing') return null;
+  if (result.matchStatus === 'dormie') return null;
+
+  if (result.matchStatus === 'halved') {
+    const names = players.map(p => p.name.split(' ')[0]);
+    return `${names[0]} and ${names[1]} halved their match`;
+  }
+
+  if (result.matchStatus === 'won' && result.winnerId) {
+    const winner = players.find(p => p.id === result.winnerId);
+    const loser = players.find(p => p.id !== result.winnerId);
+    if (!winner || !loser) return null;
+    const winnerFirst = winner.name.split(' ')[0];
+    const loserFirst = loser.name.split(' ')[0];
+    return `${winnerFirst} beat ${loserFirst} ${result.winMargin || '1 UP'}`;
+  }
+
+  return null;
+}
+
+/**
  * Get the color class for displaying match status
  */
 export function getMatchPlayStatusColor(result: MatchPlayResult, playerId: string): string {

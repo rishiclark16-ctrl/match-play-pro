@@ -25,12 +25,18 @@ import { useScorekeeper } from '@/hooks/useScorekeeper';
 import { useAutoAdvance } from '@/hooks/useAutoAdvance';
 import { usePlayoff } from '@/hooks/usePlayoff';
 import { useVoiceScoring } from '@/hooks/useVoiceScoring';
+import { useVoiceNicknames } from '@/hooks/useVoiceNicknames';
+import { useHandsFreeVoice } from '@/hooks/useHandsFreeVoice';
 import { useSettings } from '@/hooks/useSettings';
+import { setSpeechEnabled } from '@/lib/voiceFeedback';
 import { usePlayersWithScores } from '@/hooks/usePlayersWithScores';
 import { useSettlementPreview } from '@/hooks/useSettlementPreview';
 import { Press, PlayerWithScores, GameConfig, BingoBangoHoleResult } from '@/types/golf';
 import { checkAutoPress, createPress } from '@/lib/games/nassau';
+import { calculateMatchPlay, generateMatchPlayHeadline } from '@/lib/games/matchPlay';
 import { sendPushToProfiles } from '@/lib/pushUtils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { buildConfig } from '@/engine/HouseGameEngine';
 import { buildScoringConfig } from '@/lib/houseGame/engine';
 import { toast } from 'sonner';
@@ -44,6 +50,7 @@ export default function Scorecard() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const isSpectator = searchParams.get('spectator') === 'true';
 
   // Keep screen awake during active round
@@ -248,6 +255,22 @@ export default function Scorecard() {
     setPlayerScore(round.id, playerId, currentHole, score);
   }, [round, currentHole, saveScoreToSupabase, setPlayerScore]);
 
+  // Sync speech feedback setting
+  useEffect(() => {
+    setSpeechEnabled(settings.speechFeedback);
+  }, [settings.speechFeedback]);
+
+  // Voice nicknames for custom name learning
+  const { getNicknamesForPlayer, suggestNickname } = useVoiceNicknames();
+
+  // Helper to get a player's current score on the current hole
+  const getPlayerCurrentScore = useCallback((playerId: string): number | null => {
+    const player = playersWithScores.find(p => p.id === playerId);
+    if (!player) return null;
+    const holeScore = player.scores.find(s => s.holeNumber === currentHole);
+    return holeScore?.strokes ?? null;
+  }, [playersWithScores, currentHole]);
+
   // Voice scoring hook
   const {
     isListening,
@@ -256,6 +279,9 @@ export default function Scorecard() {
     showVoiceModal,
     parseResult,
     voiceSuccessPlayerIds,
+    interimTranscript,
+    audioLevel,
+    isNoisy,
     handleVoicePress,
     handleVoiceConfirm,
     handleVoiceRetry,
@@ -269,8 +295,20 @@ export default function Scorecard() {
     onScoreSaved: handleSaveScore,
     onNavigateToHole: setCurrentHole,
     onFinishRound: () => setShowFinishOptions(true),
+    onOpenLeaderboard: () => round && navigate(`/round/${round.id}/leaderboard`),
+    getPlayerScore: getPlayerCurrentScore,
     continuousVoice: settings.continuousVoice,
     alwaysConfirmVoice: settings.alwaysConfirmVoice,
+  });
+
+  // Hands-free continuous voice mode
+  const { isActive: isHandsFreeActive } = useHandsFreeVoice({
+    onTranscript: useCallback((transcript: string) => {
+      // In hands-free mode, simulate a voice press to process the transcript
+      // The useVoiceScoring hook handles the actual parsing
+      handleVoicePress();
+    }, [handleVoicePress]),
+    enabled: settings.handsFreeVoice && !isListening && !showVoiceModal,
   });
 
   // Handle quick score from +/- buttons
@@ -290,22 +328,101 @@ export default function Scorecard() {
     }
   }, [selectedPlayerId, round, currentHole, saveScoreToSupabase, setPlayerScore]);
 
+  // Send match result notifications to friends after round completion
+  const sendRoundCompletionNotifications = useCallback(async () => {
+    if (!round || !user) return;
+
+    // Build game result headlines
+    const headlines: string[] = [];
+    const matchPlayGame = round.games?.find(g => g.type === 'match_play');
+
+    if (matchPlayGame && playersWithScores.length === 2) {
+      // Build strokes map for net scoring
+      let strokesPerHole: Map<string, Map<number, number>> | undefined;
+      if (matchPlayGame.useNet) {
+        strokesPerHole = new Map();
+        for (const player of playersWithScores) {
+          if (player.strokesPerHole) {
+            strokesPerHole.set(player.id, player.strokesPerHole);
+          }
+        }
+        if (strokesPerHole.size === 0) strokesPerHole = undefined;
+      }
+
+      const mpResult = calculateMatchPlay(
+        roundScores,
+        playersWithScores,
+        round.holeInfo,
+        strokesPerHole,
+        round.holes as 9 | 18
+      );
+
+      const headline = generateMatchPlayHeadline(mpResult, playersWithScores);
+      if (headline) {
+        headlines.push(headline);
+
+        // Store result headline in the game config for feed display
+        const updatedGames = (round.games || []).map(g =>
+          g.type === 'match_play' ? { ...g, resultHeadline: headline } : g
+        );
+        updateGamesSupabase(updatedGames);
+      }
+    }
+
+    if (headlines.length === 0) return;
+
+    // Get friends of the current user to notify
+    try {
+      const { data: friendships } = await supabase
+        .from('friendships')
+        .select('user_id, friend_id')
+        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
+        .eq('status', 'accepted');
+
+      if (!friendships?.length) return;
+
+      const friendIds = friendships.map(f =>
+        f.user_id === user.id ? f.friend_id : f.user_id
+      );
+
+      // Exclude players already in the round (they'll see the result directly)
+      const playerProfileIds = playersWithScores
+        .map(p => p.profileId)
+        .filter(Boolean) as string[];
+      const notifyIds = friendIds.filter(id => !playerProfileIds.includes(id));
+
+      if (notifyIds.length > 0) {
+        sendPushToProfiles({
+          profileIds: notifyIds,
+          title: 'Match Result',
+          body: `${headlines[0]} at ${round.courseName}`,
+          data: { roundId: round.id, route: `/round/${round.id}/complete` },
+          type: 'roundCompleted',
+        });
+      }
+    } catch {
+      // Notification is non-critical
+    }
+  }, [round, user, playersWithScores, roundScores, updateGamesSupabase]);
+
   const handleFinishRound = useCallback(() => {
     if (round) {
       completeRoundSupabase();
       completeRoundLocal(round.id);
+      sendRoundCompletionNotifications();
       navigate(`/round/${round.id}/complete`);
     }
-  }, [round, completeRoundSupabase, completeRoundLocal, navigate]);
+  }, [round, completeRoundSupabase, completeRoundLocal, navigate, sendRoundCompletionNotifications]);
 
   const handleFinishWithWinner = useCallback(() => {
     if (round) {
       setShowWinnerModal(false);
       completeRoundSupabase();
       completeRoundLocal(round.id);
+      sendRoundCompletionNotifications();
       navigate(`/round/${round.id}/complete`);
     }
-  }, [round, completeRoundSupabase, completeRoundLocal, navigate, setShowWinnerModal]);
+  }, [round, completeRoundSupabase, completeRoundLocal, navigate, setShowWinnerModal, sendRoundCompletionNotifications]);
 
   const handleAddPress = useCallback((press: Press) => {
     if (round) {
@@ -796,6 +913,10 @@ export default function Scorecard() {
         isListening={isListening}
         isProcessing={isProcessing}
         isSupported={isSupported}
+        audioLevel={audioLevel}
+        interimTranscript={interimTranscript}
+        isNoisy={isNoisy}
+        isHandsFree={isHandsFreeActive}
         propBets={propBets}
         autoAdvanceCountdown={autoAdvanceCountdown}
         allCurrentHoleScored={allCurrentHoleScored}

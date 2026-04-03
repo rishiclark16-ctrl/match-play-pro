@@ -3,6 +3,7 @@ import {
   calculateMatchPlay,
   getMatchPlayStatusBrief,
   getMatchPlayStatusColor,
+  generateMatchPlayHeadline,
   StrokesPerHoleMap,
 } from './matchPlay';
 import { Player, Score, HoleInfo } from '@/types/golf';
@@ -539,5 +540,144 @@ describe('net scoring scenarios', () => {
     // Hole 2: p1 net 5 = p2 net 5 = halved (no strokes on hole 2)
     expect(result.holeResults[1].winnerId).toBeNull();
     expect(result.holeResults[1].strokesReceived['p1']).toBe(0);
+  });
+});
+
+describe('generateMatchPlayHeadline', () => {
+  const players = [
+    { id: 'p1', name: 'Rishi Clark' },
+    { id: 'p2', name: 'Andrew Smith' },
+  ];
+
+  it('should generate "beat" headline for a decisive win (e.g., 5&4)', () => {
+    // p1 wins 5 of first 14 holes more than p2 (5 up with 4 remaining)
+    const scores: Score[] = [];
+    for (let i = 1; i <= 14; i++) {
+      scores.push(createScore('p1', i, i <= 5 ? 3 : 4));
+      scores.push(createScore('p2', i, 4));
+    }
+    const result = calculateMatchPlay(scores, twoPlayers, eighteenHoles, undefined, 18);
+    const headline = generateMatchPlayHeadline(result, players);
+    expect(headline).toContain('Rishi beat Andrew');
+    expect(headline).toContain('5&4');
+  });
+
+  it('should generate "beat X 1 UP" for last-hole win', () => {
+    // p1 wins 1 more hole than p2 over 18 holes → 1 UP
+    const scores: Score[] = [];
+    for (let i = 1; i <= 18; i++) {
+      if (i === 1) {
+        // p1 wins hole 1
+        scores.push(createScore('p1', i, 3));
+        scores.push(createScore('p2', i, 4));
+      } else {
+        // All other holes halved
+        scores.push(createScore('p1', i, 4));
+        scores.push(createScore('p2', i, 4));
+      }
+    }
+    const result = calculateMatchPlay(scores, twoPlayers, eighteenHoles, undefined, 18);
+    expect(result.matchStatus).toBe('won');
+    expect(result.winMargin).toBe('1 UP');
+    const headline = generateMatchPlayHeadline(result, players);
+    expect(headline).toBe('Rishi beat Andrew 1 UP');
+  });
+
+  it('should generate halved headline when match is tied after all holes', () => {
+    const scores: Score[] = [];
+    for (let i = 1; i <= 18; i++) {
+      scores.push(createScore('p1', i, 4));
+      scores.push(createScore('p2', i, 4));
+    }
+    const result = calculateMatchPlay(scores, twoPlayers, eighteenHoles, undefined, 18);
+    const headline = generateMatchPlayHeadline(result, players);
+    expect(headline).toBe('Rishi and Andrew halved their match');
+  });
+
+  it('should return null for ongoing match', () => {
+    const scores: Score[] = [
+      createScore('p1', 1, 3),
+      createScore('p2', 1, 5),
+    ];
+    const result = calculateMatchPlay(scores, twoPlayers, eighteenHoles, undefined, 18);
+    expect(result.matchStatus).toBe('ongoing');
+    const headline = generateMatchPlayHeadline(result, players);
+    expect(headline).toBeNull();
+  });
+
+  it('should return null for not started match', () => {
+    const result = calculateMatchPlay([], twoPlayers, eighteenHoles, undefined, 18);
+    expect(result.matchStatus).toBe('not_started');
+    const headline = generateMatchPlayHeadline(result, players);
+    expect(headline).toBeNull();
+  });
+
+  it('should return null for dormie match (still in progress)', () => {
+    // p1 is 2 up with 2 to play = dormie
+    const scores: Score[] = [];
+    for (let i = 1; i <= 16; i++) {
+      scores.push(createScore('p1', i, i <= 2 ? 3 : 4));
+      scores.push(createScore('p2', i, 4));
+    }
+    const result = calculateMatchPlay(scores, twoPlayers, eighteenHoles, undefined, 18);
+    expect(result.matchStatus).toBe('dormie');
+    const headline = generateMatchPlayHeadline(result, players);
+    expect(headline).toBeNull();
+  });
+
+  it('should use first name only in headlines', () => {
+    const scores: Score[] = [];
+    for (let i = 1; i <= 18; i++) {
+      scores.push(createScore('p1', i, 4));
+      scores.push(createScore('p2', i, 4));
+    }
+    const result = calculateMatchPlay(scores, twoPlayers, eighteenHoles, undefined, 18);
+    const headline = generateMatchPlayHeadline(result, [
+      { id: 'p1', name: 'John Michael Smith III' },
+      { id: 'p2', name: 'Robert James Johnson' },
+    ]);
+    expect(headline).toBe('John and Robert halved their match');
+  });
+
+  it('should correctly identify winner by id, not array position', () => {
+    // p2 wins decisively
+    const scores: Score[] = [];
+    for (let i = 1; i <= 14; i++) {
+      scores.push(createScore('p1', i, 6));
+      scores.push(createScore('p2', i, i <= 5 ? 3 : 4));
+    }
+    const result = calculateMatchPlay(scores, twoPlayers, eighteenHoles, undefined, 18);
+    expect(result.winnerId).toBe('p2');
+    const headline = generateMatchPlayHeadline(result, players);
+    expect(headline).toContain('Andrew beat Rishi');
+  });
+
+  it('should handle 9-hole match win', () => {
+    // p1 wins first 5 of 9, up 5 with 4 remaining
+    const scores: Score[] = [];
+    for (let i = 1; i <= 5; i++) {
+      scores.push(createScore('p1', i, 3));
+      scores.push(createScore('p2', i, 5));
+    }
+    const result = calculateMatchPlay(scores, twoPlayers, nineHoles, undefined, 9);
+    expect(result.matchStatus).toBe('won');
+    const headline = generateMatchPlayHeadline(result, players);
+    expect(headline).toBe('Rishi beat Andrew 5&4');
+  });
+
+  it('should return null if winner id does not match any player', () => {
+    const fakeResult = {
+      holeResults: [],
+      leaderId: 'unknown',
+      holesUp: 3,
+      holesPlayed: 18,
+      holesRemaining: 0,
+      matchStatus: 'won' as const,
+      winnerId: 'unknown',
+      statusText: 'Unknown wins 3 UP',
+      winMargin: '3 UP',
+    };
+    const headline = generateMatchPlayHeadline(fakeResult, players);
+    expect(headline).toBeNull();
   });
 });
