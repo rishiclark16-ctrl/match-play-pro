@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Mic, MicOff, Sparkles, ChevronRight, AlertCircle, RotateCcw } from 'lucide-react';
@@ -74,18 +74,29 @@ export default function HouseGameBuilder() {
     return () => { if (parseStepTimer.current) clearInterval(parseStepTimer.current); };
   }, [parsing]);
 
-  const { startListening, stopListening, isSupported: voiceSupported } = useVoiceRecognition({
-    onResult: (transcript) => {
-      setDescription(prev => prev ? `${prev} ${transcript}` : transcript);
-      setIsListening(false);
-      hapticSuccess();
-    },
-    onError: () => {
+  const handleVoiceTranscript = useCallback((text: string) => {
+    setDescription(prev => prev ? `${prev} ${text}` : text);
+    hapticSuccess();
+  }, []);
+
+  const {
+    startListening,
+    stopListening,
+    isSupported: voiceSupported,
+    error: voiceError,
+    interimTranscript,
+    reset: resetVoice,
+  } = useVoiceRecognition({ continuous: true, onTranscript: handleVoiceTranscript });
+
+  // Handle voice errors
+  useEffect(() => {
+    if (voiceError) {
       setIsListening(false);
       hapticError();
       toast.error('Voice not available — type your description instead');
-    },
-  });
+      resetVoice();
+    }
+  }, [voiceError, resetVoice]);
 
   const handleVoice = () => {
     if (isListening) {
@@ -231,14 +242,18 @@ export default function HouseGameBuilder() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="absolute bottom-3 left-4 flex items-center gap-2"
+                className="absolute bottom-3 left-4 right-14 flex items-center gap-2"
               >
                 <motion.span
                   animate={{ opacity: [1, 0.3, 1] }}
                   transition={{ repeat: Infinity, duration: 1 }}
-                  className="w-2 h-2 rounded-full bg-red-500"
+                  className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"
                 />
-                <span className="text-[11px] font-bold text-red-500">Listening…</span>
+                {interimTranscript ? (
+                  <span className="text-[11px] font-medium text-muted-foreground truncate">{interimTranscript}</span>
+                ) : (
+                  <span className="text-[11px] font-bold text-red-500">Listening…</span>
+                )}
               </motion.div>
             )}
           </div>

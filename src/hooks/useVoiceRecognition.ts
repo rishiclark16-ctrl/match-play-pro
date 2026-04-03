@@ -1,6 +1,13 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import '@/types/speech.d.ts';
 
+interface UseVoiceRecognitionOptions {
+  /** Enable continuous listening — fires onTranscript for each finalized phrase. Default: false */
+  continuous?: boolean;
+  /** Callback for each finalized transcript in continuous mode */
+  onTranscript?: (transcript: string) => void;
+}
+
 interface UseVoiceRecognitionReturn {
   isListening: boolean;
   isProcessing: boolean;
@@ -29,7 +36,10 @@ function shouldRequestMicBeforeStart(): boolean {
     !!navigator.mediaDevices?.getUserMedia;
 }
 
-export function useVoiceRecognition(): UseVoiceRecognitionReturn {
+export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): UseVoiceRecognitionReturn {
+  const { continuous = false, onTranscript } = options;
+  const onTranscriptRef = useRef(onTranscript);
+  onTranscriptRef.current = onTranscript;
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState<string | null>(null);
@@ -152,7 +162,7 @@ export function useVoiceRecognition(): UseVoiceRecognitionReturn {
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognitionAPI();
 
-    recognition.continuous = false;
+    recognition.continuous = continuous;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
     recognition.maxAlternatives = 3;
@@ -182,12 +192,21 @@ export function useVoiceRecognition(): UseVoiceRecognitionReturn {
         }
       }
 
-      setTranscript(finalTranscript);
-      setBrowserConfidence(confidence);
-      setAlternatives(alts);
       setInterimTranscript(null);
-      setIsListening(false);
-      setIsProcessing(true);
+
+      if (continuous && onTranscriptRef.current) {
+        // In continuous mode, fire callback per phrase and keep listening
+        onTranscriptRef.current(finalTranscript);
+        setBrowserConfidence(confidence);
+        setAlternatives(alts);
+      } else {
+        // Single-utterance mode — set state and stop
+        setTranscript(finalTranscript);
+        setBrowserConfidence(confidence);
+        setAlternatives(alts);
+        setIsListening(false);
+        setIsProcessing(true);
+      }
     };
 
     recognition.onerror = (event) => {
@@ -236,8 +255,17 @@ export function useVoiceRecognition(): UseVoiceRecognitionReturn {
     };
 
     recognition.onend = () => {
-      setIsListening(false);
       setInterimTranscript(null);
+      if (continuous && recognitionRef.current === recognition) {
+        // Auto-restart in continuous mode — browser stops after each phrase
+        try {
+          recognition.start();
+          return;
+        } catch {
+          // Falls through to stop
+        }
+      }
+      setIsListening(false);
       if (!resultReceivedRef.current) {
         setIsProcessing(false);
       }
@@ -253,7 +281,7 @@ export function useVoiceRecognition(): UseVoiceRecognitionReturn {
       setIsListening(false);
       setIsProcessing(false);
     }
-  }, [stopAudioMonitoring]);
+  }, [continuous, stopAudioMonitoring]);
 
   const startListening = useCallback(() => {
     if (!isSupported) {
@@ -278,8 +306,10 @@ export function useVoiceRecognition(): UseVoiceRecognitionReturn {
   }, [isSupported, initRecognition, startAudioMonitoring]);
 
   const stopListening = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
+    const recognition = recognitionRef.current;
+    recognitionRef.current = null; // Prevents auto-restart in continuous mode
+    if (recognition) {
+      recognition.stop();
     }
     setIsListening(false);
     setInterimTranscript(null);
