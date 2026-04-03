@@ -84,9 +84,9 @@ export function AvatarUpload({
         type="button"
         onClick={handleClick}
         disabled={isUploading}
-        className="relative group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-2xl"
+        className="relative group focus:outline-none rounded-2xl"
       >
-        <Avatar className={cn(sizeClasses[size], 'border-4 border-background shadow-lg rounded-2xl')}>
+        <Avatar className={cn(sizeClasses[size], 'shadow-lg rounded-2xl')}>
           <AvatarImage src={displayUrl || undefined} alt={fullName || 'Profile'} className="rounded-2xl" />
           <AvatarFallback className="text-xl font-semibold bg-primary text-primary-foreground rounded-2xl">
             {getInitials(fullName)}

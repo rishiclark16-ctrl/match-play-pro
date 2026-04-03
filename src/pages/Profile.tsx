@@ -282,15 +282,12 @@ export default function Profile() {
 
         {/* Avatar + identity */}
         <div className="flex items-center gap-4 mb-5">
-          <div className="ring-2 ring-white/20 rounded-2xl">
-            <AvatarUpload
-              avatarUrl={profile?.avatar_url || null}
-              fullName={profile?.full_name || null}
-              onUpload={handleAvatarUpload}
-              size="lg"
-              className="rounded-2xl"
-            />
-          </div>
+          <AvatarUpload
+            avatarUrl={profile?.avatar_url || null}
+            fullName={profile?.full_name || null}
+            onUpload={handleAvatarUpload}
+            size="lg"
+          />
           <div className="flex-1 min-w-0">
             <h1 className="text-[26px] font-black tracking-[-0.04em] text-white leading-tight truncate">
               {profile?.full_name || 'Add your name'}
