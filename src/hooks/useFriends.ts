@@ -432,6 +432,35 @@ export function useFriends() {
     }
   };
 
+  const searchByName = async (query: string): Promise<SearchResult[]> => {
+    if (!query || query.length < 2) return [];
+    if (!user) return [];
+
+    const rateLimitResult = searchRateLimiter.checkAndRecord(user.id);
+    if (!rateLimitResult.allowed) return [];
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, handicap, avatar_url, friend_code')
+        .ilike('full_name', `%${query}%`)
+        .neq('id', user.id)
+        .limit(10);
+
+      if (error || !data) return [];
+
+      return data.map(d => ({
+        id: d.id,
+        fullName: d.full_name,
+        handicap: d.handicap,
+        avatarUrl: d.avatar_url,
+        friendCode: d.friend_code,
+      }));
+    } catch {
+      return [];
+    }
+  };
+
   const searchByCode = async (code: string): Promise<SearchResult | null> => {
     if (!code || code.length < 3) return null;
     if (!user) return null;
@@ -481,6 +510,7 @@ export function useFriends() {
     declineFriendRequest,
     removeFriend,
     searchByCode,
+    searchByName,
     loadMoreFriends,
     refetch: () => {
       setPage(0);
