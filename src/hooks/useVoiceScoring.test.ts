@@ -8,11 +8,6 @@ vi.mock('@/hooks/useVoiceRecognition', () => ({
   useVoiceRecognition: vi.fn(),
 }));
 
-vi.mock('@/lib/voiceCommands', () => ({
-  parseVoiceCommands: vi.fn(),
-  hasScoreContent: vi.fn(),
-}));
-
 vi.mock('@/lib/voiceFeedback', () => ({
   feedbackListeningStart: vi.fn(),
   feedbackListeningStop: vi.fn(),
@@ -20,6 +15,14 @@ vi.mock('@/lib/voiceFeedback', () => ({
   feedbackVoiceError: vi.fn(),
   feedbackAllScored: vi.fn(),
   feedbackNextHole: vi.fn(),
+  speakScoreConfirmation: vi.fn(),
+  speakAllScored: vi.fn(),
+  speakError: vi.fn(),
+  speakCorrection: vi.fn(),
+  speakNavigation: vi.fn(),
+  speakScoreQuery: vi.fn(),
+  speakMissingPlayers: vi.fn(),
+  setSpeechEnabled: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({
@@ -30,11 +33,13 @@ vi.mock('sonner', () => ({
   },
 }));
 
-// For voiceParser, use spyOn (not vi.mock) to avoid contaminating voiceParser.test.ts
+// Use spyOn (not vi.mock) for voiceParser and voiceCommands to avoid
+// contaminating their test files under bun's test runner
 import * as voiceParserModule from '@/lib/voiceParser';
+import * as voiceCommandsModule from '@/lib/voiceCommands';
 
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
-import { parseVoiceCommands, hasScoreContent } from '@/lib/voiceCommands';
+// parseVoiceCommands and hasScoreContent accessed via voiceCommandsModule spies
 import {
   feedbackListeningStart,
   feedbackListeningStop,
@@ -79,14 +84,18 @@ describe('useVoiceScoring', () => {
 
   let parseVoiceInputSpy: ReturnType<typeof vi.spyOn>;
   let parseVoiceCorrectionSpy: ReturnType<typeof vi.spyOn>;
+  let parseVoiceCommandsSpy: ReturnType<typeof vi.spyOn>;
+  let hasScoreContentSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
 
-    // Set up spies on voiceParser module (restores automatically on vi.restoreAllMocks)
+    // Set up spies (not vi.mock) to avoid contaminating other test files under bun
     parseVoiceInputSpy = vi.spyOn(voiceParserModule, 'parseVoiceInput');
     parseVoiceCorrectionSpy = vi.spyOn(voiceParserModule, 'parseVoiceCorrection');
+    parseVoiceCommandsSpy = vi.spyOn(voiceCommandsModule, 'parseVoiceCommands');
+    hasScoreContentSpy = vi.spyOn(voiceCommandsModule, 'hasScoreContent');
 
     // Default voice recognition mock
     mockVoiceRecognition = {
@@ -96,13 +105,18 @@ describe('useVoiceScoring', () => {
       startListening: vi.fn(),
       stopListening: vi.fn(),
       transcript: '',
+      interimTranscript: null,
+      alternatives: [],
+      browserConfidence: null,
+      audioLevel: 0,
+      isNoisy: false,
       error: null,
       reset: vi.fn(),
     };
 
     (useVoiceRecognition as ReturnType<typeof vi.fn>).mockReturnValue(mockVoiceRecognition);
-    (parseVoiceCommands as ReturnType<typeof vi.fn>).mockReturnValue([]);
-    (hasScoreContent as ReturnType<typeof vi.fn>).mockReturnValue(false);
+    parseVoiceCommandsSpy.mockReturnValue([]);
+    hasScoreContentSpy.mockReturnValue(false);
     parseVoiceCorrectionSpy.mockReturnValue(null);
     parseVoiceInputSpy.mockReturnValue({
       success: false,
@@ -221,7 +235,7 @@ describe('useVoiceScoring', () => {
       it('should navigate to next hole on "next hole" command', () => {
         const onNavigateToHole = vi.fn();
 
-        (parseVoiceCommands as ReturnType<typeof vi.fn>).mockReturnValue([
+        parseVoiceCommandsSpy.mockReturnValue([
           { type: 'next_hole' },
         ]);
 
@@ -244,7 +258,7 @@ describe('useVoiceScoring', () => {
       it('should navigate to previous hole on "previous hole" command', () => {
         const onNavigateToHole = vi.fn();
 
-        (parseVoiceCommands as ReturnType<typeof vi.fn>).mockReturnValue([
+        parseVoiceCommandsSpy.mockReturnValue([
           { type: 'previous_hole' },
         ]);
 
@@ -265,7 +279,7 @@ describe('useVoiceScoring', () => {
       it('should navigate to specific hole on "go to hole X" command', () => {
         const onNavigateToHole = vi.fn();
 
-        (parseVoiceCommands as ReturnType<typeof vi.fn>).mockReturnValue([
+        parseVoiceCommandsSpy.mockReturnValue([
           { type: 'go_to_hole', holeNumber: 14 },
         ]);
 
@@ -285,7 +299,7 @@ describe('useVoiceScoring', () => {
       it('should not go below hole 1', () => {
         const onNavigateToHole = vi.fn();
 
-        (parseVoiceCommands as ReturnType<typeof vi.fn>).mockReturnValue([
+        parseVoiceCommandsSpy.mockReturnValue([
           { type: 'previous_hole' },
         ]);
 
@@ -306,7 +320,7 @@ describe('useVoiceScoring', () => {
       it('should not exceed total holes', () => {
         const onNavigateToHole = vi.fn();
 
-        (parseVoiceCommands as ReturnType<typeof vi.fn>).mockReturnValue([
+        parseVoiceCommandsSpy.mockReturnValue([
           { type: 'next_hole' },
         ]);
 
@@ -398,7 +412,7 @@ describe('useVoiceScoring', () => {
       it('should save scores immediately with high confidence', () => {
         const onScoreSaved = vi.fn();
 
-        (hasScoreContent as ReturnType<typeof vi.fn>).mockReturnValue(true);
+        hasScoreContentSpy.mockReturnValue(true);
         parseVoiceInputSpy.mockReturnValue({
           success: true,
           scores: [
@@ -433,7 +447,7 @@ describe('useVoiceScoring', () => {
       });
 
       it('should show modal for medium confidence scores', () => {
-        (hasScoreContent as ReturnType<typeof vi.fn>).mockReturnValue(true);
+        hasScoreContentSpy.mockReturnValue(true);
         parseVoiceInputSpy.mockReturnValue({
           success: true,
           scores: [
@@ -455,7 +469,7 @@ describe('useVoiceScoring', () => {
       });
 
       it('should show modal for low confidence / no scores', () => {
-        (hasScoreContent as ReturnType<typeof vi.fn>).mockReturnValue(true);
+        hasScoreContentSpy.mockReturnValue(true);
         parseVoiceInputSpy.mockReturnValue({
           success: false,
           scores: [],
@@ -477,7 +491,7 @@ describe('useVoiceScoring', () => {
       it('should show modal when alwaysConfirmVoice is true even for high confidence', () => {
         const onScoreSaved = vi.fn();
 
-        (hasScoreContent as ReturnType<typeof vi.fn>).mockReturnValue(true);
+        hasScoreContentSpy.mockReturnValue(true);
         parseVoiceInputSpy.mockReturnValue({
           success: true,
           scores: [
@@ -510,7 +524,7 @@ describe('useVoiceScoring', () => {
 
     describe('no score content', () => {
       it('should show error modal when no score content detected', () => {
-        (hasScoreContent as ReturnType<typeof vi.fn>).mockReturnValue(false);
+        hasScoreContentSpy.mockReturnValue(false);
 
         mockVoiceRecognition.transcript = 'hello world';
         (useVoiceRecognition as ReturnType<typeof vi.fn>).mockReturnValue(mockVoiceRecognition);
@@ -593,7 +607,7 @@ describe('useVoiceScoring', () => {
 
   describe('closeVoiceModal', () => {
     it('should close modal and clear parse result', () => {
-      (hasScoreContent as ReturnType<typeof vi.fn>).mockReturnValue(true);
+      hasScoreContentSpy.mockReturnValue(true);
       parseVoiceInputSpy.mockReturnValue({
         success: true,
         scores: [{ playerId: 'p1', playerName: 'Michael', score: 4 }],
@@ -633,7 +647,7 @@ describe('useVoiceScoring', () => {
 
   describe('continuous voice mode', () => {
     it('should restart listening after high confidence save', () => {
-      (hasScoreContent as ReturnType<typeof vi.fn>).mockReturnValue(true);
+      hasScoreContentSpy.mockReturnValue(true);
       parseVoiceInputSpy.mockReturnValue({
         success: true,
         scores: [
@@ -666,7 +680,7 @@ describe('useVoiceScoring', () => {
     });
 
     it('should not restart listening when continuousVoice is false', () => {
-      (hasScoreContent as ReturnType<typeof vi.fn>).mockReturnValue(true);
+      hasScoreContentSpy.mockReturnValue(true);
       parseVoiceInputSpy.mockReturnValue({
         success: true,
         scores: [
@@ -701,7 +715,7 @@ describe('useVoiceScoring', () => {
 
   describe('voiceSuccessPlayerIds', () => {
     it('should set and clear success player ids after high confidence save', () => {
-      (hasScoreContent as ReturnType<typeof vi.fn>).mockReturnValue(true);
+      hasScoreContentSpy.mockReturnValue(true);
       parseVoiceInputSpy.mockReturnValue({
         success: true,
         scores: [

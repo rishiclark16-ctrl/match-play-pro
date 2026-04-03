@@ -6,7 +6,7 @@ interface Player {
   name: string;
 }
 
-export type VoiceCommandType = 
+export type VoiceCommandType =
   | 'wolf_selection'
   | 'wolf_alone'
   | 'wolf_partner'
@@ -15,7 +15,16 @@ export type VoiceCommandType =
   | 'previous_hole'
   | 'go_to_hole'
   | 'undo'
-  | 'score_entry';
+  | 'score_entry'
+  | 'clear_hole'
+  | 'skip_hole'
+  | 'query_score'
+  | 'query_missing'
+  | 'query_par'
+  | 'query_leaderboard'
+  | 'start_game_builder'
+  | 'hands_free_toggle'
+  | 'speech_toggle';
 
 export interface VoiceCommand {
   type: VoiceCommandType;
@@ -24,6 +33,9 @@ export interface VoiceCommand {
   partnerId?: string;
   partnerName?: string;
   holeNumber?: number;
+  queryPlayerId?: string;
+  queryPlayerName?: string;
+  enabled?: boolean;
 }
 
 // Levenshtein distance for fuzzy matching
@@ -413,6 +425,149 @@ export function parseVoiceCommands(
     }
   }
   
+  // Batch operations - clear all scores on current hole
+  const clearPatterns = [
+    /\bclear\s+(?:all\s+)?scores?\b/i,
+    /\bclear\s+(?:all\s+)?(?:scores?\s+)?(?:on\s+)?(?:this\s+)?hole\b/i,
+    /\bundo\s+(?:all|everything)\s+(?:on\s+)?(?:this\s+)?hole\b/i,
+    /\breset\s+(?:this\s+)?hole\b/i,
+    /\bstart\s+(?:this\s+)?hole\s+over\b/i,
+    /\berase\s+(?:all\s+)?scores?\b/i,
+  ];
+
+  for (const pattern of clearPatterns) {
+    if (pattern.test(text)) {
+      commands.push({ type: 'clear_hole' });
+      break;
+    }
+  }
+
+  // Skip hole
+  const skipPatterns = [
+    /\bskip\s+(?:this\s+)?hole\b/i,
+    /\bmark\s+(?:this\s+)?(?:hole\s+)?(?:as\s+)?(?:not\s+played|skipped|n\/?a)\b/i,
+    /\bdidnt?\s+play\s+(?:this\s+)?hole\b/i,
+  ];
+
+  for (const pattern of skipPatterns) {
+    if (pattern.test(text)) {
+      commands.push({ type: 'skip_hole' });
+      break;
+    }
+  }
+
+  // Score queries - "What did Mike score?" (normalized: apostrophes stripped)
+  const scoreQueryPatterns = [
+    /whats?\s+(?:did\s+)?(\w+)s?\s+(?:score|get|shoot|make)/i,
+    /what\s+(?:did|was)\s+(\w+)s?\s+(?:score|get|shoot|make)/i,
+    /(?:how\s+did|what\s+about)\s+(\w+)\s+(?:do|score|shoot)/i,
+    /(\w+)s?\s+score\??$/i,
+  ];
+
+  for (const pattern of scoreQueryPatterns) {
+    const match = text.match(pattern);
+    if (match && match[1]) {
+      const player = findPlayerInText(match[1], players);
+      if (player) {
+        commands.push({
+          type: 'query_score',
+          queryPlayerId: player.id,
+          queryPlayerName: player.name,
+        });
+        break;
+      }
+    }
+  }
+
+  // Missing players query - "Who hasn't scored?" (normalized: who's → whos, hasn't → hasnt)
+  const missingPatterns = [
+    /\bwho(?:s|\s+has)?\s*(?:hasnt|hasnt|nt)\s+scored\b/i,
+    /\bwhos?\s+(?:left|missing|remaining)\b/i,
+    /\bwho\s+(?:still\s+)?needs?\s+(?:to\s+)?score\b/i,
+    /\beveryone\s+(?:scored|done)\b/i,
+    /\banyone\s+(?:left|missing)\b/i,
+    /\bwho\s+hasnt\s+scored\b/i,
+  ];
+
+  for (const pattern of missingPatterns) {
+    if (pattern.test(text)) {
+      commands.push({ type: 'query_missing' });
+      break;
+    }
+  }
+
+  // Par query - "What's par?" (normalized: what's → whats)
+  const parQueryPatterns = [
+    /\bwhats?\s+(?:the\s+)?par\b/i,
+    /\bwhat\s+is\s+(?:the\s+)?par\b/i,
+    /\bpar\s+(?:on|for)\s+(?:this\s+)?hole\b/i,
+    /\bhow\s+(?:long|far)\s+(?:is\s+)?(?:this\s+)?hole\b/i,
+  ];
+
+  for (const pattern of parQueryPatterns) {
+    if (pattern.test(text)) {
+      commands.push({ type: 'query_par' });
+      break;
+    }
+  }
+
+  // Leaderboard query (normalized: who's → whos)
+  const leaderboardPatterns = [
+    /\bshow\s+(?:me\s+)?(?:the\s+)?(?:leader\s*board|standings?|scores?)\b/i,
+    /\bwhos?\s+(?:winning|leading|ahead|in\s+(?:the\s+)?lead)\b/i,
+    /\bwho\s+is\s+(?:winning|leading|ahead|in\s+(?:the\s+)?lead)\b/i,
+  ];
+
+  for (const pattern of leaderboardPatterns) {
+    if (pattern.test(text)) {
+      commands.push({ type: 'query_leaderboard' });
+      break;
+    }
+  }
+
+  // AI Game Builder trigger
+  const gameBuilderPatterns = [
+    /\b(?:start|create|build|make)\s+(?:a\s+)?(?:new\s+)?(?:game|format|bet)\b/i,
+    /\b(?:set\s+up|add)\s+(?:a\s+)?(?:new\s+)?(?:game|side\s+bet|wager)\b/i,
+  ];
+
+  for (const pattern of gameBuilderPatterns) {
+    if (pattern.test(text)) {
+      commands.push({ type: 'start_game_builder' });
+      break;
+    }
+  }
+
+  // Hands-free mode toggle
+  const handsFreePatterns = [
+    /\b(?:hands?\s*free|continuous|always\s+listen(?:ing)?)\s+(?:mode\s+)?(?:on|off|enable|disable|start|stop|toggle)\b/i,
+    /\b(?:turn|switch)\s+(?:on|off)\s+(?:hands?\s*free|continuous|always\s+listen(?:ing)?)\b/i,
+    /\b(?:start|stop|enable|disable)\s+(?:hands?\s*free|continuous\s+(?:mode|listening))\b/i,
+  ];
+
+  for (const pattern of handsFreePatterns) {
+    if (pattern.test(text)) {
+      const isEnable = /\b(?:on|enable|start)\b/i.test(text);
+      commands.push({ type: 'hands_free_toggle', enabled: isEnable });
+      break;
+    }
+  }
+
+  // Speech toggle
+  const speechTogglePatterns = [
+    /\b(?:turn|switch)\s+(?:on|off)\s+(?:speech|voice\s+(?:feedback|response)|talk(?:ing)?|speak(?:ing)?)\b/i,
+    /\b(?:mute|unmute)\s+(?:voice|speech|responses?)\b/i,
+    /\b(?:stop|start)\s+(?:talking|speaking|reading)\b/i,
+  ];
+
+  for (const pattern of speechTogglePatterns) {
+    if (pattern.test(text)) {
+      const isEnable = /\b(?:on|unmute|start)\b/i.test(text);
+      commands.push({ type: 'speech_toggle', enabled: isEnable });
+      break;
+    }
+  }
+
   return commands;
 }
 

@@ -140,8 +140,119 @@ export async function feedbackWolfSelected(): Promise<void> {
 // Press added
 export async function feedbackPressAdded(): Promise<void> {
   await hapticMedium();
-  
+
   // Cash register sound
   playTone(880, 0.08, 0.1);
   setTimeout(() => playTone(1047, 0.12, 0.1), 60);
+}
+
+// === Speech Synthesis ===
+
+let speechEnabled = true;
+
+export function setSpeechEnabled(enabled: boolean): void {
+  speechEnabled = enabled;
+}
+
+export function isSpeechEnabled(): boolean {
+  return speechEnabled;
+}
+
+function speak(text: string, options?: { rate?: number; pitch?: number; volume?: number }): Promise<void> {
+  return new Promise((resolve) => {
+    if (!speechEnabled || typeof window === 'undefined' || !window.speechSynthesis) {
+      resolve();
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = options?.rate ?? 1.15;
+    utterance.pitch = options?.pitch ?? 1.0;
+    utterance.volume = options?.volume ?? 0.8;
+
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v =>
+      v.lang.startsWith('en') && (v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Daniel') || v.name.includes('Google'))
+    ) || voices.find(v => v.lang.startsWith('en'));
+    if (preferred) {
+      utterance.voice = preferred;
+    }
+
+    utterance.onend = () => resolve();
+    utterance.onerror = () => resolve();
+
+    if (voices.length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        const v = window.speechSynthesis.getVoices();
+        const pref = v.find(voice => voice.lang.startsWith('en'));
+        if (pref) utterance.voice = pref;
+        window.speechSynthesis.speak(utterance);
+      };
+    } else {
+      window.speechSynthesis.speak(utterance);
+    }
+
+    setTimeout(resolve, 5000);
+  });
+}
+
+/** Speak back confirmed scores: "Mike 4, Bob 5, saved" */
+export async function speakScoreConfirmation(scores: Array<{ playerName: string; score: number }>): Promise<void> {
+  if (!speechEnabled) return;
+  const parts = scores.map(s => `${s.playerName.split(' ')[0]} ${s.score}`);
+  const text = parts.length === 1
+    ? `${parts[0]}, saved`
+    : `${parts.join(', ')}, saved`;
+  await speak(text, { rate: 1.2 });
+}
+
+/** Speak all-scored confirmation */
+export async function speakAllScored(holeNumber: number): Promise<void> {
+  if (!speechEnabled) return;
+  await speak(`All scores saved for hole ${holeNumber}`, { rate: 1.15 });
+}
+
+/** Speak error */
+export async function speakError(): Promise<void> {
+  if (!speechEnabled) return;
+  await speak("Didn't catch that, try again", { rate: 1.1 });
+}
+
+/** Speak a help prompt when user pauses */
+export async function speakHelpPrompt(playerNames: string[]): Promise<void> {
+  if (!speechEnabled) return;
+  const names = playerNames.slice(0, 2).map(n => n.split(' ')[0]).join(' and ');
+  await speak(`Say ${names} followed by their scores`, { rate: 1.0 });
+}
+
+/** Speak score query response */
+export async function speakScoreQuery(playerName: string, score: number, holeNumber: number): Promise<void> {
+  if (!speechEnabled) return;
+  await speak(`${playerName.split(' ')[0]} got ${score} on hole ${holeNumber}`, { rate: 1.1 });
+}
+
+/** Speak missing players */
+export async function speakMissingPlayers(playerNames: string[]): Promise<void> {
+  if (!speechEnabled) return;
+  const names = playerNames.map(n => n.split(' ')[0]);
+  const text = names.length === 1
+    ? `${names[0]} hasn't scored yet`
+    : `${names.join(' and ')} haven't scored yet`;
+  await speak(text, { rate: 1.1 });
+}
+
+/** Speak correction confirmation */
+export async function speakCorrection(playerName: string, newScore: number): Promise<void> {
+  if (!speechEnabled) return;
+  await speak(`Changed ${playerName.split(' ')[0]} to ${newScore}`, { rate: 1.2 });
+}
+
+/** Speak navigation */
+export async function speakNavigation(holeNumber: number, par?: number): Promise<void> {
+  if (!speechEnabled) return;
+  const text = par ? `Hole ${holeNumber}, par ${par}` : `Hole ${holeNumber}`;
+  await speak(text, { rate: 1.15 });
 }

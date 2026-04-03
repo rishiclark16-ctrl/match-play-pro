@@ -1,4 +1,5 @@
 import { MIN_HOLE_SCORE, MAX_HOLE_SCORE, MAX_VOICE_SCORE } from '@/lib/constants';
+import { phoneticMatch } from '@/lib/phoneticMatch';
 
 interface Player {
   id: string;
@@ -309,6 +310,18 @@ function findPlayerMatch(text: string, players: Player[]): Player | null {
     for (const potential of potentialNames) {
       // Only fuzzy match if the input is similar to the name
       if (isFuzzyMatch(potential, firstName, 2)) {
+        return player;
+      }
+    }
+  }
+
+  // Fourth pass: phonetic matching (Double Metaphone)
+  // Catches names that sound alike but have different spellings
+  // e.g. "Shawn" matches "Sean", "Geoff" matches "Jeff"
+  for (const player of players) {
+    const firstName = player.name.toLowerCase().split(' ')[0];
+    for (const potential of potentialNames) {
+      if (potential.length >= 3 && phoneticMatch(potential, firstName)) {
         return player;
       }
     }

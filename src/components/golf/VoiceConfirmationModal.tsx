@@ -69,13 +69,18 @@ export function VoiceConfirmationModal({
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const listenTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check if voice recognition is supported
   const isVoiceSupported = typeof window !== 'undefined' &&
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
-  // Start listening for voice confirmation when modal opens (with parsed scores)
+  // Use shared recognition approach — lightweight instance just for yes/no in the modal
   const startVoiceListening = useCallback(() => {
     if (!isVoiceSupported || editingPlayerId) return;
+
+    // Abort any existing session
+    if (recognitionRef.current) {
+      recognitionRef.current.abort();
+      recognitionRef.current = null;
+    }
 
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognitionAPI) return;
@@ -84,10 +89,11 @@ export function VoiceConfirmationModal({
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
       setIsVoiceListening(true);
-      setVoiceHint('Listening... say "yes" or "no"');
+      setVoiceHint('Say "yes" or "no"');
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -97,18 +103,12 @@ export function VoiceConfirmationModal({
       if (command === 'confirm') {
         feedbackVoiceSuccess();
         setVoiceHint('Confirmed!');
-        setTimeout(() => {
-          handleConfirm();
-        }, 200);
+        setTimeout(() => handleConfirm(), 200);
       } else if (command === 'retry') {
         setVoiceHint('Retrying...');
-        setTimeout(() => {
-          onRetry();
-        }, 200);
+        setTimeout(() => onRetry(), 200);
       } else {
-        // Didn't understand, keep listening
-        setVoiceHint(`Heard "${transcript}" - say "yes" to confirm`);
-        // Restart listening after a moment
+        setVoiceHint(`Heard "${transcript}" — say "yes" to confirm`);
         setTimeout(() => {
           if (isOpen && parseResult?.scores?.length) {
             startVoiceListening();
@@ -132,11 +132,10 @@ export function VoiceConfirmationModal({
       recognition.start();
       feedbackListeningStart();
     } catch {
-      // Voice recognition failed to start - silent fail
+      // Silent fail
     }
   }, [isVoiceSupported, editingPlayerId, isOpen, parseResult]);
 
-  // Stop voice listening
   const stopVoiceListening = useCallback(() => {
     if (recognitionRef.current) {
       recognitionRef.current.abort();
@@ -153,7 +152,6 @@ export function VoiceConfirmationModal({
   // Auto-start voice listening when modal opens with parsed scores
   useEffect(() => {
     if (isOpen && parseResult?.scores?.length && isVoiceSupported && !editingPlayerId) {
-      // Small delay before starting voice to let modal animate in
       listenTimeoutRef.current = setTimeout(() => {
         startVoiceListening();
       }, 600);

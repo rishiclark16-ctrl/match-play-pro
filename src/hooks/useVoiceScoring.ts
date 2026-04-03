@@ -9,6 +9,14 @@ import {
   feedbackVoiceError,
   feedbackAllScored,
   feedbackNextHole,
+  speakScoreConfirmation,
+  speakAllScored,
+  speakError,
+  speakCorrection,
+  speakNavigation,
+  speakScoreQuery,
+  speakMissingPlayers,
+  setSpeechEnabled,
 } from '@/lib/voiceFeedback';
 import { toast } from 'sonner';
 import { GameConfig } from '@/types/golf';
@@ -27,8 +35,13 @@ interface UseVoiceScoringOptions {
   onScoreSaved: (playerId: string, score: number) => void;
   onNavigateToHole: (hole: number) => void;
   onFinishRound?: () => void;
-  continuousVoice?: boolean; // Keep listening after successful entry
-  alwaysConfirmVoice?: boolean; // Always show confirmation modal
+  onClearHole?: () => void;
+  onSkipHole?: () => void;
+  onOpenLeaderboard?: () => void;
+  onOpenGameBuilder?: () => void;
+  getPlayerScore?: (playerId: string) => number | null;
+  continuousVoice?: boolean;
+  alwaysConfirmVoice?: boolean;
 }
 
 interface UseVoiceScoringReturn {
@@ -38,6 +51,9 @@ interface UseVoiceScoringReturn {
   showVoiceModal: boolean;
   parseResult: ParseResult | null;
   voiceSuccessPlayerIds: Set<string>;
+  interimTranscript: string | null;
+  audioLevel: number;
+  isNoisy: boolean;
   handleVoicePress: () => void;
   handleVoiceConfirm: (scores: ParsedScore[]) => void;
   handleVoiceRetry: () => void;
@@ -53,6 +69,11 @@ export function useVoiceScoring({
   onScoreSaved,
   onNavigateToHole,
   onFinishRound,
+  onClearHole,
+  onSkipHole,
+  onOpenLeaderboard,
+  onOpenGameBuilder,
+  getPlayerScore,
   continuousVoice = true,
   alwaysConfirmVoice = false,
 }: UseVoiceScoringOptions): UseVoiceScoringReturn {
@@ -69,6 +90,11 @@ export function useVoiceScoring({
     startListening,
     stopListening,
     transcript,
+    interimTranscript,
+    alternatives,
+    browserConfidence,
+    audioLevel,
+    isNoisy,
     error: voiceError,
     reset: resetVoice,
   } = useVoiceRecognition();
@@ -83,19 +109,44 @@ export function useVoiceScoring({
     previousIsListening.current = isListening;
   }, [isListening, isProcessing]);
 
-  // Helper to restart listening for continuous mode
   const restartListeningForContinuousMode = useCallback(() => {
     if (continuousVoice && isSupported) {
-      // Clear any existing timeout
       if (continuousVoiceTimeoutRef.current) {
         clearTimeout(continuousVoiceTimeoutRef.current);
       }
-      // Restart listening after a brief pause
       continuousVoiceTimeoutRef.current = setTimeout(() => {
         startListening();
       }, 1500);
     }
   }, [continuousVoice, isSupported, startListening]);
+
+  // Adjust confidence based on browser's Speech API confidence score
+  const adjustConfidence = useCallback((result: ParseResult): ParseResult => {
+    if (browserConfidence === null) return result;
+
+    // If browser confidence is low, downgrade our confidence
+    if (browserConfidence < 0.3 && result.confidence === 'high') {
+      return { ...result, confidence: 'medium', confidenceReason: 'Low speech recognition confidence' };
+    }
+    if (browserConfidence < 0.5 && result.confidence === 'high') {
+      return { ...result, confidence: 'medium', confidenceReason: `Speech confidence: ${Math.round(browserConfidence * 100)}%` };
+    }
+
+    return result;
+  }, [browserConfidence]);
+
+  // Try parsing alternatives if primary transcript fails
+  const tryAlternatives = useCallback((playerList: Array<{ id: string; name: string }>): ParseResult | null => {
+    for (const alt of alternatives) {
+      if (hasScoreContent(alt)) {
+        const result = parseVoiceInput(alt, playerList, par);
+        if (result.scores.length > 0 && result.confidence !== 'low') {
+          return result;
+        }
+      }
+    }
+    return null;
+  }, [alternatives, par]);
 
   // Process voice transcript when it arrives
   useEffect(() => {
@@ -121,21 +172,110 @@ export function useVoiceScoring({
       return;
     }
 
+    // Handle new command types
+    const clearCmd = commands.find(c => c.type === 'clear_hole');
+    if (clearCmd && onClearHole) {
+      feedbackVoiceSuccess();
+      toast.success('Scores cleared for this hole', { duration: 2000 });
+      onClearHole();
+      resetVoice();
+      restartListeningForContinuousMode();
+      return;
+    }
+
+    const skipCmd = commands.find(c => c.type === 'skip_hole');
+    if (skipCmd && onSkipHole) {
+      feedbackVoiceSuccess();
+      toast.info('Hole skipped', { duration: 1500 });
+      onSkipHole();
+      resetVoice();
+      restartListeningForContinuousMode();
+      return;
+    }
+
+    const queryScoreCmd = commands.find(c => c.type === 'query_score');
+    if (queryScoreCmd && queryScoreCmd.queryPlayerId && getPlayerScore) {
+      const score = getPlayerScore(queryScoreCmd.queryPlayerId);
+      if (score !== null) {
+        speakScoreQuery(queryScoreCmd.queryPlayerName || '', score, currentHole);
+        toast.info(`${(queryScoreCmd.queryPlayerName || '').split(' ')[0]}: ${score}`, { duration: 2000 });
+      } else {
+        toast.info(`${(queryScoreCmd.queryPlayerName || '').split(' ')[0]} hasn't scored yet`, { duration: 2000 });
+      }
+      resetVoice();
+      restartListeningForContinuousMode();
+      return;
+    }
+
+    const queryMissingCmd = commands.find(c => c.type === 'query_missing');
+    if (queryMissingCmd && getPlayerScore) {
+      const missing = players.filter(p => getPlayerScore(p.id) === null);
+      if (missing.length === 0) {
+        toast.success('Everyone has scored!', { duration: 2000 });
+      } else {
+        const names = missing.map(p => p.name);
+        speakMissingPlayers(names);
+        toast.info(`Waiting: ${names.map(n => n.split(' ')[0]).join(', ')}`, { duration: 3000 });
+      }
+      resetVoice();
+      restartListeningForContinuousMode();
+      return;
+    }
+
+    const queryParCmd = commands.find(c => c.type === 'query_par');
+    if (queryParCmd) {
+      speakNavigation(currentHole, par);
+      toast.info(`Hole ${currentHole} — Par ${par}`, { duration: 2000 });
+      resetVoice();
+      restartListeningForContinuousMode();
+      return;
+    }
+
+    const leaderboardCmd = commands.find(c => c.type === 'query_leaderboard');
+    if (leaderboardCmd && onOpenLeaderboard) {
+      feedbackVoiceSuccess();
+      onOpenLeaderboard();
+      resetVoice();
+      return;
+    }
+
+    const gameBuilderCmd = commands.find(c => c.type === 'start_game_builder');
+    if (gameBuilderCmd && onOpenGameBuilder) {
+      feedbackVoiceSuccess();
+      toast.success('Opening game builder...', { duration: 1500 });
+      onOpenGameBuilder();
+      resetVoice();
+      return;
+    }
+
+    const speechToggleCmd = commands.find(c => c.type === 'speech_toggle');
+    if (speechToggleCmd) {
+      setSpeechEnabled(!!speechToggleCmd.enabled);
+      toast.success(speechToggleCmd.enabled ? 'Voice feedback on' : 'Voice feedback off', { duration: 1500 });
+      resetVoice();
+      restartListeningForContinuousMode();
+      return;
+    }
+
     // Check for navigation commands
     const navCommand = commands.find(c => c.type === 'next_hole' || c.type === 'previous_hole' || c.type === 'go_to_hole');
 
     if (navCommand) {
       if (navCommand.type === 'go_to_hole' && navCommand.holeNumber) {
-        onNavigateToHole(Math.min(totalHoles, Math.max(1, navCommand.holeNumber)));
+        const targetHole = Math.min(totalHoles, Math.max(1, navCommand.holeNumber));
+        onNavigateToHole(targetHole);
         feedbackNextHole();
-        toast.info(`Hole ${navCommand.holeNumber}`, { duration: 1500 });
+        speakNavigation(targetHole);
+        toast.info(`Hole ${targetHole}`, { duration: 1500 });
         resetVoice();
         restartListeningForContinuousMode();
         return;
       } else if (navCommand.type === 'next_hole' && navCommand.holeNumber) {
-        onNavigateToHole(Math.min(totalHoles, Math.max(1, navCommand.holeNumber)));
+        const targetHole = Math.min(totalHoles, Math.max(1, navCommand.holeNumber));
+        onNavigateToHole(targetHole);
         feedbackNextHole();
-        toast.info(`Hole ${navCommand.holeNumber}`, { duration: 1500 });
+        speakNavigation(targetHole);
+        toast.info(`Hole ${targetHole}`, { duration: 1500 });
         resetVoice();
         restartListeningForContinuousMode();
         return;
@@ -143,6 +283,7 @@ export function useVoiceScoring({
         if (currentHole < totalHoles) {
           onNavigateToHole(currentHole + 1);
           feedbackNextHole();
+          speakNavigation(currentHole + 1);
           toast.info(`Hole ${currentHole + 1}`, { duration: 1500 });
         }
         resetVoice();
@@ -152,6 +293,7 @@ export function useVoiceScoring({
         if (currentHole > 1) {
           onNavigateToHole(currentHole - 1);
           feedbackNextHole();
+          speakNavigation(currentHole - 1);
           toast.info(`Hole ${currentHole - 1}`, { duration: 1500 });
         }
         resetVoice();
@@ -163,9 +305,9 @@ export function useVoiceScoring({
     // Check for correction commands first (e.g., "change Mike to 6")
     const correction = parseVoiceCorrection(transcript, playerList, par);
     if (correction) {
-      // Apply correction immediately
       onScoreSaved(correction.playerId, correction.newScore);
       feedbackVoiceSuccess();
+      speakCorrection(correction.playerName, correction.newScore);
       toast.success(`${correction.playerName.split(' ')[0]} → ${correction.newScore}`, { duration: 2000 });
       resetVoice();
       restartListeningForContinuousMode();
@@ -173,9 +315,19 @@ export function useVoiceScoring({
     }
 
     if (hasScoreContent(transcript)) {
-      const result = parseVoiceInput(transcript, playerList, par);
+      let result = parseVoiceInput(transcript, playerList, par);
 
-      // If alwaysConfirmVoice is on, show modal even for high confidence
+      // If primary transcript failed or got low confidence, try alternatives
+      if ((result.scores.length === 0 || result.confidence === 'low') && alternatives.length > 0) {
+        const altResult = tryAlternatives(playerList);
+        if (altResult && altResult.scores.length > result.scores.length) {
+          result = altResult;
+        }
+      }
+
+      // Adjust confidence using browser's Speech API confidence score
+      result = adjustConfidence(result);
+
       if (result.confidence === 'high' && result.scores.length > 0 && !alwaysConfirmVoice) {
         // High confidence - save immediately
         result.scores.forEach(({ playerId, score }) => {
@@ -187,9 +339,11 @@ export function useVoiceScoring({
 
         if (result.scores.length === players.length) {
           feedbackAllScored();
-          toast.success(`All ${result.scores.length} scores saved! 🎉`, { duration: 5000 });
+          speakAllScored(currentHole);
+          toast.success(`All ${result.scores.length} scores saved!`, { duration: 5000 });
         } else {
           feedbackVoiceSuccess();
+          speakScoreConfirmation(result.scores);
           const scoresSummary = result.scores
             .map(s => `${s.playerName.split(' ')[0]} ${s.score}`)
             .join(', ');
@@ -206,6 +360,7 @@ export function useVoiceScoring({
       } else {
         // Low confidence - show error modal
         feedbackVoiceError();
+        speakError();
         setParseResult(result);
         setShowVoiceModal(true);
         resetVoice();
@@ -213,6 +368,7 @@ export function useVoiceScoring({
     } else {
       // No score content detected
       feedbackVoiceError();
+      speakError();
       setParseResult({
         success: false,
         scores: [],
@@ -224,7 +380,7 @@ export function useVoiceScoring({
       setShowVoiceModal(true);
       resetVoice();
     }
-  }, [transcript, players, currentHole, totalHoles, par, games, onScoreSaved, onNavigateToHole, onFinishRound, resetVoice, alwaysConfirmVoice, restartListeningForContinuousMode]);
+  }, [transcript, players, currentHole, totalHoles, par, games, onScoreSaved, onNavigateToHole, onFinishRound, onClearHole, onSkipHole, onOpenLeaderboard, onOpenGameBuilder, getPlayerScore, resetVoice, alwaysConfirmVoice, restartListeningForContinuousMode, alternatives, adjustConfidence, tryAlternatives]);
 
   // Show voice errors
   useEffect(() => {
@@ -253,9 +409,9 @@ export function useVoiceScoring({
     setShowVoiceModal(false);
     setParseResult(null);
     feedbackVoiceSuccess();
+    speakScoreConfirmation(scores);
     toast.success(`${scores.length} score${scores.length > 1 ? 's' : ''} saved!`, { duration: 2000 });
 
-    // Restart listening in continuous mode
     restartListeningForContinuousMode();
   }, [onScoreSaved, restartListeningForContinuousMode]);
 
@@ -279,6 +435,9 @@ export function useVoiceScoring({
     showVoiceModal,
     parseResult,
     voiceSuccessPlayerIds,
+    interimTranscript,
+    audioLevel,
+    isNoisy,
     handleVoicePress,
     handleVoiceConfirm,
     handleVoiceRetry,

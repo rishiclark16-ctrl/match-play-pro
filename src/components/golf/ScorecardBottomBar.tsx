@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Trophy, Flag, CheckCircle2, Mic, Share2, DollarSign, Zap } from 'lucide-react';
+import { BarChart3, Trophy, Flag, CheckCircle2, Share2, DollarSign, Zap } from 'lucide-react';
 import { VoiceButton } from '@/components/golf/VoiceButton';
 import { PropBetSheet } from '@/components/golf/PropBetSheet';
 import { JunkBetSheet } from '@/components/golf/JunkBetSheet';
@@ -25,6 +25,10 @@ interface ScorecardBottomBarProps {
   isListening: boolean;
   isProcessing: boolean;
   isSupported: boolean;
+  audioLevel?: number;
+  interimTranscript?: string | null;
+  isNoisy?: boolean;
+  isHandsFree?: boolean;
   propBets: PropBet[];
   junkStakes?: number;
   autoAdvanceCountdown?: number | null;
@@ -56,6 +60,10 @@ export function ScorecardBottomBar({
   isListening,
   isProcessing,
   isSupported,
+  audioLevel = 0,
+  interimTranscript = null,
+  isNoisy = false,
+  isHandsFree = false,
   propBets,
   junkStakes = 1,
   autoAdvanceCountdown,
@@ -205,36 +213,19 @@ export function ScorecardBottomBar({
         {/* Voice Button */}
         {canEditScores ? (
           <div ref={voiceButtonRef} className="flex-shrink-0">
-            <motion.div
-              animate={{
-                scale: isListening ? [1, 1.05, 1] : 1,
-              }}
-              transition={{ duration: 0.8, repeat: isListening ? Infinity : 0 }}
-            >
-              <button
-                onClick={onVoicePress}
-                aria-label={isListening ? 'Stop listening' : 'Start voice scoring'}
-                className={cn(
-                  'w-12 h-12 rounded-full flex items-center justify-center touch-manipulation transition-colors duration-200',
-                  isListening
-                    ? 'bg-[#F0EE3A] shadow-md'
-                    : isProcessing
-                    ? 'bg-[#F0EE3A]/60 shadow-sm'
-                    : 'bg-muted'
-                )}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-              >
-                <Mic
-                  className={cn(
-                    'w-5 h-5 transition-colors',
-                    isListening || isProcessing ? 'text-[#0A0A0A]' : 'text-muted-foreground'
-                  )}
-                />
-              </button>
-            </motion.div>
+            <VoiceButton
+              isListening={isListening}
+              isProcessing={isProcessing}
+              isSupported={isSupported}
+              onPress={onVoicePress}
+              audioLevel={audioLevel}
+              interimTranscript={interimTranscript}
+              isNoisy={isNoisy}
+              isHandsFree={isHandsFree}
+            />
           </div>
         ) : (
-          <div className="w-12 flex-shrink-0" />
+          <div className="w-16 flex-shrink-0" />
         )}
 
         {/* Main CTA Button */}
