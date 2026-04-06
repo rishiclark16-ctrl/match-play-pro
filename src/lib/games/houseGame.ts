@@ -154,6 +154,7 @@ export function calculateHouseGame(
       strokesMap,
       config.carryoverCap,
       config.carryoverJackpot18,
+      config.carryoverSkinsHalved,
     );
   }
 
@@ -295,7 +296,9 @@ export function calculateHouseGame(
   // ── Quota ─────────────────────────────────────────────────────────────────
   let quotaResult: QuotaResult | undefined;
   if (config.quota) {
-    quotaResult = calculateQuota(scores, players, holeInfo, config.unitValue, strokesMap);
+    // Quota target already includes handicap (36 - Course Handicap), so use GROSS
+    // Stableford points (no strokesMap) to avoid double-counting the handicap.
+    quotaResult = calculateQuota(scores, players, holeInfo, config.unitValue, undefined, slopeRating);
     for (const standing of quotaResult.standings) {
       playerEarnings[standing.playerId] = (playerEarnings[standing.playerId] ?? 0) + standing.earnings;
     }
@@ -337,23 +340,28 @@ export function calculateHouseGame(
     const holeScores = scores.filter(s => s.holeNumber === holeNum);
     const hr = holeResults.find(h => h.holeNumber === holeNum);
 
-    for (const s of holeScores) {
-      const net = (hr?.netScores[s.playerId] ?? s.strokes);
-
-      // Greenie: par on a par 3 (or better) — player collects from all others
-      if (config.greenie && hole.par === 3 && net <= hole.par) {
+    // Greenie: par 3 — single lowest net score wins; ties = no greenie
+    if (config.greenie && hole.par === 3 && holeScores.length >= 2) {
+      const netEntries = holeScores.map(s => ({
+        playerId: s.playerId,
+        net: hr?.netScores[s.playerId] ?? s.strokes,
+      }));
+      netEntries.sort((a, b) => a.net - b.net);
+      const best = netEntries[0];
+      const second = netEntries[1];
+      // Award only if unique lowest AND made par or better
+      if (best.net < second.net && best.net <= hole.par) {
         const earn = config.unitValue * (players.length - 1);
-        playerEarnings[s.playerId] = (playerEarnings[s.playerId] ?? 0) + earn;
-        players.filter(p => p.id !== s.playerId).forEach(p => {
+        playerEarnings[best.playerId] = (playerEarnings[best.playerId] ?? 0) + earn;
+        players.filter(p => p.id !== best.playerId).forEach(p => {
           playerEarnings[p.id] = (playerEarnings[p.id] ?? 0) - config.unitValue;
         });
         if (hr) hr.activeBonuses.push('bonus_greenie');
       }
-
-      // Sandie: par or better from a bunker (tracked as gross score = par with bunker)
-      // We can't detect bunker shots from score data alone — mark as info-only
-      // Barkie: par or better after hitting a tree — same limitation
     }
+
+    // Sandie: par or better from a bunker — can't detect from score data alone (info-only)
+    // Barkie: par or better after hitting a tree — same limitation
   }
 
   // ── Breakfast Ball (info-only, no scoring impact) ─────────────────────────

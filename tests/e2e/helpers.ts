@@ -1,4 +1,4 @@
-import { Page, Route } from '@playwright/test';
+import { Page, Route, expect } from '@playwright/test';
 
 /**
  * Mock Supabase auth so the app thinks we're logged in.
@@ -235,15 +235,19 @@ export async function dismissTutorial(page: Page) {
 
 /**
  * Set up all common mocks for the AI Game Builder tests.
+ * Uses real auth (test user) + mocked parse/format APIs for deterministic behavior.
  */
 export async function setupBuilderMocks(page: Page, opts: { parseMode?: 'success' | 'error' | 'empty'; isPro?: boolean } = {}) {
-  await blockExternalRequests(page);
+  // Use real auth — navigate to origin and log in with the test user
+  await setupAuthenticatedTest(page);
+
+  // Mock realtime to prevent WebSocket noise
   await mockRealtimeQuiet(page);
-  await mockAuth(page);
-  await mockAuthApi(page);
-  await mockProfileApi(page);
+
+  // Mock formats API (free tier, no existing formats)
   await mockFormatsEmpty(page);
 
+  // Set up parse mock based on mode
   if (opts.parseMode === 'error') {
     await mockParseError(page);
   } else if (opts.parseMode === 'empty') {
@@ -251,4 +255,81 @@ export async function setupBuilderMocks(page: Page, opts: { parseMode?: 'success
   } else {
     await mockParseSuccess(page);
   }
+}
+
+// ─── Test User Credentials ─────────────────────────────────────────────────────
+
+export const TEST_USER = {
+  id: 'd2067fae-137e-4050-960e-8a67d7f8e9a2',
+  email: 'e2e-test@matchgolf.dev',
+  password: 'TestMatch2026!',
+  name: 'E2E Test Player',
+  handicap: 12.5,
+  friendCode: 'E2ETST',
+};
+
+/**
+ * Log in with the real test user via the Supabase JS client.
+ * Injects the session into localStorage so the app picks it up on next navigation.
+ */
+export async function loginWithTestUser(page: Page) {
+  const supabaseUrl = 'https://puqgbsxabcyxrbwwoznn.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1cWdic3hhYmN5eHJid3dvem5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyNDA4NzAsImV4cCI6MjA4MzgxNjg3MH0.gr7BZFetWhyMTSHITVzg3wjhWWH8K5dzIVT74zJcUPw';
+
+  // Call Supabase auth from the page context so the session lands in the right localStorage
+  const result = await page.evaluate(async ({ url, key, email, password }) => {
+    const res = await fetch(`${url}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': key,
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) return { error: await res.text() };
+    const session = await res.json();
+    // Store in the Supabase localStorage key
+    const storageKey = `sb-puqgbsxabcyxrbwwoznn-auth-token`;
+    localStorage.setItem(storageKey, JSON.stringify(session));
+    return { success: true, userId: session.user?.id };
+  }, { url: supabaseUrl, key: supabaseKey, email: TEST_USER.email, password: TEST_USER.password });
+
+  if ('error' in result) {
+    throw new Error(`Login failed: ${result.error}`);
+  }
+  return result;
+}
+
+/**
+ * Full setup for authenticated E2E tests:
+ * 1. Navigate to a blank page on the app origin (so localStorage works)
+ * 2. Log in with the real test user
+ * 3. Block noisy external requests
+ */
+export async function setupAuthenticatedTest(page: Page) {
+  // Navigate to origin first so we can set localStorage
+  await page.goto('/auth', { waitUntil: 'domcontentloaded' });
+  await loginWithTestUser(page);
+  // Set tutorial flags to avoid overlays blocking tests
+  await page.evaluate(() => {
+    localStorage.setItem('ai_builder_tutorial_seen_v1', '1');
+    localStorage.setItem('app_tutorial_seen', '1');
+    localStorage.setItem('scorecard_tutorial_seen', '1');
+  });
+  await blockExternalRequests(page);
+}
+
+/**
+ * Wait for the app to be fully loaded (not showing loading spinner).
+ */
+export async function waitForAppReady(page: Page) {
+  // Wait for the main app content to be visible (no skeleton/spinner)
+  await page.waitForFunction(() => {
+    const loader = document.querySelector('[data-testid="page-skeleton"]');
+    return !loader;
+  }, { timeout: 15_000 }).catch(() => {
+    // Skeleton might not exist — that's fine
+  });
+  // Small buffer for React hydration
+  await page.waitForTimeout(500);
 }

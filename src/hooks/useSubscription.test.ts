@@ -2,16 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useSubscription, TIER_LIMITS, Subscription } from './useSubscription';
 
-// Mock objects - defined before vi.mock so they're available in factory functions
-const mockSupabaseClient = {
-  from: vi.fn(),
-  channel: vi.fn(() => ({
-    on: vi.fn().mockReturnThis(),
-    subscribe: vi.fn().mockReturnThis(),
-  })),
-  removeChannel: vi.fn(),
-};
-const mockUser = { id: 'test-user-id', email: 'test@test.com' };
+// Use vi.hoisted() so mock objects are available when vi.mock factories run (hoisted)
+const { mockSupabaseClient, mockUser } = vi.hoisted(() => ({
+  mockSupabaseClient: {
+    from: vi.fn(),
+    channel: vi.fn(() => ({
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn().mockReturnThis(),
+    })),
+    removeChannel: vi.fn(),
+  },
+  mockUser: { id: 'test-user-id', email: 'test@test.com' },
+}));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: mockSupabaseClient,

@@ -2,15 +2,18 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  workers: 1,
+  reporter: [['html'], ['list']],
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
   use: {
-    baseURL: 'http://localhost:8080',
+    baseURL: process.env.E2E_BASE_URL || 'http://localhost:8080',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
   projects: [
     {
@@ -24,8 +27,8 @@ export default defineConfig({
   ],
   webServer: {
     command: 'bun run dev',
-    url: 'http://localhost:8080',
-    reuseExistingServer: !process.env.CI,
+    url: process.env.E2E_BASE_URL || 'http://localhost:8080',
+    reuseExistingServer: true,
     timeout: 30_000,
   },
 });

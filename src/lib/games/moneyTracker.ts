@@ -2,6 +2,7 @@ import { PlayerWithScores, GameConfig, HoleInfo, Score, Press } from '@/types/go
 import { calculateSkins, SkinsResult } from './skins';
 import { calculateNassau, NassauResult } from './nassau';
 import { calculateMatchPlay, MatchPlayResult } from './matchPlay';
+import { calculateWolfStandings } from './wolf';
 import { calculateHouseGame } from './houseGame';
 import { buildScoringConfig } from '@/lib/houseGame/engine';
 import { getStrokesPerHole } from '@/lib/handicapUtils';
@@ -93,7 +94,7 @@ export function calculateLiveMoney(
             players,
             game.stakes,
             presses.filter(p => p.startHole <= upToHole),
-            18, // default to 18 holes
+            (holeInfo.length <= 9 ? 9 : 18) as 9 | 18,
             game.useNet ? strokesMap : undefined
           );
           
@@ -150,101 +151,13 @@ export function calculateLiveMoney(
       case 'wolf': {
         if (players.length === 4 && game.wolfResults) {
           const relevantResults = game.wolfResults.filter(r => r.holeNumber <= upToHole);
-          
-          relevantResults.forEach(result => {
-            const pointValue = game.stakes * (result.isBlindWolf ? (game.blindWolfMultiplier || 2) : 1);
-            
-            if (result.winningTeam === 'wolf') {
-              // Wolf team wins
-              const pbWolf = breakdown.get(result.wolfId);
-              if (pbWolf) {
-                if (result.partnerId) {
-                  // Wolf + partner vs 2 hunters
-                  pbWolf.wolf += pointValue;
-                  pbWolf.total += pointValue;
-                  
-                  const pbPartner = breakdown.get(result.partnerId);
-                  if (pbPartner) {
-                    pbPartner.wolf += pointValue;
-                    pbPartner.total += pointValue;
-                  }
-                  
-                  // Hunters lose
-                  players.forEach(p => {
-                    if (p.id !== result.wolfId && p.id !== result.partnerId) {
-                      const pb = breakdown.get(p.id);
-                      if (pb) {
-                        pb.wolf -= pointValue;
-                        pb.total -= pointValue;
-                      }
-                    }
-                  });
-                } else {
-                  // Lone Wolf wins - gets 4 points from each hunter (doubled stakes)
-                  // Blind wolf: 4 × blindWolfMultiplier points per hunter
-                  const basePointsPerHunter = result.isBlindWolf
-                    ? 4 * (game.blindWolfMultiplier || 2)
-                    : 4;
-                  const wolfWinnings = game.stakes * basePointsPerHunter * 3; // 3 hunters
-                  pbWolf.wolf += wolfWinnings;
-                  pbWolf.total += wolfWinnings;
+          const wolfStandings = calculateWolfStandings(relevantResults, players, game.stakes);
 
-                  const hunterLoss = game.stakes * basePointsPerHunter;
-                  players.forEach(p => {
-                    if (p.id !== result.wolfId) {
-                      const pb = breakdown.get(p.id);
-                      if (pb) {
-                        pb.wolf -= hunterLoss;
-                        pb.total -= hunterLoss;
-                      }
-                    }
-                  });
-                }
-              }
-            } else if (result.winningTeam === 'hunters') {
-              // Hunters win - reverse of above
-              const pbWolf = breakdown.get(result.wolfId);
-              if (pbWolf) {
-                if (result.partnerId) {
-                  pbWolf.wolf -= pointValue;
-                  pbWolf.total -= pointValue;
-                  
-                  const pbPartner = breakdown.get(result.partnerId);
-                  if (pbPartner) {
-                    pbPartner.wolf -= pointValue;
-                    pbPartner.total -= pointValue;
-                  }
-                  
-                  players.forEach(p => {
-                    if (p.id !== result.wolfId && p.id !== result.partnerId) {
-                      const pb = breakdown.get(p.id);
-                      if (pb) {
-                        pb.wolf += pointValue;
-                        pb.total += pointValue;
-                      }
-                    }
-                  });
-                } else {
-                  // Hunters win - Lone Wolf loses to all hunters
-                  const basePointsPerHunter = result.isBlindWolf
-                    ? 4 * (game.blindWolfMultiplier || 2)
-                    : 4;
-                  const wolfLoss = game.stakes * basePointsPerHunter * 3; // 3 hunters
-                  pbWolf.wolf -= wolfLoss;
-                  pbWolf.total -= wolfLoss;
-
-                  const hunterWinnings = game.stakes * basePointsPerHunter;
-                  players.forEach(p => {
-                    if (p.id !== result.wolfId) {
-                      const pb = breakdown.get(p.id);
-                      if (pb) {
-                        pb.wolf += hunterWinnings;
-                        pb.total += hunterWinnings;
-                      }
-                    }
-                  });
-                }
-              }
+          wolfStandings.forEach(standing => {
+            const pb = breakdown.get(standing.playerId);
+            if (pb) {
+              pb.wolf += standing.earnings;
+              pb.total += standing.earnings;
             }
           });
         }
@@ -355,9 +268,9 @@ export function calculateLiveMoney(
 export function formatMoney(amount: number): string {
   const absAmount = Math.abs(amount);
   if (amount >= 0) {
-    return `+$${absAmount.toFixed(0)}`;
+    return `+$${absAmount.toFixed(2)}`;
   }
-  return `-$${absAmount.toFixed(0)}`;
+  return `-$${absAmount.toFixed(2)}`;
 }
 
 export function getMoneyColor(amount: number): string {

@@ -46,13 +46,27 @@ export function useGameResults({
 
     const holesPlayed = Math.max(...playersWithScores.map(p => p.holesPlayed));
 
+    // Build strokes map for net scoring (shared across games that need it)
+    let strokesPerHole: Map<string, Map<number, number>> | undefined;
+    const anyNetGame = [skinsGame, nassauGame].some(g => g?.useNet);
+    if (anyNetGame) {
+      strokesPerHole = new Map();
+      for (const player of playersWithScores) {
+        if (player.strokesPerHole) {
+          strokesPerHole.set(player.id, player.strokesPerHole);
+        }
+      }
+      if (strokesPerHole.size === 0) strokesPerHole = undefined;
+    }
+
     if (skinsGame) {
       skinsResult = calculateSkins(
         scores,
         players,
         holesPlayed,
         skinsGame.stakes || 1,
-        skinsGame.carryover !== false
+        skinsGame.carryover !== false,
+        skinsGame.useNet ? strokesPerHole : undefined
       );
     }
 
@@ -62,7 +76,8 @@ export function useGameResults({
         players,
         nassauGame.stakes || 1,
         presses,
-        round.holes
+        round.holes,
+        nassauGame.useNet ? strokesPerHole : undefined
       );
     }
 

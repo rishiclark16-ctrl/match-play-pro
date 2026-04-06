@@ -34,12 +34,24 @@ export function useSettlementPreview({
 
     for (const game of round.games || []) {
       if (game.type === 'skins') {
+        // Build strokes map if using net scoring
+        let skinsStrokesMap: Map<string, Map<number, number>> | undefined;
+        if (game.useNet) {
+          skinsStrokesMap = new Map();
+          for (const player of playersWithScores) {
+            if (player.strokesPerHole) {
+              skinsStrokesMap.set(player.id, player.strokesPerHole);
+            }
+          }
+          if (skinsStrokesMap.size === 0) skinsStrokesMap = undefined;
+        }
         skinsResult = calculateSkins(
           scores,
           playersWithScores,
           round.holes,
           game.stakes,
-          game.carryover ?? true
+          game.carryover ?? true,
+          skinsStrokesMap
         );
       } else if (game.type === 'nassau') {
         // Build strokes map if using net scoring

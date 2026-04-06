@@ -35,28 +35,32 @@ export function calculateSkins(
   strokesPerHole?: StrokesPerHoleMap,
   carryoverCap?: number | null,
   jackpot18?: boolean,
+  carryoverHalved?: boolean,
 ): SkinsResult {
   const results: SkinResult[] = [];
   let currentCarryover = 0;
   const playerSkins: Record<string, number> = {};
-  
+
   players.forEach(p => playerSkins[p.id] = 0);
-  
+
+  // When carryoverHalved is true, each tied skin carries over at half value
+  const carryIncrement = carryoverHalved ? 0.5 : 1;
+
   for (let hole = 1; hole <= holesPlayed; hole++) {
     const holeScores = scores.filter(s => s.holeNumber === hole);
-    
+
     // Skip if not all players have scored this hole
     if (holeScores.length < players.length) {
       continue;
     }
-    
+
     // Sort by net score when using handicaps
-    const sorted = [...holeScores].sort((a, b) => 
+    const sorted = [...holeScores].sort((a, b) =>
       getNetScore(a, strokesPerHole) - getNetScore(b, strokesPerHole)
     );
     const lowestNet = getNetScore(sorted[0], strokesPerHole);
     const winners = sorted.filter(s => getNetScore(s, strokesPerHole) === lowestNet);
-    
+
     if (winners.length === 1) {
       // Clear winner takes the skin + any carryovers
       const winnerId = winners[0].playerId;
@@ -68,7 +72,7 @@ export function calculateSkins(
       // Tie - skin carries over (or is lost if carryover disabled)
       results.push({ holeNumber: hole, winnerId: null, value: 0 });
       if (carryover) {
-        currentCarryover += 1;
+        currentCarryover += carryIncrement;
         // Apply carryover cap if configured
         if (carryoverCap != null && carryoverCap > 0 && currentCarryover > carryoverCap) {
           currentCarryover = carryoverCap;

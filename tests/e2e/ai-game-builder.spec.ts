@@ -263,8 +263,8 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
     // AI summary section
     await expect(page.getByText(/Here's what we found/)).toBeVisible();
 
-    // Save button
-    await expect(page.getByText(/Save My Format/)).toBeVisible();
+    // Save button (in header — just says "Save" with a Check icon)
+    await expect(page.locator('header button:has-text("Save")')).toBeVisible();
   });
 
   test('shows confidence indicators for parsed rules', async ({ page }) => {
@@ -314,9 +314,8 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
   test('can uncheck a high-confidence rule', async ({ page }) => {
     await navigateToConfirm(page);
 
-    // Custom checkbox buttons: 20x20 rounded-md buttons with bg-foreground when checked
-    // The "X rules selected" counter tells us how many are checked
-    const rulesText = page.locator('text=/\\d+ rules? selected/');
+    // The header subtitle shows "My Format · X rules" — extract the count
+    const rulesText = page.locator('header p').filter({ hasText: /\d+ rule/ });
     await expect(rulesText).toBeVisible({ timeout: 5000 });
     const initialText = await rulesText.textContent();
     const initialCount = parseInt(initialText!.match(/(\d+)/)?.[1] ?? '0');
@@ -336,8 +335,8 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
   test('can check a low-confidence (unchecked) rule', async ({ page }) => {
     await navigateToConfirm(page);
 
-    // Get initial count from the "X rules selected" text
-    const rulesText = page.locator('text=/\\d+ rules? selected/');
+    // Get initial count from the header subtitle "My Format · X rules"
+    const rulesText = page.locator('header p').filter({ hasText: /\d+ rule/ });
     await expect(rulesText).toBeVisible({ timeout: 5000 });
     const initialText = await rulesText.textContent();
     const initialCount = parseInt(initialText!.match(/(\d+)/)?.[1] ?? '0');
@@ -437,7 +436,7 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
     await expect(page.getByText('Confirm Rules')).toBeVisible({ timeout: 10000 });
 
     // Click save — use dispatchEvent to avoid mouseup landing on the overlay
-    await page.locator('button:has-text("Save My Format")').dispatchEvent('click');
+    await page.locator('header button:has-text("Save")').dispatchEvent('click');
 
     // Should show success overlay
     await expect(page.getByText(/Format Created|House Game Set/i)).toBeVisible({ timeout: 10000 });
@@ -452,8 +451,8 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
   test('cannot save with zero rules selected', async ({ page }) => {
     await navigateToConfirm(page);
 
-    // The "X rules selected" counter tells us current state
-    const rulesText = page.locator('text=/\\d+ rules? selected/');
+    // The header subtitle shows "My Format · X rules"
+    const rulesText = page.locator('header p').filter({ hasText: /\d+ rule/ });
     await expect(rulesText).toBeVisible({ timeout: 5000 });
 
     // Uncheck all rules by clicking each toggle in the found section
@@ -476,7 +475,7 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
     }
 
     // Save button should be disabled when 0 rules selected
-    const saveBtn = page.locator('button:has-text("Save My Format")');
+    const saveBtn = page.locator('header button:has-text("Save")');
     await expect(saveBtn).toBeDisabled();
   });
 });
@@ -642,7 +641,7 @@ test.describe('AI Game Builder — Full E2E Flow', () => {
     await nameInput.fill('My Nassau Game');
 
     // Step 4: Save — use dispatchEvent to avoid mouseup landing on the success overlay
-    await page.locator('button:has-text("Save My Format")').dispatchEvent('click');
+    await page.locator('header button:has-text("Save")').dispatchEvent('click');
 
     // Step 5: Success
     await expect(page.getByText(/Format Created/i)).toBeVisible({ timeout: 10000 });
@@ -714,9 +713,8 @@ test.describe('AI Game Builder — Mobile Layout', () => {
     await page.waitForURL('**/my-formats/confirm', { timeout: 10000 });
     await expect(page.getByText('Confirm Rules')).toBeVisible({ timeout: 10000 });
 
-    // Scroll to the save button at the bottom
-    const saveBtn = page.getByText(/Save My Format/);
-    await saveBtn.scrollIntoViewIfNeeded();
+    // The save button is in the header (sticky) — verify it's visible on mobile
+    const saveBtn = page.locator('header button:has-text("Save")');
     await expect(saveBtn).toBeVisible();
   });
 });

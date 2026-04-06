@@ -1,6 +1,7 @@
 import { Score, Player, HoleInfo } from '@/types/golf';
 import { StrokesPerHoleMap } from './skins';
 import { getStablefordPoints } from './stableford';
+import { calculateCourseHandicap } from '@/lib/handicapUtils';
 
 export interface QuotaStanding {
   playerId: string;
@@ -35,10 +36,15 @@ export function calculateQuota(
   holeInfo: HoleInfo[],
   unitValue: number,
   strokesPerHole?: StrokesPerHoleMap,
+  slopeRating: number = 113,
+  courseRating?: number,
+  coursePar?: number,
 ): QuotaResult {
   const standings: QuotaStanding[] = players.map(p => {
-    const handicap = p.handicap ?? 0;
-    const quota = Math.max(36 - handicap, 0);
+    const handicapIndex = p.handicap ?? 0;
+    // Quota uses Course Handicap (not raw Handicap Index) per USGA rules
+    const courseHandicap = calculateCourseHandicap(handicapIndex, slopeRating, courseRating, coursePar);
+    const quota = Math.max(36 - courseHandicap, 0);
     return {
       playerId: p.id,
       playerName: p.name,

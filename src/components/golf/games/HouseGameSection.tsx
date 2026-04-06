@@ -176,12 +176,13 @@ export function HouseGameSection({
             <span className="text-[11px] font-bold text-muted-foreground">Nassau</span>
           </div>
           <div className="flex gap-3 text-[11px]">
-            {(['front', 'back', 'overall'] as const).map(seg => {
-              const s = result.nassauResult![seg];
+            {([['front9', 'F'], ['back9', 'B'], ['overall', 'O']] as const).map(([key, label]) => {
+              const s = result.nassauResult![key];
+              if (!s) return null;
               const winnerName = players.find(p => p.id === s.winnerId)?.name?.split(' ')[0] ?? '—';
               return (
-                <div key={seg} className="flex items-center gap-1">
-                  <span className="text-muted-foreground capitalize">{seg === 'front' ? 'F' : seg === 'back' ? 'B' : 'O'}:</span>
+                <div key={key} className="flex items-center gap-1">
+                  <span className="text-muted-foreground">{label}:</span>
                   <span className="font-bold text-foreground">
                     {s.margin === 0 ? 'AS' : `${winnerName} ${s.margin}UP`}
                   </span>
