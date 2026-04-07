@@ -21,6 +21,7 @@ export function BottomNav() {
   // Check if we should hide the nav
   const shouldHide = HIDDEN_ROUTES.some(route => location.pathname === route) ||
     location.pathname.startsWith('/round/') ||
+    location.pathname.startsWith('/watch/') ||
     location.pathname.endsWith('/house-game/confirm');
 
   if (shouldHide) return null;

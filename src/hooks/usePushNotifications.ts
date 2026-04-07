@@ -45,7 +45,9 @@ export function usePushNotifications() {
       (action) => {
         const data = action.notification.data as Record<string, string> | undefined;
         if (!data) return;
-        if (data.roundId) {
+        if (data.type === 'watch_party' && data.roundId) {
+          navigate(`/watch/${data.roundId}`);
+        } else if (data.roundId) {
           navigate(`/round/${data.roundId}`);
         } else if (data.route) {
           navigate(data.route);

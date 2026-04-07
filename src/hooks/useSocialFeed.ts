@@ -30,6 +30,7 @@ export interface FeedRoundItem {
   reactions: FeedReactionSummary[];
   totalReactions: number;
   holes: number;
+  watchPartyMessageCount: number;
 }
 
 interface RpcFeedRow {
@@ -65,7 +66,7 @@ export function useSocialFeed() {
       const roundIds = rows.map(r => r.round_id);
 
       // Fetch scores, players, and reactions in parallel for all feed rounds
-      const [scoresRes, playersRes, reactionsRes, roundsRes] = await Promise.all([
+      const [scoresRes, playersRes, reactionsRes, roundsRes, watchPartyRes] = await Promise.all([
         roundIds.length > 0
           ? supabase.from('scores').select('round_id, player_id, strokes').in('round_id', roundIds)
           : { data: [] },
@@ -78,12 +79,20 @@ export function useSocialFeed() {
         roundIds.length > 0
           ? supabase.from('rounds').select('id, holes').in('id', roundIds)
           : { data: [] },
+        roundIds.length > 0
+          ? (async () => {
+              try {
+                return await supabase.from('watch_party_messages').select('round_id').in('round_id', roundIds).eq('is_post_reveal', false);
+              } catch { return { data: [] }; }
+            })()
+          : { data: [] },
       ]);
 
       const allScores = (scoresRes.data ?? []) as { round_id: string; player_id: string; strokes: number }[];
       const allPlayers = (playersRes.data ?? []) as { id: string; round_id: string; profile_id: string | null; name: string; is_ghost: boolean }[];
       const allReactions = (reactionsRes.data ?? []) as { round_id: string; reaction_type: string }[];
       const allRounds = (roundsRes.data ?? []) as { id: string; holes: number }[];
+      const allWatchPartyMsgs = (watchPartyRes.data ?? []) as { round_id: string }[];
 
       const mapped: FeedRoundItem[] = rows.map((row) => {
         // Build player scores
@@ -129,6 +138,7 @@ export function useSocialFeed() {
           reactions,
           totalReactions: roundReactions.length,
           holes: roundInfo?.holes ?? 18,
+          watchPartyMessageCount: allWatchPartyMsgs.filter(m => m.round_id === row.round_id).length,
         };
       });
       setItems(mapped);

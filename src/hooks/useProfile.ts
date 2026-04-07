@@ -9,6 +9,7 @@ export interface NotificationPreferences {
   tabAddedTo: boolean;
   friendStartedRound: boolean;
   roundCompleted: boolean;
+  watch_party: boolean;
 }
 
 export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
@@ -18,6 +19,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   tabAddedTo: true,
   friendStartedRound: true,
   roundCompleted: true,
+  watch_party: true,
 };
 
 export interface Profile {

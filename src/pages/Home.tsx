@@ -456,9 +456,18 @@ export default function Home() {
                           {fr.currentHole > 0 && ` · Hole ${fr.currentHole}`}
                         </p>
                       </div>
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <Eye className="w-3.5 h-3.5 text-[#22C55E]" />
-                        <span className="text-[11px] font-bold text-[#22C55E]">Watch</span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            hapticLight();
+                            navigate(`/watch/${fr.roundId}`);
+                          }}
+                          className="flex items-center gap-1 bg-violet-50 rounded-full px-2.5 py-1 cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-violet-600" />
+                          <span className="text-[11px] font-bold text-violet-600">Watch Party</span>
+                        </div>
                       </div>
                     </motion.button>
                   ))}

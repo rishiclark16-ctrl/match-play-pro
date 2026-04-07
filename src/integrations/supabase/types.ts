@@ -146,6 +146,104 @@ export type Database = {
           },
         ]
       }
+      group_format_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string
+          format_id: string
+          group_id: string
+          id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by: string
+          format_id: string
+          group_id: string
+          id?: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string
+          format_id?: string
+          group_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_format_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_format_assignments_format_id_fkey"
+            columns: ["format_id"]
+            isOneToOne: false
+            referencedRelation: "personal_game_formats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_format_assignments_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: true
+            referencedRelation: "golf_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_ledger_entries: {
+        Row: {
+          amount: number
+          created_at: string | null
+          game_breakdown: Json | null
+          group_id: string
+          id: string
+          profile_id: string
+          round_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string | null
+          game_breakdown?: Json | null
+          group_id: string
+          id?: string
+          profile_id: string
+          round_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          game_breakdown?: Json | null
+          group_id?: string
+          id?: string
+          profile_id?: string
+          round_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_ledger_entries_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "golf_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_ledger_entries_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_ledger_entries_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_members: {
         Row: {
           created_at: string | null
@@ -191,39 +289,198 @@ export type Database = {
           },
         ]
       }
+      group_settlements: {
+        Row: {
+          amount: number
+          created_at: string | null
+          from_profile_id: string
+          group_id: string
+          id: string
+          method: string | null
+          note: string | null
+          settled_at: string | null
+          to_profile_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          from_profile_id: string
+          group_id: string
+          id?: string
+          method?: string | null
+          note?: string | null
+          settled_at?: string | null
+          to_profile_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          from_profile_id?: string
+          group_id?: string
+          id?: string
+          method?: string | null
+          note?: string | null
+          settled_at?: string | null
+          to_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_settlements_from_profile_id_fkey"
+            columns: ["from_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_settlements_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "golf_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_settlements_to_profile_id_fkey"
+            columns: ["to_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      house_games: {
+        Row: {
+          active_primitives: Json
+          created_at: string | null
+          description: string
+          group_id: string
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string | null
+          version: number
+        }
+        Insert: {
+          active_primitives?: Json
+          created_at?: string | null
+          description?: string
+          group_id: string
+          id?: string
+          name?: string
+          owner_id: string
+          updated_at?: string | null
+          version?: number
+        }
+        Update: {
+          active_primitives?: Json
+          created_at?: string | null
+          description?: string
+          group_id?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "house_games_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: true
+            referencedRelation: "golf_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "house_games_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_game_formats: {
+        Row: {
+          active_primitives: Json
+          created_at: string | null
+          description: string
+          id: string
+          is_public: boolean
+          name: string
+          owner_id: string
+          updated_at: string | null
+          version: number
+        }
+        Insert: {
+          active_primitives?: Json
+          created_at?: string | null
+          description?: string
+          id?: string
+          is_public?: boolean
+          name?: string
+          owner_id: string
+          updated_at?: string | null
+          version?: number
+        }
+        Update: {
+          active_primitives?: Json
+          created_at?: string | null
+          description?: string
+          id?: string
+          is_public?: boolean
+          name?: string
+          owner_id?: string
+          updated_at?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_game_formats_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
           created_at: string | null
           handicap: number | null
           id: string
+          is_ghost: boolean
           manual_strokes: number | null
           name: string
           order_index: number
           profile_id: string | null
           round_id: string | null
           team_id: string | null
+          tee_set_id: string | null
         }
         Insert: {
           created_at?: string | null
           handicap?: number | null
           id?: string
+          is_ghost?: boolean
           manual_strokes?: number | null
           name: string
           order_index: number
           profile_id?: string | null
           round_id?: string | null
           team_id?: string | null
+          tee_set_id?: string | null
         }
         Update: {
           created_at?: string | null
           handicap?: number | null
           id?: string
+          is_ghost?: boolean
           manual_strokes?: number | null
           name?: string
           order_index?: number
           profile_id?: string | null
           round_id?: string | null
           team_id?: string | null
+          tee_set_id?: string | null
         }
         Relationships: [
           {
@@ -304,12 +561,18 @@ export type Database = {
           email: string | null
           friend_code: string | null
           full_name: string | null
+          grandfathered_at: string | null
           handicap: number | null
+          has_onboarded: boolean
           home_course_id: string | null
           home_course_name: string | null
           id: string
+          notification_preferences: Json | null
           paypal_email: string | null
           phone: string | null
+          push_permission_denied_at: string | null
+          push_token: string | null
+          subscription_tier: string | null
           tee_preference: string | null
           updated_at: string | null
           venmo_username: string | null
@@ -320,12 +583,18 @@ export type Database = {
           email?: string | null
           friend_code?: string | null
           full_name?: string | null
+          grandfathered_at?: string | null
           handicap?: number | null
+          has_onboarded?: boolean
           home_course_id?: string | null
           home_course_name?: string | null
           id: string
+          notification_preferences?: Json | null
           paypal_email?: string | null
           phone?: string | null
+          push_permission_denied_at?: string | null
+          push_token?: string | null
+          subscription_tier?: string | null
           tee_preference?: string | null
           updated_at?: string | null
           venmo_username?: string | null
@@ -336,12 +605,18 @@ export type Database = {
           email?: string | null
           friend_code?: string | null
           full_name?: string | null
+          grandfathered_at?: string | null
           handicap?: number | null
+          has_onboarded?: boolean
           home_course_id?: string | null
           home_course_name?: string | null
           id?: string
+          notification_preferences?: Json | null
           paypal_email?: string | null
           phone?: string | null
+          push_permission_denied_at?: string | null
+          push_token?: string | null
+          subscription_tier?: string | null
           tee_preference?: string | null
           updated_at?: string | null
           venmo_username?: string | null
@@ -402,6 +677,126 @@ export type Database = {
             columns: ["winner_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      round_comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          round_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          round_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          round_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_comments_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      round_messages: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          round_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          round_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          round_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_messages_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      round_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          reaction_type: string
+          round_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reaction_type: string
+          round_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reaction_type?: string
+          round_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_reactions_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -493,17 +888,20 @@ export type Database = {
       }
       rounds: {
         Row: {
+          completed_at: string | null
           course_id: string | null
           course_name: string
           created_at: string | null
           created_by: string | null
           games: Json | null
           handicap_mode: string | null
-          hole_info: Json
+          hole_info: Json | null
           holes: number
           id: string
+          invited_player_ids: string[] | null
           join_code: string
           match_play: boolean | null
+          mixed_tees: boolean
           modified_stableford: boolean | null
           rating: number | null
           scorekeeper_ids: string[] | null
@@ -513,20 +911,25 @@ export type Database = {
           status: string | null
           stroke_play: boolean | null
           teams: Json | null
+          tee_sets: Json | null
+          tee_time: string | null
           updated_at: string | null
         }
         Insert: {
+          completed_at?: string | null
           course_id?: string | null
           course_name: string
           created_at?: string | null
           created_by?: string | null
           games?: Json | null
           handicap_mode?: string | null
-          hole_info: Json
+          hole_info?: Json | null
           holes?: number
           id?: string
+          invited_player_ids?: string[] | null
           join_code: string
           match_play?: boolean | null
+          mixed_tees?: boolean
           modified_stableford?: boolean | null
           rating?: number | null
           scorekeeper_ids?: string[] | null
@@ -536,20 +939,25 @@ export type Database = {
           status?: string | null
           stroke_play?: boolean | null
           teams?: Json | null
+          tee_sets?: Json | null
+          tee_time?: string | null
           updated_at?: string | null
         }
         Update: {
+          completed_at?: string | null
           course_id?: string | null
           course_name?: string
           created_at?: string | null
           created_by?: string | null
           games?: Json | null
           handicap_mode?: string | null
-          hole_info?: Json
+          hole_info?: Json | null
           holes?: number
           id?: string
+          invited_player_ids?: string[] | null
           join_code?: string
           match_play?: boolean | null
+          mixed_tees?: boolean
           modified_stableford?: boolean | null
           rating?: number | null
           scorekeeper_ids?: string[] | null
@@ -559,6 +967,8 @@ export type Database = {
           status?: string | null
           stroke_play?: boolean | null
           teams?: Json | null
+          tee_sets?: Json | null
+          tee_time?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -608,6 +1018,205 @@ export type Database = {
           },
         ]
       }
+      subscription_transactions: {
+        Row: {
+          created_at: string | null
+          expires_date: string | null
+          id: string
+          original_transaction_id: string
+          product_id: string
+          purchase_date: string
+          raw_receipt: Json | null
+          subscription_id: string
+          transaction_id: string
+          transaction_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_date?: string | null
+          id?: string
+          original_transaction_id: string
+          product_id: string
+          purchase_date: string
+          raw_receipt?: Json | null
+          subscription_id: string
+          transaction_id: string
+          transaction_type: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_date?: string | null
+          id?: string
+          original_transaction_id?: string
+          product_id?: string
+          purchase_date?: string
+          raw_receipt?: Json | null
+          subscription_id?: string
+          transaction_id?: string
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_transactions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          cancellation_date: string | null
+          created_at: string | null
+          expires_at: string | null
+          grace_period_expires_at: string | null
+          id: string
+          latest_transaction_id: string | null
+          original_transaction_id: string | null
+          product_id: string | null
+          status: string
+          tier: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cancellation_date?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          grace_period_expires_at?: string | null
+          id?: string
+          latest_transaction_id?: string | null
+          original_transaction_id?: string | null
+          product_id?: string | null
+          status?: string
+          tier?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cancellation_date?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          grace_period_expires_at?: string | null
+          id?: string
+          latest_transaction_id?: string | null
+          original_transaction_id?: string | null
+          product_id?: string | null
+          status?: string
+          tier?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      watch_party_members: {
+        Row: {
+          id: string
+          joined_at: string
+          left_at: string | null
+          profile_id: string
+          round_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          profile_id: string
+          round_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          profile_id?: string
+          round_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_party_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "watch_party_members_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      watch_party_messages: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          is_post_reveal: boolean
+          round_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          is_post_reveal?: boolean
+          round_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          is_post_reveal?: boolean
+          round_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_party_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "watch_party_messages_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      watch_party_notifications: {
+        Row: {
+          recipient_count: number
+          round_id: string
+          sent_at: string
+        }
+        Insert: {
+          recipient_count?: number
+          round_id: string
+          sent_at?: string
+        }
+        Update: {
+          recipient_count?: number
+          round_id?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_party_notifications_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: true
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -617,28 +1226,141 @@ export type Database = {
         Args: { user1_id: string; user2_id: string }
         Returns: boolean
       }
+      can_edit_round: {
+        Args: { check_round_id: string; check_user_id: string }
+        Returns: boolean
+      }
+      get_friend_count: { Args: { check_user_id: string }; Returns: number }
+      get_group_count: { Args: { check_user_id: string }; Returns: number }
+      get_head_to_head: {
+        Args: { other_id: string; viewer_id: string }
+        Returns: {
+          losses: number
+          net_amount: number
+          pushes: number
+          round_count: number
+          wins: number
+        }[]
+      }
+      get_round_reactions: {
+        Args: { target_round_id: string; viewer_id: string }
+        Returns: {
+          count: number
+          reaction_type: string
+          viewer_reacted: boolean
+        }[]
+      }
+      get_season_leaderboard: {
+        Args: { viewer_id: string }
+        Returns: {
+          friend_avatar: string
+          friend_name: string
+          friend_profile_id: string
+          net_amount: number
+          round_count: number
+        }[]
+      }
+      get_social_feed_round_ids: {
+        Args: { viewer_id: string }
+        Returns: {
+          round_id: string
+        }[]
+      }
+      get_social_feed_rounds: {
+        Args: { viewer_id: string }
+        Returns: {
+          comment_count: number
+          completed_at: string
+          course_name: string
+          creator_avatar: string
+          creator_id: string
+          creator_name: string
+          games: Json
+          participant_ids: string[]
+          participant_names: string[]
+          round_id: string
+        }[]
+      }
+      get_upcoming_rounds: {
+        Args: { viewer_id: string }
+        Returns: {
+          course_name: string
+          created_at: string
+          creator_avatar: string
+          creator_id: string
+          creator_name: string
+          invited_ids: string[]
+          message_count: number
+          participant_ids: string[]
+          participant_names: string[]
+          round_id: string
+          tee_time: string
+        }[]
+      }
+      get_watch_party_messages: {
+        Args: { p_round_id: string }
+        Returns: {
+          author_avatar: string
+          author_id: string
+          author_name: string
+          body: string
+          created_at: string
+          id: string
+          is_player: boolean
+          is_post_reveal: boolean
+        }[]
+      }
+      get_watch_party_recipients: {
+        Args: { p_round_id: string }
+        Returns: {
+          profile_id: string
+        }[]
+      }
+      get_watch_party_stats: {
+        Args: { p_round_id: string }
+        Returns: {
+          first_message_author: string
+          first_message_body: string
+          message_count: number
+          spectator_count: number
+        }[]
+      }
       has_round_access: {
-        Args: { round_id: string; user_id: string }
+        Args: { check_round_id: string; check_user_id: string }
+        Returns: boolean
+      }
+      is_friend_of_any_player: {
+        Args: { p_round_id: string; p_user_id: string }
         Returns: boolean
       }
       is_group_member: {
-        Args: { group_id: string; user_id: string }
+        Args: { p_group_id: string; p_user_id: string }
         Returns: boolean
       }
       is_group_owner: {
-        Args: { group_id: string; user_id: string }
+        Args: { p_group_id: string; p_user_id: string }
         Returns: boolean
       }
+      is_pro_user: { Args: { check_user_id: string }; Returns: boolean }
+      is_round_complete: { Args: { p_round_id: string }; Returns: boolean }
       is_round_creator: {
-        Args: { round_id: string; user_id: string }
+        Args: { p_round_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_round_owner: {
+        Args: { check_round_id: string; check_user_id: string }
         Returns: boolean
       }
       is_round_participant: {
-        Args: { round_id: string; user_id: string }
+        Args: { check_round_id: string; check_user_id: string }
         Returns: boolean
       }
       is_scorekeeper: {
-        Args: { round_id: string; user_id: string }
+        Args: { p_round_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_watch_party_member: {
+        Args: { p_round_id: string; p_user_id: string }
         Returns: boolean
       }
     }

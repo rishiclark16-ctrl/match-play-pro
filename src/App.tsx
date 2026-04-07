@@ -39,6 +39,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Support = lazy(() => import("./pages/Support"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
+const WatchParty = lazy(() => import("./pages/WatchParty"));
 
 const queryClient = new QueryClient();
 
@@ -159,6 +160,16 @@ function AppContent() {
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="default" />}>
                 <RoundComplete />
+              </Suspense>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/watch/:roundId"
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <WatchParty />
               </Suspense>
             </AuthGuard>
           }

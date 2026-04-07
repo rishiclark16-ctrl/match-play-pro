@@ -42,6 +42,7 @@ import { buildScoringConfig } from '@/lib/houseGame/engine';
 import { toast } from 'sonner';
 import { hapticSuccess } from '@/lib/haptics';
 import { setStatusBarDefault } from '@/lib/statusBar';
+import { broadcastWatchPartyNotification } from '@/lib/watchPartyNotification';
 
 // MATCH logo M path
 const MATCH_M_PATH = 'M16 58 L16 22 L40 46 L64 22 L64 58';
@@ -177,6 +178,16 @@ export default function Scorecard() {
     }
     return completed;
   }, [round, playersWithScores]);
+
+  // Watch Party: broadcast notification on first score
+  const watchPartyBroadcastRef = useRef(false);
+  useEffect(() => {
+    if (watchPartyBroadcastRef.current || !round || !id || isSpectator) return;
+    if (roundScores.length === 0) return;
+    watchPartyBroadcastRef.current = true;
+    const playerNames = playersWithScores.map(p => p.name.split(' ')[0]);
+    broadcastWatchPartyNotification(id, round.courseName, playerNames);
+  }, [roundScores.length, round, id, isSpectator, playersWithScores]);
 
   // Determine leading player
   const leadingPlayerId = useMemo(() => {

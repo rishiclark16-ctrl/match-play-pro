@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { MessageCircle, Trophy, Swords } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { WatchPartyFeedBadge } from '@/components/golf/WatchPartyFeedBadge';
 import { formatGameType } from '@/lib/formatGameType';
 import { cn } from '@/lib/utils';
 import type { FeedRoundItem } from '@/hooks/useSocialFeed';
@@ -207,6 +208,13 @@ export function FeedItem({ item, onPress, currentUserId }: FeedItemProps) {
                 +{overflowCount}
               </span>
             )}
+          </div>
+        )}
+
+        {/* Watch Party badge */}
+        {item.watchPartyMessageCount > 0 && (
+          <div className="mb-2">
+            <WatchPartyFeedBadge roundId={item.roundId} messageCount={item.watchPartyMessageCount} />
           </div>
         )}
 

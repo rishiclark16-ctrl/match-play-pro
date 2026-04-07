@@ -689,6 +689,7 @@ export default function Profile() {
                   {([
                     { key: 'roundInvites', label: 'Round Invites', desc: "When someone adds you to a round" },
                     { key: 'friendStartedRound', label: 'Friend Playing', desc: 'When a friend starts a round you can watch' },
+                    { key: 'watch_party', label: 'Watch Party', desc: 'When friends tee off — join the chat' },
                     { key: 'pressTriggered', label: 'Press Triggered', desc: 'When an auto-press fires in your round' },
                     { key: 'tabSettled', label: 'Tab Settled', desc: 'When group debts are settled' },
                     { key: 'tabAddedTo', label: 'Tab Added', desc: 'When a round is added to your group tab' },
