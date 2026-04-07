@@ -1,10 +1,22 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  'https://matchgolf.dev',
+  'capacitor://localhost',  // iOS
+  'http://localhost',       // Android
+];
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('origin') ?? '';
+  const allowed = ALLOWED_ORIGINS.includes(origin) || origin.startsWith('http://localhost:');
+  return {
+    'Access-Control-Allow-Origin': allowed ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Vary': 'Origin',
+  };
+}
 
 const GOLFCOURSEAPI_KEY = Deno.env.get('GOLFCOURSEAPI_KEY');
 const BASE_URL = 'https://api.golfcourseapi.com';
@@ -36,9 +48,11 @@ function checkRateLimit(clientId: string): { allowed: boolean; remaining: number
 }
 
 serve(async (req) => {
+  const cors = getCorsHeaders(req);
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: cors });
   }
 
   try {
@@ -60,7 +74,7 @@ serve(async (req) => {
         {
           status: 429,
           headers: {
-            ...corsHeaders,
+            ...cors,
             ...rateLimitHeaders,
             'Content-Type': 'application/json',
             'Retry-After': rateLimit.resetInSeconds.toString()
@@ -83,7 +97,7 @@ serve(async (req) => {
       console.error('GOLFCOURSEAPI_KEY not configured');
       return new Response(
         JSON.stringify({ error: 'API key not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -96,7 +110,7 @@ serve(async (req) => {
     } else {
       return new Response(
         JSON.stringify({ error: 'Invalid action. Use action=search&query=... or action=details&id=...' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -115,7 +129,7 @@ serve(async (req) => {
       console.error(`GolfCourseAPI error: ${response.status} - ${errorText}`);
       return new Response(
         JSON.stringify({ error: `API error: ${response.status}`, details: errorText }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: response.status, headers: { ...cors, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -124,7 +138,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(data),
-      { headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...cors, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error: unknown) {
@@ -132,7 +146,7 @@ serve(async (req) => {
     console.error('Error in golf-course-lookup:', errorMessage);
     return new Response(
       JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } }
     );
   }
 });

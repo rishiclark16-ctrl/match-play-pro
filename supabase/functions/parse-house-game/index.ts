@@ -1,9 +1,21 @@
 import { serve } from 'https://deno.land/std@0.208.0/http/server.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  'https://matchgolf.dev',
+  'capacitor://localhost',  // iOS
+  'http://localhost',       // Android
+];
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('origin') ?? '';
+  const allowed = ALLOWED_ORIGINS.includes(origin) || origin.startsWith('http://localhost:');
+  return {
+    'Access-Control-Allow-Origin': allowed ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Vary': 'Origin',
+  };
+}
 
 const VALID_IDS = new Set([
   'press_auto_x_down','press_auto_birdie','press_auto_eagle','press_manual_request',
@@ -210,8 +222,10 @@ function checkRateLimit(userId: string): boolean {
 }
 
 serve(async (req) => {
+  const cors = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: cors });
   }
 
   try {
@@ -220,7 +234,7 @@ serve(async (req) => {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new Response(
         JSON.stringify({ error: 'Authentication required.' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -234,7 +248,7 @@ serve(async (req) => {
     if (!checkRateLimit(userId)) {
       return new Response(
         JSON.stringify({ error: 'Too many requests. Please wait a minute.' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -243,7 +257,7 @@ serve(async (req) => {
     if (!description || typeof description !== 'string' || description.trim().length < 5) {
       return new Response(
         JSON.stringify({ error: 'Description must be at least 5 characters.' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -254,7 +268,7 @@ serve(async (req) => {
     if (!anthropicKey) {
       return new Response(
         JSON.stringify({ error: 'Parsing service not configured.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -288,7 +302,7 @@ serve(async (req) => {
     if (!successRes) {
       return new Response(
         JSON.stringify({ error: 'Failed to parse game rules. Please try again.' }),
-        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -298,13 +312,13 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ primitives }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...cors, 'Content-Type': 'application/json' } }
     );
   } catch (err) {
     console.error('parse-house-game error:', err);
     return new Response(
       JSON.stringify({ error: 'Unexpected error. Please try again.' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } }
     );
   }
 });

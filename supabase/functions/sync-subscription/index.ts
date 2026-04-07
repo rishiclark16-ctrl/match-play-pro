@@ -184,7 +184,7 @@ function validateSyncSubscriptionPayload(payload: unknown): ValidationResult {
 /**
  * Creates a validation error response
  */
-function createValidationErrorResponse(errors: ValidationError[], corsHeaders: Record<string, string>): Response {
+function createValidationErrorResponse(errors: ValidationError[], cors: Record<string, string>): Response {
   return new Response(
     JSON.stringify({
       error: 'Validation failed',
@@ -192,7 +192,7 @@ function createValidationErrorResponse(errors: ValidationError[], corsHeaders: R
     }),
     {
       status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...cors, 'Content-Type': 'application/json' }
     }
   );
 }
@@ -230,15 +230,29 @@ function checkRateLimit(userId: string): { allowed: boolean; remaining: number; 
 // Main Handler
 // ============================================================================
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  'https://matchgolf.dev',
+  'capacitor://localhost',  // iOS
+  'http://localhost',       // Android
+];
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('origin') ?? '';
+  const allowed = ALLOWED_ORIGINS.includes(origin) || origin.startsWith('http://localhost:');
+  return {
+    'Access-Control-Allow-Origin': allowed ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Vary': 'Origin',
+  };
+}
 
 serve(async (req) => {
+  const cors = getCorsHeaders(req);
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: cors });
   }
 
   try {
@@ -247,7 +261,7 @@ serve(async (req) => {
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'Missing authorization' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -263,7 +277,7 @@ serve(async (req) => {
     if (authError || !user) {
       return new Response(
         JSON.stringify({ error: 'Invalid authorization' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -281,7 +295,7 @@ serve(async (req) => {
         {
           status: 429,
           headers: {
-            ...corsHeaders,
+            ...cors,
             ...rateLimitHeaders,
             'Content-Type': 'application/json',
             'Retry-After': rateLimit.resetInSeconds.toString()
@@ -298,7 +312,7 @@ serve(async (req) => {
       console.error('Failed to parse JSON body:', parseError);
       return new Response(
         JSON.stringify({ error: 'Invalid JSON in request body' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -306,7 +320,7 @@ serve(async (req) => {
     const validationResult = validateSyncSubscriptionPayload(rawPayload);
     if (!validationResult.valid) {
       console.error('Sync subscription validation failed:', validationResult.errors);
-      return createValidationErrorResponse(validationResult.errors, corsHeaders);
+      return createValidationErrorResponse(validationResult.errors, cors);
     }
 
     // Type-safe extraction after validation
@@ -376,7 +390,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...cors, 'Content-Type': 'application/json' } }
     );
 
   } catch (error: unknown) {
@@ -384,7 +398,7 @@ serve(async (req) => {
     console.error('Sync error:', errorMessage);
     return new Response(
       JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } }
     );
   }
 });

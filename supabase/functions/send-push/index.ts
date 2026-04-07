@@ -1,10 +1,39 @@
 import { serve } from 'https://deno.land/std@0.208.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  'https://matchgolf.dev',
+  'capacitor://localhost',  // iOS
+  'http://localhost',       // Android
+];
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('origin') ?? '';
+  const allowed = ALLOWED_ORIGINS.includes(origin) || origin.startsWith('http://localhost:');
+  return {
+    'Access-Control-Allow-Origin': allowed ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Vary': 'Origin',
+  };
+}
+
+// Rate limiting: 50 push requests per hour per user
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 50;
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(userId);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT) return false;
+  entry.count++;
+  return true;
+}
 
 /**
  * Sign an APNs JWT using ES256 (ECDSA P-256).
@@ -47,8 +76,10 @@ async function signApnsJwt(teamId: string, keyId: string, privateKeyPem: string)
 }
 
 serve(async (req) => {
+  const cors = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: cors });
   }
 
   try {
@@ -57,7 +88,7 @@ serve(async (req) => {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new Response(
         JSON.stringify({ error: 'Missing or invalid authorization' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -71,7 +102,15 @@ serve(async (req) => {
     if (authError || !user) {
       return new Response(
         JSON.stringify({ error: 'Invalid authorization' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    // Rate limit: 50 push requests per hour per user
+    if (!checkRateLimit(user.id)) {
+      return new Response(
+        JSON.stringify({ error: 'Too many push requests. Please try again later.' }),
+        { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -80,14 +119,14 @@ serve(async (req) => {
     if (!Array.isArray(tokens) || tokens.length === 0) {
       return new Response(
         JSON.stringify({ error: 'tokens must be a non-empty array' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
       );
     }
 
     if (typeof title !== 'string' || typeof body !== 'string') {
       return new Response(
         JSON.stringify({ error: 'title and body are required strings' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -101,7 +140,7 @@ serve(async (req) => {
       console.error('send-push: APNs env vars not configured');
       return new Response(
         JSON.stringify({ error: 'Push notifications not configured' }),
-        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 503, headers: { ...cors, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -148,13 +187,13 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ sent: results.length - failed.length, failed: failed.length, results }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { headers: { ...cors, 'Content-Type': 'application/json' } },
     );
   } catch (err) {
     console.error('send-push error:', err);
     return new Response(
       JSON.stringify({ error: 'Unexpected error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } },
     );
   }
 });
