@@ -94,6 +94,7 @@ export interface HouseGameScoringConfig {
   bingoBangoBongo: boolean;
   rabbit: boolean;
   quota: boolean;
+  nines: boolean;
   defender: boolean;
   sixes: boolean;
 

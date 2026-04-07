@@ -129,6 +129,10 @@ export default function RoundDashboard() {
       wolfGame?.stakes,
       propBets,
       gameResults?.houseGameResult,
+      gameResults?.vegasResult,
+      gameResults?.ninesResult,
+      gameResults?.defenderResult,
+      gameResults?.sixesResult,
     );
   }, [round, playersWithScores, rawPlayers, gameResults, matchPlayResult, propBets]);
 

@@ -46,9 +46,36 @@ export function getStrokesPerHole(
   
   // Initialize all holes with 0 strokes
   holeInfo.forEach(hole => strokesMap.set(hole.number, 0));
-  
-  if (playingHandicap <= 0) return strokesMap;
+
+  if (playingHandicap === 0) return strokesMap;
   if (holeInfo.length === 0) return strokesMap;
+
+  // Plus handicap (negative value): player GIVES BACK strokes
+  // Strokes are added (penalty) starting from the easiest holes (highest SI) counting down
+  if (playingHandicap < 0) {
+    const absStrokes = Math.abs(playingHandicap);
+    // Sort holes by handicap rating DESCENDING (easiest first = highest SI)
+    const sortedByEasiest = [...holeInfo].sort((a, b) => {
+      const aHcp = a.handicap ?? a.number;
+      const bHcp = b.handicap ?? b.number;
+      return bHcp - aHcp; // descending = easiest first
+    });
+
+    let remaining = absStrokes;
+    let round = 0;
+    while (remaining > 0) {
+      for (const hole of sortedByEasiest) {
+        if (remaining <= 0) break;
+        const currentStrokes = strokesMap.get(hole.number) || 0;
+        if (Math.abs(currentStrokes) === round) {
+          strokesMap.set(hole.number, currentStrokes - 1); // negative = penalty
+          remaining--;
+        }
+      }
+      round++;
+    }
+    return strokesMap;
+  }
 
   // Sort holes by handicap rating (1 = hardest, gets stroke first)
   // If no handicap rating, use hole number as fallback

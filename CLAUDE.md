@@ -87,11 +87,17 @@ All game logic lives in `src/lib/games/` as pure functions with extensive tests:
 - **Nassau** (27 tests) — front/back/overall with auto-press; full 9-hole support via `holesInRound` param
 - **Skins** (24 tests) — individual hole wins, optional carryover; auto-adapts to any hole count including 9
 - **Match Play** (31 tests) — 2-player head-to-head, net scoring
-- **Wolf** (55 tests) — 4-player rotating wolf, blind wolf option
+- **Wolf** (58 tests) — 3-4 player rotating wolf, blind wolf, catch-up mechanic on holes 17-18
 - **Stableford** (42 tests) — points-based, standard + modified
 - **Best Ball** (30 tests) — team format, best score per team per hole
+- **Vegas** — 2v2 paired scores, 10+ rule, birdie flip, eagle flip+double, carryover ties (4 players)
+- **Nines/5-3-1** — 9 points split per hole: best=5, mid=3, worst=1, ties redistribute (exactly 3 players)
+- **Defender** — rotating 1-vs-field: defend wins +3, ties +1, attackers win +1/+2 each (3-4 players)
+- **Sixes/Round Robin** — 3 six-hole segments with rotating 2v2 partners, best ball per team (exactly 4 players)
+- **Quota/Chicago** (22 tests) — target-based with correct point table (birdie=4, eagle=8, par=2, bogey=1)
+- **Rabbit** — chase the rabbit with optional "set free" mechanic
 - **Prop Bets** — CTP, greenie, sandie, barkie, snake, custom bets
-- **Settlement** (18 tests) — aggregates money owed across all games
+- **Settlement** (18 tests) — aggregates money owed across all games including new game types
 
 ### Voice Scoring
 - `src/lib/voiceParser.ts` — 114 tests, pure NLP (no ML/server calls)
@@ -234,7 +240,7 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**661 pass, 0 fail** (661 tests across 18 files). All tests pass.
+**865 pass, 0 fail** (865 tests across 26 files). All tests pass.
 
 Test infrastructure notes:
 - `bunfig.toml` preloads `src/test/setup.ts` which polyfills jsdom, localStorage, sessionStorage, and indexedDB for all test files
@@ -256,6 +262,23 @@ Full audit performed and all critical/high/medium/low bugs fixed across:
 - `Home.tsx` — stable React key for game tags (L-2), console.error in spectator catch (L-5)
 - New tests added: settlement rounding, Wolf multi-player, skins per-player contribution, nassau/wolf edge cases (20 new tests, all pass)
 - Test baseline after audit + voice fix: **661 pass, 0 fail** (661 total)
+
+## Scoring Correctness Audit (2026-04-06)
+Full scoring audit against golf betting reference document. Fixes + new games:
+- `quota.ts` — replaced Stableford points with correct Quota table (birdie=4, eagle=8, par=2, bogey=1)
+- `vegas.ts` — complete rewrite: 10+ rule (high digit first), unconditional birdie flip, eagle flip+2x, carryover ties
+- `handicapUtils.ts` — plus handicap (negative HI) now distributes penalty strokes from easiest holes (SI 18 down)
+- `wolf.ts` — 3-player support, catch-up mechanic on holes 17-18 (lowest-point player becomes wolf)
+- `rabbit.ts` — added "set free" mechanic toggle (`directTransfer` param)
+- New calculators: `nines.ts` (5-3-1), `defender.ts` (1-vs-field), `sixes.ts` (round robin 2v2)
+- New UI sections: `VegasSection`, `NinesSection`, `DefenderSection`, `SixesSection`
+- `FormatStep.tsx` — player count validation: Vegas/Sixes (4), Nines (3), Defender/Wolf (3-4)
+- `GamesSection.tsx`, `moneyTracker.ts`, `settlement.ts`, `useGameResults.ts` — wired all new games
+- `houseGame.ts` — integrated Nines/Defender/Sixes into house game engine, removed from stubs
+- `HouseGameEngine.ts` — removed stub warnings for Vegas/Rabbit/Quota/Defender/Sixes/Nines
+- `primitives.ts` — added `format_nines`, set implemented=true for all new/fixed games
+- Wolf tests updated for 3-player, Quota tests updated for correct point table
+- Test baseline after scoring audit: **865 pass, 0 fail** (865 total)
 
 ---
 

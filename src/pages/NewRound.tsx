@@ -91,6 +91,15 @@ export default function NewRound() {
   const [wolfEnabled, setWolfEnabled] = useState(false);
   const [wolfStakes, setWolfStakes] = useState('2');
   const [wolfCarryover, setWolfCarryover] = useState(true);
+  const [vegasEnabled, setVegasEnabled] = useState(false);
+  const [vegasStakes, setVegasStakes] = useState('1');
+  const [vegasCarryover, setVegasCarryover] = useState(false);
+  const [ninesEnabled, setNinesEnabled] = useState(false);
+  const [ninesStakes, setNinesStakes] = useState('1');
+  const [defenderEnabled, setDefenderEnabled] = useState(false);
+  const [defenderStakes, setDefenderStakes] = useState('1');
+  const [sixesEnabled, setSixesEnabled] = useState(false);
+  const [sixesStakes, setSixesStakes] = useState('1');
 
   // Group + house game
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
@@ -114,12 +123,13 @@ export default function NewRound() {
   const [savedToggles, setSavedToggles] = useState<{
     strokePlay: boolean; matchPlay: boolean; skinsEnabled: boolean;
     nassauEnabled: boolean; stablefordEnabled: boolean; bestBallEnabled: boolean; wolfEnabled: boolean;
+    vegasEnabled: boolean; ninesEnabled: boolean; defenderEnabled: boolean; sixesEnabled: boolean;
   } | null>(null);
 
   useEffect(() => {
     if (formatActive) {
       // Save current toggles and disable them all
-      setSavedToggles({ strokePlay, matchPlay, skinsEnabled, nassauEnabled, stablefordEnabled, bestBallEnabled, wolfEnabled });
+      setSavedToggles({ strokePlay, matchPlay, skinsEnabled, nassauEnabled, stablefordEnabled, bestBallEnabled, wolfEnabled, vegasEnabled, ninesEnabled, defenderEnabled, sixesEnabled });
       setStrokePlay(false);
       setMatchPlay(false);
       setSkinsEnabled(false);
@@ -127,6 +137,10 @@ export default function NewRound() {
       setStablefordEnabled(false);
       setBestBallEnabled(false);
       setWolfEnabled(false);
+      setVegasEnabled(false);
+      setNinesEnabled(false);
+      setDefenderEnabled(false);
+      setSixesEnabled(false);
     } else if (savedToggles) {
       // Restore previous toggles
       setStrokePlay(savedToggles.strokePlay);
@@ -136,6 +150,10 @@ export default function NewRound() {
       setStablefordEnabled(savedToggles.stablefordEnabled);
       setBestBallEnabled(savedToggles.bestBallEnabled);
       setWolfEnabled(savedToggles.wolfEnabled);
+      setVegasEnabled(savedToggles.vegasEnabled);
+      setNinesEnabled(savedToggles.ninesEnabled);
+      setDefenderEnabled(savedToggles.defenderEnabled);
+      setSixesEnabled(savedToggles.sixesEnabled);
       setSavedToggles(null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -445,12 +463,45 @@ export default function NewRound() {
         });
       }
 
-      if (wolfEnabled && players.filter(p => p.name.trim()).length === 4) {
+      if (wolfEnabled && [3, 4].includes(players.filter(p => p.name.trim()).length)) {
         games.push({
           id: generateId(),
           type: 'wolf',
           stakes: Number(wolfStakes) || 2,
           carryover: wolfCarryover,
+        });
+      }
+
+      if (vegasEnabled && players.filter(p => p.name.trim()).length === 4) {
+        games.push({
+          id: generateId(),
+          type: 'vegas',
+          stakes: Number(vegasStakes) || 1,
+          carryover: vegasCarryover,
+        });
+      }
+
+      if (ninesEnabled && players.filter(p => p.name.trim()).length === 3) {
+        games.push({
+          id: generateId(),
+          type: 'nines',
+          stakes: Number(ninesStakes) || 1,
+        });
+      }
+
+      if (defenderEnabled && [3, 4].includes(players.filter(p => p.name.trim()).length)) {
+        games.push({
+          id: generateId(),
+          type: 'defender',
+          stakes: Number(defenderStakes) || 1,
+        });
+      }
+
+      if (sixesEnabled && players.filter(p => p.name.trim()).length === 4) {
+        games.push({
+          id: generateId(),
+          type: 'sixes',
+          stakes: Number(sixesStakes) || 1,
         });
       }
 
@@ -797,6 +848,24 @@ export default function NewRound() {
               onWolfEnabledChange={setWolfEnabled}
               onWolfStakesChange={setWolfStakes}
               onWolfCarryoverChange={setWolfCarryover}
+              vegasEnabled={vegasEnabled}
+              vegasStakes={vegasStakes}
+              vegasCarryover={vegasCarryover}
+              onVegasEnabledChange={setVegasEnabled}
+              onVegasStakesChange={setVegasStakes}
+              onVegasCarryoverChange={setVegasCarryover}
+              ninesEnabled={ninesEnabled}
+              ninesStakes={ninesStakes}
+              onNinesEnabledChange={setNinesEnabled}
+              onNinesStakesChange={setNinesStakes}
+              defenderEnabled={defenderEnabled}
+              defenderStakes={defenderStakes}
+              onDefenderEnabledChange={setDefenderEnabled}
+              onDefenderStakesChange={setDefenderStakes}
+              sixesEnabled={sixesEnabled}
+              sixesStakes={sixesStakes}
+              onSixesEnabledChange={setSixesEnabled}
+              onSixesStakesChange={setSixesStakes}
               personalFormats={personalFormats}
               selectedPersonalFormatId={selectedPersonalFormatId}
               onPersonalFormatSelect={setSelectedPersonalFormatId}

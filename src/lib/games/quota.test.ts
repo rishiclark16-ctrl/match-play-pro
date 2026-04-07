@@ -59,18 +59,18 @@ describe('calculateQuota', () => {
       expect(result.standings[0].totalPoints).toBe(2);
     });
 
-    it('should award 3 points for birdie', () => {
+    it('should award 4 points for birdie', () => {
       const players = [createPlayer('p1', 'Alice', 0)];
       const scores = [createScore('p1', 1, 3)]; // par 4, score 3
       const result = calculateQuota(scores, players, holeInfo, 1);
-      expect(result.standings[0].totalPoints).toBe(3);
+      expect(result.standings[0].totalPoints).toBe(4);
     });
 
-    it('should award 4 points for eagle', () => {
+    it('should award 8 points for eagle', () => {
       const players = [createPlayer('p1', 'Alice', 0)];
       const scores = [createScore('p1', 1, 2)]; // par 4, score 2
       const result = calculateQuota(scores, players, holeInfo, 1);
-      expect(result.standings[0].totalPoints).toBe(4);
+      expect(result.standings[0].totalPoints).toBe(8);
     });
 
     it('should award 1 point for bogey', () => {
@@ -91,11 +91,11 @@ describe('calculateQuota', () => {
       const players = [createPlayer('p1', 'Alice', 0)];
       const scores = [
         createScore('p1', 1, 4), // par = 2 pts
-        createScore('p1', 2, 3), // birdie = 3 pts
+        createScore('p1', 2, 3), // birdie = 4 pts
         createScore('p1', 3, 5), // bogey = 1 pt
       ];
       const result = calculateQuota(scores, players, holeInfo, 1);
-      expect(result.standings[0].totalPoints).toBe(6);
+      expect(result.standings[0].totalPoints).toBe(7);
     });
   });
 
@@ -147,7 +147,7 @@ describe('calculateQuota', () => {
         createPlayer('p2', 'Bob', 34),   // quota = 2
         createPlayer('p3', 'Charlie', 34), // quota = 2
       ];
-      // Alice birdie (3pts, o/u=+1), Bob par (2pts, o/u=0), Charlie bogey (1pt, o/u=-1)
+      // Alice birdie (4pts, o/u=+2), Bob par (2pts, o/u=0), Charlie bogey (1pt, o/u=-1)
       const scores = [
         createScore('p1', 1, 3),
         createScore('p2', 1, 4),
@@ -157,12 +157,12 @@ describe('calculateQuota', () => {
       const alice = result.standings.find(s => s.playerId === 'p1')!;
       const bob = result.standings.find(s => s.playerId === 'p2')!;
       const charlie = result.standings.find(s => s.playerId === 'p3')!;
-      // Alice: vs Bob (+1)*1 + vs Charlie (+2)*1 = 3
-      // Bob: vs Alice (-1)*1 + vs Charlie (+1)*1 = 0
-      // Charlie: vs Alice (-2)*1 + vs Bob (-1)*1 = -3
-      expect(alice.earnings).toBe(3);
-      expect(bob.earnings).toBe(0);
-      expect(charlie.earnings).toBe(-3);
+      // Alice: vs Bob (+2)*1 + vs Charlie (+3)*1 = 5
+      // Bob: vs Alice (-2)*1 + vs Charlie (+1)*1 = -1
+      // Charlie: vs Alice (-3)*1 + vs Bob (-1)*1 = -4
+      expect(alice.earnings).toBe(5);
+      expect(bob.earnings).toBe(-1);
+      expect(charlie.earnings).toBe(-4);
     });
 
     it('should zero-sum across all players', () => {

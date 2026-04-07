@@ -16,7 +16,7 @@ const EDGE_FUNCTION_VALID_IDS = new Set([
   'format_skins','format_skins_back9_only','format_match_play','format_stroke_play',
   'format_stableford','format_modified_stableford','format_wolf','format_vegas',
   'format_hammer','format_bingo_bango_bongo','format_rabbit','format_quota',
-  'format_defender','bonus_par5_double','bonus_par3_special','bonus_birdie_unit',
+  'format_nines','format_defender','bonus_par5_double','bonus_par3_special','bonus_birdie_unit',
   'bonus_eagle_unit','bonus_greenie','bonus_sandie','bonus_barkie','bonus_oozle',
   'bonus_chippy','bonus_polie','bonus_last_hole_double','bonus_garbage_tracking',
   'carryover_skins_halved','carryover_cap','carryover_jackpot_18',

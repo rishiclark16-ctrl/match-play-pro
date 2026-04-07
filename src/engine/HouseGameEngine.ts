@@ -145,37 +145,23 @@ export function buildConfig(activePrimitives: ActivePrimitive[]): ScoringConfig 
   if (c.matchPlay)  activeFormats.push('match');
   if (c.stableford) activeFormats.push('stableford');
 
-  // STUB: formats below are logged + ignored in scoring
+  // STUB: Wolf and Hammer still not scoring-integrated in AI builder
   if (c.wolf) {
     activeFormats.push('wolf');
     logger.warn('[HouseGame] Wolf format not yet implemented in AI builder');
     warnings.push('Wolf format is not yet available in AI-built games. Use the standard Wolf game instead.');
   }
-  if (c.vegas) {
-    logger.warn('[HouseGame] Vegas format not yet implemented in AI builder');
-    warnings.push('Vegas format is not yet available in AI-built games. Use the standard Vegas game instead.');
-  }
+  if (c.vegas)            activeFormats.push('vegas');
   if (c.hammer) {
     logger.warn('[HouseGame] Hammer format not yet implemented in AI builder');
     warnings.push('Hammer format is not yet available in AI-built games.');
   }
-  if (c.bingoBangoBongo) { activeFormats.push('bingo_bango_bongo'); }
-  if (c.rabbit) {
-    logger.warn('[HouseGame] Rabbit format not yet implemented in AI builder');
-    warnings.push('Rabbit format is not yet available in AI-built games.');
-  }
-  if (c.quota) {
-    logger.warn('[HouseGame] Quota format not yet implemented in AI builder');
-    warnings.push('Quota format is not yet available in AI-built games.');
-  }
-  if (c.defender) {
-    logger.warn('[HouseGame] Defender format not yet implemented in AI builder');
-    warnings.push('Defender format is not yet available in AI-built games.');
-  }
-  if (c.sixes) {
-    logger.warn('[HouseGame] Sixes group format not yet implemented');
-    warnings.push('Sixes group format is not yet available in AI-built games.');
-  }
+  if (c.bingoBangoBongo)  activeFormats.push('bingo_bango_bongo');
+  if (c.rabbit)           activeFormats.push('rabbit');
+  if (c.quota)            activeFormats.push('quota');
+  if (c.nines)            activeFormats.push('nines');
+  if (c.defender)         activeFormats.push('defender');
+  if (c.sixes)            activeFormats.push('sixes');
 
   // ── Press rules ────────────────────────────────────────────────────────────
   let pressTrigger: PressRules['trigger'] = 'none';

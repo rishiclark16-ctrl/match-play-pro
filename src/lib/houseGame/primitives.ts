@@ -148,7 +148,7 @@ export const PRIMITIVES: HouseGamePrimitive[] = [
     description: 'Points awarded per hole based on score relative to par; highest total wins.',
     valueType: 'none',
     defaultValue: null,
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'format_modified_stableford',
@@ -157,7 +157,7 @@ export const PRIMITIVES: HouseGamePrimitive[] = [
     description: 'Variation of Stableford with different point values (e.g., eagle = 8, birdie = 2).',
     valueType: 'none',
     defaultValue: null,
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'format_wolf',
@@ -175,7 +175,7 @@ export const PRIMITIVES: HouseGamePrimitive[] = [
     description: 'Team scores are combined into a two-digit number; lower combined number wins the hole.',
     valueType: 'none',
     defaultValue: null,
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'format_hammer',
@@ -193,7 +193,7 @@ export const PRIMITIVES: HouseGamePrimitive[] = [
     description: 'Three points per hole: first on green, closest to pin when all are on, first to hole out.',
     valueType: 'none',
     defaultValue: null,
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'format_rabbit',
@@ -202,7 +202,7 @@ export const PRIMITIVES: HouseGamePrimitive[] = [
     description: 'Win a hole outright to "catch the rabbit"; keep it until someone else wins a hole outright.',
     valueType: 'none',
     defaultValue: null,
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'format_quota',
@@ -211,16 +211,25 @@ export const PRIMITIVES: HouseGamePrimitive[] = [
     description: 'Each player has a quota based on handicap; points earned above quota determine the winner.',
     valueType: 'none',
     defaultValue: null,
-    implemented: false,
+    implemented: true,
+  },
+  {
+    id: 'format_nines',
+    category: 'scoring',
+    label: 'Nines (5-3-1)',
+    description: 'Three-player game: 9 points per hole distributed by score rank (5/3/1, ties split).',
+    valueType: 'none',
+    defaultValue: null,
+    implemented: true,
   },
   {
     id: 'format_defender',
     category: 'scoring',
     label: 'Defender',
-    description: 'One player defends against the field each hole; role rotates when defender loses a hole.',
+    description: 'One player defends against the field each hole; role rotates every hole among 3-4 players.',
     valueType: 'none',
     defaultValue: null,
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'group_sixes',
@@ -229,7 +238,7 @@ export const PRIMITIVES: HouseGamePrimitive[] = [
     description: 'Three six-hole matches with rotating partners; each six-hole block is a separate bet.',
     valueType: 'none',
     defaultValue: null,
-    implemented: false,
+    implemented: true,
   },
 
   // ─── MULTIPLIERS & BONUSES ───────────────────────────────────────────────────
@@ -333,7 +342,7 @@ export const PRIMITIVES: HouseGamePrimitive[] = [
     description: 'The stake on hole 18 is doubled for all active bets.',
     valueType: 'none',
     defaultValue: null,
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'bonus_garbage_tracking',
@@ -363,7 +372,7 @@ export const PRIMITIVES: HouseGamePrimitive[] = [
     valueType: 'number',
     valueConfig: { min: 1, max: 18, step: 1 },
     defaultValue: 5,
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'carryover_jackpot_18',
@@ -372,7 +381,7 @@ export const PRIMITIVES: HouseGamePrimitive[] = [
     description: 'All unclaimed carryover skins are decided on hole 18 regardless of a tie.',
     valueType: 'none',
     defaultValue: null,
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'carryover_reset_on_win',
@@ -617,7 +626,7 @@ export const PRIMITIVES: HouseGamePrimitive[] = [
     valueType: 'currency',
     valueConfig: { min: 1, max: 500, step: 1, unit: '$' },
     defaultValue: 50,
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'settlement_ties_split',

@@ -87,10 +87,16 @@ describe('getWolfForHole', () => {
     expect(wolf?.id).toBe('p1'); // Still Alice (orderIndex 0)
   });
 
-  it('should return null for non-4-player games', () => {
+  it('should support 3-player wolf', () => {
     const threePlayers = fourPlayers.slice(0, 3);
-    expect(getWolfForHole(threePlayers, 1)).toBeNull();
+    expect(getWolfForHole(threePlayers, 1)?.id).toBe('p1'); // Alice wolf on hole 1
+    expect(getWolfForHole(threePlayers, 2)?.id).toBe('p2'); // Bob wolf on hole 2
+    expect(getWolfForHole(threePlayers, 4)?.id).toBe('p1'); // Wraps around
+  });
+
+  it('should return null for empty or 1-2 player games', () => {
     expect(getWolfForHole([], 1)).toBeNull();
+    expect(getWolfForHole(fourPlayers.slice(0, 2), 1)).toBeNull();
   });
 });
 
@@ -121,10 +127,13 @@ describe('getHuntingOrder', () => {
     expect(order[3].id).toBe('p4'); // Wolf last
   });
 
-  it('should return players as-is for non-4-player games', () => {
+  it('should place wolf last for 3-player game', () => {
     const threePlayers = fourPlayers.slice(0, 3);
     const order = getHuntingOrder(threePlayers, 1);
-    expect(order).toEqual(threePlayers);
+    expect(order).toHaveLength(3);
+    expect(order[2].id).toBe('p1'); // Wolf (Alice) goes last
+    expect(order[0].id).toBe('p2'); // First hunter
+    expect(order[1].id).toBe('p3'); // Second hunter
   });
 });
 
@@ -600,11 +609,13 @@ describe('getWolfHoleContext', () => {
     expect(context?.potValue).toBe(40); // 20 base + 20 carryover
   });
 
-  it('should return null for non-4-player game', () => {
+  it('should return valid context for 3-player game', () => {
     const threePlayers = fourPlayers.slice(0, 3);
     const context = getWolfHoleContext(threePlayers, 1, [], 5, false);
 
-    expect(context).toBeNull();
+    expect(context).not.toBeNull();
+    expect(context?.wolfId).toBe('p1');
+    expect(context?.wolfName).toBe('Alice');
   });
 });
 

@@ -3,6 +3,10 @@ import { calculateSkins, SkinsResult } from './skins';
 import { calculateNassau, NassauResult } from './nassau';
 import { calculateMatchPlay, MatchPlayResult } from './matchPlay';
 import { calculateWolfStandings } from './wolf';
+import { calculateVegas } from './vegas';
+import { calculateNines } from './nines';
+import { calculateDefender } from './defender';
+import { calculateSixes } from './sixes';
 import { calculateHouseGame } from './houseGame';
 import { buildScoringConfig } from '@/lib/houseGame/engine';
 import { getStrokesPerHole } from '@/lib/handicapUtils';
@@ -13,6 +17,10 @@ interface MoneyBreakdown {
   nassau: number;
   match: number;
   wolf: number;
+  vegas: number;
+  nines: number;
+  defender: number;
+  sixes: number;
   houseGame: number;
   propBets: number;
   total: number;
@@ -44,7 +52,7 @@ export function calculateLiveMoney(
   
   // Initialize breakdown for each player
   players.forEach(p => {
-    breakdown.set(p.id, { skins: 0, nassau: 0, match: 0, wolf: 0, houseGame: 0, propBets: 0, total: 0 });
+    breakdown.set(p.id, { skins: 0, nassau: 0, match: 0, wolf: 0, vegas: 0, nines: 0, defender: 0, sixes: 0, houseGame: 0, propBets: 0, total: 0 });
   });
 
   // Filter scores up to the current hole
@@ -149,7 +157,7 @@ export function calculateLiveMoney(
       }
 
       case 'wolf': {
-        if (players.length === 4 && game.wolfResults) {
+        if ((players.length === 3 || players.length === 4) && game.wolfResults) {
           const relevantResults = game.wolfResults.filter(r => r.holeNumber <= upToHole);
           const wolfStandings = calculateWolfStandings(relevantResults, players, game.stakes);
 
@@ -159,6 +167,59 @@ export function calculateLiveMoney(
               pb.wolf += standing.earnings;
               pb.total += standing.earnings;
             }
+          });
+        }
+        break;
+      }
+
+      case 'vegas': {
+        if (players.length === 4) {
+          const vegasResult = calculateVegas(relevantScores, players, holeInfo, game.stakes, game.carryover ?? false);
+          // Vegas is team-based: split earnings evenly between team members
+          const teamAPlayers = [players[0], players[1]];
+          const teamBPlayers = [players[2], players[3]];
+          const perPlayerA = vegasResult.teamAEarnings / 2;
+          const perPlayerB = vegasResult.teamBEarnings / 2;
+          teamAPlayers.forEach(p => {
+            const pb = breakdown.get(p.id);
+            if (pb) { pb.vegas += perPlayerA; pb.total += perPlayerA; }
+          });
+          teamBPlayers.forEach(p => {
+            const pb = breakdown.get(p.id);
+            if (pb) { pb.vegas += perPlayerB; pb.total += perPlayerB; }
+          });
+        }
+        break;
+      }
+
+      case 'nines': {
+        if (players.length === 3) {
+          const ninesResult = calculateNines(relevantScores, players, holeInfo, game.stakes, game.useNet ? strokesMap : undefined);
+          ninesResult.standings.forEach(standing => {
+            const pb = breakdown.get(standing.playerId);
+            if (pb) { pb.nines += standing.earnings; pb.total += standing.earnings; }
+          });
+        }
+        break;
+      }
+
+      case 'defender': {
+        if (players.length === 3 || players.length === 4) {
+          const defenderResult = calculateDefender(relevantScores, players, holeInfo, game.stakes, game.useNet ? strokesMap : undefined);
+          defenderResult.standings.forEach(standing => {
+            const pb = breakdown.get(standing.playerId);
+            if (pb) { pb.defender += standing.earnings; pb.total += standing.earnings; }
+          });
+        }
+        break;
+      }
+
+      case 'sixes': {
+        if (players.length === 4) {
+          const sixesResult = calculateSixes(relevantScores, players, holeInfo, game.stakes, game.useNet ? strokesMap : undefined);
+          sixesResult.standings.forEach(standing => {
+            const pb = breakdown.get(standing.playerId);
+            if (pb) { pb.sixes += standing.earnings; pb.total += standing.earnings; }
           });
         }
         break;

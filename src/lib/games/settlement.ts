@@ -2,6 +2,10 @@ import { Player, Settlement, GameConfig, WolfHoleResult } from '@/types/golf';
 import { SkinsResult } from './skins';
 import { NassauResult } from './nassau';
 import { calculateWolfStandings } from './wolf';
+import { VegasResult } from './vegas';
+import { NinesResult } from './nines';
+import { DefenderResult } from './defender';
+import { SixesResult } from './sixes';
 import { HouseGameResult } from './houseGame';
 import { PropBet } from '@/types/betting';
 
@@ -23,6 +27,10 @@ export function calculateSettlement(
   wolfStakes?: number,
   propBets?: PropBet[],
   houseGameResult?: HouseGameResult,
+  vegasResult?: VegasResult,
+  ninesResult?: NinesResult,
+  defenderResult?: DefenderResult,
+  sixesResult?: SixesResult,
 ): NetSettlement[] {
   // Build a ledger of who owes whom
   const ledger: Record<string, Record<string, number>> = {};
@@ -149,6 +157,108 @@ export function calculateSettlement(
             : Math.round((winner.netEarnings / totalWinnings) * Math.abs(loser.netEarnings) * 100) / 100;
           const actualPayment = Math.min(lossToDistribute, payment);
 
+          if (ledger[loser.playerId]?.[winner.playerId] !== undefined) {
+            ledger[loser.playerId][winner.playerId] += actualPayment;
+          }
+          lossToDistribute -= actualPayment;
+        });
+      });
+    }
+  }
+
+  // Process Vegas earnings (team-based)
+  if (vegasResult && players.length === 4) {
+    const teamA = [players[0], players[1]];
+    const teamB = [players[2], players[3]];
+    const perPlayerA = vegasResult.teamAEarnings / 2;
+    const perPlayerB = vegasResult.teamBEarnings / 2;
+
+    // If team A wins, team B members each owe team A members
+    if (vegasResult.teamAEarnings > 0) {
+      teamB.forEach(loser => {
+        teamA.forEach(winner => {
+          if (ledger[loser.id]?.[winner.id] !== undefined) {
+            ledger[loser.id][winner.id] += Math.abs(perPlayerB);
+          }
+        });
+      });
+    } else if (vegasResult.teamBEarnings > 0) {
+      teamA.forEach(loser => {
+        teamB.forEach(winner => {
+          if (ledger[loser.id]?.[winner.id] !== undefined) {
+            ledger[loser.id][winner.id] += Math.abs(perPlayerA);
+          }
+        });
+      });
+    }
+  }
+
+  // Process Nines earnings (pairwise settlement)
+  if (ninesResult && ninesResult.standings.length > 0) {
+    const winners = ninesResult.standings.filter(s => s.earnings > 0);
+    const losers = ninesResult.standings.filter(s => s.earnings < 0);
+    const totalWinnings = winners.reduce((sum, w) => sum + w.earnings, 0);
+
+    if (totalWinnings > 0) {
+      losers.forEach(loser => {
+        let lossToDistribute = Math.abs(loser.earnings);
+        winners.forEach((winner, idx) => {
+          if (lossToDistribute <= 0) return;
+          const isLast = idx === winners.length - 1;
+          const payment = isLast
+            ? Math.round(lossToDistribute * 100) / 100
+            : Math.round((winner.earnings / totalWinnings) * Math.abs(loser.earnings) * 100) / 100;
+          const actualPayment = Math.min(lossToDistribute, payment);
+          if (ledger[loser.playerId]?.[winner.playerId] !== undefined) {
+            ledger[loser.playerId][winner.playerId] += actualPayment;
+          }
+          lossToDistribute -= actualPayment;
+        });
+      });
+    }
+  }
+
+  // Process Defender earnings (pairwise settlement)
+  if (defenderResult && defenderResult.standings.length > 0) {
+    const winners = defenderResult.standings.filter(s => s.earnings > 0);
+    const losers = defenderResult.standings.filter(s => s.earnings < 0);
+    const totalWinnings = winners.reduce((sum, w) => sum + w.earnings, 0);
+
+    if (totalWinnings > 0) {
+      losers.forEach(loser => {
+        let lossToDistribute = Math.abs(loser.earnings);
+        winners.forEach((winner, idx) => {
+          if (lossToDistribute <= 0) return;
+          const isLast = idx === winners.length - 1;
+          const payment = isLast
+            ? Math.round(lossToDistribute * 100) / 100
+            : Math.round((winner.earnings / totalWinnings) * Math.abs(loser.earnings) * 100) / 100;
+          const actualPayment = Math.min(lossToDistribute, payment);
+          if (ledger[loser.playerId]?.[winner.playerId] !== undefined) {
+            ledger[loser.playerId][winner.playerId] += actualPayment;
+          }
+          lossToDistribute -= actualPayment;
+        });
+      });
+    }
+  }
+
+  // Process Sixes earnings (pairwise settlement)
+  if (sixesResult && sixesResult.standings.length > 0) {
+    const winners = sixesResult.standings.filter(s => s.earnings > 0);
+    const losers = sixesResult.standings.filter(s => s.earnings < 0);
+    const totalWinnings = winners.reduce((sum, w) => sum + w.earnings, 0);
+
+    if (totalWinnings > 0) {
+      losers.forEach(loser => {
+        let lossToDistribute = Math.abs(loser.earnings);
+        winners.forEach((winner, idx) => {
+          if (lossToDistribute <= 0) return;
+          const isLast = idx === winners.length - 1;
+          const payment = isLast
+            ? Math.round(lossToDistribute * 100) / 100
+            : Math.round((winner.earnings / totalWinnings) * Math.abs(loser.earnings) * 100) / 100;
+          const actualPayment = Math.min(lossToDistribute, payment);
           if (ledger[loser.playerId]?.[winner.playerId] !== undefined) {
             ledger[loser.playerId][winner.playerId] += actualPayment;
           }

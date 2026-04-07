@@ -8,6 +8,10 @@ import { calculateStableford } from '@/lib/games/stableford';
 import { calculateBestBall } from '@/lib/games/bestball';
 import { calculateWolf } from '@/lib/games/wolf';
 import { calculateMatchPlay } from '@/lib/games/matchPlay';
+import { calculateVegas } from '@/lib/games/vegas';
+import { calculateNines } from '@/lib/games/nines';
+import { calculateDefender } from '@/lib/games/defender';
+import { calculateSixes } from '@/lib/games/sixes';
 import { calculateHouseGame } from '@/lib/games/houseGame';
 import { buildScoringConfig } from '@/lib/houseGame/engine';
 import { buildConfig } from '@/engine/HouseGameEngine';
@@ -33,6 +37,10 @@ import { WolfSection } from './games/WolfSection';
 import { StrokePlaySection } from './games/StrokePlaySection';
 import { PropBetsSection } from './games/PropBetsSection';
 import { HouseGameSection } from './games/HouseGameSection';
+import { VegasSection } from './games/VegasSection';
+import { NinesSection } from './games/NinesSection';
+import { DefenderSection } from './games/DefenderSection';
+import { SixesSection } from './games/SixesSection';
 
 export function GamesSection({ round, players, scores, currentHole, onAddPress, propBets = [] }: GamesSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -55,6 +63,10 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
   const bestBallGame = round.games?.find(g => g.type === 'bestball');
   const wolfGame = round.games?.find(g => g.type === 'wolf');
   const matchGame = round.games?.find(g => g.type === 'match');
+  const vegasGame = round.games?.find(g => g.type === 'vegas');
+  const ninesGame = round.games?.find(g => g.type === 'nines');
+  const defenderGame = round.games?.find(g => g.type === 'defender');
+  const sixesGame = round.games?.find(g => g.type === 'sixes');
   const houseGameEntry = round.games?.find(g => g.type === 'house');
   const hasMatchPlay = matchGame || round.matchPlay;
 
@@ -97,9 +109,32 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
   }, [bestBallGame, scores, players, round.holeInfo, holesPlayed, buildStrokesMap]);
 
   const wolfResult = useMemo(() => {
-    if (!wolfGame || players.length !== 4) return null;
+    if (!wolfGame || (players.length !== 3 && players.length !== 4)) return null;
     return calculateWolf(scores, players, wolfGame.wolfResults || [], wolfGame.stakes, wolfGame.carryover ?? true, round.holes);
   }, [wolfGame, scores, players, round.holes]);
+
+  const vegasResult = useMemo(() => {
+    if (!vegasGame || players.length !== 4) return null;
+    return calculateVegas(scores, players, round.holeInfo, vegasGame.stakes, vegasGame.carryover ?? false);
+  }, [vegasGame, scores, players, round.holeInfo]);
+
+  const ninesResult = useMemo(() => {
+    if (!ninesGame || players.length !== 3) return null;
+    const useStrokesMap = ninesGame.useNet ? buildStrokesMap : undefined;
+    return calculateNines(scores, players, round.holeInfo, ninesGame.stakes, useStrokesMap);
+  }, [ninesGame, scores, players, round.holeInfo, buildStrokesMap]);
+
+  const defenderResult = useMemo(() => {
+    if (!defenderGame || (players.length !== 3 && players.length !== 4)) return null;
+    const useStrokesMap = defenderGame.useNet ? buildStrokesMap : undefined;
+    return calculateDefender(scores, players, round.holeInfo, defenderGame.stakes, useStrokesMap);
+  }, [defenderGame, scores, players, round.holeInfo, buildStrokesMap]);
+
+  const sixesResult = useMemo(() => {
+    if (!sixesGame || players.length !== 4) return null;
+    const useStrokesMap = sixesGame.useNet ? buildStrokesMap : undefined;
+    return calculateSixes(scores, players, round.holeInfo, sixesGame.stakes, useStrokesMap);
+  }, [sixesGame, scores, players, round.holeInfo, buildStrokesMap]);
 
   const matchPlayResult = useMemo(() => {
     if (!hasMatchPlay || players.length !== 2) return null;
@@ -151,7 +186,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
   const hasPropBets = propBets.length > 0;
   const hasStrokePlay = round.strokePlay;
 
-  if (!skinsGame && !nassauGame && !stablefordGame && !bestBallGame && !wolfGame && !hasMatchPlay && !hasPropBets && !hasStrokePlay && !houseGameEntry)
+  if (!skinsGame && !nassauGame && !stablefordGame && !bestBallGame && !wolfGame && !vegasGame && !ninesGame && !defenderGame && !sixesGame && !hasMatchPlay && !hasPropBets && !hasStrokePlay && !houseGameEntry)
     return null;
 
   const handleConfirmPress = () => {
@@ -195,6 +230,22 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
 
   if (wolfGame && wolfResult) {
     sections.push(<WolfSection key="wolf" wolfGame={wolfGame} wolfResult={wolfResult} players={players} currentHole={currentHole} />);
+  }
+
+  if (vegasGame && vegasResult) {
+    sections.push(<VegasSection key="vegas" vegasGame={vegasGame} vegasResult={vegasResult} players={players} />);
+  }
+
+  if (ninesGame && ninesResult) {
+    sections.push(<NinesSection key="nines" ninesGame={ninesGame} ninesResult={ninesResult} players={players} />);
+  }
+
+  if (defenderGame && defenderResult) {
+    sections.push(<DefenderSection key="defender" defenderGame={defenderGame} defenderResult={defenderResult} players={players} currentHole={currentHole} />);
+  }
+
+  if (sixesGame && sixesResult) {
+    sections.push(<SixesSection key="sixes" sixesGame={sixesGame} sixesResult={sixesResult} players={players} />);
   }
 
   if (hasStrokePlay && players.length > 0) {

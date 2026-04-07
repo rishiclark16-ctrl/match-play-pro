@@ -13,6 +13,9 @@ import { calculateStableford } from './stableford';
 import { calculateRabbit, RabbitResult } from './rabbit';
 import { calculateQuota, QuotaResult } from './quota';
 import { calculateVegas, VegasResult } from './vegas';
+import { calculateNines, NinesResult } from './nines';
+import { calculateDefender, DefenderResult } from './defender';
+import { calculateSixes, SixesResult } from './sixes';
 
 export interface HouseGameHoleResult {
   holeNumber: number;
@@ -46,6 +49,9 @@ export interface HouseGameResult {
   rabbitResult?: RabbitResult;
   quotaResult?: QuotaResult;
   vegasResult?: VegasResult;
+  ninesResult?: NinesResult;
+  defenderResult?: DefenderResult;
+  sixesResult?: SixesResult;
   // Unimplemented primitives that are active (shown as "coming soon" in UI)
   stubbedPrimitives: string[];
   // Summary text lines for the live panel
@@ -56,7 +62,6 @@ export interface HouseGameResult {
 
 const STUBS = new Set([
   'format_wolf', 'format_hammer',
-  'format_defender', 'format_sixes',
   'press_auto_eagle', 'press_manual_request',
   'press_requires_acceptance', 'press_double_or_nothing', 'press_max_per_round',
   'press_new_submatch', 'press_no_dormie', 'press_back9_auto',
@@ -319,6 +324,33 @@ export function calculateHouseGame(
     }
   }
 
+  // ── Nines (5-3-1) ────────────────────────────────────────────────────────
+  let ninesResult: NinesResult | undefined;
+  if (config.nines && players.length === 3) {
+    ninesResult = calculateNines(scores, players, holeInfo, config.unitValue, strokesMap);
+    for (const standing of ninesResult.standings) {
+      playerEarnings[standing.playerId] = (playerEarnings[standing.playerId] ?? 0) + standing.earnings;
+    }
+  }
+
+  // ── Defender ─────────────────────────────────────────────────────────────
+  let defenderResult: DefenderResult | undefined;
+  if (config.defender && (players.length === 3 || players.length === 4)) {
+    defenderResult = calculateDefender(scores, players, holeInfo, config.unitValue, strokesMap);
+    for (const standing of defenderResult.standings) {
+      playerEarnings[standing.playerId] = (playerEarnings[standing.playerId] ?? 0) + standing.earnings;
+    }
+  }
+
+  // ── Sixes (Round Robin) ──────────────────────────────────────────────────
+  let sixesResult: SixesResult | undefined;
+  if (config.sixes && players.length === 4) {
+    sixesResult = calculateSixes(scores, players, holeInfo, config.unitValue, strokesMap);
+    for (const standing of sixesResult.standings) {
+      playerEarnings[standing.playerId] = (playerEarnings[standing.playerId] ?? 0) + standing.earnings;
+    }
+  }
+
   // ── Last Hole Double ──────────────────────────────────────────────────────
   if (config.lastHoleDouble) {
     const lastHole = totalHoles === 18 ? 18 : 9;
@@ -457,7 +489,7 @@ export function calculateHouseGame(
     summary.push('Loss cap applied');
   }
 
-  return { holeResults, standings, skinsResult, nassauResult, stablefordResult, rabbitResult, quotaResult, vegasResult, stubbedPrimitives, summary, cappedPlayerIds };
+  return { holeResults, standings, skinsResult, nassauResult, stablefordResult, rabbitResult, quotaResult, vegasResult, ninesResult, defenderResult, sixesResult, stubbedPrimitives, summary, cappedPlayerIds };
 }
 
 /** Helper: check if a stub primitive's config flag is truthy */
@@ -469,6 +501,7 @@ function checkPrimitiveActive(id: string, config: HouseGameScoringConfig): boole
     format_bingo_bango_bongo: config.bingoBangoBongo,
     format_rabbit: config.rabbit,
     format_quota: config.quota,
+    format_nines: config.nines,
     format_defender: config.defender,
     group_sixes: config.sixes,
     press_auto_birdie: config.pressAutoBirdie,

@@ -14,6 +14,7 @@ const DEFAULT_CONFIG: HouseGameScoringConfig = {
   bingoBangoBongo: false,
   rabbit: false,
   quota: false,
+  nines: false,
   defender: false,
   sixes: false,
 
@@ -104,6 +105,7 @@ export function buildScoringConfig(activePrimitives: ActivePrimitive[]): HouseGa
       case 'format_bingo_bango_bongo': config.bingoBangoBongo = true; break;
       case 'format_rabbit': config.rabbit = true; break;
       case 'format_quota': config.quota = true; break;
+      case 'format_nines': config.nines = true; break;
       case 'format_defender': config.defender = true; break;
       case 'group_sixes': config.sixes = true; break;
 
@@ -195,8 +197,14 @@ export function summarizeConfig(config: HouseGameScoringConfig): string[] {
   if (config.skins) lines.push(config.skinsBackNineOnly ? 'Skins — back 9 only' : 'Skins');
   if (config.matchPlay) lines.push('Match Play');
   if (config.wolf) lines.push('Wolf');
+  if (config.vegas) lines.push('Vegas (2v2 paired scores)');
   if (config.stableford) lines.push(config.modifiedStableford ? 'Modified Stableford' : 'Stableford');
   if (config.bingoBangoBongo) lines.push('Bingo Bango Bongo');
+  if (config.nines) lines.push('Nines (5-3-1)');
+  if (config.defender) lines.push('Defender');
+  if (config.sixes) lines.push('Sixes (Round Robin)');
+  if (config.rabbit) lines.push('Rabbit');
+  if (config.quota) lines.push('Quota (Chicago)');
   if (config.pressAutoXDown !== null) lines.push(`Auto-press when ${config.pressAutoXDown} down`);
   if (config.pressBack9Auto) lines.push('Auto-press at back 9');
   if (config.par5Double) lines.push('Par 5s worth double');

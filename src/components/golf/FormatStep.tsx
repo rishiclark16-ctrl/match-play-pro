@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Flag, Swords, DollarSign, Trophy, BarChart3, Users, Crown, Sparkles, ToggleLeft, ToggleRight, Plus } from 'lucide-react';
+import { Lock, Flag, Swords, DollarSign, Trophy, BarChart3, Users, Crown, Sparkles, ToggleLeft, ToggleRight, Plus, Dice3, Shield, RotateCcw, Layers } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -57,6 +57,28 @@ interface FormatStepProps {
   onWolfEnabledChange: (enabled: boolean) => void;
   onWolfStakesChange: (stakes: string) => void;
   onWolfCarryoverChange: (carryover: boolean) => void;
+  // Vegas
+  vegasEnabled: boolean;
+  vegasStakes: string;
+  vegasCarryover: boolean;
+  onVegasEnabledChange: (enabled: boolean) => void;
+  onVegasStakesChange: (stakes: string) => void;
+  onVegasCarryoverChange: (carryover: boolean) => void;
+  // Nines (5-3-1)
+  ninesEnabled: boolean;
+  ninesStakes: string;
+  onNinesEnabledChange: (enabled: boolean) => void;
+  onNinesStakesChange: (stakes: string) => void;
+  // Defender
+  defenderEnabled: boolean;
+  defenderStakes: string;
+  onDefenderEnabledChange: (enabled: boolean) => void;
+  onDefenderStakesChange: (stakes: string) => void;
+  // Sixes
+  sixesEnabled: boolean;
+  sixesStakes: string;
+  onSixesEnabledChange: (enabled: boolean) => void;
+  onSixesStakesChange: (stakes: string) => void;
   // Personal saved formats (optional)
   personalFormats?: PersonalGameFormat[];
   selectedPersonalFormatId?: string | null;
@@ -104,6 +126,24 @@ export function FormatStep({
   onWolfEnabledChange,
   onWolfStakesChange,
   onWolfCarryoverChange,
+  vegasEnabled,
+  vegasStakes,
+  vegasCarryover,
+  onVegasEnabledChange,
+  onVegasStakesChange,
+  onVegasCarryoverChange,
+  ninesEnabled,
+  ninesStakes,
+  onNinesEnabledChange,
+  onNinesStakesChange,
+  defenderEnabled,
+  defenderStakes,
+  onDefenderEnabledChange,
+  onDefenderStakesChange,
+  sixesEnabled,
+  sixesStakes,
+  onSixesEnabledChange,
+  onSixesStakesChange,
   personalFormats,
   selectedPersonalFormatId,
   onPersonalFormatSelect,
@@ -686,7 +726,7 @@ export function FormatStep({
       )}
 
       {/* Wolf */}
-      {playerCount === 4 && (
+      {(playerCount === 3 || playerCount === 4) && (
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -713,7 +753,9 @@ export function FormatStep({
                   Wolf
                   {!canUseGame('wolf') && <ProLabel />}
                 </p>
-                <p className="text-[12px] text-muted-foreground mt-0.5">Rotating captain picks partner</p>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  {playerCount === 3 ? 'Rotating wolf vs. field' : 'Rotating captain picks partner'}
+                </p>
               </div>
             </div>
             <Switch
@@ -760,6 +802,300 @@ export function FormatStep({
 
               <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg font-mono">
                 Lone Wolf: 3x • Blind Wolf: 6x
+              </div>
+            </motion.div>
+          )}
+        </motion.div>
+      )}
+
+      {/* Vegas — 4 players required */}
+      {playerCount === 4 && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 5 * 0.04, ...springTransition }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => {
+            if (canUseGame('vegas')) onVegasEnabledChange(!vegasEnabled);
+            else handleProFeature('Vegas', () => {});
+          }}
+          className={cn(
+            gameCardBase,
+            vegasEnabled && canUseGame('vegas') && gameCardSelected,
+            !canUseGame('vegas') && 'opacity-60'
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {!canUseGame('vegas') && <Lock className="w-4 h-4 text-muted-foreground" />}
+              <div className={iconBoxClass(vegasEnabled && canUseGame('vegas'), !canUseGame('vegas'))}>
+                <Dice3 className={iconClass(vegasEnabled && canUseGame('vegas'), !canUseGame('vegas'))} />
+              </div>
+              <div>
+                <p className="font-bold text-sm text-foreground flex items-center gap-2">
+                  Vegas
+                  {!canUseGame('vegas') && <ProLabel />}
+                </p>
+                <p className="text-[12px] text-muted-foreground mt-0.5">2v2 paired scores · flips & doubles</p>
+              </div>
+            </div>
+            <Switch
+              checked={vegasEnabled}
+              disabled={!canUseGame('vegas')}
+              onCheckedChange={(checked) => {
+                if (canUseGame('vegas')) onVegasEnabledChange(checked);
+                else handleProFeature('Vegas', () => {});
+              }}
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
+
+          {vegasEnabled && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              transition={springTransition}
+              className="pt-3 mt-3 border-t border-border/50 space-y-3"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-muted-foreground">$</span>
+                <Input
+                  type="number"
+                  placeholder="1"
+                  value={vegasStakes}
+                  onChange={e => onVegasStakesChange(e.target.value)}
+                  className="w-24 text-center font-mono bg-muted/50 rounded-xl border-0 py-2.5 text-sm"
+                  min={1}
+                />
+                <span className="text-sm text-muted-foreground">per point</span>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Checkbox
+                  id="vegascarryover"
+                  checked={vegasCarryover}
+                  className="w-4 h-4 rounded border-border"
+                  onCheckedChange={checked => onVegasCarryoverChange(checked === true)}
+                />
+                <label htmlFor="vegascarryover">Ties carry over (multiply next hole)</label>
+              </div>
+
+              <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg font-mono">
+                Birdie flip · Eagle flip+2× · 10+ high digit first
+              </div>
+            </motion.div>
+          )}
+        </motion.div>
+      )}
+
+      {/* Nines (5-3-1) — exactly 3 players */}
+      {playerCount === 3 && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 5 * 0.04, ...springTransition }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => {
+            if (canUseGame('nines')) onNinesEnabledChange(!ninesEnabled);
+            else handleProFeature('Nines', () => {});
+          }}
+          className={cn(
+            gameCardBase,
+            ninesEnabled && canUseGame('nines') && gameCardSelected,
+            !canUseGame('nines') && 'opacity-60'
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {!canUseGame('nines') && <Lock className="w-4 h-4 text-muted-foreground" />}
+              <div className={iconBoxClass(ninesEnabled && canUseGame('nines'), !canUseGame('nines'))}>
+                <BarChart3 className={iconClass(ninesEnabled && canUseGame('nines'), !canUseGame('nines'))} />
+              </div>
+              <div>
+                <p className="font-bold text-sm text-foreground flex items-center gap-2">
+                  Nines (5-3-1)
+                  {!canUseGame('nines') && <ProLabel />}
+                </p>
+                <p className="text-[12px] text-muted-foreground mt-0.5">9 points split per hole · 3 players</p>
+              </div>
+            </div>
+            <Switch
+              checked={ninesEnabled}
+              disabled={!canUseGame('nines')}
+              onCheckedChange={(checked) => {
+                if (canUseGame('nines')) onNinesEnabledChange(checked);
+                else handleProFeature('Nines', () => {});
+              }}
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
+
+          {ninesEnabled && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              transition={springTransition}
+              className="pt-3 mt-3 border-t border-border/50 space-y-3"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-muted-foreground">$</span>
+                <Input
+                  type="number"
+                  placeholder="1"
+                  value={ninesStakes}
+                  onChange={e => onNinesStakesChange(e.target.value)}
+                  className="w-24 text-center font-mono bg-muted/50 rounded-xl border-0 py-2.5 text-sm"
+                  min={1}
+                />
+                <span className="text-sm text-muted-foreground">per point</span>
+              </div>
+
+              <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg font-mono">
+                Best: 5 · Mid: 3 · Worst: 1 · All tie: 3-3-3
+              </div>
+            </motion.div>
+          )}
+        </motion.div>
+      )}
+
+      {/* Defender — 3-4 players */}
+      {(playerCount === 3 || playerCount === 4) && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 6 * 0.04, ...springTransition }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => {
+            if (canUseGame('defender')) onDefenderEnabledChange(!defenderEnabled);
+            else handleProFeature('Defender', () => {});
+          }}
+          className={cn(
+            gameCardBase,
+            defenderEnabled && canUseGame('defender') && gameCardSelected,
+            !canUseGame('defender') && 'opacity-60'
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {!canUseGame('defender') && <Lock className="w-4 h-4 text-muted-foreground" />}
+              <div className={iconBoxClass(defenderEnabled && canUseGame('defender'), !canUseGame('defender'))}>
+                <Shield className={iconClass(defenderEnabled && canUseGame('defender'), !canUseGame('defender'))} />
+              </div>
+              <div>
+                <p className="font-bold text-sm text-foreground flex items-center gap-2">
+                  Defender
+                  {!canUseGame('defender') && <ProLabel />}
+                </p>
+                <p className="text-[12px] text-muted-foreground mt-0.5">1 vs. field · rotating defender</p>
+              </div>
+            </div>
+            <Switch
+              checked={defenderEnabled}
+              disabled={!canUseGame('defender')}
+              onCheckedChange={(checked) => {
+                if (canUseGame('defender')) onDefenderEnabledChange(checked);
+                else handleProFeature('Defender', () => {});
+              }}
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
+
+          {defenderEnabled && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              transition={springTransition}
+              className="pt-3 mt-3 border-t border-border/50 space-y-3"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-muted-foreground">$</span>
+                <Input
+                  type="number"
+                  placeholder="1"
+                  value={defenderStakes}
+                  onChange={e => onDefenderStakesChange(e.target.value)}
+                  className="w-24 text-center font-mono bg-muted/50 rounded-xl border-0 py-2.5 text-sm"
+                  min={1}
+                />
+                <span className="text-sm text-muted-foreground">per point</span>
+              </div>
+
+              <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg font-mono">
+                Defend: +3 win · +1 tie · Attackers: +1/+2 each
+              </div>
+            </motion.div>
+          )}
+        </motion.div>
+      )}
+
+      {/* Sixes — exactly 4 players */}
+      {playerCount === 4 && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 7 * 0.04, ...springTransition }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => {
+            if (canUseGame('sixes')) onSixesEnabledChange(!sixesEnabled);
+            else handleProFeature('Sixes', () => {});
+          }}
+          className={cn(
+            gameCardBase,
+            sixesEnabled && canUseGame('sixes') && gameCardSelected,
+            !canUseGame('sixes') && 'opacity-60'
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {!canUseGame('sixes') && <Lock className="w-4 h-4 text-muted-foreground" />}
+              <div className={iconBoxClass(sixesEnabled && canUseGame('sixes'), !canUseGame('sixes'))}>
+                <RotateCcw className={iconClass(sixesEnabled && canUseGame('sixes'), !canUseGame('sixes'))} />
+              </div>
+              <div>
+                <p className="font-bold text-sm text-foreground flex items-center gap-2">
+                  Sixes (Round Robin)
+                  {!canUseGame('sixes') && <ProLabel />}
+                </p>
+                <p className="text-[12px] text-muted-foreground mt-0.5">3 rotating 2v2 segments · 6 holes each</p>
+              </div>
+            </div>
+            <Switch
+              checked={sixesEnabled}
+              disabled={!canUseGame('sixes')}
+              onCheckedChange={(checked) => {
+                if (canUseGame('sixes')) onSixesEnabledChange(checked);
+                else handleProFeature('Sixes', () => {});
+              }}
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
+
+          {sixesEnabled && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              transition={springTransition}
+              className="pt-3 mt-3 border-t border-border/50 space-y-3"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-muted-foreground">$</span>
+                <Input
+                  type="number"
+                  placeholder="1"
+                  value={sixesStakes}
+                  onChange={e => onSixesStakesChange(e.target.value)}
+                  className="w-24 text-center font-mono bg-muted/50 rounded-xl border-0 py-2.5 text-sm"
+                  min={1}
+                />
+                <span className="text-sm text-muted-foreground">per point</span>
+              </div>
+
+              <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg font-mono">
+                H1-6: AB vs CD · H7-12: AC vs BD · H13-18: AD vs BC
               </div>
             </motion.div>
           )}

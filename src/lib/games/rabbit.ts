@@ -29,6 +29,11 @@ function getNetScore(score: Score, strokesPerHole?: StrokesPerHoleMap): number {
   return score.strokes - holeStrokes;
 }
 
+/**
+ * @param directTransfer — When true, rabbit transfers immediately on any outright win
+ *   (simpler variant). When false (default/standard), the rabbit is "set free" when
+ *   someone else wins a hole — it must be captured on the NEXT outright win.
+ */
 export function calculateRabbit(
   scores: Score[],
   players: Player[],
@@ -36,9 +41,11 @@ export function calculateRabbit(
   unitValue: number,
   totalHoles: 9 | 18,
   strokesPerHole?: StrokesPerHoleMap,
+  directTransfer: boolean = true,
 ): RabbitResult {
   const holeResults: RabbitHoleResult[] = [];
   let currentHolder: string | null = null;
+  let rabbitFree: boolean = true; // When true, the rabbit can be captured
   let frontRabbitHolder: string | null = null;
   let backRabbitHolder: string | null = null;
   const timesHeld: Record<string, number> = {};
@@ -57,9 +64,29 @@ export function calculateRabbit(
     );
     const lowestNet = getNetScore(sorted[0], strokesPerHole);
     const winners = sorted.filter(s => getNetScore(s, strokesPerHole) === lowestNet);
-
     const winnerId = winners.length === 1 ? winners[0].playerId : null;
-    if (winnerId) currentHolder = winnerId;
+
+    if (directTransfer) {
+      // Simple variant: rabbit transfers immediately
+      if (winnerId) currentHolder = winnerId;
+    } else {
+      // Standard "set free" rules:
+      // If rabbit is held and a DIFFERENT player wins outright → rabbit is set free
+      // If rabbit is free and a player wins outright → that player captures it
+      if (winnerId) {
+        if (currentHolder === null || rabbitFree) {
+          // Rabbit is free — capture it
+          currentHolder = winnerId;
+          rabbitFree = false;
+        } else if (winnerId === currentHolder) {
+          // Same holder wins again — still holds it
+        } else {
+          // Different player wins — set rabbit free (not transferred yet)
+          rabbitFree = true;
+          currentHolder = null;
+        }
+      }
+    }
 
     holeResults.push({ holeNumber: hole, winnerId, holderId: currentHolder });
 
@@ -68,7 +95,10 @@ export function calculateRabbit(
     if (hole === 18) backRabbitHolder = currentHolder;
 
     // Reset rabbit for back 9
-    if (hole === 9 && totalHoles === 18) currentHolder = null;
+    if (hole === 9 && totalHoles === 18) {
+      currentHolder = null;
+      rabbitFree = true;
+    }
   }
 
   // For 9-hole rounds, front is the only segment

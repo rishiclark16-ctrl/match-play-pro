@@ -1,7 +1,19 @@
 import { Score, Player, HoleInfo } from '@/types/golf';
 import { StrokesPerHoleMap } from './skins';
-import { getStablefordPoints } from './stableford';
 import { calculateCourseHandicap } from '@/lib/handicapUtils';
+
+/**
+ * Quota (Chicago) uses its own point table, NOT standard Stableford.
+ * Bogey=1, Par=2, Birdie=4, Eagle=8, Double bogey or worse=0.
+ */
+export function getQuotaPoints(strokes: number, par: number): number {
+  const relativeToPar = strokes - par;
+  if (relativeToPar <= -2) return 8;  // Eagle or better
+  if (relativeToPar === -1) return 4; // Birdie
+  if (relativeToPar === 0) return 2;  // Par
+  if (relativeToPar === 1) return 1;  // Bogey
+  return 0;                            // Double bogey or worse
+}
 
 export interface QuotaStanding {
   playerId: string;
@@ -60,7 +72,7 @@ export function calculateQuota(
     if (!hole) return;
 
     const netStrokes = getNetScore(score.playerId, score.holeNumber, score.strokes, strokesPerHole);
-    const points = getStablefordPoints(netStrokes, hole.par);
+    const points = getQuotaPoints(netStrokes, hole.par);
     const standing = standings.find(s => s.playerId === score.playerId);
     if (standing) {
       standing.totalPoints += points;

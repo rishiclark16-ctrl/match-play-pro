@@ -41,38 +41,51 @@ export interface WolfResult {
   holesPlayed: number;
 }
 
-// Determine who is Wolf for a given hole (4-player rotation)
-export function getWolfForHole(players: Player[], holeNumber: number): Player | null {
-  if (players.length !== 4) return null;
-  
+/**
+ * Determine who is Wolf for a given hole.
+ * Supports 3 or 4 players.
+ * Optionally uses catch-up mechanic on holes 17-18: lowest-point player becomes wolf.
+ */
+export function getWolfForHole(
+  players: Player[],
+  holeNumber: number,
+  standings?: WolfStanding[],
+): Player | null {
+  const n = players.length;
+  if (n !== 3 && n !== 4) return null;
+
   // Sort by orderIndex to ensure consistent rotation
   const sortedPlayers = [...players].sort((a, b) => a.orderIndex - b.orderIndex);
-  
-  // Wolf rotates each hole: hole 1 = player 0, hole 2 = player 1, etc.
-  const wolfIndex = (holeNumber - 1) % 4;
+
+  // Catch-up mechanic: on holes 17-18 (for 18-hole rounds), lowest-point player is wolf
+  if (standings && standings.length > 0 && holeNumber >= 17) {
+    const lowestStanding = [...standings].sort((a, b) => a.totalPoints - b.totalPoints)[0];
+    const lowestPlayer = sortedPlayers.find(p => p.id === lowestStanding.playerId);
+    if (lowestPlayer) return lowestPlayer;
+  }
+
+  // Standard rotation
+  const wolfIndex = (holeNumber - 1) % n;
   return sortedPlayers[wolfIndex];
 }
 
-// Get hunting order for a hole (Wolf goes last)
-export function getHuntingOrder(players: Player[], holeNumber: number): Player[] {
-  if (players.length !== 4) return players;
-  
+// Get hunting order for a hole (Wolf goes last). Supports 3 or 4 players.
+export function getHuntingOrder(players: Player[], holeNumber: number, standings?: WolfStanding[]): Player[] {
+  const n = players.length;
+  if (n !== 3 && n !== 4) return players;
+
+  const wolf = getWolfForHole(players, holeNumber, standings);
+  if (!wolf) return players;
+
   const sortedPlayers = [...players].sort((a, b) => a.orderIndex - b.orderIndex);
-  const wolfIndex = (holeNumber - 1) % 4;
-  
+
   // Hunters tee off in order, Wolf goes last
-  const hunters: Player[] = [];
-  for (let i = 0; i < 4; i++) {
-    if (i !== wolfIndex) {
-      hunters.push(sortedPlayers[i]);
-    }
-  }
-  hunters.push(sortedPlayers[wolfIndex]);
-  
+  const hunters = sortedPlayers.filter(p => p.id !== wolf.id);
+  hunters.push(wolf);
   return hunters;
 }
 
-// Calculate Wolf result for a completed hole
+// Calculate Wolf result for a completed hole. Supports 3 or 4 players.
 export function calculateWolfHoleResult(
   holeNumber: number,
   wolfId: string,
@@ -85,8 +98,10 @@ export function calculateWolfHoleResult(
   strokesPerHole?: Map<string, Map<number, number>>,
   carryover: number = 0
 ): WolfHoleResult | null {
+  const n = players.length;
+  if (n !== 3 && n !== 4) return null;
   const holeScores = scores.filter(s => s.holeNumber === holeNumber);
-  if (holeScores.length !== 4) return null;
+  if (holeScores.length !== n) return null;
   
   const wolf = players.find(p => p.id === wolfId);
   if (!wolf) return null;
@@ -124,9 +139,10 @@ export function calculateWolfHoleResult(
       winningTeam = 'push';
     }
     
-    // Points: Lone Wolf = 4 points per hunter (12 total), Blind Wolf = 2x
+    // Points scale by hunter count: 4 per hunter (3-player: 2 hunters, 4-player: 3 hunters)
+    const hunterCount = n - 1;
     const basePoints = isBlindWolf ? 8 : 4;
-    const totalPoints = basePoints * 3 + carryover; // 3 hunters
+    const totalPoints = basePoints * hunterCount + carryover;
     
     return {
       holeNumber,
@@ -273,12 +289,13 @@ export function calculateWolfStandings(
     }
   });
 
-  // Apply accumulated lone-wolf hunter points with a single division by 3,
+  // Apply accumulated lone-wolf hunter points divided by hunter count,
   // then snap to the nearest integer to eliminate any residual floating-point error.
+  const hunterCount = players.length - 1; // 2 for 3-player, 3 for 4-player
   standings.forEach(s => {
     const raw = rawLoneWolfHunterPoints.get(s.playerId) ?? 0;
     if (raw !== 0) {
-      s.totalPoints += Math.round(raw / 3);
+      s.totalPoints += Math.round(raw / hunterCount);
     }
   });
 
@@ -325,8 +342,8 @@ export function getWolfHoleContext(
   stakes: number,
   carryoverEnabled: boolean
 ): WolfHoleContext | null {
-  if (players.length !== 4) return null;
-  
+  if (players.length !== 3 && players.length !== 4) return null;
+
   const wolf = getWolfForHole(players, currentHole);
   if (!wolf) return null;
   

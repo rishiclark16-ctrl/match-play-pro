@@ -42,6 +42,7 @@ import { SettlementsSection } from '@/components/golf/SettlementsSection';
 import { GameResultsSection } from '@/components/golf/GameResultsSection';
 import { HighlightsSection } from '@/components/golf/HighlightsSection';
 import { RoundCompleteActions } from '@/components/golf/RoundCompleteActions';
+import { WatchPartyRevealCard } from '@/components/golf/WatchPartyRevealCard';
 
 export default function RoundComplete() {
   const { id } = useParams<{ id: string }>();
@@ -270,6 +271,10 @@ export default function RoundComplete() {
       wolfGame?.stakes,
       propBets,
       gameResults?.houseGameResult,
+      gameResults?.vegasResult,
+      gameResults?.ninesResult,
+      gameResults?.defenderResult,
+      gameResults?.sixesResult,
     );
   }, [round, playersWithScores, rawPlayers, gameResults, matchPlayResult, propBets]);
 
@@ -629,6 +634,9 @@ export default function RoundComplete() {
             <p className="text-[#0A0A0A] text-[12px] font-bold">Net-out applied — all debts combined into minimum payments</p>
           </motion.div>
         )}
+
+        {/* Watch Party Reveal */}
+        {id && <WatchPartyRevealCard roundId={id} />}
 
         {/* Settlements Section */}
         <SettlementsSection

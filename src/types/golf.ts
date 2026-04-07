@@ -28,7 +28,7 @@ export interface BingoBangoHoleResult {
 // Betting game configuration
 export interface GameConfig {
   id: string;
-  type: 'skins' | 'nassau' | 'match' | 'stableford' | 'bestball' | 'wolf' | 'house';
+  type: 'skins' | 'nassau' | 'match' | 'stableford' | 'bestball' | 'wolf' | 'vegas' | 'nines' | 'defender' | 'sixes' | 'house';
   stakes: number;
   carryover?: boolean;           // Skins/Wolf: ties carry to next hole
   autoPress?: boolean;           // Nassau: auto-press when 2 down
