@@ -296,6 +296,13 @@ export async function syncSubscriptionToSupabase(customerInfo: CustomerInfo): Pr
       },
     });
 
+    // Refresh session before calling edge function to avoid 401 on stale tokens
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      logger.warn('Session refresh failed before sync', refreshError);
+      return false;
+    }
+
     const { data, error } = await supabase.functions.invoke('sync-subscription', {
       body: {
         isPro: customerInfo.isPro,
@@ -306,14 +313,15 @@ export async function syncSubscriptionToSupabase(customerInfo: CustomerInfo): Pr
     });
 
     if (error) {
-      logger.error('Failed to sync to Supabase', error);
+      logger.warn('Failed to sync to Supabase', error);
       return false;
     }
 
     logger.debug('Sync successful', { data: { result: data } });
     return true;
   } catch (error) {
-    logger.error('Sync error', error);
+    // Catch FunctionsHttpError so it doesn't bubble to Sentry as unhandled
+    logger.warn('Sync subscription error (non-fatal)', error);
     return false;
   }
 }

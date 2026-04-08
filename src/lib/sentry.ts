@@ -1,19 +1,20 @@
 import * as Sentry from '@sentry/react';
+import { Capacitor } from '@capacitor/core';
 
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 const IS_PRODUCTION = import.meta.env.PROD;
 const SENTRY_RELEASE = import.meta.env.VITE_SENTRY_RELEASE;
 
 /**
- * Initialize Sentry error tracking
- * Only initializes in production or if DSN is explicitly provided
+ * Initialize Sentry error tracking.
+ * Only initializes in production or if DSN is explicitly provided.
  */
 export function initSentry() {
-  if (!SENTRY_DSN) {
-    // Sentry DSN not configured - error tracking disabled
-    // Set VITE_SENTRY_DSN in .env to enable
-    return;
-  }
+  if (!SENTRY_DSN) return;
+
+  const platform = Capacitor.isNativePlatform()
+    ? Capacitor.getPlatform() // 'ios' | 'android'
+    : 'web';
 
   Sentry.init({
     dsn: SENTRY_DSN,
@@ -21,28 +22,33 @@ export function initSentry() {
     release: SENTRY_RELEASE,
 
     // Performance monitoring
-    tracesSampleRate: IS_PRODUCTION ? 0.1 : 1.0, // 10% in prod, 100% in dev
+    tracesSampleRate: IS_PRODUCTION ? 0.2 : 1.0,
 
-    // Session replay
-    replaysSessionSampleRate: IS_PRODUCTION ? 0.01 : 0, // 1% of production sessions
-    replaysOnErrorSampleRate: IS_PRODUCTION ? 0.1 : 0,  // 10% of error sessions
+    // Session replay — capture errored sessions at higher rate
+    replaysSessionSampleRate: IS_PRODUCTION ? 0.01 : 0,
+    replaysOnErrorSampleRate: IS_PRODUCTION ? 0.5 : 0,
 
     // Filter out noisy errors
     ignoreErrors: [
-      // Network errors that are expected
       'Failed to fetch',
       'NetworkError',
       'Load failed',
-      // User-initiated actions
       'AbortError',
-      // Browser extensions
       /^chrome-extension:/,
       /^moz-extension:/,
+      // Capacitor bridge noise
+      'clobberProtocol',
+      'CapacitorCookies',
     ],
 
-    // Before sending, clean up sensitive data
+    // PII scrubbing + noise filtering
     beforeSend(event) {
-      // Remove any potential PII from error messages
+      // Drop non-fatal edge function auth errors (stale session on app resume)
+      const exValue = event.exception?.values?.[0]?.value ?? '';
+      if (exValue.includes('Edge Function returned a non-2xx status code')) {
+        return null;
+      }
+
       if (event.message) {
         event.message = event.message.replace(
           /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
@@ -52,14 +58,35 @@ export function initSentry() {
       return event;
     },
 
-    // Integration configuration
+    // Integrations
     integrations: [
-      Sentry.browserTracingIntegration(),
+      Sentry.browserTracingIntegration({
+        enableInp: true, // Interaction to Next Paint
+      }),
       Sentry.replayIntegration({
         maskAllText: true,
         blockAllMedia: true,
       }),
+      Sentry.feedbackIntegration({
+        colorScheme: 'system',
+        showBranding: false,
+        triggerLabel: 'Report a Bug',
+        formTitle: 'Report a Bug',
+        submitButtonLabel: 'Send Report',
+        messagePlaceholder: 'What went wrong? What did you expect to happen?',
+        successMessageText: 'Thanks! We\'ll look into it.',
+        isNameRequired: false,
+        isEmailRequired: false,
+      }),
     ],
+
+    // Global tags for filtering
+    initialScope: {
+      tags: {
+        platform,
+        app_version: SENTRY_RELEASE || 'unknown',
+      },
+    },
   });
 }
 
@@ -68,13 +95,24 @@ export function initSentry() {
  */
 export function setSentryUser(user: { id: string; email?: string } | null) {
   if (user) {
-    Sentry.setUser({
-      id: user.id,
-      email: user.email,
-    });
+    Sentry.setUser({ id: user.id, email: user.email });
   } else {
     Sentry.setUser(null);
   }
+}
+
+/**
+ * Set subscription tier tag for filtering errors by plan
+ */
+export function setSentrySubscription(isPro: boolean) {
+  Sentry.setTag('subscription', isPro ? 'pro' : 'free');
+}
+
+/**
+ * Set the current route for context
+ */
+export function setSentryRoute(route: string) {
+  Sentry.setTag('route', route);
 }
 
 /**
@@ -84,9 +122,7 @@ export function captureException(
   error: Error,
   context?: Record<string, unknown>
 ) {
-  Sentry.captureException(error, {
-    extra: context,
-  });
+  Sentry.captureException(error, { extra: context });
 }
 
 /**
@@ -107,12 +143,7 @@ export function addBreadcrumb(
   message: string,
   data?: Record<string, unknown>
 ) {
-  Sentry.addBreadcrumb({
-    category,
-    message,
-    data,
-    level: 'info',
-  });
+  Sentry.addBreadcrumb({ category, message, data, level: 'info' });
 }
 
 /**
@@ -122,5 +153,28 @@ export function setTag(key: string, value: string) {
   Sentry.setTag(key, value);
 }
 
-// Export Sentry for advanced usage
+/**
+ * Wrap an async operation with a performance span
+ */
+export async function withSpan<T>(
+  name: string,
+  op: string,
+  fn: () => Promise<T>
+): Promise<T> {
+  return Sentry.startSpan({ name, op }, async () => {
+    return fn();
+  });
+}
+
+/**
+ * Show the Sentry user feedback dialog
+ */
+export function showFeedbackDialog() {
+  const feedback = Sentry.getFeedback();
+  if (feedback) {
+    feedback.createForm().then(form => form.appendToDom());
+  }
+}
+
+// Export Sentry for advanced usage (ErrorBoundary, etc.)
 export { Sentry };
