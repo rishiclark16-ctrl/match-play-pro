@@ -1,11 +1,37 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, ChevronRight, Check } from 'lucide-react';
+import Cropper, { Area } from 'react-easy-crop';
+import { Camera, ChevronRight, Check, X, ZoomIn } from 'lucide-react';
 import { useProfile, ProfileUpdate } from '@/hooks/useProfile';
 import { HomeCourseSelector } from '@/components/profile/HomeCourseSelector';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
+
+async function getCroppedFile(imageSrc: string, cropArea: Area, fileName: string): Promise<File> {
+  const image = new Image();
+  image.crossOrigin = 'anonymous';
+  await new Promise<void>((resolve, reject) => {
+    image.onload = () => resolve();
+    image.onerror = reject;
+    image.src = imageSrc;
+  });
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(image, cropArea.x, cropArea.y, cropArea.width, cropArea.height, 0, 0, 512, 512);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return reject(new Error('Canvas toBlob failed'));
+        resolve(new File([blob], fileName, { type: 'image/jpeg' }));
+      },
+      'image/jpeg',
+      0.9,
+    );
+  });
+}
 
 const TEE_OPTIONS = [
   { label: 'Black', color: 'bg-[#1a1a1a]' },
@@ -32,21 +58,53 @@ export default function Onboarding() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Crop state
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedArea, setCroppedArea] = useState<Area | null>(null);
+
   const step: OnboardingStep = STEPS[currentStep];
   const isLastStep = currentStep === STEPS.length - 1;
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
+    if (!file || !file.type.startsWith('image/')) return;
     hapticLight();
-    // Preview immediately
     const reader = new FileReader();
-    reader.onload = ev => setAvatarPreview(ev.target?.result as string);
+    reader.onload = ev => {
+      setCropImageSrc(ev.target?.result as string);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setCroppedArea(null);
+    };
     reader.readAsDataURL(file);
-    await uploadAvatar(file);
-    hapticSuccess();
-    setUploading(false);
+    e.target.value = '';
+  };
+
+  const onCropComplete = useCallback((_: Area, pixels: Area) => {
+    setCroppedArea(pixels);
+  }, []);
+
+  const handleCropCancel = () => {
+    setCropImageSrc(null);
+    setCroppedArea(null);
+  };
+
+  const handleCropSave = async () => {
+    if (!cropImageSrc || !croppedArea) return;
+    setUploading(true);
+    try {
+      const croppedFile = await getCroppedFile(cropImageSrc, croppedArea, `avatar-${Date.now()}.jpg`);
+      const blobUrl = URL.createObjectURL(croppedFile);
+      setAvatarPreview(blobUrl);
+      setCropImageSrc(null);
+      await uploadAvatar(croppedFile);
+      hapticSuccess();
+      URL.revokeObjectURL(blobUrl);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const finish = async () => {
@@ -338,6 +396,60 @@ export default function Onboarding() {
         </div>
 
       </div>
+
+      {/* Crop Modal */}
+      {cropImageSrc && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black">
+          <div className="flex items-center justify-between px-4 py-3 bg-black/80 backdrop-blur-sm safe-top">
+            <button
+              onClick={handleCropCancel}
+              className="flex items-center gap-1.5 text-white/80 active:text-white/50 text-sm font-medium py-2 px-1"
+            >
+              <X className="w-5 h-5" />
+              Cancel
+            </button>
+            <p className="text-white font-bold text-sm">Move and Scale</p>
+            <button
+              onClick={handleCropSave}
+              className="flex items-center gap-1.5 text-[#F0EE3A] active:text-[#F0EE3A]/50 text-sm font-bold py-2 px-1"
+            >
+              <Check className="w-5 h-5" />
+              Choose
+            </button>
+          </div>
+          <div className="relative flex-1">
+            <Cropper
+              image={cropImageSrc}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              cropShape="round"
+              showGrid={false}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={onCropComplete}
+              style={{
+                containerStyle: { background: '#000' },
+                cropAreaStyle: { border: '2px solid rgba(255,255,255,0.6)' },
+              }}
+            />
+          </div>
+          <div className="flex items-center gap-3 px-8 py-5 bg-black/80 backdrop-blur-sm safe-bottom">
+            <ZoomIn className="w-4 h-4 text-white/50 shrink-0" />
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.01}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="flex-1 h-1 appearance-none bg-white/20 rounded-full outline-none
+                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
+                [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
