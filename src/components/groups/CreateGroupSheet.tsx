@@ -353,7 +353,7 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
                 transition={{ type: 'spring', stiffness: 300, damping: 28 }}
                 onClick={() => {
                   onOpenChange(false);
-                  navigate('/friends');
+                  navigate('/social?tab=friends');
                 }}
                 className="bg-foreground text-background rounded-2xl px-5 py-2.5 text-[13px] font-bold"
               >

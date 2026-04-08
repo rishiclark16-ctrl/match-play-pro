@@ -201,7 +201,7 @@ export default function PublicProfile() {
           {friendStatus === 'pending_received' && (
             <motion.button
               whileTap={{ scale: 0.97 }}
-              onClick={() => navigate('/friends')}
+              onClick={() => navigate('/social?tab=friends')}
               className="w-full bg-[#F0EE3A] text-foreground rounded-2xl h-[48px] font-bold text-[14px] flex items-center justify-center gap-2"
             >
               <UserPlus className="w-4 h-4" />

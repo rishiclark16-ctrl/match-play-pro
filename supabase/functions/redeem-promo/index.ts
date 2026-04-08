@@ -6,6 +6,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  *
  * Validates a promo code and grants lifetime Pro access.
  * Creates/updates the subscription record with product_id = 'promo_lifetime'.
+ *
+ * Always returns 200 with { success, error? } so the client can read the body.
+ * Only returns non-200 for infrastructure failures (missing auth, rate limit).
  */
 
 const ALLOWED_ORIGINS = [
@@ -41,6 +44,13 @@ function checkRateLimit(userId: string): boolean {
   return true;
 }
 
+function jsonResponse(body: Record<string, unknown>, cors: Record<string, string>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...cors, 'Content-Type': 'application/json' },
+  });
+}
+
 serve(async (req) => {
   const cors = getCorsHeaders(req);
 
@@ -52,10 +62,7 @@ serve(async (req) => {
     // Auth
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization' }),
-        { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'Missing authorization' }, cors, 401);
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -66,18 +73,12 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid authorization' }),
-        { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'Session expired. Please close and reopen the app.' }, cors, 401);
     }
 
     // Rate limit
     if (!checkRateLimit(user.id)) {
-      return new Response(
-        JSON.stringify({ error: 'Too many attempts. Please try again later.' }),
-        { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'Too many attempts. Please try again later.' }, cors, 429);
     }
 
     // Parse body
@@ -85,25 +86,19 @@ serve(async (req) => {
     try {
       body = await req.json();
     } catch {
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON' }),
-        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'Invalid request' }, cors);
     }
 
     const code = (body.code ?? '').trim().toUpperCase();
     if (!code || code.length < 3 || code.length > 50) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid promo code' }),
-        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'Please enter a valid promo code' }, cors);
     }
 
     // Service role client for writes
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const admin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Look up promo code (case-insensitive — stored uppercase)
+    // Look up promo code
     const { data: promo, error: promoError } = await admin
       .from('promo_codes')
       .select('*')
@@ -111,35 +106,22 @@ serve(async (req) => {
       .single();
 
     if (promoError || !promo) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid promo code' }),
-        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'Invalid promo code' }, cors);
     }
 
-    // Validate promo is usable
     if (!promo.active) {
-      return new Response(
-        JSON.stringify({ error: 'This promo code is no longer active' }),
-        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'This promo code is no longer active' }, cors);
     }
 
     if (promo.current_uses >= promo.max_uses) {
-      return new Response(
-        JSON.stringify({ error: 'This promo code has reached its usage limit' }),
-        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'This promo code has reached its usage limit' }, cors);
     }
 
     if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
-      return new Response(
-        JSON.stringify({ error: 'This promo code has expired' }),
-        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'This promo code has expired' }, cors);
     }
 
-    // Check if user already redeemed this code
+    // Check if user already redeemed
     const { data: existing } = await admin
       .from('promo_redemptions')
       .select('id')
@@ -148,13 +130,10 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existing) {
-      return new Response(
-        JSON.stringify({ error: 'You have already redeemed this code' }),
-        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'You have already redeemed this code' }, cors);
     }
 
-    // Check if user already has Pro (via any method)
+    // Check if user already has Pro
     const { data: existingSub } = await admin
       .from('subscriptions')
       .select('tier, status, product_id')
@@ -162,10 +141,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existingSub?.tier === 'pro' && existingSub?.status === 'active') {
-      return new Response(
-        JSON.stringify({ error: 'You already have an active Pro subscription' }),
-        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'You already have Pro!' }, cors);
     }
 
     // ── Grant Pro access ──────────────────────────────────────────────
@@ -177,10 +153,7 @@ serve(async (req) => {
 
     if (redemptionError) {
       console.error('Failed to record redemption:', redemptionError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to redeem code' }),
-        { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'Failed to redeem code. Please try again.' }, cors);
     }
 
     // 2. Increment usage count
@@ -203,10 +176,7 @@ serve(async (req) => {
 
     if (subError) {
       console.error('Failed to create subscription:', subError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to activate Pro' }),
-        { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'Failed to activate Pro. Please try again.' }, cors);
     }
 
     // 4. Update profile tier
@@ -217,17 +187,11 @@ serve(async (req) => {
 
     console.log(`Promo redeemed: user=${user.id}, code=${code}, type=${promo.type}`);
 
-    return new Response(
-      JSON.stringify({ success: true, type: promo.type }),
-      { headers: { ...cors, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({ success: true, type: promo.type }, cors);
 
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error';
     console.error('Redeem promo error:', msg);
-    return new Response(
-      JSON.stringify({ error: msg }),
-      { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({ success: false, error: 'Something went wrong. Please try again.' }, cors);
   }
 });

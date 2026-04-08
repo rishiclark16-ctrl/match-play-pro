@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 interface PromoCodeSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess: () => void | Promise<void>;
 }
 
 export function PromoCodeSheet({ open, onOpenChange, onSuccess }: PromoCodeSheetProps) {
@@ -25,25 +25,41 @@ export function PromoCodeSheet({ open, onOpenChange, onSuccess }: PromoCodeSheet
     hapticLight();
 
     try {
+      // Refresh session first — stale tokens cause silent 401 failures
+      await supabase.auth.refreshSession();
+
       const { data, error } = await supabase.functions.invoke('redeem-promo', {
         body: { code: trimmed },
       });
 
+      // supabase.functions.invoke wraps non-2xx as FunctionsHttpError with a
+      // generic message. Try to extract the actual error from the response body.
       if (error) {
+        let msg = 'Failed to redeem code. Please try again.';
+        try {
+          // FunctionsHttpError stores the Response in .context
+          const body = await (error as any).context?.json?.();
+          if (body?.error) msg = body.error;
+        } catch {
+          // Fall through to generic message
+        }
         hapticError();
-        toast.error(error.message || 'Failed to redeem code');
+        toast.error(msg);
         return;
       }
 
-      if (data?.error) {
+      // Business logic errors returned as 200 with { success: false, error }
+      if (data && !data.success) {
         hapticError();
-        toast.error(data.error);
+        toast.error(data.error || 'Failed to redeem code');
         return;
       }
 
       hapticSuccess();
       setRedeemed(true);
-      onSuccess();
+
+      // Refresh subscription state so the app immediately reflects Pro
+      await onSuccess();
 
       setTimeout(() => {
         onOpenChange(false);

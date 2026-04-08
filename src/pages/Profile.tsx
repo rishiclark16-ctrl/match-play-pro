@@ -710,6 +710,7 @@ export default function Profile() {
                 <>
                   {([
                     { key: 'roundInvites', label: 'Round Invites', desc: "When someone adds you to a round" },
+                    { key: 'friendRequests', label: 'Friend Requests', desc: 'When someone sends or accepts a request' },
                     { key: 'friendStartedRound', label: 'Friend Playing', desc: 'When a friend starts a round you can watch' },
                     { key: 'watch_party', label: 'Watch Party', desc: 'When friends tee off — join the chat' },
                     { key: 'pressTriggered', label: 'Press Triggered', desc: 'When an auto-press fires in your round' },

@@ -705,7 +705,7 @@ export default function NewRound() {
               onHandicapModeChange={setHandicapMode}
               onAddFriend={handleAddFriend}
               onSelectGroup={handleSelectGroup}
-              onNavigateToFriends={() => navigate('/friends')}
+              onNavigateToFriends={() => navigate('/social?tab=friends')}
               onNavigateToGroups={() => navigate('/groups')}
               mixedTees={mixedTees || mixedTeesPrimitiveActive}
               roundTeeSets={roundTeeSets}

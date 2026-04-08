@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Cropper, { Area } from 'react-easy-crop';
-import { Camera, ChevronRight, Check, X, ZoomIn } from 'lucide-react';
+import { Camera, ChevronRight, Check, X, ZoomIn, Phone } from 'lucide-react';
 import { useProfile, ProfileUpdate } from '@/hooks/useProfile';
 import { HomeCourseSelector } from '@/components/profile/HomeCourseSelector';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
@@ -41,7 +41,7 @@ const TEE_OPTIONS = [
   { label: 'Red', color: 'bg-red-500' },
 ];
 
-const STEPS = ['photo', 'handicap', 'tees', 'course'] as const;
+const STEPS = ['photo', 'phone', 'handicap', 'tees', 'course'] as const;
 type OnboardingStep = typeof STEPS[number];
 
 export default function Onboarding() {
@@ -55,6 +55,7 @@ export default function Onboarding() {
   const [teePreference, setTeePreference] = useState('');
   const [homeCourseId, setHomeCourseId] = useState<string | null>(null);
   const [homeCourseName, setHomeCourseName] = useState<string | null>(null);
+  const [phone, setPhone] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -114,6 +115,7 @@ export default function Onboarding() {
     if (teePreference) updates.tee_preference = teePreference;
     if (homeCourseId) updates.home_course_id = homeCourseId;
     if (homeCourseName) updates.home_course_name = homeCourseName;
+    if (phone) updates.phone = phone;
     await updateProfile(updates);
     setSaving(false);
     navigate('/', { replace: true, state: { showTutorial: true, fromOnboarding: true } });
@@ -179,7 +181,7 @@ export default function Onboarding() {
               className="flex flex-col pt-4"
             >
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step 1 of 4
+                Step 1 of 5
               </p>
               <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
                 Add a profile photo
@@ -233,7 +235,49 @@ export default function Onboarding() {
             </motion.div>
           )}
 
-          {/* ── Step 2: Handicap ── */}
+          {/* ── Step 2: Phone ── */}
+          {step === 'phone' && (
+            <motion.div
+              key="phone"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              transition={spring}
+              className="flex flex-col pt-4"
+            >
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
+                Step 2 of 5
+              </p>
+              <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
+                What's your number?
+              </h1>
+              <p className="text-[15px] text-muted-foreground leading-relaxed mb-10">
+                Friends can find you by phone number. This won't be shared publicly.
+              </p>
+
+              <div className="bg-white rounded-2xl border-2 border-foreground/10 focus-within:border-foreground px-5 py-4 transition-colors">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Phone Number
+                </p>
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    aria-label="Phone number"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    placeholder="(555) 123-4567"
+                    autoFocus
+                    className="w-full text-[24px] font-black text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30 tabular-nums"
+                  />
+                </div>
+              </div>
+              <p className="text-[12px] text-muted-foreground mt-2 ml-1">Required — helps your group find you</p>
+            </motion.div>
+          )}
+
+          {/* ── Step 3: Handicap ── */}
           {step === 'handicap' && (
             <motion.div
               key="handicap"
@@ -244,7 +288,7 @@ export default function Onboarding() {
               className="flex flex-col pt-4"
             >
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step 2 of 4
+                Step 3 of 5
               </p>
               <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
                 What's your handicap?
@@ -286,7 +330,7 @@ export default function Onboarding() {
               className="flex flex-col pt-4"
             >
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step 3 of 4
+                Step 4 of 5
               </p>
               <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
                 Which tees do you play?
@@ -333,7 +377,7 @@ export default function Onboarding() {
               className="flex flex-col pt-4"
             >
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step 4 of 4
+                Step 5 of 5
               </p>
               <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
                 Where do you play?
@@ -372,7 +416,7 @@ export default function Onboarding() {
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={handleContinue}
-            disabled={saving || uploading}
+            disabled={saving || uploading || (step === 'phone' && !phone.trim())}
             className="flex-1 bg-foreground text-background rounded-2xl h-[54px] font-bold text-[15px] flex items-center justify-center gap-2 disabled:opacity-40"
           >
             {saving ? (

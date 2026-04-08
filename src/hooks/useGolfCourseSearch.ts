@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { HoleInfo } from '@/types/golf';
 import { supabase } from '@/integrations/supabase/client';
+import { withSpan } from '@/lib/sentry';
 
 export interface GolfCourseResult {
   id: number;
@@ -55,24 +56,25 @@ export function useGolfCourseSearch() {
     setError(null);
 
     try {
-      // Get the user's session token for authenticated edge function calls
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const data = await withSpan('golf-course-search', 'http.client', async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/golf-course-lookup?action=search&query=${encodeURIComponent(query)}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/golf-course-lookup?action=search&query=${encodeURIComponent(query)}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Search failed: ${response.status}`);
         }
-      );
 
-      if (!response.ok) {
-        throw new Error(`Search failed: ${response.status}`);
-      }
-
-      const data = await response.json();
+        return response.json();
+      });
       setSearchResults(data.courses || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Search failed');

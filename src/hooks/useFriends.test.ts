@@ -466,6 +466,7 @@ describe('useFriends', () => {
           return {
             select: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: { user_id: 'sender-123' }, error: null }),
                 or: vi.fn().mockReturnValue({
                   order: vi.fn().mockReturnValue({
                     range: vi.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
@@ -480,7 +481,11 @@ describe('useFriends', () => {
         if (table === 'profiles') {
           return {
             select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: { full_name: 'Test User' }, error: null }),
+              }),
               in: vi.fn().mockResolvedValue({ data: [], error: null }),
+              not: vi.fn().mockResolvedValue({ data: [], error: null }),
             }),
           };
         }

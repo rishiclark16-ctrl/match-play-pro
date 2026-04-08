@@ -88,7 +88,7 @@ function parseDeepLinkPath(path: string, params: URLSearchParams): string | null
   
   // Friends
   if (cleanPath === 'friends') {
-    return '/friends';
+    return '/social?tab=friends';
   }
   
   // Groups

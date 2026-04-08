@@ -100,12 +100,9 @@ export function CourseSearch({ courses, onSelectCourse, onCreateNew, onSelectApi
           )}
 
           {searchResults.length > 0 ? (
-            searchResults.map((course, index) => (
+            searchResults.map((course) => (
               <motion.button
                 key={course.id}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.04 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleApiCourseSelect(course)}
                 className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-4 py-3.5 flex items-center justify-between mb-2 cursor-pointer w-full text-left"
@@ -140,12 +137,9 @@ export function CourseSearch({ courses, onSelectCourse, onCreateNew, onSelectApi
       {activeTab === 'saved' && (
         <div>
           {filteredLocalCourses.length > 0 ? (
-            filteredLocalCourses.map((course, index) => (
+            filteredLocalCourses.map((course) => (
               <motion.button
                 key={course.id}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.04 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onSelectCourse(course)}
                 className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-4 py-3.5 flex items-center justify-between mb-2 cursor-pointer w-full text-left"

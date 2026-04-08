@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { sendPushToProfiles } from '@/lib/pushUtils';
 import {
   friendRequestRateLimiter,
   searchRateLimiter,
@@ -262,6 +263,22 @@ export function useFriends() {
 
     if (insertError) throw insertError;
 
+    // Send push notification to the recipient
+    const { data: senderProfile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .single();
+
+    const senderName = senderProfile?.full_name || 'Someone';
+    sendPushToProfiles({
+      profileIds: [profileId],
+      title: 'New Friend Request',
+      body: `${senderName} wants to be your friend`,
+      data: { type: 'friend_request', senderId: user.id },
+      type: 'friendRequests',
+    });
+
     await fetchSentRequests();
     return { success: true };
   };
@@ -380,6 +397,13 @@ export function useFriends() {
 
   const acceptFriendRequest = async (friendshipId: string): Promise<boolean> => {
     try {
+      // Get the sender's ID before updating
+      const { data: friendship } = await supabase
+        .from('friendships')
+        .select('user_id')
+        .eq('id', friendshipId)
+        .single();
+
       const { error } = await supabase
         .from('friendships')
         .update({
@@ -389,6 +413,24 @@ export function useFriends() {
         .eq('id', friendshipId);
 
       if (error) throw error;
+
+      // Notify the original sender that their request was accepted
+      if (friendship?.user_id && user) {
+        const { data: accepterProfile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+
+        const accepterName = accepterProfile?.full_name || 'Someone';
+        sendPushToProfiles({
+          profileIds: [friendship.user_id],
+          title: 'Friend Request Accepted',
+          body: `${accepterName} accepted your friend request`,
+          data: { type: 'friend_accepted', friendId: user.id },
+          type: 'friendRequests',
+        });
+      }
 
       await Promise.all([fetchFriends(), fetchPendingRequests()]);
       return true;
@@ -441,10 +483,19 @@ export function useFriends() {
 
     try {
       // Search by name OR email prefix (e.g. "rishiclark16" matches email)
+      // Normalize query for phone matching (strip formatting)
+      const phoneQuery = query.replace(/[\s\-()+ ]/g, '');
+      const isPhoneLike = /^\d{3,}$/.test(phoneQuery);
+
+      let orFilter = `full_name.ilike.%${query}%,email.ilike.${query}%`;
+      if (isPhoneLike) {
+        orFilter += `,phone.ilike.%${phoneQuery}%`;
+      }
+
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, handicap, avatar_url, friend_code, email')
-        .or(`full_name.ilike.%${query}%,email.ilike.${query}%`)
+        .select('id, full_name, handicap, avatar_url, friend_code, email, phone')
+        .or(orFilter)
         .neq('id', user.id)
         .limit(10);
 

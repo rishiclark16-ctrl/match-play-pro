@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate, useSearchParams } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthGuard } from "@/components/AuthGuard";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
@@ -11,6 +11,7 @@ import { Capacitor } from '@capacitor/core';
 import { setStatusBarDefault } from '@/lib/statusBar';
 import { useDeepLinks } from '@/hooks/useDeepLinks';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useSentryContext } from '@/hooks/useSentryContext';
 import { useProfile } from '@/hooks/useProfile';
 import NotFound from "./pages/NotFound";
 import { SplashScreen } from "@/components/ui/splash-screen";
@@ -26,7 +27,7 @@ const RoundComplete = lazy(() => import("./pages/RoundComplete"));
 const RoundDashboard = lazy(() => import("./pages/RoundDashboard"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Profile = lazy(() => import("./pages/Profile"));
-const Friends = lazy(() => import("./pages/Friends"));
+// Friends page is deprecated — /friends redirects to /social?tab=friends via FriendsRedirect below
 const Social = lazy(() => import("./pages/Social"));
 const Groups = lazy(() => import("./pages/Groups"));
 const Stats = lazy(() => import("./pages/Stats"));
@@ -61,6 +62,16 @@ function OnboardingRedirect() {
   return null;
 }
 
+// Redirect /friends → /social?tab=friends, passing through ?add= param
+function FriendsRedirect() {
+  const [searchParams] = useSearchParams();
+  const addCode = searchParams.get('add');
+  const target = addCode
+    ? `/social?tab=friends&add=${encodeURIComponent(addCode)}`
+    : '/social?tab=friends';
+  return <Navigate to={target} replace />;
+}
+
 // Inner component that uses router hooks
 function AppContent() {
   const [showSplash, setShowSplash] = useState(true);
@@ -69,6 +80,8 @@ function AppContent() {
   useDeepLinks();
   // Register for push notifications and handle taps
   usePushNotifications();
+  // Sync route + subscription tier to Sentry tags
+  useSentryContext();
 
   // Initialize native status bar styling on app start
   useEffect(() => {
@@ -198,9 +211,7 @@ function AppContent() {
           path="/friends"
           element={
             <AuthGuard>
-              <Suspense fallback={<PageSkeleton variant="list" />}>
-                <Friends />
-              </Suspense>
+              <FriendsRedirect />
             </AuthGuard>
           }
         />
