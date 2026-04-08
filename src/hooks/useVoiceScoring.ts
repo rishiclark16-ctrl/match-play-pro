@@ -111,11 +111,16 @@ export function useVoiceScoring({
     previousIsListening.current = isListening;
   }, [isListening, isProcessing]);
 
-  // In the new continuous architecture, reset() auto-starts the next
-  // recording cycle, so we just need to call resetVoice().
   const restartListeningForContinuousMode = useCallback(() => {
-    resetVoice();
-  }, [resetVoice]);
+    if (continuousVoice && isSupported) {
+      if (continuousVoiceTimeoutRef.current) {
+        clearTimeout(continuousVoiceTimeoutRef.current);
+      }
+      continuousVoiceTimeoutRef.current = setTimeout(() => {
+        startListening();
+      }, 1500);
+    }
+  }, [continuousVoice, isSupported, startListening]);
 
   // Adjust confidence based on browser's Speech API confidence score
   const adjustConfidence = useCallback((result: ParseResult): ParseResult => {

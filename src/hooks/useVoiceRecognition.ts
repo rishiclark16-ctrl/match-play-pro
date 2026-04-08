@@ -391,31 +391,18 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
   }, [isSupported, startRecordingCycle]);
 
   const stopListening = useCallback(() => {
-    // If currently recording, stop it (will trigger onstop → transcribe)
+    // Stop the recorder — this triggers onstop → transcribeBlob
+    // The mic stream stays alive until transcription completes and reset() is called
     if (isRecordingRef.current) {
       stopCurrentRecorder();
     }
-    // End the session
-    sessionActiveRef.current = false;
     setIsListening(false);
-    setInterimTranscript(null);
     clearTimers();
-    // Stop monitoring but keep stream alive briefly for final recording
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
     }
-    // Clean up stream after a short delay (let final recording process)
-    setTimeout(() => {
-      if (!sessionActiveRef.current) {
-        stopMonitoring();
-        if (mediaStreamRef.current) {
-          mediaStreamRef.current.getTracks().forEach(t => t.stop());
-          mediaStreamRef.current = null;
-        }
-      }
-    }, 500);
-  }, [stopCurrentRecorder, clearTimers, stopMonitoring]);
+  }, [stopCurrentRecorder, clearTimers]);
 
   const reset = useCallback(() => {
     setTranscript(null);
@@ -426,15 +413,18 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
     setIsProcessing(false);
     awaitingResetRef.current = false;
 
-    // Auto-start next recording cycle if session is still active
-    if (sessionActiveRef.current && mediaStreamRef.current) {
-      cycleTimerRef.current = setTimeout(() => {
-        if (sessionActiveRef.current) {
-          startRecordingCycle();
-        }
-      }, CYCLE_RESTART_MS);
+    // Single-utterance mode — don't auto-restart.
+    // Clean up the session fully.
+    if (sessionActiveRef.current) {
+      sessionActiveRef.current = false;
+      setIsListening(false);
+      stopMonitoring();
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(t => t.stop());
+        mediaStreamRef.current = null;
+      }
     }
-  }, [startRecordingCycle]);
+  }, [stopMonitoring]);
 
   return {
     isListening,
