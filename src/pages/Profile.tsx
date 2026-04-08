@@ -17,6 +17,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { useSubscription } from '@/hooks/useSubscription';
 import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { PaywallModal } from '@/components/subscription/PaywallModal';
+import { PromoCodeSheet } from '@/components/subscription/PromoCodeSheet';
 import { restorePurchases, openManagementUrl } from '@/services/purchases';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { Capacitor } from '@capacitor/core';
@@ -86,6 +87,7 @@ export default function Profile() {
   const publicFormats = myFormats.filter(f => f.isPublic);
   const [copied, setCopied] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showPromoSheet, setShowPromoSheet] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
 
   const [fullName, setFullName] = useState('');
@@ -246,8 +248,9 @@ export default function Profile() {
     );
   }
 
+  const isPromo = subscription?.product_id === 'promo_lifetime';
   const isAnnual = subscription?.product_id?.includes('annual');
-  const expiresAt = subscription?.expires_at
+  const expiresAt = subscription?.expires_at && !isPromo
     ? new Date(subscription.expires_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     : null;
 
@@ -306,7 +309,7 @@ export default function Profile() {
           )}
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={() => { hapticLight(); navigate('/friends'); }}
+            onClick={() => { hapticLight(); navigate('/social?tab=friends'); }}
             className="flex items-center gap-1.5 bg-white/10 rounded-xl px-3 py-1.5"
           >
             <Users className="w-3 h-3 text-[#F0EE3A]" />
@@ -367,7 +370,7 @@ export default function Profile() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/30 mb-1">Current Plan</p>
                 <p className="text-[22px] font-black tracking-[-0.04em] text-[#F0EE3A] leading-none">
-                  Pro {isAnnual ? 'Annual' : 'Monthly'}
+                  Pro {isPromo ? 'Lifetime' : isAnnual ? 'Annual' : 'Monthly'}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-2xl bg-[#F0EE3A] flex items-center justify-center">
@@ -417,7 +420,7 @@ export default function Profile() {
                 </div>
               ))}
             </div>
-            <div className="border-t border-white/10 pt-3 mt-4">
+            <div className="border-t border-white/10 pt-3 mt-4 flex items-center justify-between">
               <button
                 onClick={handleRestorePurchases}
                 disabled={isRestoring}
@@ -425,6 +428,12 @@ export default function Profile() {
               >
                 {isRestoring && <Loader2 className="w-3 h-3 animate-spin" />}
                 Restore Purchases
+              </button>
+              <button
+                onClick={() => { hapticLight(); setShowPromoSheet(true); }}
+                className="text-[12px] font-bold text-white/30"
+              >
+                Have a promo code?
               </button>
             </div>
           </motion.div>
@@ -804,6 +813,7 @@ export default function Profile() {
       )}
 
       <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} feature="Pro" />
+      <PromoCodeSheet open={showPromoSheet} onOpenChange={setShowPromoSheet} onSuccess={refreshSubscription} />
     </AppLayout>
   );
 }

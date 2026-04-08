@@ -185,23 +185,14 @@ function SectionLabel({ children, live }: { children: React.ReactNode; live?: bo
   );
 }
 
-// ─── Animated Logo ────────────────────────────────────────────────────────────
+// ─── App Logo ─────────────────────────────────────────────────────────────────
 function AnimatedLogo() {
   return (
-    <div className="w-10 h-10 rounded-[12px] bg-foreground flex items-center justify-center flex-shrink-0">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" overflow="visible">
-        {/* Stick */}
-        <line x1="7" y1="2.5" x2="7" y2="20" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-        {/* Animated flag pennant */}
-        <motion.polygon
-          points="7,2.5 17,6.5 7,10.5"
-          fill="#F0EE3A"
-          style={{ transformOrigin: '7px 6.5px' }}
-          animate={{ scaleX: [1, 0.82, 1], skewY: [0, 4, 0] }}
-          transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      </svg>
-    </div>
+    <img
+      src="/app-icon.png"
+      alt="MATCH"
+      className="w-10 h-10 rounded-[12px] flex-shrink-0"
+    />
   );
 }
 

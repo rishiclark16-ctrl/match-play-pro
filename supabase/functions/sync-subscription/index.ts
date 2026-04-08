@@ -334,57 +334,73 @@ serve(async (req) => {
     const adminSupabase = createClient(supabaseUrl, supabaseServiceKey);
 
     if (isPro) {
-      // Upsert subscription record
-      const { error: upsertError } = await adminSupabase
+      // Check if user already has a promo lifetime subscription — don't overwrite it
+      const { data: existingPro } = await adminSupabase
         .from('subscriptions')
-        .upsert({
-          user_id: user.id,
-          status: 'active',
-          tier: 'pro',
-          product_id: activeSubscription,
-          expires_at: expirationDate,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id',
-        });
+        .select('product_id')
+        .eq('user_id', user.id)
+        .single();
 
-      if (upsertError) {
-        console.error('Error upserting subscription:', upsertError);
-        throw upsertError;
+      if (existingPro?.product_id === 'promo_lifetime') {
+        console.log(`Skipping upsert for promo_lifetime user ${user.id}`);
+      } else {
+        // Upsert subscription record
+        const { error: upsertError } = await adminSupabase
+          .from('subscriptions')
+          .upsert({
+            user_id: user.id,
+            status: 'active',
+            tier: 'pro',
+            product_id: activeSubscription,
+            expires_at: expirationDate,
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'user_id',
+          });
+
+        if (upsertError) {
+          console.error('Error upserting subscription:', upsertError);
+          throw upsertError;
+        }
+
+        // Update profile
+        await adminSupabase
+          .from('profiles')
+          .update({ subscription_tier: 'pro' })
+          .eq('id', user.id);
+
+        console.log(`Subscription synced as Pro for user ${user.id}`);
       }
-
-      // Update profile
-      await adminSupabase
-        .from('profiles')
-        .update({ subscription_tier: 'pro' })
-        .eq('id', user.id);
-
-      console.log(`Subscription synced as Pro for user ${user.id}`);
     } else {
       // Check if user has existing subscription and downgrade if needed
       const { data: existing } = await adminSupabase
         .from('subscriptions')
-        .select('id, tier')
+        .select('id, tier, product_id')
         .eq('user_id', user.id)
         .single();
 
       if (existing && existing.tier === 'pro') {
-        // Downgrade to free
-        await adminSupabase
-          .from('subscriptions')
-          .update({
-            status: 'expired',
-            tier: 'free',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('user_id', user.id);
+        // Never downgrade promo lifetime subscriptions
+        if (existing.product_id === 'promo_lifetime') {
+          console.log(`Skipping downgrade for promo_lifetime user ${user.id}`);
+        } else {
+          // Downgrade to free
+          await adminSupabase
+            .from('subscriptions')
+            .update({
+              status: 'expired',
+              tier: 'free',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('user_id', user.id);
 
-        await adminSupabase
-          .from('profiles')
-          .update({ subscription_tier: 'free' })
-          .eq('id', user.id);
+          await adminSupabase
+            .from('profiles')
+            .update({ subscription_tier: 'free' })
+            .eq('id', user.id);
 
-        console.log(`Subscription synced as Free for user ${user.id}`);
+          console.log(`Subscription synced as Free for user ${user.id}`);
+        }
       }
     }
 
