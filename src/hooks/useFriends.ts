@@ -432,7 +432,7 @@ export function useFriends() {
     }
   };
 
-  const searchByName = async (query: string): Promise<SearchResult[]> => {
+  const searchByName = useCallback(async (query: string): Promise<SearchResult[]> => {
     if (!query || query.length < 2) return [];
     if (!user) return [];
 
@@ -459,19 +459,14 @@ export function useFriends() {
     } catch {
       return [];
     }
-  };
+  }, [user]);
 
-  const searchByCode = async (code: string): Promise<SearchResult | null> => {
+  const searchByCode = useCallback(async (code: string): Promise<SearchResult | null> => {
     if (!code || code.length < 3) return null;
     if (!user) return null;
 
-    // Check rate limit for search operations
     const rateLimitResult = searchRateLimiter.checkAndRecord(user.id);
-    if (!rateLimitResult.allowed) {
-      // For search, we silently fail to avoid disrupting UX
-      // The rate limit will reset automatically
-      return null;
-    }
+    if (!rateLimitResult.allowed) return null;
 
     try {
       const { data, error } = await supabase
@@ -492,7 +487,7 @@ export function useFriends() {
     } catch {
       return null;
     }
-  };
+  }, [user]);
 
   return {
     friends,
