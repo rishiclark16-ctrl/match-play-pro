@@ -212,9 +212,9 @@ export function AvatarUpload({
 
       {/* Crop Modal */}
       {cropImageSrc && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-black/80 backdrop-blur-sm safe-top">
+          <div className="flex items-center justify-between px-4 py-3 bg-black/80 backdrop-blur-sm pt-safe-content">
             <button
               onClick={handleCropCancel}
               className="flex items-center gap-1.5 text-white/80 active:text-white/50 text-sm font-medium py-2 px-1"
@@ -239,7 +239,7 @@ export function AvatarUpload({
               crop={crop}
               zoom={zoom}
               aspect={1}
-              cropShape="round"
+              cropShape="rect"
               showGrid={false}
               onCropChange={setCrop}
               onZoomChange={setZoom}
@@ -247,6 +247,7 @@ export function AvatarUpload({
               style={{
                 containerStyle: { background: '#000' },
                 cropAreaStyle: {
+                  borderRadius: '20px',
                   border: '2px solid rgba(255,255,255,0.6)',
                 },
               }}
@@ -254,7 +255,7 @@ export function AvatarUpload({
           </div>
 
           {/* Zoom slider */}
-          <div className="flex items-center gap-3 px-8 py-5 bg-black/80 backdrop-blur-sm safe-bottom">
+          <div className="flex items-center gap-3 px-8 py-5 pb-10 bg-black/80 backdrop-blur-sm">
             <ZoomIn className="w-4 h-4 text-white/50 shrink-0" />
             <input
               type="range"
