@@ -22,12 +22,19 @@ interface UseVoiceRecognitionReturn {
   reset: () => void;
 }
 
-/** Silence threshold — stop recording after this much quiet (ms) */
-const SILENCE_TIMEOUT_MS = 1800;
-/** Audio level below this = silence */
-const SILENCE_THRESHOLD = 0.02;
-/** Max recording duration (ms) — safety cap */
-const MAX_RECORDING_MS = 15000;
+/** Audio level above this = speech */
+const SPEECH_THRESHOLD = 0.025;
+/** Silence duration after speech to trigger transcription (ms) */
+const SILENCE_AFTER_SPEECH_MS = 1400;
+/** Max single utterance recording (ms) */
+const MAX_UTTERANCE_MS = 10000;
+/**
+ * If AnalyserNode never reports audio (iOS Capacitor), auto-stop
+ * recording after this many ms regardless.
+ */
+const IOS_FALLBACK_MS = 4000;
+/** Delay before starting next VAD cycle after processing (ms) */
+const CYCLE_RESTART_MS = 300;
 
 function isIOS(): boolean {
   if (typeof navigator === 'undefined') return false;
@@ -35,6 +42,16 @@ function isIOS(): boolean {
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
+/**
+ * Continuous voice recognition hook.
+ *
+ * Flow: press mic → mic stays hot → VAD detects speech → records utterance →
+ * silence detected → transcribes via Deepgram → sets transcript → consumer
+ * processes & calls reset() → next VAD cycle starts automatically.
+ *
+ * The mic stream stays open the entire time. Each natural pause between
+ * phrases ("Rishi 5" ... "Jake 6") triggers a separate transcription.
+ */
 export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): UseVoiceRecognitionReturn {
   const { playerNames = [] } = options;
   const playerNamesRef = useRef(playerNames);
@@ -50,258 +67,315 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
   const [isNoisy, setIsNoisy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Refs — mic stream is kept open across recording cycles
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number | null>(null);
-  const noiseSamplesRef = useRef<number[]>([]);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const maxTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const speechDetectedRef = useRef(false);
-  const isListeningRef = useRef(false);
-  const mimeTypeRef = useRef(getPreferredMimeType());
+  const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const cycleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const noiseSamplesRef = useRef<number[]>([]);
 
+  /** true while the mic session is active (across multiple recording cycles) */
+  const sessionActiveRef = useRef(false);
+  /** true while a MediaRecorder is actively capturing audio */
+  const isRecordingRef = useRef(false);
+  /** true once the AnalyserNode has reported at least one non-zero level */
+  const analyserWorkingRef = useRef(false);
+  /** true once speech was detected in the current recording */
+  const speechDetectedRef = useRef(false);
+  /** true while we're waiting for the consumer to call reset() */
+  const awaitingResetRef = useRef(false);
+
+  const mimeType = useRef(getPreferredMimeType()).current;
   const isSupported = isVoiceSupported();
 
-  // Audio level monitoring via AnalyserNode — same approach as before
-  const startAudioMonitoring = useCallback((stream: MediaStream) => {
-    try {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!AudioCtx) return;
+  // ── Timers ──────────────────────────────────────────────────────────
 
-      const ctx = new AudioCtx();
-      audioContextRef.current = ctx;
-
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.8;
-      analyserRef.current = analyser;
-
-      const source = ctx.createMediaStreamSource(stream);
-      source.connect(analyser);
-
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-      noiseSamplesRef.current = [];
-
-      const updateLevel = () => {
-        if (!analyserRef.current) return;
-        analyserRef.current.getByteFrequencyData(dataArray);
-
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-          const normalized = dataArray[i] / 255;
-          sum += normalized * normalized;
-        }
-        const rms = Math.sqrt(sum / dataArray.length);
-        const level = Math.min(1, rms * 3);
-
-        setAudioLevel(level);
-
-        // Detect speech activity for auto-stop
-        if (level > SILENCE_THRESHOLD) {
-          speechDetectedRef.current = true;
-          // Clear silence timer when speech detected
-          if (silenceTimerRef.current) {
-            clearTimeout(silenceTimerRef.current);
-            silenceTimerRef.current = null;
-          }
-        } else if (speechDetectedRef.current && !silenceTimerRef.current && isListeningRef.current) {
-          // Speech was detected but now it's quiet — start silence timer
-          silenceTimerRef.current = setTimeout(() => {
-            if (isListeningRef.current) {
-              stopRecording();
-            }
-          }, SILENCE_TIMEOUT_MS);
-        }
-
-        // Collect noise samples for first ~500ms
-        if (noiseSamplesRef.current.length < 15) {
-          noiseSamplesRef.current.push(rms);
-          if (noiseSamplesRef.current.length === 15) {
-            const avgNoise = noiseSamplesRef.current.reduce((a, b) => a + b, 0) / 15;
-            setIsNoisy(avgNoise > 0.1);
-          }
-        }
-
-        animFrameRef.current = requestAnimationFrame(updateLevel);
-      };
-
-      animFrameRef.current = requestAnimationFrame(updateLevel);
-    } catch {
-      // Audio monitoring is optional
+  const clearTimers = useCallback(() => {
+    for (const ref of [silenceTimerRef, maxTimerRef, fallbackTimerRef, cycleTimerRef]) {
+      if (ref.current) { clearTimeout(ref.current); ref.current = null; }
     }
   }, []);
 
-  const stopAudioMonitoring = useCallback(() => {
-    if (animFrameRef.current) {
-      cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = null;
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close().catch(() => {});
-      audioContextRef.current = null;
-    }
+  // ── Audio monitoring ────────────────────────────────────────────────
+
+  const stopMonitoring = useCallback(() => {
+    if (animFrameRef.current) { cancelAnimationFrame(animFrameRef.current); animFrameRef.current = null; }
+    if (audioContextRef.current) { audioContextRef.current.close().catch(() => {}); audioContextRef.current = null; }
     analyserRef.current = null;
     setAudioLevel(0);
     setIsNoisy(false);
   }, []);
 
-  const cleanup = useCallback(() => {
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = null;
-    }
-    if (maxTimerRef.current) {
-      clearTimeout(maxTimerRef.current);
-      maxTimerRef.current = null;
-    }
-    if (recorderRef.current && recorderRef.current.state !== 'inactive') {
-      recorderRef.current.stop();
-    }
-    recorderRef.current = null;
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(t => t.stop());
-      mediaStreamRef.current = null;
-    }
-    stopAudioMonitoring();
-    speechDetectedRef.current = false;
-    isListeningRef.current = false;
-  }, [stopAudioMonitoring]);
+  // ── Stop the current recorder without killing the mic stream ────────
 
-  // Cleanup on unmount
-  useEffect(() => cleanup, [cleanup]);
-
-  const stopRecording = useCallback(() => {
+  const stopCurrentRecorder = useCallback(() => {
     if (recorderRef.current && recorderRef.current.state === 'recording') {
       recorderRef.current.stop();
     }
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = null;
-    }
-    if (maxTimerRef.current) {
-      clearTimeout(maxTimerRef.current);
-      maxTimerRef.current = null;
-    }
+    if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
+    if (maxTimerRef.current) { clearTimeout(maxTimerRef.current); maxTimerRef.current = null; }
+    if (fallbackTimerRef.current) { clearTimeout(fallbackTimerRef.current); fallbackTimerRef.current = null; }
+    isRecordingRef.current = false;
   }, []);
 
-  const processRecording = useCallback(async (blob: Blob) => {
-    setIsListening(false);
-    isListeningRef.current = false;
-    setIsProcessing(true);
-    setInterimTranscript('Processing...');
+  // ── Full cleanup — kills mic stream, monitoring, everything ─────────
 
-    // Stop mic and monitoring
+  const fullCleanup = useCallback(() => {
+    clearTimers();
+    if (recorderRef.current && recorderRef.current.state !== 'inactive') {
+      try { recorderRef.current.stop(); } catch { /* already stopped */ }
+    }
+    recorderRef.current = null;
+    stopMonitoring();
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach(t => t.stop());
       mediaStreamRef.current = null;
     }
-    stopAudioMonitoring();
+    sessionActiveRef.current = false;
+    isRecordingRef.current = false;
+    speechDetectedRef.current = false;
+    awaitingResetRef.current = false;
+    analyserWorkingRef.current = false;
+  }, [clearTimers, stopMonitoring]);
+
+  useEffect(() => fullCleanup, [fullCleanup]);
+
+  // ── Transcribe a recorded blob ──────────────────────────────────────
+
+  const transcribeBlob = useCallback(async (blob: Blob) => {
+    setIsProcessing(true);
+    setInterimTranscript('Processing...');
+    awaitingResetRef.current = true;
 
     try {
-      if (blob.size < 100) {
-        setError('No speech detected. Tap and try again.');
+      console.log('[Voice] Sending blob to Deepgram, size:', blob.size, 'type:', blob.type);
+
+      if (blob.size < 200) {
+        console.log('[Voice] Blob too small, skipping');
+        // Don't show error — just restart the cycle silently
         setIsProcessing(false);
         setInterimTranscript(null);
+        awaitingResetRef.current = false;
         return;
       }
 
       const result = await transcribeAudio(blob, playerNamesRef.current);
+      console.log('[Voice] Result:', JSON.stringify(result));
 
       setInterimTranscript(null);
 
       if (!result.transcript) {
-        setError('No speech detected. Tap and try again.');
+        // Empty transcript — restart cycle, no error
         setIsProcessing(false);
+        awaitingResetRef.current = false;
         return;
       }
 
+      // Set transcript — the consumer (useVoiceScoring) will process it
+      // and call reset(), which starts the next cycle
       setTranscript(result.transcript);
       setAlternatives(result.alternatives);
       setBrowserConfidence(result.confidence);
-      setIsProcessing(true); // stays true until consumer calls reset
     } catch (err) {
+      console.error('[Voice] Transcription error:', err);
       setInterimTranscript(null);
+      setIsProcessing(false);
+      awaitingResetRef.current = false;
+
       const message = err instanceof Error ? err.message : 'Transcription failed';
       if (message.includes('Not authenticated')) {
         setError('Please sign in to use voice scoring.');
       } else if (message.includes('Rate limit')) {
         setError('Too many voice requests. Try again in a few minutes.');
       } else {
-        setError('Voice transcription failed. Check your connection and try again.');
+        setError('Voice transcription failed. Check your connection.');
       }
-      setIsProcessing(false);
     }
-  }, [stopAudioMonitoring]);
+  }, []);
+
+  // ── Start a single recording cycle (VAD → record → silence → transcribe) ──
+
+  const startRecordingCycle = useCallback(() => {
+    const stream = mediaStreamRef.current;
+    if (!stream || !sessionActiveRef.current) return;
+
+    // Set up AnalyserNode if not already running
+    if (!analyserRef.current) {
+      try {
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          audioContextRef.current = ctx;
+          const analyser = ctx.createAnalyser();
+          analyser.fftSize = 256;
+          analyser.smoothingTimeConstant = 0.8;
+          analyserRef.current = analyser;
+          ctx.createMediaStreamSource(stream).connect(analyser);
+        }
+      } catch {
+        // Will use fallback timer
+      }
+    }
+
+    // Reset per-cycle state
+    speechDetectedRef.current = false;
+    isRecordingRef.current = false;
+    chunksRef.current = [];
+    noiseSamplesRef.current = [];
+    analyserWorkingRef.current = false;
+
+    // Create recorder (but don't start yet — wait for speech)
+    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    recorderRef.current = recorder;
+
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunksRef.current.push(e.data);
+    };
+
+    recorder.onstop = () => {
+      isRecordingRef.current = false;
+      const chunks = chunksRef.current;
+      chunksRef.current = [];
+
+      if (chunks.length > 0 && sessionActiveRef.current) {
+        const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
+        transcribeBlob(blob);
+      }
+    };
+
+    recorder.onerror = () => {
+      isRecordingRef.current = false;
+      // Silently restart cycle
+      if (sessionActiveRef.current) {
+        cycleTimerRef.current = setTimeout(() => startRecordingCycle(), CYCLE_RESTART_MS);
+      }
+    };
+
+    // Start recording immediately — don't wait for VAD on iOS since
+    // AnalyserNode often doesn't work. The user pressed the mic button,
+    // they're about to speak.
+    recorder.start();
+    isRecordingRef.current = true;
+    setInterimTranscript('Listening...');
+
+    // iOS fallback: if analyser never reports audio, stop after fixed duration
+    fallbackTimerRef.current = setTimeout(() => {
+      if (isRecordingRef.current && !analyserWorkingRef.current && sessionActiveRef.current) {
+        console.log('[Voice] iOS fallback — stopping recording');
+        stopCurrentRecorder();
+      }
+    }, IOS_FALLBACK_MS);
+
+    // Absolute max recording cap
+    maxTimerRef.current = setTimeout(() => {
+      if (isRecordingRef.current) {
+        console.log('[Voice] Max duration — stopping recording');
+        stopCurrentRecorder();
+      }
+    }, MAX_UTTERANCE_MS);
+
+    // VAD loop — monitor for silence after speech
+    const analyser = analyserRef.current;
+    if (analyser) {
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      const vadLoop = () => {
+        if (!sessionActiveRef.current || !analyserRef.current) return;
+        analyserRef.current.getByteFrequencyData(dataArray);
+
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          const n = dataArray[i] / 255;
+          sum += n * n;
+        }
+        const rms = Math.sqrt(sum / dataArray.length);
+        const level = Math.min(1, rms * 3);
+
+        setAudioLevel(level);
+
+        // Track if analyser is actually working (reports non-zero)
+        if (level > 0.001) {
+          analyserWorkingRef.current = true;
+        }
+
+        // Noise detection (first ~500ms)
+        if (noiseSamplesRef.current.length < 15) {
+          noiseSamplesRef.current.push(rms);
+          if (noiseSamplesRef.current.length === 15) {
+            const avg = noiseSamplesRef.current.reduce((a, b) => a + b, 0) / 15;
+            setIsNoisy(avg > 0.1);
+          }
+        }
+
+        if (level > SPEECH_THRESHOLD) {
+          speechDetectedRef.current = true;
+          // Cancel fallback timer — analyser is working and speech detected
+          if (fallbackTimerRef.current) {
+            clearTimeout(fallbackTimerRef.current);
+            fallbackTimerRef.current = null;
+          }
+          // Clear silence timer — still speaking
+          if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+          }
+        } else if (speechDetectedRef.current && !silenceTimerRef.current && isRecordingRef.current) {
+          // Speech ended — start silence timer
+          silenceTimerRef.current = setTimeout(() => {
+            if (isRecordingRef.current && sessionActiveRef.current) {
+              console.log('[Voice] Silence detected — stopping recording');
+              stopCurrentRecorder();
+            }
+          }, SILENCE_AFTER_SPEECH_MS);
+        }
+
+        animFrameRef.current = requestAnimationFrame(vadLoop);
+      };
+
+      animFrameRef.current = requestAnimationFrame(vadLoop);
+    }
+  }, [mimeType, transcribeBlob, stopCurrentRecorder]);
+
+  // ── Public API ──────────────────────────────────────────────────────
 
   const startListening = useCallback(() => {
     if (!isSupported) {
       setError('Voice recording not supported on this device.');
       return;
     }
-
     if (!navigator.onLine) {
       setError('Voice scoring requires an internet connection.');
       return;
     }
 
+    // Reset state
     setError(null);
     setTranscript(null);
     setInterimTranscript(null);
     setAlternatives([]);
     setBrowserConfidence(null);
     setIsProcessing(false);
-    chunksRef.current = [];
-    speechDetectedRef.current = false;
+    awaitingResetRef.current = false;
+
+    // If session is already active, just restart a cycle
+    if (sessionActiveRef.current && mediaStreamRef.current) {
+      startRecordingCycle();
+      setIsListening(true);
+      return;
+    }
 
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then((stream) => {
         mediaStreamRef.current = stream;
-        startAudioMonitoring(stream);
-
-        const mimeType = mimeTypeRef.current;
-        const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-        recorderRef.current = recorder;
-
-        recorder.ondataavailable = (e) => {
-          if (e.data.size > 0) {
-            chunksRef.current.push(e.data);
-          }
-        };
-
-        recorder.onstop = () => {
-          const chunks = chunksRef.current;
-          chunksRef.current = [];
-          if (chunks.length > 0) {
-            const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
-            processRecording(blob);
-          } else {
-            setIsListening(false);
-            isListeningRef.current = false;
-            setIsProcessing(false);
-          }
-        };
-
-        recorder.onerror = () => {
-          setError('Recording failed. Try again.');
-          cleanup();
-          setIsListening(false);
-          setIsProcessing(false);
-        };
-
-        recorder.start();
+        sessionActiveRef.current = true;
         setIsListening(true);
-        isListeningRef.current = true;
-        setInterimTranscript('Listening...');
-
-        // Safety timeout — stop after max duration
-        maxTimerRef.current = setTimeout(() => {
-          if (isListeningRef.current) {
-            stopRecording();
-          }
-        }, MAX_RECORDING_MS);
+        startRecordingCycle();
       })
       .catch((err) => {
         if (err instanceof DOMException && err.name === 'NotAllowedError') {
@@ -314,11 +388,34 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
           setError('Could not access microphone. Please check your device.');
         }
       });
-  }, [isSupported, startAudioMonitoring, processRecording, stopRecording, cleanup]);
+  }, [isSupported, startRecordingCycle]);
 
   const stopListening = useCallback(() => {
-    stopRecording();
-  }, [stopRecording]);
+    // If currently recording, stop it (will trigger onstop → transcribe)
+    if (isRecordingRef.current) {
+      stopCurrentRecorder();
+    }
+    // End the session
+    sessionActiveRef.current = false;
+    setIsListening(false);
+    setInterimTranscript(null);
+    clearTimers();
+    // Stop monitoring but keep stream alive briefly for final recording
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    // Clean up stream after a short delay (let final recording process)
+    setTimeout(() => {
+      if (!sessionActiveRef.current) {
+        stopMonitoring();
+        if (mediaStreamRef.current) {
+          mediaStreamRef.current.getTracks().forEach(t => t.stop());
+          mediaStreamRef.current = null;
+        }
+      }
+    }, 500);
+  }, [stopCurrentRecorder, clearTimers, stopMonitoring]);
 
   const reset = useCallback(() => {
     setTranscript(null);
@@ -327,7 +424,17 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
     setBrowserConfidence(null);
     setError(null);
     setIsProcessing(false);
-  }, []);
+    awaitingResetRef.current = false;
+
+    // Auto-start next recording cycle if session is still active
+    if (sessionActiveRef.current && mediaStreamRef.current) {
+      cycleTimerRef.current = setTimeout(() => {
+        if (sessionActiveRef.current) {
+          startRecordingCycle();
+        }
+      }, CYCLE_RESTART_MS);
+    }
+  }, [startRecordingCycle]);
 
   return {
     isListening,

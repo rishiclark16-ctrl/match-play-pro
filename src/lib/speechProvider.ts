@@ -60,22 +60,23 @@ export async function transcribeAudio(
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-  const response = await fetch(
-    `${supabaseUrl}/functions/v1/speech-to-text`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-        'Content-Type': audioBlob.type || 'audio/webm;codecs=opus',
-        'X-Player-Names': playerNames.join(','),
-        'apikey': apiKey,
-      },
-      body: audioBlob,
+  const url = `${supabaseUrl}/functions/v1/speech-to-text`;
+  console.log('[SpeechProvider] POST', url, 'blob:', audioBlob.size, 'bytes, type:', audioBlob.type, 'players:', playerNames);
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': audioBlob.type || 'audio/webm;codecs=opus',
+      'X-Player-Names': playerNames.join(','),
+      'apikey': apiKey,
     },
-  );
+    body: audioBlob,
+  });
 
   if (!response.ok) {
     const errorBody = await response.text();
+    console.error('[SpeechProvider] Error response:', response.status, errorBody);
     let message = 'Transcription failed';
     try {
       const parsed = JSON.parse(errorBody);
@@ -86,5 +87,7 @@ export async function transcribeAudio(
     throw new Error(message);
   }
 
-  return response.json();
+  const result = await response.json();
+  console.log('[SpeechProvider] Success:', result);
+  return result;
 }
