@@ -97,7 +97,9 @@ export function useVoiceScoring({
     isNoisy,
     error: voiceError,
     reset: resetVoice,
-  } = useVoiceRecognition();
+  } = useVoiceRecognition({
+    playerNames: players.map(p => p.name),
+  });
 
   // Track listening state changes for audio feedback
   useEffect(() => {

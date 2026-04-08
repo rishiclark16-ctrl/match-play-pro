@@ -320,6 +320,7 @@ export default function Scorecard() {
       handleVoicePress();
     }, [handleVoicePress]),
     enabled: settings.handsFreeVoice && !isListening && !showVoiceModal,
+    playerNames: playersWithScores.map(p => p.name),
   });
 
   // Handle quick score from +/- buttons

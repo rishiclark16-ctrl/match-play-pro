@@ -1,11 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import '@/types/speech.d.ts';
+import { transcribeAudio, getPreferredMimeType, isVoiceSupported } from '@/lib/speechProvider';
 
 interface UseVoiceRecognitionOptions {
-  /** Enable continuous listening — fires onTranscript for each finalized phrase. Default: false */
-  continuous?: boolean;
-  /** Callback for each finalized transcript in continuous mode */
-  onTranscript?: (transcript: string) => void;
+  /** Player names to bias the speech model toward (Deepgram keyterm prompting) */
+  playerNames?: string[];
 }
 
 interface UseVoiceRecognitionReturn {
@@ -24,22 +22,24 @@ interface UseVoiceRecognitionReturn {
   reset: () => void;
 }
 
+/** Silence threshold — stop recording after this much quiet (ms) */
+const SILENCE_TIMEOUT_MS = 1800;
+/** Audio level below this = silence */
+const SILENCE_THRESHOLD = 0.02;
+/** Max recording duration (ms) — safety cap */
+const MAX_RECORDING_MS = 15000;
+
 function isIOS(): boolean {
   if (typeof navigator === 'undefined') return false;
   return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
-function shouldRequestMicBeforeStart(): boolean {
-  return !isIOS() &&
-    typeof navigator !== 'undefined' &&
-    !!navigator.mediaDevices?.getUserMedia;
-}
-
 export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): UseVoiceRecognitionReturn {
-  const { continuous = false, onTranscript } = options;
-  const onTranscriptRef = useRef(onTranscript);
-  onTranscriptRef.current = onTranscript;
+  const { playerNames = [] } = options;
+  const playerNamesRef = useRef(playerNames);
+  playerNamesRef.current = playerNames;
+
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState<string | null>(null);
@@ -50,24 +50,25 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
   const [isNoisy, setIsNoisy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const resultReceivedRef = useRef(false);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const noiseSamplesRef = useRef<number[]>([]);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const maxTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const speechDetectedRef = useRef(false);
+  const isListeningRef = useRef(false);
+  const mimeTypeRef = useRef(getPreferredMimeType());
 
-  const isSupported = typeof window !== 'undefined' &&
-    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+  const isSupported = isVoiceSupported();
 
-  // Audio level monitoring via AnalyserNode
-  const startAudioMonitoring = useCallback(async () => {
+  // Audio level monitoring via AnalyserNode — same approach as before
+  const startAudioMonitoring = useCallback((stream: MediaStream) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaStreamRef.current = stream;
-
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (!AudioCtx) return;
 
       const ctx = new AudioCtx();
@@ -98,6 +99,23 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
 
         setAudioLevel(level);
 
+        // Detect speech activity for auto-stop
+        if (level > SILENCE_THRESHOLD) {
+          speechDetectedRef.current = true;
+          // Clear silence timer when speech detected
+          if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+          }
+        } else if (speechDetectedRef.current && !silenceTimerRef.current && isListeningRef.current) {
+          // Speech was detected but now it's quiet — start silence timer
+          silenceTimerRef.current = setTimeout(() => {
+            if (isListeningRef.current) {
+              stopRecording();
+            }
+          }, SILENCE_TIMEOUT_MS);
+        }
+
         // Collect noise samples for first ~500ms
         if (noiseSamplesRef.current.length < 15) {
           noiseSamplesRef.current.push(rms);
@@ -112,7 +130,7 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
 
       animFrameRef.current = requestAnimationFrame(updateLevel);
     } catch {
-      // Audio monitoring is optional — continue without it
+      // Audio monitoring is optional
     }
   }, []);
 
@@ -125,30 +143,108 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
       audioContextRef.current.close().catch(() => {});
       audioContextRef.current = null;
     }
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(t => t.stop());
-      mediaStreamRef.current = null;
-    }
     analyserRef.current = null;
     setAudioLevel(0);
     setIsNoisy(false);
   }, []);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-        recognitionRef.current = null;
-      }
-      stopAudioMonitoring();
-    };
+  const cleanup = useCallback(() => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    if (maxTimerRef.current) {
+      clearTimeout(maxTimerRef.current);
+      maxTimerRef.current = null;
+    }
+    if (recorderRef.current && recorderRef.current.state !== 'inactive') {
+      recorderRef.current.stop();
+    }
+    recorderRef.current = null;
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(t => t.stop());
+      mediaStreamRef.current = null;
+    }
+    stopAudioMonitoring();
+    speechDetectedRef.current = false;
+    isListeningRef.current = false;
   }, [stopAudioMonitoring]);
 
-  const initRecognition = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.abort();
-      recognitionRef.current = null;
+  // Cleanup on unmount
+  useEffect(() => cleanup, [cleanup]);
+
+  const stopRecording = useCallback(() => {
+    if (recorderRef.current && recorderRef.current.state === 'recording') {
+      recorderRef.current.stop();
+    }
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    if (maxTimerRef.current) {
+      clearTimeout(maxTimerRef.current);
+      maxTimerRef.current = null;
+    }
+  }, []);
+
+  const processRecording = useCallback(async (blob: Blob) => {
+    setIsListening(false);
+    isListeningRef.current = false;
+    setIsProcessing(true);
+    setInterimTranscript('Processing...');
+
+    // Stop mic and monitoring
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(t => t.stop());
+      mediaStreamRef.current = null;
+    }
+    stopAudioMonitoring();
+
+    try {
+      if (blob.size < 100) {
+        setError('No speech detected. Tap and try again.');
+        setIsProcessing(false);
+        setInterimTranscript(null);
+        return;
+      }
+
+      const result = await transcribeAudio(blob, playerNamesRef.current);
+
+      setInterimTranscript(null);
+
+      if (!result.transcript) {
+        setError('No speech detected. Tap and try again.');
+        setIsProcessing(false);
+        return;
+      }
+
+      setTranscript(result.transcript);
+      setAlternatives(result.alternatives);
+      setBrowserConfidence(result.confidence);
+      setIsProcessing(true); // stays true until consumer calls reset
+    } catch (err) {
+      setInterimTranscript(null);
+      const message = err instanceof Error ? err.message : 'Transcription failed';
+      if (message.includes('Not authenticated')) {
+        setError('Please sign in to use voice scoring.');
+      } else if (message.includes('Rate limit')) {
+        setError('Too many voice requests. Try again in a few minutes.');
+      } else {
+        setError('Voice transcription failed. Check your connection and try again.');
+      }
+      setIsProcessing(false);
+    }
+  }, [stopAudioMonitoring]);
+
+  const startListening = useCallback(() => {
+    if (!isSupported) {
+      setError('Voice recording not supported on this device.');
+      return;
+    }
+
+    if (!navigator.onLine) {
+      setError('Voice scoring requires an internet connection.');
+      return;
     }
 
     setError(null);
@@ -157,164 +253,72 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
     setAlternatives([]);
     setBrowserConfidence(null);
     setIsProcessing(false);
-    resultReceivedRef.current = false;
+    chunksRef.current = [];
+    speechDetectedRef.current = false;
 
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognitionAPI();
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then((stream) => {
+        mediaStreamRef.current = stream;
+        startAudioMonitoring(stream);
 
-    recognition.continuous = continuous;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-    recognition.maxAlternatives = 3;
+        const mimeType = mimeTypeRef.current;
+        const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+        recorderRef.current = recorder;
 
-    recognition.onstart = () => {
-      setIsListening(true);
-      setError(null);
-      resultReceivedRef.current = false;
-    };
+        recorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            chunksRef.current.push(e.data);
+          }
+        };
 
-    recognition.onresult = (event) => {
-      const result = event.results[event.resultIndex];
+        recorder.onstop = () => {
+          const chunks = chunksRef.current;
+          chunksRef.current = [];
+          if (chunks.length > 0) {
+            const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
+            processRecording(blob);
+          } else {
+            setIsListening(false);
+            isListeningRef.current = false;
+            setIsProcessing(false);
+          }
+        };
 
-      if (!result.isFinal) {
-        setInterimTranscript(result[0].transcript);
-        return;
-      }
+        recorder.onerror = () => {
+          setError('Recording failed. Try again.');
+          cleanup();
+          setIsListening(false);
+          setIsProcessing(false);
+        };
 
-      resultReceivedRef.current = true;
-      const finalTranscript = result[0].transcript;
-      const confidence = result[0].confidence;
+        recorder.start();
+        setIsListening(true);
+        isListeningRef.current = true;
+        setInterimTranscript('Listening...');
 
-      const alts: string[] = [];
-      for (let i = 1; i < result.length; i++) {
-        if (result[i]?.transcript) {
-          alts.push(result[i].transcript);
+        // Safety timeout — stop after max duration
+        maxTimerRef.current = setTimeout(() => {
+          if (isListeningRef.current) {
+            stopRecording();
+          }
+        }, MAX_RECORDING_MS);
+      })
+      .catch((err) => {
+        if (err instanceof DOMException && err.name === 'NotAllowedError') {
+          setError(
+            isIOS()
+              ? 'Microphone access denied. Check Settings → Privacy → Microphone.'
+              : 'Microphone access denied. Please allow microphone access.',
+          );
+        } else {
+          setError('Could not access microphone. Please check your device.');
         }
-      }
-
-      setInterimTranscript(null);
-
-      if (continuous && onTranscriptRef.current) {
-        // In continuous mode, fire callback per phrase and keep listening
-        onTranscriptRef.current(finalTranscript);
-        setBrowserConfidence(confidence);
-        setAlternatives(alts);
-      } else {
-        // Single-utterance mode — set state and stop
-        setTranscript(finalTranscript);
-        setBrowserConfidence(confidence);
-        setAlternatives(alts);
-        setIsListening(false);
-        setIsProcessing(true);
-      }
-    };
-
-    recognition.onerror = (event) => {
-      let errorMessage = 'Could not recognize speech. Try again.';
-
-      switch (event.error) {
-        case 'no-speech':
-          errorMessage = 'No speech detected. Tap and try again.';
-          break;
-        case 'audio-capture':
-          errorMessage = 'No microphone found. Please check your device.';
-          break;
-        case 'not-allowed':
-          errorMessage = isIOS()
-            ? 'Microphone or Speech Recognition access denied. Check Settings → Privacy.'
-            : 'Microphone access denied. Please allow microphone access.';
-          break;
-        case 'network':
-          errorMessage = isIOS()
-            ? 'Speech recognition temporarily unavailable. Try again.'
-            : 'Voice requires a stable connection. Try opening in a new tab or on your phone.';
-          break;
-        case 'aborted':
-          errorMessage = '';
-          break;
-        case 'service-not-allowed':
-          errorMessage = isIOS()
-            ? 'Speech Recognition not enabled. Check Settings → Privacy → Speech Recognition.'
-            : 'Speech service not available. Try opening in a new browser tab.';
-          break;
-        case 'bad-grammar':
-          errorMessage = 'Could not understand. Please try again.';
-          break;
-        case 'language-not-supported':
-          errorMessage = 'Language not supported. Please try again.';
-          break;
-      }
-
-      if (errorMessage) {
-        setError(errorMessage);
-      }
-      setIsListening(false);
-      setIsProcessing(false);
-      setInterimTranscript(null);
-      stopAudioMonitoring();
-    };
-
-    recognition.onend = () => {
-      setInterimTranscript(null);
-      if (continuous && recognitionRef.current === recognition) {
-        // Auto-restart in continuous mode — browser stops after each phrase
-        try {
-          recognition.start();
-          return;
-        } catch {
-          // Falls through to stop
-        }
-      }
-      setIsListening(false);
-      if (!resultReceivedRef.current) {
-        setIsProcessing(false);
-      }
-      stopAudioMonitoring();
-    };
-
-    recognitionRef.current = recognition;
-
-    try {
-      recognition.start();
-    } catch (err) {
-      setError('Failed to start voice recognition. Try again.');
-      setIsListening(false);
-      setIsProcessing(false);
-    }
-  }, [continuous, stopAudioMonitoring]);
-
-  const startListening = useCallback(() => {
-    if (!isSupported) {
-      setError('Voice recognition not supported in this browser');
-      return;
-    }
-
-    if (shouldRequestMicBeforeStart()) {
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then((stream) => {
-          stream.getTracks().forEach(t => t.stop());
-          startAudioMonitoring();
-          initRecognition();
-        })
-        .catch(() => {
-          setError('Microphone access needed. Please allow microphone access.');
-        });
-    } else {
-      startAudioMonitoring();
-      initRecognition();
-    }
-  }, [isSupported, initRecognition, startAudioMonitoring]);
+      });
+  }, [isSupported, startAudioMonitoring, processRecording, stopRecording, cleanup]);
 
   const stopListening = useCallback(() => {
-    const recognition = recognitionRef.current;
-    recognitionRef.current = null; // Prevents auto-restart in continuous mode
-    if (recognition) {
-      recognition.stop();
-    }
-    setIsListening(false);
-    setInterimTranscript(null);
-    stopAudioMonitoring();
-  }, [stopAudioMonitoring]);
+    stopRecording();
+  }, [stopRecording]);
 
   const reset = useCallback(() => {
     setTranscript(null);
@@ -323,7 +327,6 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
     setBrowserConfidence(null);
     setError(null);
     setIsProcessing(false);
-    resultReceivedRef.current = false;
   }, []);
 
   return {

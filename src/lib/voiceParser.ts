@@ -1,5 +1,4 @@
 import { MIN_HOLE_SCORE, MAX_HOLE_SCORE, MAX_VOICE_SCORE } from '@/lib/constants';
-import { phoneticMatch } from '@/lib/phoneticMatch';
 
 interface Player {
   id: string;
@@ -30,96 +29,32 @@ export interface CorrectionResult {
   newScore: number;
 }
 
-// Word numbers to digits - comprehensive with common mishearings
+// Word numbers to digits — Deepgram/OpenAI handle phonetic mishearings,
+// so we only need standard number words here.
 const wordToNumber: Record<string, number> = {
-  // Standard words
   'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
   'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
   'eleven': 11, 'twelve': 12,
-  // Common mishearings / homophones
-  'won': 1, 'want': 1, 'juan': 1, 'wun': 1, 'wan': 1,
-  'to': 2, 'too': 2, 'tu': 2, 'tuu': 2, 'tew': 2,
-  'tree': 3, 'free': 3, 'treat': 3, 'thru': 3, 'thre': 3,
-  'for': 4, 'fore': 4, 'floor': 4, 'ford': 4, 'fower': 4,
-  'fives': 5, 'hive': 5, 'dive': 5,
-  'sex': 6, 'sax': 6, 'sits': 6,
-  'heaven': 7, 'evan': 7,
-  'ate': 8, 'ait': 8, 'eit': 8, 'weight': 8, 'wait': 8, 'late': 8,
-  'nein': 9, 'niner': 9, 'dine': 9, 'fine': 9, 'line': 9, 'mine': 9, 'wine': 9,
-  // Ordinal variations
+  // Ordinal variations (sometimes spoken as "he got his fourth")
   'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5,
 };
 
-// Common phonetic variations for names - expanded
-const phoneticVariations: Record<string, string[]> = {
-  'michael': ['mike', 'mikey', 'mick', 'micah', 'my call', 'micheal'],
-  'william': ['will', 'bill', 'billy', 'willy', 'liam'],
-  'robert': ['rob', 'bob', 'bobby', 'robby', 'bert', 'robbie'],
-  'richard': ['rick', 'dick', 'rich', 'ricky', 'richie'],
-  'jonathan': ['jon', 'john', 'johnny', 'jonny', 'nathan'],
-  'james': ['jim', 'jimmy', 'jamie', 'jay'],
-  'timothy': ['tim', 'timmy'],
-  'anthony': ['tony', 'ant', 'anton', 'antony'],
-  'nicholas': ['nick', 'nicky', 'nico', 'nickolas'],
-  'christopher': ['chris', 'kris', 'topher', 'kit'],
-  'matthew': ['matt', 'matty', 'mathew'],
-  'daniel': ['dan', 'danny', 'daniels'],
-  'andrew': ['andy', 'drew', 'andre'],
-  'steven': ['steve', 'stevie', 'stephen'],
-  'david': ['dave', 'davey', 'davie'],
-  'thomas': ['tom', 'tommy', 'thom'],
-  'patrick': ['pat', 'paddy', 'patty', 'patric'],
-  'edward': ['ed', 'eddie', 'ted', 'teddy', 'ned'],
-  'alexander': ['alex', 'xander', 'al', 'lex', 'alec'],
-  'benjamin': ['ben', 'benny', 'benji'],
-  'joshua': ['josh', 'joshy'],
-  'adam': ['ad', 'addison', 'atom'],
-  'austin': ['aus', 'aussie'],
-  'jack': ['jacky', 'jackie', 'jaq'],
-  'joseph': ['joe', 'joey', 'jo'],
-  'samuel': ['sam', 'sammy'],
-  'ryan': ['ry'],
-  'kyle': ['ky'],
-  'brian': ['bri', 'bryan'],
-  'kevin': ['kev'],
-  'jason': ['jay', 'jase'],
-  'justin': ['just'],
-  'brandon': ['brand'],
-  'zachary': ['zach', 'zack', 'zak'],
-  'tyler': ['ty'],
-  'jacob': ['jake', 'jakey'],
-  'connor': ['con'],
-  'sean': ['shawn', 'shaun'],
-  'charles': ['charlie', 'chuck', 'chas'],
-  'peter': ['pete', 'petey'],
-  'paul': ['paulie'],
-  'mark': ['marky'],
-  'frank': ['franky', 'frankie'],
-  'george': ['georgie'],
-  'henry': ['hank', 'harry'],
-  'larry': ['lar', 'lars'],
-  'gary': ['gar'],
-  'dennis': ['den', 'denny'],
-  'raymond': ['ray'],
-  'donald': ['don', 'donny'],
-  'gerald': ['jerry', 'gerry'],
-  'douglas': ['doug', 'dougie'],
-  'gregory': ['greg', 'gregg'],
-  'lawrence': ['larry', 'lars', 'lary'],
-  'phillip': ['phil'],
-  'ronald': ['ron', 'ronny', 'ronnie'],
-  'russell': ['russ', 'rusty'],
-  'walter': ['walt', 'wally'],
-  'albert': ['al', 'bert'],
-  'arthur': ['art', 'artie'],
-  'carl': ['carlos'],
-  'eugene': ['gene'],
-  'ralph': ['ralf'],
-  'louis': ['lou', 'louie'],
-  'vincent': ['vin', 'vinny', 'vince'],
-  'wayne': ['wane'],
-  'roger': ['rodge'],
-  'eric': ['rick', 'erik'],
+// Common nickname mappings — kept slim since Deepgram's keyterm prompting
+// biases toward actual player names. Only the most common short-form nicknames
+// remain as a safety net for name matching.
+const nicknameMap: Record<string, string[]> = {
+  'michael': ['mike'], 'william': ['will', 'bill'], 'robert': ['rob', 'bob'],
+  'richard': ['rick', 'rich'], 'jonathan': ['jon', 'john'], 'james': ['jim', 'jimmy'],
+  'timothy': ['tim'], 'anthony': ['tony'], 'nicholas': ['nick'],
+  'christopher': ['chris'], 'matthew': ['matt'], 'daniel': ['dan'],
+  'andrew': ['andy', 'drew'], 'steven': ['steve'], 'david': ['dave'],
+  'thomas': ['tom'], 'patrick': ['pat'], 'edward': ['ed', 'ted'],
+  'alexander': ['alex'], 'benjamin': ['ben'], 'joshua': ['josh'],
+  'joseph': ['joe'], 'samuel': ['sam'], 'zachary': ['zach'],
+  'jacob': ['jake'], 'charles': ['charlie', 'chuck'],
+  'peter': ['pete'], 'gregory': ['greg'], 'douglas': ['doug'],
+  'ronald': ['ron'], 'phillip': ['phil'], 'raymond': ['ray'],
+  'donald': ['don'], 'vincent': ['vince'],
 };
 
 // Golf terms to relative par — positive = over par, negative = under par.
@@ -272,28 +207,23 @@ function findPlayerMatch(text: string, players: Player[]): Player | null {
     }
   }
 
-  // Second pass: nickname/phonetic variations
+  // Second pass: nickname mappings
   for (const player of players) {
-    const playerNameLower = player.name.toLowerCase();
-    const firstName = playerNameLower.split(' ')[0];
+    const firstName = player.name.toLowerCase().split(' ')[0];
 
-    // Build all variants for this player
     const allVariants: string[] = [firstName];
 
-    // Check if first name matches any known full name
-    Object.entries(phoneticVariations).forEach(([full, nicks]) => {
+    // Check if first name has known nicknames
+    Object.entries(nicknameMap).forEach(([full, nicks]) => {
       if (firstName === full) {
         allVariants.push(...nicks);
       }
-      // Check if first name IS a nickname of something
-      nicks.forEach(nick => {
-        if (firstName === nick || isFuzzyMatch(firstName, nick)) {
-          allVariants.push(full, ...nicks.filter(n => n !== nick));
-        }
-      });
+      // Check if first name IS a nickname
+      if (nicks.includes(firstName)) {
+        allVariants.push(full, ...nicks.filter(n => n !== firstName));
+      }
     });
 
-    // Check each variant
     for (const variant of allVariants) {
       for (const potential of potentialNames) {
         if (potential === variant || isFuzzyMatch(potential, variant)) {
@@ -308,20 +238,7 @@ function findPlayerMatch(text: string, players: Player[]): Player | null {
     const firstName = player.name.toLowerCase().split(' ')[0];
 
     for (const potential of potentialNames) {
-      // Only fuzzy match if the input is similar to the name
       if (isFuzzyMatch(potential, firstName, 2)) {
-        return player;
-      }
-    }
-  }
-
-  // Fourth pass: phonetic matching (Double Metaphone)
-  // Catches names that sound alike but have different spellings
-  // e.g. "Shawn" matches "Sean", "Geoff" matches "Jeff"
-  for (const player of players) {
-    const firstName = player.name.toLowerCase().split(' ')[0];
-    for (const potential of potentialNames) {
-      if (potential.length >= 3 && phoneticMatch(potential, firstName)) {
         return player;
       }
     }
@@ -458,15 +375,10 @@ function extractScore(text: string, par: number): number | null {
   return null;
 }
 
-// All word number variants used in regex patterns (comprehensive)
+// Word number variants for regex patterns — standard words only
+// (Deepgram/OpenAI produce accurate transcripts, no phonetic hacks needed)
 const wordNumberAlternation = [
   'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve',
-  'won', 'want', 'juan', 'wun', 'wan',
-  'to', 'too', 'tu', 'tuu', 'tew',
-  'tree', 'free', 'thru', 'thre',
-  'for', 'fore', 'fower',
-  'ate', 'ait', 'eit',
-  'niner', 'nein',
 ].join('|');
 
 // Golf term alternation for regex patterns
@@ -556,12 +468,10 @@ function parseMultiScoreInline(text: string, players: Player[], currentPar: numb
     const lastName = parts[parts.length - 1];
     const variants: string[] = [firstName, lastName];
 
-    // Add phonetic variants
-    Object.entries(phoneticVariations).forEach(([full, nicks]) => {
+    // Add nickname variants
+    Object.entries(nicknameMap).forEach(([full, nicks]) => {
       if (firstName === full) variants.push(...nicks);
-      nicks.forEach(nick => {
-        if (firstName === nick) variants.push(full, ...nicks);
-      });
+      if (nicks.includes(firstName)) variants.push(full, ...nicks);
     });
 
     return { tokens: [...new Set(variants)], player: p };
