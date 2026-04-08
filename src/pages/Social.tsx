@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Rss, Users, UserPlus, Hash, AtSign, Phone, ScanLine, Contact, Crown, QrCode, ChevronDown, Calendar } from 'lucide-react';
+import { Rss, Users, UserPlus, Hash, AtSign, Phone, ScanLine, Contact, Crown, QrCode, ChevronDown, Calendar, Search, Loader2 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useProfile } from '@/hooks/useProfile';
-import { useFriends } from '@/hooks/useFriends';
+import { useFriends, SearchResult } from '@/hooks/useFriends';
 import { useSubscription } from '@/hooks/useSubscription';
 import { FriendCard } from '@/components/friends/FriendCard';
 import { FriendRequestCard } from '@/components/friends/FriendRequestCard';
@@ -32,27 +32,78 @@ export default function Social() {
     sendFriendRequest,
     sendFriendRequestByEmail,
     sendFriendRequestByPhone,
+    sendFriendRequestByProfileId,
+    searchByName,
     acceptFriendRequest,
     declineFriendRequest,
     removeFriend,
+    sentRequests,
   } = useFriends();
 
   const initialTab = (searchParams.get('tab') as Tab) || 'feed';
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [searchValue, setSearchValue] = useState('');
-  const [searchType, setSearchType] = useState<'code' | 'email' | 'phone'>('code');
+  const [searchType, setSearchType] = useState<'name' | 'code' | 'email' | 'phone'>('name');
   const [isSending, setIsSending] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [contactSyncOpen, setContactSyncOpen] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [showCode, setShowCode] = useState(false);
+  const [nameResults, setNameResults] = useState<SearchResult[]>([]);
+  const [nameSearching, setNameSearching] = useState(false);
+  const [addingProfileId, setAddingProfileId] = useState<string | null>(null);
+  const nameSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchRequestId = useRef(0);
+  const searchByNameRef = useRef(searchByName);
+  searchByNameRef.current = searchByName;
 
   const { isPro, canAddFriend, limits } = useSubscription();
   const atFriendLimit = !canAddFriend(friends.length);
   const maxFriends = limits.maxFriends;
   const friendCode = profile?.friend_code ?? null;
   const userName = profile?.full_name;
+
+  // Debounced name search — uses ref to avoid dependency churn
+  useEffect(() => {
+    if (searchType !== 'name') {
+      setNameResults([]);
+      setNameSearching(false);
+      return;
+    }
+    if (nameSearchTimer.current) clearTimeout(nameSearchTimer.current);
+    const trimmed = searchValue.trim();
+    if (trimmed.length < 2) {
+      setNameResults([]);
+      setNameSearching(false);
+      return;
+    }
+    setNameSearching(true);
+    const requestId = ++searchRequestId.current;
+    nameSearchTimer.current = setTimeout(async () => {
+      const results = await searchByNameRef.current(trimmed);
+      // Only apply results if this is still the latest request
+      if (requestId === searchRequestId.current) {
+        setNameResults(results);
+        setNameSearching(false);
+      }
+    }, 350);
+    return () => { if (nameSearchTimer.current) clearTimeout(nameSearchTimer.current); };
+  }, [searchValue, searchType]);
+
+  const handleAddByProfile = async (profileId: string) => {
+    if (atFriendLimit) { setShowPaywall(true); return; }
+    setAddingProfileId(profileId);
+    const result = await sendFriendRequestByProfileId(profileId);
+    setAddingProfileId(null);
+    if (result.success) {
+      hapticSuccess();
+      toast.success('Friend request sent!');
+    } else {
+      hapticError();
+      toast.error(result.error || 'Failed to send request');
+    }
+  };
 
   const handleSendRequest = async (codeOverride?: string) => {
     const value = codeOverride || searchValue.trim();
@@ -70,7 +121,7 @@ export default function Social() {
       hapticSuccess();
       toast.success('Friend request sent!');
       setSearchValue('');
-      if (searchParams.get('add')) navigate('/social', { replace: true });
+      if (searchParams.get('add')) navigate('/social?tab=friends', { replace: true });
     } else {
       hapticError();
       toast.error(result.error || 'Failed to send request');
@@ -84,6 +135,7 @@ export default function Social() {
       setActiveTab('friends');
       setSearchValue(addCode.toUpperCase());
       setSearchType('code');
+      if (atFriendLimit) { setShowPaywall(true); return; }
       const timer = setTimeout(() => {
         sendFriendRequest(addCode).then(result => {
           if (result.success) {
@@ -135,6 +187,7 @@ export default function Social() {
 
   const getPlaceholder = () => {
     switch (searchType) {
+      case 'name': return 'Search by name...';
       case 'email': return 'Enter email...';
       case 'phone': return 'Enter phone...';
       default: return 'Enter code...';
@@ -143,6 +196,7 @@ export default function Social() {
 
   const getSearchIcon = () => {
     switch (searchType) {
+      case 'name': return <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
       case 'email': return <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
       case 'phone': return <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
       default: return <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
@@ -294,17 +348,17 @@ export default function Social() {
               </div>
               <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5 mx-6">
                 <div className="bg-muted rounded-xl p-1 flex gap-1 mb-4">
-                  {(['code', 'email', 'phone'] as const).map((type) => (
+                  {(['name', 'code', 'email', 'phone'] as const).map((type) => (
                     <button
                       key={type}
-                      onClick={() => setSearchType(type)}
+                      onClick={() => { setSearchType(type); setSearchValue(''); setNameResults([]); }}
                       className={
                         searchType === type
                           ? 'bg-white rounded-lg shadow-sm text-foreground font-bold text-sm py-2 flex-1 text-center'
                           : 'text-muted-foreground font-medium text-sm py-2 flex-1 text-center'
                       }
                     >
-                      {type === 'code' ? 'Code' : type === 'email' ? 'Email' : 'Phone'}
+                      {type === 'name' ? 'Name' : type === 'code' ? 'Code' : type === 'email' ? 'Email' : 'Phone'}
                     </button>
                   ))}
                 </div>
@@ -322,8 +376,62 @@ export default function Social() {
                     maxLength={searchType === 'code' ? 6 : undefined}
                     type={searchType === 'email' ? 'email' : searchType === 'phone' ? 'tel' : 'text'}
                   />
+                  {searchType === 'name' && nameSearching && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                  )}
                 </div>
-                <motion.button
+
+                {/* Name search results */}
+                {searchType === 'name' && searchValue.trim().length >= 2 && (
+                  <div className="mt-3 space-y-1">
+                    {nameResults.length > 0 ? (
+                      nameResults.map((result) => {
+                        const isFriend = friends.some(f => f.id === result.id);
+                        const isPending = sentRequests.includes(result.id);
+                        return (
+                          <div
+                            key={result.id}
+                            className="flex items-center gap-3 rounded-xl bg-muted/30 px-3 py-2.5"
+                          >
+                            <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-[11px] font-bold text-muted-foreground overflow-hidden flex-shrink-0">
+                              {result.avatarUrl ? (
+                                <img src={result.avatarUrl} className="w-full h-full object-cover" />
+                              ) : (
+                                (result.fullName ?? '?').charAt(0).toUpperCase()
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] font-semibold text-foreground truncate">{result.fullName || 'Unknown'}</p>
+                              {result.handicap != null && (
+                                <p className="text-[11px] text-muted-foreground">{result.handicap} HCP</p>
+                              )}
+                            </div>
+                            {isFriend ? (
+                              <span className="text-[11px] font-bold text-emerald-600 px-3 py-1.5">Friends</span>
+                            ) : isPending ? (
+                              <span className="text-[11px] font-bold text-muted-foreground px-3 py-1.5">Sent</span>
+                            ) : (
+                              <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => handleAddByProfile(result.id)}
+                                disabled={addingProfileId === result.id}
+                                className="bg-foreground text-background rounded-lg px-3 py-1.5 text-[11px] font-bold flex items-center gap-1 disabled:opacity-50"
+                              >
+                                <UserPlus className="w-3 h-3" />
+                                {addingProfileId === result.id ? '...' : 'Add'}
+                              </motion.button>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : !nameSearching ? (
+                      <p className="text-[12px] text-muted-foreground text-center py-3">No users found</p>
+                    ) : null}
+                  </div>
+                )}
+
+                {/* Send button (not shown for name search) */}
+                {searchType !== 'name' && <motion.button
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleSendRequest()}
                   disabled={!searchValue.trim() || isSending}
@@ -331,7 +439,7 @@ export default function Social() {
                 >
                   <UserPlus className="h-4 w-4" />
                   {isSending ? 'Sending...' : 'Add Friend'}
-                </motion.button>
+                </motion.button>}
               </div>
             </section>
 

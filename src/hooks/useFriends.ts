@@ -440,16 +440,23 @@ export function useFriends() {
     if (!rateLimitResult.allowed) return [];
 
     try {
+      // Search by name OR email prefix (e.g. "rishiclark16" matches email)
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, handicap, avatar_url, friend_code')
-        .ilike('full_name', `%${query}%`)
+        .select('id, full_name, handicap, avatar_url, friend_code, email')
+        .or(`full_name.ilike.%${query}%,email.ilike.${query}%`)
         .neq('id', user.id)
         .limit(10);
 
       if (error || !data) return [];
 
-      return data.map(d => ({
+      // Deduplicate by id (in case both name and email match)
+      const seen = new Set<string>();
+      return data.filter(d => {
+        if (seen.has(d.id)) return false;
+        seen.add(d.id);
+        return true;
+      }).map(d => ({
         id: d.id,
         fullName: d.full_name,
         handicap: d.handicap,
