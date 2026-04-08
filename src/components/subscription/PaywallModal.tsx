@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, Crown, Users, Zap, Trophy, BarChart3, Loader2 } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { SubscriptionCard } from './SubscriptionCard';
+import { PromoCodeSheet } from './PromoCodeSheet';
 import { useSubscription } from '@/hooks/useSubscription';
 import {
   getOfferings,
@@ -37,6 +37,7 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
   const [loading, setLoading] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [showPromo, setShowPromo] = useState(false);
 
   // Fetch offerings on open
   useEffect(() => {
@@ -258,13 +259,22 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
               )}
             </motion.button>
 
-            <button
-              onClick={handleRestore}
-              disabled={restoring}
-              className="w-full text-muted-foreground text-[13px] font-medium text-center py-2"
-            >
-              {restoring ? 'Restoring...' : 'Restore Purchases'}
-            </button>
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={handleRestore}
+                disabled={restoring}
+                className="text-muted-foreground text-[13px] font-medium py-2"
+              >
+                {restoring ? 'Restoring...' : 'Restore Purchases'}
+              </button>
+              <span className="text-muted-foreground/30">·</span>
+              <button
+                onClick={() => setShowPromo(true)}
+                className="text-muted-foreground text-[13px] font-medium py-2"
+              >
+                Promo Code
+              </button>
+            </div>
 
             <p className="text-[10px] text-center text-muted-foreground leading-relaxed">
               Cancel anytime. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.
@@ -276,6 +286,12 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
             </p>
           </div>
         </div>
+
+        <PromoCodeSheet
+          open={showPromo}
+          onOpenChange={setShowPromo}
+          onSuccess={() => { refreshSubscription(); onOpenChange(false); }}
+        />
       </SheetContent>
     </Sheet>
   );
