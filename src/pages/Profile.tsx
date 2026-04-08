@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Mic, Crown, ExternalLink, Trash2, AlertTriangle, Bell, ChevronRight, Settings, Sparkles, Globe } from 'lucide-react';
+import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Mic, Crown, ExternalLink, Trash2, AlertTriangle, Bell, ChevronRight, Settings, Sparkles, Globe, Gift } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -420,7 +420,7 @@ export default function Profile() {
                 </div>
               ))}
             </div>
-            <div className="border-t border-white/10 pt-3 mt-4 flex items-center justify-between">
+            <div className="border-t border-white/10 pt-3 mt-4">
               <button
                 onClick={handleRestorePurchases}
                 disabled={isRestoring}
@@ -429,14 +429,27 @@ export default function Profile() {
                 {isRestoring && <Loader2 className="w-3 h-3 animate-spin" />}
                 Restore Purchases
               </button>
-              <button
-                onClick={() => { hapticLight(); setShowPromoSheet(true); }}
-                className="text-[12px] font-bold text-white/30"
-              >
-                Have a promo code?
-              </button>
             </div>
           </motion.div>
+        )}
+
+        {/* ── PROMO CODE CARD ─────────────────────────────────────── */}
+        {!isPro && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.06 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => { hapticLight(); setShowPromoSheet(true); }}
+            className="w-full bg-white rounded-2xl p-4 mb-5 flex items-center gap-3.5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] text-left"
+          >
+            <div className="w-11 h-11 rounded-2xl bg-[#F0EE3A]/15 flex items-center justify-center flex-shrink-0">
+              <Gift className="w-5 h-5 text-[#C4C200]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-black tracking-[-0.02em] text-foreground">Have a promo code?</p>
+              <p className="text-[12px] text-muted-foreground mt-0.5">Redeem a code to unlock Pro for free</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
+          </motion.button>
         )}
 
         {/* ── GOLF INFO ─────────────────────────────────────────────── */}
