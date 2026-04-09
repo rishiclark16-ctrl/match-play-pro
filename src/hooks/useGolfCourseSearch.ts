@@ -5,7 +5,7 @@ import { withSpan } from '@/lib/sentry';
 import { distanceMiles } from '@/hooks/useUserLocation';
 
 export interface GolfCourseResult {
-  id: number | string;
+  id: number;
   club_name: string;
   course_name: string;
   location: {
@@ -16,8 +16,6 @@ export interface GolfCourseResult {
     latitude?: number;
     longitude?: number;
   };
-  /** Which API this result came from */
-  source?: 'golfcourseapi' | 'golfambit';
   /** Client-side computed distance in miles (only if user location available) */
   distanceMi?: number;
 }
@@ -65,11 +63,11 @@ function setCachedSearch(query: string, results: GolfCourseResult[]): void {
 }
 
 // ── Details cache ──
-const detailsCache = new Map<number | string, { details: GolfCourseDetails; timestamp: number }>();
+const detailsCache = new Map<number, { details: GolfCourseDetails; timestamp: number }>();
 const DETAILS_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 interface UseGolfCourseSearchOptions {
-  /** User's GPS coordinates for proximity sorting + nearby search */
+  /** User's GPS coordinates for proximity sorting */
   userLocation?: { latitude: number; longitude: number } | null;
 }
 
@@ -84,12 +82,6 @@ export function useGolfCourseSearch(options: UseGolfCourseSearchOptions = {}) {
   // Track the latest request to avoid stale results
   const latestRequestRef = useRef(0);
   const prefetchedRef = useRef(false);
-
-  /** Get auth token for edge function calls */
-  const getToken = useCallback(async (): Promise<string> => {
-    const { data: { session } } = await supabase.auth.getSession();
-    return session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  }, []);
 
   /** Attach distance to results and sort by proximity */
   const sortByDistance = useCallback((courses: GolfCourseResult[]): GolfCourseResult[] => {
@@ -110,40 +102,22 @@ export function useGolfCourseSearch(options: UseGolfCourseSearchOptions = {}) {
       });
   }, [userLocation]);
 
-  /** Text search — passes user location to edge function for merged results */
-  const fetchSearchResults = useCallback(async (query: string): Promise<GolfCourseResult[]> => {
-    const token = await getToken();
-
-    let url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/golf-course-lookup?action=search&query=${encodeURIComponent(query)}`;
-    // Pass location so edge function can merge GolfAmbit results when primary results are sparse
-    if (userLocation) {
-      url += `&lat=${userLocation.latitude}&lng=${userLocation.longitude}`;
-    }
-
-    const response = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-
-    if (!response.ok) throw new Error(`Search failed: ${response.status}`);
-    const data = await response.json();
-    return data.courses || [];
-  }, [getToken, userLocation]);
-
-  /** Geo-search via GolfAmbit — real lat/lng radius search */
-  const fetchNearbyCourses = useCallback(async (lat: number, lng: number, miles = 25): Promise<GolfCourseResult[]> => {
-    const token = await getToken();
+  /** Raw API call — shared between search + prefetch */
+  const fetchCourses = useCallback(async (query: string): Promise<GolfCourseResult[]> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
     const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/golf-course-lookup?action=nearby&lat=${lat}&lng=${lng}&miles=${miles}`,
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/golf-course-lookup?action=search&query=${encodeURIComponent(query)}`,
       {
         headers: { 'Authorization': `Bearer ${token}` },
       }
     );
 
-    if (!response.ok) return [];
+    if (!response.ok) throw new Error(`Search failed: ${response.status}`);
     const data = await response.json();
     return data.courses || [];
-  }, [getToken]);
+  }, []);
 
   const searchCourses = useCallback(async (query: string) => {
     if (!query.trim() || query.length < 3) {
@@ -164,6 +138,7 @@ export function useGolfCourseSearch(options: UseGolfCourseSearchOptions = {}) {
       const prefix = trimmed.slice(0, len);
       const prefixCached = getCachedSearch(prefix);
       if (prefixCached) {
+        // Show filtered prefix results immediately while full search loads
         const filtered = prefixCached.filter(c =>
           c.course_name.toLowerCase().includes(trimmed) ||
           c.club_name?.toLowerCase().includes(trimmed) ||
@@ -181,8 +156,9 @@ export function useGolfCourseSearch(options: UseGolfCourseSearchOptions = {}) {
     setError(null);
 
     try {
-      const courses = await withSpan('golf-course-search', 'http.client', () => fetchSearchResults(query));
+      const courses = await withSpan('golf-course-search', 'http.client', () => fetchCourses(query));
 
+      // Only update if this is still the latest request
       if (requestId === latestRequestRef.current) {
         const sorted = sortByDistance(courses);
         setSearchResults(sorted);
@@ -198,9 +174,9 @@ export function useGolfCourseSearch(options: UseGolfCourseSearchOptions = {}) {
         setIsSearching(false);
       }
     }
-  }, [fetchSearchResults, sortByDistance]);
+  }, [fetchCourses, sortByDistance]);
 
-  /** Prefetch nearby courses using real geo-search */
+  /** Prefetch nearby courses based on user location */
   useEffect(() => {
     if (!userLocation || prefetchedRef.current) return;
     prefetchedRef.current = true;
@@ -213,7 +189,7 @@ export function useGolfCourseSearch(options: UseGolfCourseSearchOptions = {}) {
           return;
         }
 
-        const courses = await fetchNearbyCourses(userLocation.latitude, userLocation.longitude, 25);
+        const courses = await fetchCourses('golf');
         setCachedSearch('__nearby__', courses);
         setNearbyCourses(sortByDistance(courses));
       } catch {
@@ -222,15 +198,10 @@ export function useGolfCourseSearch(options: UseGolfCourseSearchOptions = {}) {
     };
 
     prefetch();
-  }, [userLocation, fetchNearbyCourses, sortByDistance]);
+  }, [userLocation, fetchCourses, sortByDistance]);
 
-  const getCourseDetails = useCallback(async (courseId: number | string): Promise<GolfCourseDetails | null> => {
-    // GolfAmbit courses don't have detail data — return null so the app
-    // falls back to default 18-hole par-4 setup
-    if (typeof courseId === 'string' && courseId.startsWith('ga-')) {
-      return null;
-    }
-
+  const getCourseDetails = useCallback(async (courseId: number): Promise<GolfCourseDetails | null> => {
+    // Check client cache
     const cached = detailsCache.get(courseId);
     if (cached && Date.now() - cached.timestamp < DETAILS_CACHE_TTL_MS) {
       return cached.details;
@@ -240,7 +211,8 @@ export function useGolfCourseSearch(options: UseGolfCourseSearchOptions = {}) {
     setError(null);
 
     try {
-      const token = await getToken();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/golf-course-lookup?action=details&id=${courseId}`,
@@ -254,6 +226,7 @@ export function useGolfCourseSearch(options: UseGolfCourseSearchOptions = {}) {
       const data = await response.json();
       const courseData = data.course || data;
 
+      // Cache it
       detailsCache.set(courseId, { details: courseData, timestamp: Date.now() });
 
       return courseData;
@@ -263,7 +236,7 @@ export function useGolfCourseSearch(options: UseGolfCourseSearchOptions = {}) {
     } finally {
       setIsLoadingDetails(false);
     }
-  }, [getToken]);
+  }, []);
 
   const convertToHoleInfo = useCallback((
     details: GolfCourseDetails,
