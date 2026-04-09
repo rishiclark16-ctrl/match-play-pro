@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, MapPin, Loader2, Globe, Database, ChevronRight } from 'lucide-react';
+import { Search, Plus, MapPin, Loader2, Globe, Database, ChevronRight, Navigation } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Course } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { useGolfCourseSearch, GolfCourseResult } from '@/hooks/useGolfCourseSearch';
+import { useUserLocation } from '@/hooks/useUserLocation';
 
 interface CourseSearchProps {
   courses: Course[];
@@ -15,18 +16,19 @@ interface CourseSearchProps {
 export function CourseSearch({ courses, onSelectCourse, onCreateNew, onSelectApiCourse }: CourseSearchProps) {
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'saved' | 'search'>('search');
-  const { searchCourses, searchResults, isSearching, error, clearResults } = useGolfCourseSearch();
+  const { location: userLocation } = useUserLocation();
+  const { searchCourses, searchResults, nearbyCourses, isSearching, error, clearResults } = useGolfCourseSearch({ userLocation });
 
   useEffect(() => {
     if (activeTab !== 'search') return;
 
     const timer = setTimeout(() => {
-      if (query.trim().length >= 2) {
+      if (query.trim().length >= 3) {
         searchCourses(query);
       } else {
         clearResults();
       }
-    }, 400);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [query, activeTab, searchCourses, clearResults]);
@@ -118,16 +120,56 @@ export function CourseSearch({ courses, onSelectCourse, onCreateNew, onSelectApi
                     </p>
                   )}
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 ml-2" />
+                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                  {course.distanceMi != null && (
+                    <span className="text-[11px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md">
+                      {course.distanceMi < 1 ? '<1' : Math.round(course.distanceMi)} mi
+                    </span>
+                  )}
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                </div>
               </motion.button>
             ))
-          ) : query.trim().length >= 2 && !isSearching ? (
+          ) : query.trim().length >= 3 && !isSearching ? (
             <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-4 py-8 text-center text-muted-foreground text-sm">
               No courses found matching "{query}"
             </div>
+          ) : query.trim().length < 3 && nearbyCourses.length > 0 ? (
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2 flex items-center gap-1.5">
+                <Navigation className="w-3 h-3" />
+                Nearby Courses
+              </p>
+              {nearbyCourses.slice(0, 5).map((course) => (
+                <motion.button
+                  key={course.id}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleApiCourseSelect(course)}
+                  className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-4 py-3.5 flex items-center justify-between mb-2 cursor-pointer w-full text-left"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-sm text-foreground">{course.course_name}</p>
+                    {course.location && (
+                      <p className="text-[12px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3 h-3" />
+                        {[course.location.city, course.location.state].filter(Boolean).join(', ')}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                    {course.distanceMi != null && (
+                      <span className="text-[11px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md">
+                        {course.distanceMi < 1 ? '<1' : Math.round(course.distanceMi)} mi
+                      </span>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                </motion.button>
+              ))}
+            </div>
           ) : (
             <div className="py-8 text-center text-muted-foreground text-sm">
-              Enter at least 2 characters to search
+              Enter at least 3 characters to search
             </div>
           )}
         </div>

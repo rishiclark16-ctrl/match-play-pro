@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin, ChevronRight, X, Search, Loader2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useGolfCourseSearch } from '@/hooks/useGolfCourseSearch';
+import { useUserLocation } from '@/hooks/useUserLocation';
 import { cn } from '@/lib/utils';
 
 interface HomeCourseSelectorProps {
@@ -21,16 +22,20 @@ export function HomeCourseSelector({
 }: HomeCourseSelectorProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const { searchCourses, searchResults, isSearching, error, clearResults } = useGolfCourseSearch();
+  const { location: userLocation } = useUserLocation();
+  const { searchCourses, searchResults, nearbyCourses, isSearching, error, clearResults } = useGolfCourseSearch({ userLocation });
 
-  const handleSearch = async (searchQuery: string) => {
-    setQuery(searchQuery);
-    if (searchQuery.length >= 2) {
-      await searchCourses(searchQuery);
-    } else {
-      clearResults();
-    }
-  };
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (query.length >= 3) {
+        searchCourses(query);
+      } else {
+        clearResults();
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query, searchCourses, clearResults]);
 
   const handleSelect = (course: { id: number; course_name: string; club_name?: string }) => {
     const displayName = course.club_name
@@ -80,7 +85,7 @@ export function HomeCourseSelector({
             <Input
               placeholder="Search golf courses..."
               value={query}
-              onChange={(e) => handleSearch(e.target.value)}
+              onChange={(e) => setQuery(e.target.value)}
               className="pl-10 py-6"
               autoFocus
             />
@@ -94,7 +99,7 @@ export function HomeCourseSelector({
           )}
 
           <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-            {searchResults.map((course) => (
+            {(query.length >= 3 ? searchResults : nearbyCourses.slice(0, 5)).map((course) => (
               <button
                 key={course.id}
                 type="button"
@@ -106,7 +111,7 @@ export function HomeCourseSelector({
                 )}
               >
                 <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="font-medium text-foreground">{course.course_name}</p>
                   {course.club_name && (
                     <p className="text-sm text-muted-foreground">{course.club_name}</p>
@@ -119,18 +124,23 @@ export function HomeCourseSelector({
                     </p>
                   )}
                 </div>
+                {course.distanceMi != null && (
+                  <span className="text-[11px] font-semibold text-muted-foreground bg-background px-1.5 py-0.5 rounded-md flex-shrink-0 mt-0.5">
+                    {course.distanceMi < 1 ? '<1' : Math.round(course.distanceMi)} mi
+                  </span>
+                )}
               </button>
             ))}
 
-            {query.length >= 2 && !isSearching && searchResults.length === 0 && (
+            {query.length >= 3 && !isSearching && searchResults.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-8">
                 No courses found. Try a different search.
               </p>
             )}
 
-            {query.length < 2 && (
+            {query.length < 3 && nearbyCourses.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-8">
-                Type at least 2 characters to search
+                Type at least 3 characters to search
               </p>
             )}
           </div>

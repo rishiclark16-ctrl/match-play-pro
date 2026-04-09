@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useFriends } from '@/hooks/useFriends';
 import { useGolfCourseSearch, GolfCourseResult, GolfCourseDetails } from '@/hooks/useGolfCourseSearch';
+import { useUserLocation } from '@/hooks/useUserLocation';
 import { generateJoinCode } from '@/types/golf';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
@@ -22,7 +23,8 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
   const { user } = useAuth();
   const { profile } = useProfile();
   const { friends } = useFriends();
-  const { searchCourses, getCourseDetails, convertToHoleInfo, searchResults, isSearching, isLoadingDetails, clearResults } = useGolfCourseSearch();
+  const { location: userLocation } = useUserLocation();
+  const { searchCourses, getCourseDetails, convertToHoleInfo, searchResults, isSearching, isLoadingDetails, clearResults } = useGolfCourseSearch({ userLocation });
 
   const [courseQuery, setCourseQuery] = useState('');
   const [selectedCourse, setSelectedCourse] = useState<{ name: string; id?: number; details?: GolfCourseDetails } | null>(null);
@@ -32,14 +34,14 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
 
   // Debounced course search
   useEffect(() => {
-    if (selectedCourse) return; // Don't search when a course is already selected
+    if (selectedCourse) return;
     const timer = setTimeout(() => {
-      if (courseQuery.trim().length >= 2) {
+      if (courseQuery.trim().length >= 3) {
         searchCourses(courseQuery);
       } else {
         clearResults();
       }
-    }, 400);
+    }, 300);
     return () => clearTimeout(timer);
   }, [courseQuery, selectedCourse, searchCourses, clearResults]);
 
@@ -176,7 +178,7 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   const minDateTime = now.toISOString().slice(0, 16);
 
-  const showResults = !selectedCourse && courseQuery.trim().length >= 2;
+  const showResults = !selectedCourse && courseQuery.trim().length >= 3;
 
   return (
     <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
@@ -271,6 +273,11 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
                           </p>
                         )}
                       </div>
+                      {course.distanceMi != null && (
+                        <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md flex-shrink-0">
+                          {course.distanceMi < 1 ? '<1' : Math.round(course.distanceMi)} mi
+                        </span>
+                      )}
                       <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                     </button>
                   ))}
