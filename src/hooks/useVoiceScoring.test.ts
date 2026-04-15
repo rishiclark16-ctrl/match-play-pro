@@ -3,26 +3,9 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { useVoiceScoring } from './useVoiceScoring';
 
 // Use vi.mock only for modules that do not have their own test files
-// (to avoid contaminating voiceParser.test.ts via shared module registry)
+// (to avoid contaminating voiceParser.test.ts / voiceFeedback.test.ts via shared module registry)
 vi.mock('@/hooks/useVoiceRecognition', () => ({
   useVoiceRecognition: vi.fn(),
-}));
-
-vi.mock('@/lib/voiceFeedback', () => ({
-  feedbackListeningStart: vi.fn(),
-  feedbackListeningStop: vi.fn(),
-  feedbackVoiceSuccess: vi.fn(),
-  feedbackVoiceError: vi.fn(),
-  feedbackAllScored: vi.fn(),
-  feedbackNextHole: vi.fn(),
-  speakScoreConfirmation: vi.fn(),
-  speakAllScored: vi.fn(),
-  speakError: vi.fn(),
-  speakCorrection: vi.fn(),
-  speakNavigation: vi.fn(),
-  speakScoreQuery: vi.fn(),
-  speakMissingPlayers: vi.fn(),
-  setSpeechEnabled: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({
@@ -33,22 +16,22 @@ vi.mock('sonner', () => ({
   },
 }));
 
-// Use spyOn (not vi.mock) for voiceParser and voiceCommands to avoid
-// contaminating their test files under bun's test runner
+// Use spyOn (not vi.mock) for voiceParser, voiceCommands, and voiceFeedback to
+// avoid contaminating their test files under bun's test runner.
 import * as voiceParserModule from '@/lib/voiceParser';
 import * as voiceCommandsModule from '@/lib/voiceCommands';
+import * as voiceFeedbackModule from '@/lib/voiceFeedback';
 
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
-// parseVoiceCommands and hasScoreContent accessed via voiceCommandsModule spies
-import {
-  feedbackListeningStart,
-  feedbackListeningStop,
-  feedbackVoiceSuccess,
-  feedbackVoiceError,
-  feedbackAllScored,
-  feedbackNextHole,
-} from '@/lib/voiceFeedback';
 import { toast } from 'sonner';
+
+// Accessor getters so test assertions see the live spy after beforeEach installs it
+const feedbackListeningStart = () => voiceFeedbackModule.feedbackListeningStart;
+const feedbackListeningStop = () => voiceFeedbackModule.feedbackListeningStop;
+const feedbackVoiceSuccess = () => voiceFeedbackModule.feedbackVoiceSuccess;
+const feedbackVoiceError = () => voiceFeedbackModule.feedbackVoiceError;
+const feedbackAllScored = () => voiceFeedbackModule.feedbackAllScored;
+const feedbackNextHole = () => voiceFeedbackModule.feedbackNextHole;
 
 const mockPlayers = [
   { id: 'p1', name: 'Michael Johnson' },
@@ -86,6 +69,7 @@ describe('useVoiceScoring', () => {
   let parseVoiceCorrectionSpy: ReturnType<typeof vi.spyOn>;
   let parseVoiceCommandsSpy: ReturnType<typeof vi.spyOn>;
   let hasScoreContentSpy: ReturnType<typeof vi.spyOn>;
+  const voiceFeedbackSpies: ReturnType<typeof vi.spyOn>[] = [];
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -96,6 +80,32 @@ describe('useVoiceScoring', () => {
     parseVoiceCorrectionSpy = vi.spyOn(voiceParserModule, 'parseVoiceCorrection');
     parseVoiceCommandsSpy = vi.spyOn(voiceCommandsModule, 'parseVoiceCommands');
     hasScoreContentSpy = vi.spyOn(voiceCommandsModule, 'hasScoreContent');
+
+    // Spy on voiceFeedback functions with no-op implementations so the real
+    // audio/haptic code never runs, and restore after each test to prevent
+    // contaminating voiceFeedback.test.ts (which depends on the real module state).
+    voiceFeedbackSpies.length = 0;
+    const noopFeedbackFns = [
+      'feedbackListeningStart',
+      'feedbackListeningStop',
+      'feedbackVoiceSuccess',
+      'feedbackVoiceError',
+      'feedbackAllScored',
+      'feedbackNextHole',
+      'speakScoreConfirmation',
+      'speakAllScored',
+      'speakError',
+      'speakCorrection',
+      'speakNavigation',
+      'speakScoreQuery',
+      'speakMissingPlayers',
+      'setSpeechEnabled',
+    ] as const;
+    for (const fn of noopFeedbackFns) {
+      voiceFeedbackSpies.push(
+        vi.spyOn(voiceFeedbackModule, fn).mockImplementation((() => {}) as never)
+      );
+    }
 
     // Default voice recognition mock
     mockVoiceRecognition = {
@@ -130,6 +140,8 @@ describe('useVoiceScoring', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    for (const spy of voiceFeedbackSpies) spy.mockRestore();
+    voiceFeedbackSpies.length = 0;
   });
 
   afterAll(() => {
@@ -209,7 +221,7 @@ describe('useVoiceScoring', () => {
 
       rerender();
 
-      expect(feedbackListeningStart).toHaveBeenCalled();
+      expect(feedbackListeningStart()).toHaveBeenCalled();
     });
 
     it('should trigger feedbackListeningStop when listening stops and processing', () => {
@@ -226,7 +238,7 @@ describe('useVoiceScoring', () => {
 
       rerender();
 
-      expect(feedbackListeningStop).toHaveBeenCalled();
+      expect(feedbackListeningStop()).toHaveBeenCalled();
     });
   });
 
@@ -251,7 +263,7 @@ describe('useVoiceScoring', () => {
         );
 
         expect(onNavigateToHole).toHaveBeenCalledWith(6);
-        expect(feedbackNextHole).toHaveBeenCalled();
+        expect(feedbackNextHole()).toHaveBeenCalled();
         expect(toast.info).toHaveBeenCalled();
       });
 
@@ -355,7 +367,7 @@ describe('useVoiceScoring', () => {
         );
 
         expect(onFinishRound).toHaveBeenCalled();
-        expect(feedbackVoiceSuccess).toHaveBeenCalled();
+        expect(feedbackVoiceSuccess()).toHaveBeenCalled();
       });
 
       it('should recognize various finish patterns', () => {
@@ -403,7 +415,7 @@ describe('useVoiceScoring', () => {
         );
 
         expect(onScoreSaved).toHaveBeenCalledWith('p1', 6);
-        expect(feedbackVoiceSuccess).toHaveBeenCalled();
+        expect(feedbackVoiceSuccess()).toHaveBeenCalled();
         expect(toast.success).toHaveBeenCalled();
       });
     });
@@ -442,7 +454,7 @@ describe('useVoiceScoring', () => {
         expect(onScoreSaved).toHaveBeenCalledWith('p2', 5);
         expect(onScoreSaved).toHaveBeenCalledWith('p3', 4);
         expect(onScoreSaved).toHaveBeenCalledWith('p4', 6);
-        expect(feedbackAllScored).toHaveBeenCalled();
+        expect(feedbackAllScored()).toHaveBeenCalled();
         expect(result.current.showVoiceModal).toBe(false);
       });
 
@@ -485,7 +497,7 @@ describe('useVoiceScoring', () => {
         const { result } = renderHook(() => useVoiceScoring(defaultOptions));
 
         expect(result.current.showVoiceModal).toBe(true);
-        expect(feedbackVoiceError).toHaveBeenCalled();
+        expect(feedbackVoiceError()).toHaveBeenCalled();
       });
 
       it('should show modal when alwaysConfirmVoice is true even for high confidence', () => {
@@ -533,7 +545,7 @@ describe('useVoiceScoring', () => {
 
         expect(result.current.showVoiceModal).toBe(true);
         expect(result.current.parseResult?.confidence).toBe('low');
-        expect(feedbackVoiceError).toHaveBeenCalled();
+        expect(feedbackVoiceError()).toHaveBeenCalled();
       });
     });
   });
@@ -562,7 +574,7 @@ describe('useVoiceScoring', () => {
       expect(onScoreSaved).toHaveBeenCalledWith('p2', 5);
       expect(result.current.showVoiceModal).toBe(false);
       expect(result.current.parseResult).toBeNull();
-      expect(feedbackVoiceSuccess).toHaveBeenCalled();
+      expect(feedbackVoiceSuccess()).toHaveBeenCalled();
     });
 
     it('should restart listening in continuous mode', () => {

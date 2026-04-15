@@ -2,18 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useGroups } from './useGroups';
 
-// Use vi.hoisted() so mock objects are available when vi.mock factories run (hoisted)
-const { mockSupabaseClient, mockUser } = vi.hoisted(() => ({
-  mockSupabaseClient: {
-    from: vi.fn(),
-    channel: vi.fn(() => ({
-      on: vi.fn().mockReturnThis(),
-      subscribe: vi.fn().mockReturnThis(),
-    })),
-    removeChannel: vi.fn(),
-  },
-  mockUser: { id: 'user-123', email: 'test@test.com' },
-}));
+const mockSupabaseClient = {
+  from: vi.fn(),
+  channel: vi.fn(() => ({
+    on: vi.fn().mockReturnThis(),
+    subscribe: vi.fn().mockReturnThis(),
+  })),
+  removeChannel: vi.fn(),
+};
+const mockUser = { id: 'user-123', email: 'test@test.com' };
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: mockSupabaseClient,
