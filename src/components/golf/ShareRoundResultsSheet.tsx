@@ -21,6 +21,7 @@ import { SkinsResult } from '@/lib/games/skins';
 import { NassauResult } from '@/lib/games/nassau';
 import { MatchPlayResult } from '@/lib/games/matchPlay';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
+import { sendPushToProfiles } from '@/lib/pushUtils';
 import { toast } from 'sonner';
 
 interface ShareRoundResultsSheetProps {
@@ -176,13 +177,12 @@ export function ShareRoundResultsSheet({
     // Send push notification to selected friends
     const friendIds = Array.from(selectedFriendIds);
     try {
-      const { sendPushToProfiles } = await import('@/lib/pushUtils');
       await sendPushToProfiles({
         profileIds: friendIds,
-        title: 'Round Results Shared',
-        body: `Check out the results from ${round?.course_name ?? 'a recent round'}!`,
-        data: { roundId: round?.id },
-        type: 'round_invites',
+        title: 'Round results shared ⛳',
+        body: `Check out the results from ${round?.course_name ?? 'a recent round'}`,
+        data: { roundId: round?.id, route: round?.id ? `/round/${round.id}/complete` : undefined },
+        type: 'roundCompleted',
       });
     } catch {
       // Push is non-critical — continue with success flow

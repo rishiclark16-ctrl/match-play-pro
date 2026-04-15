@@ -8,10 +8,6 @@ const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 export type NotificationType = keyof NotificationPreferences;
 
-/**
- * Returns true if we should show the contextual push prompt.
- * False if user denied within the last 30 days.
- */
 function isPushAvailable(): boolean {
   return Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('PushNotifications');
 }
@@ -23,10 +19,6 @@ export function shouldPromptForPush(): boolean {
   return Date.now() - Number(deniedAt) > THIRTY_DAYS_MS;
 }
 
-/**
- * Request OS push permission. Returns true if granted.
- * Records denial timestamp to enforce 30-day cooldown.
- */
 export async function requestPushPermission(): Promise<boolean> {
   if (!isPushAvailable()) return false;
   try {
@@ -44,9 +36,6 @@ export async function requestPushPermission(): Promise<boolean> {
   }
 }
 
-/**
- * Check current push permission status without prompting.
- */
 export async function checkPushPermission(): Promise<'granted' | 'denied' | 'prompt'> {
   if (!isPushAvailable()) return 'denied';
   try {
@@ -58,7 +47,8 @@ export async function checkPushPermission(): Promise<'granted' | 'denied' | 'pro
 }
 
 /**
- * Send push notifications to a list of profile IDs, filtered by their preferences.
+ * Send push notifications to a list of profile IDs. Token + preference lookup
+ * happens in the send-push edge function (service-role) — we only forward intent.
  * Non-critical — never throws.
  */
 export async function sendPushToProfiles({
@@ -75,29 +65,9 @@ export async function sendPushToProfiles({
   type: NotificationType;
 }): Promise<void> {
   if (profileIds.length === 0) return;
-
   try {
-    const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('push_token, notification_preferences')
-      .in('id', profileIds)
-      .not('push_token', 'is', null);
-
-    if (error || !profiles?.length) return;
-
-    const tokens = profiles
-      .filter((p) => {
-        const prefs = p.notification_preferences as Record<string, boolean> | null;
-        // Default to enabled when no preferences recorded yet
-        return prefs === null || prefs[type] !== false;
-      })
-      .map((p) => p.push_token as string)
-      .filter(Boolean);
-
-    if (tokens.length === 0) return;
-
     await supabase.functions.invoke('send-push', {
-      body: { tokens, title, body, data: data ?? {} },
+      body: { profileIds, title, body, data: data ?? {}, type },
     });
   } catch {
     // Push is always non-critical

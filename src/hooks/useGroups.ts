@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { sendPushToProfiles } from '@/lib/pushUtils';
 
 export interface GroupMember {
   id: string;
@@ -183,6 +184,20 @@ export function useGroups() {
           .insert(memberInserts);
 
         if (membersError) throw membersError;
+
+        const notifyIds = members
+          .map(m => m.profileId)
+          .filter((pid): pid is string => !!pid && pid !== user.id);
+        if (notifyIds.length > 0) {
+          const ownerName = (user.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? 'A friend';
+          sendPushToProfiles({
+            profileIds: notifyIds,
+            title: 'You\'re in the group ⛳',
+            body: `${ownerName} added you to "${name}". Lock in the tee times.`,
+            data: { groupId: group.id, route: '/groups' },
+            type: 'groupInvite',
+          });
+        }
       }
 
       await fetchGroups();
@@ -234,6 +249,17 @@ export function useGroups() {
     members: Array<{ profileId?: string; guestName?: string; guestHandicap?: number }>
   ): Promise<boolean> => {
     try {
+      // Snapshot existing profile members so we only notify the newly added ones
+      const { data: existingMembers } = await supabase
+        .from('group_members')
+        .select('profile_id')
+        .eq('group_id', groupId);
+      const existingProfileIds = new Set(
+        (existingMembers ?? [])
+          .map(m => m.profile_id)
+          .filter((pid): pid is string => !!pid)
+      );
+
       // Delete existing members
       await supabase
         .from('group_members')
@@ -255,6 +281,21 @@ export function useGroups() {
           .insert(memberInserts);
 
         if (error) throw error;
+
+        const newProfileIds = members
+          .map(m => m.profileId)
+          .filter((pid): pid is string => !!pid && !existingProfileIds.has(pid) && pid !== user?.id);
+        if (newProfileIds.length > 0) {
+          const group = groups.find(g => g.id === groupId);
+          const ownerName = (user?.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? 'A friend';
+          sendPushToProfiles({
+            profileIds: newProfileIds,
+            title: 'You\'re in the group ⛳',
+            body: `${ownerName} added you to "${group?.name ?? 'a golf group'}". Lock in the tee times.`,
+            data: { groupId, route: '/groups' },
+            type: 'groupInvite',
+          });
+        }
       }
 
       await fetchGroups();

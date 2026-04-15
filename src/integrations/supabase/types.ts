@@ -1217,6 +1217,41 @@ export type Database = {
           },
         ]
       }
+      device_tokens: {
+        Row: {
+          id: string
+          profile_id: string
+          token: string
+          platform: string
+          last_seen_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          token: string
+          platform?: string
+          last_seen_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          profile_id?: string
+          token?: string
+          platform?: string
+          last_seen_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_tokens_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

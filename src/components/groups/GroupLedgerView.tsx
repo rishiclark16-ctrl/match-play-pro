@@ -167,8 +167,8 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
       if (otherProfileIds.length > 0) {
         sendPushToProfiles({
           profileIds: otherProfileIds,
-          title: 'Tab Settled',
-          body: `${group.name} tab has been settled`,
+          title: 'All square ⛳',
+          body: `${group.name} tab is settled. For now.`,
           data: { route: '/groups' },
           type: 'tabSettled',
         });

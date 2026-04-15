@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { sendPushToProfiles } from '@/lib/pushUtils';
+import { capture } from '@/lib/posthog';
 import {
   friendRequestRateLimiter,
   searchRateLimiter,
@@ -273,13 +274,14 @@ export function useFriends() {
     const senderName = senderProfile?.full_name || 'Someone';
     sendPushToProfiles({
       profileIds: [profileId],
-      title: 'New Friend Request',
-      body: `${senderName} wants to be your friend`,
-      data: { type: 'friend_request', senderId: user.id },
-      type: 'friendRequests',
+      title: 'New friend request ⛳',
+      body: `${senderName} wants to ride along`,
+      data: { route: '/social?tab=friends', senderId: user.id },
+      type: 'friendRequestReceived',
     });
 
     await fetchSentRequests();
+    capture('friend_request_sent');
     return { success: true };
   };
 
@@ -425,14 +427,15 @@ export function useFriends() {
         const accepterName = accepterProfile?.full_name || 'Someone';
         sendPushToProfiles({
           profileIds: [friendship.user_id],
-          title: 'Friend Request Accepted',
-          body: `${accepterName} accepted your friend request`,
-          data: { type: 'friend_accepted', friendId: user.id },
-          type: 'friendRequests',
+          title: "You've got a new playing partner ⛳",
+          body: `${accepterName} accepted — go beat them`,
+          data: { route: '/social?tab=friends', friendId: user.id },
+          type: 'friendRequestAccepted',
         });
       }
 
       await Promise.all([fetchFriends(), fetchPendingRequests()]);
+      capture('friend_request_accepted');
       return true;
     } catch (err) {
       // Error handled by toast

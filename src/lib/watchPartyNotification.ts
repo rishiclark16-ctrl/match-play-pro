@@ -35,8 +35,8 @@ export async function broadcastWatchPartyNotification(
     // 4. Send push notification
     await sendPushToProfiles({
       profileIds,
-      title: 'Your friends are playing!',
-      body: `${nameList} just teed off at ${courseName}`,
+      title: 'Friends teed off ⛳',
+      body: `${nameList} just started at ${courseName} — join the peanut gallery`,
       data: { roundId, route: `/watch/${roundId}`, type: 'watch_party' },
       type: 'watch_party',
     });

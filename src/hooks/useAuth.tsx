@@ -5,7 +5,7 @@ import { setSentryUser } from '@/lib/sentry';
 import { Capacitor } from '@capacitor/core';
 import { SignInWithApple, SignInWithAppleOptions, SignInWithAppleResponse } from '@capacitor-community/apple-sign-in';
 import { initializePurchases } from '@/services/purchases';
-import { identifyUser, resetUser } from '@/lib/posthog';
+import { identifyUser, resetUser, capture } from '@/lib/posthog';
 import { authRateLimiter, formatResetTime } from '@/lib/rateLimiter';
 
 export function useAuth() {
@@ -67,6 +67,9 @@ export function useAuth() {
         data: { full_name: fullName }
       }
     });
+    if (!error) {
+      capture('user_signed_up', { method: 'email' });
+    }
     return { error };
   };
 
@@ -90,6 +93,19 @@ export function useAuth() {
   const signOut = async () => {
     // Remove all realtime subscriptions before signing out
     supabase.removeAllChannels();
+
+    // Unregister this device's push token so a subsequent user on the same
+    // device doesn't inherit notifications targeted at the previous user.
+    try {
+      const deviceToken = localStorage.getItem('device_push_token');
+      if (deviceToken) {
+        await supabase.from('device_tokens').delete().eq('token', deviceToken);
+        localStorage.removeItem('device_push_token');
+      }
+    } catch {
+      // Non-critical
+    }
+
     const { error } = await supabase.auth.signOut();
     return { error };
   };
@@ -99,6 +115,8 @@ export function useAuth() {
     if (error) {
       return { error };
     }
+    // Device_tokens rows cascade-delete from profiles; just clear the local marker.
+    localStorage.removeItem('device_push_token');
     // Sign out locally after server-side deletion
     await supabase.auth.signOut();
     return { error: null };
@@ -151,6 +169,15 @@ export function useAuth() {
 
       if (error) {
         return { error };
+      }
+
+      // Detect first-time sign-in (sign up) by checking if created_at ≈ last_sign_in_at
+      if (data.user?.created_at && data.user?.last_sign_in_at) {
+        const createdMs = new Date(data.user.created_at).getTime();
+        const lastSignInMs = new Date(data.user.last_sign_in_at).getTime();
+        if (Math.abs(createdMs - lastSignInMs) < 60_000) {
+          capture('user_signed_up', { method: 'apple' });
+        }
       }
 
       // Update user metadata with Apple-provided name if available

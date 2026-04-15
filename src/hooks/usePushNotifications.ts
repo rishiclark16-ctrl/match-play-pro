@@ -5,9 +5,11 @@ import { PushNotifications } from '@capacitor/push-notifications';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
+const DEVICE_TOKEN_STORAGE_KEY = 'device_push_token';
+
 /**
  * Registers for push notifications on native and handles:
- *  - APNs token registration → stored in profiles.push_token
+ *  - APNs token registration → upserted into device_tokens (multi-device)
  *  - Notification tap → deep link navigation
  *
  * Call this once from AppContent (alongside useDeepLinks).
@@ -22,19 +24,27 @@ export function usePushNotifications() {
     if (!Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('PushNotifications') || !user || listenersRef.current) return;
     listenersRef.current = true;
 
-    // Token received → persist to profiles
+    // Token received → upsert into device_tokens (keyed on unique token column).
+    // If the same device previously belonged to another user, this reassigns it.
     const regListener = PushNotifications.addListener('registration', async (token) => {
       try {
         await supabase
-          .from('profiles')
-          .update({ push_token: token.value })
-          .eq('id', user.id);
+          .from('device_tokens')
+          .upsert(
+            {
+              profile_id: user.id,
+              token: token.value,
+              platform: 'ios',
+              last_seen_at: new Date().toISOString(),
+            },
+            { onConflict: 'token' },
+          );
+        localStorage.setItem(DEVICE_TOKEN_STORAGE_KEY, token.value);
       } catch {
         // Non-critical
       }
     });
 
-    // Registration error — log only
     const errListener = PushNotifications.addListener('registrationError', (err) => {
       console.warn('[PushNotifications] registration error:', err.error);
     });

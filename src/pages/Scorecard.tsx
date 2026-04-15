@@ -35,6 +35,7 @@ import { Press, PlayerWithScores, GameConfig, BingoBangoHoleResult } from '@/typ
 import { checkAutoPress, createPress } from '@/lib/games/nassau';
 import { calculateMatchPlay, generateMatchPlayHeadline } from '@/lib/games/matchPlay';
 import { sendPushToProfiles } from '@/lib/pushUtils';
+import { capture } from '@/lib/posthog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { buildConfig } from '@/engine/HouseGameEngine';
@@ -259,12 +260,64 @@ export default function Scorecard() {
     hole18FullyScored,
   });
 
+  // Fire hole-in-one / eagle / score-entered-for-you side-effect pushes after
+  // a score is saved. Non-critical — never throws, never blocks save.
+  const fireScoreSideEffects = useCallback((playerId: string, score: number) => {
+    if (!round || !user) return;
+    const scoredPlayer = playersWithScores.find(p => p.id === playerId);
+    if (!scoredPlayer) return;
+    const par = currentHoleInfo.par;
+    const firstName = (scoredPlayer.name || 'Player').split(' ')[0];
+    const roundUrl = `/round/${round.id}`;
+
+    // Everyone else in the round with a profile — the "hype" audience.
+    const otherProfileIds = playersWithScores
+      .filter(p => p.id !== playerId && p.profileId)
+      .map(p => p.profileId as string);
+
+    // Hole-in-one — only par 3s, score of 1
+    if (par === 3 && score === 1 && otherProfileIds.length > 0) {
+      sendPushToProfiles({
+        profileIds: otherProfileIds,
+        title: 'ACE! ⛳',
+        body: `${firstName} just made a hole-in-one on #${currentHole}. The drinks are on them 🍻`,
+        data: { roundId: round.id, route: roundUrl },
+        type: 'holeInOne',
+      });
+    } else if (score === par - 2 && otherProfileIds.length > 0) {
+      // Eagle — par-2, but not a hole-in-one (that's already handled above)
+      sendPushToProfiles({
+        profileIds: otherProfileIds,
+        title: 'Eagle spotted ⛳',
+        body: `${firstName} went -2 on #${currentHole}. Nice grip.`,
+        data: { roundId: round.id, route: roundUrl },
+        type: 'eagleLogged',
+      });
+    }
+
+    // Score-entered-for-you: notify the scored player if someone else logged it.
+    if (
+      scoredPlayer.profileId &&
+      scoredPlayer.profileId !== user.id
+    ) {
+      const scorekeeperName = (user.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? 'Someone';
+      sendPushToProfiles({
+        profileIds: [scoredPlayer.profileId],
+        title: 'Score posted ⛳',
+        body: `${scorekeeperName} put you down for a ${score} on #${currentHole}`,
+        data: { roundId: round.id, route: roundUrl },
+        type: 'scoreEnteredForYou',
+      });
+    }
+  }, [round, user, playersWithScores, currentHole, currentHoleInfo.par]);
+
   // Score saving callback for voice
   const handleSaveScore = useCallback((playerId: string, score: number) => {
     if (!round) return;
     saveScoreToSupabase(playerId, currentHole, score);
     setPlayerScore(round.id, playerId, currentHole, score);
-  }, [round, currentHole, saveScoreToSupabase, setPlayerScore]);
+    fireScoreSideEffects(playerId, score);
+  }, [round, currentHole, saveScoreToSupabase, setPlayerScore, fireScoreSideEffects]);
 
   // Sync speech feedback setting
   useEffect(() => {
@@ -329,16 +382,18 @@ export default function Scorecard() {
     hapticSuccess();
     saveScoreToSupabase(playerId, currentHole, score);
     setPlayerScore(round.id, playerId, currentHole, score);
-  }, [round, currentHole, saveScoreToSupabase, setPlayerScore]);
+    fireScoreSideEffects(playerId, score);
+  }, [round, currentHole, saveScoreToSupabase, setPlayerScore, fireScoreSideEffects]);
 
   const handleScoreSelect = useCallback((score: number) => {
     if (selectedPlayerId && round) {
       hapticSuccess();
       saveScoreToSupabase(selectedPlayerId, currentHole, score);
       setPlayerScore(round.id, selectedPlayerId, currentHole, score);
+      fireScoreSideEffects(selectedPlayerId, score);
       toast.success('Score saved', { duration: 1500 });
     }
-  }, [selectedPlayerId, round, currentHole, saveScoreToSupabase, setPlayerScore]);
+  }, [selectedPlayerId, round, currentHole, saveScoreToSupabase, setPlayerScore, fireScoreSideEffects]);
 
   // Send match result notifications to friends after round completion
   const sendRoundCompletionNotifications = useCallback(async () => {
@@ -406,7 +461,7 @@ export default function Scorecard() {
       if (notifyIds.length > 0) {
         sendPushToProfiles({
           profileIds: notifyIds,
-          title: 'Match Result',
+          title: 'Match over ⛳',
           body: `${headlines[0]} at ${round.courseName}`,
           data: { roundId: round.id, route: `/round/${round.id}/complete` },
           type: 'roundCompleted',
@@ -422,9 +477,15 @@ export default function Scorecard() {
       completeRoundSupabase();
       completeRoundLocal(round.id);
       sendRoundCompletionNotifications();
+      capture('round_completed', {
+        round_id: round.id,
+        course_name: round.courseName,
+        holes: round.holes,
+        player_count: playersWithScores.length,
+      });
       navigate(`/round/${round.id}/complete`);
     }
-  }, [round, completeRoundSupabase, completeRoundLocal, navigate, sendRoundCompletionNotifications]);
+  }, [round, completeRoundSupabase, completeRoundLocal, navigate, sendRoundCompletionNotifications, playersWithScores.length]);
 
   const handleFinishWithWinner = useCallback(() => {
     if (round) {
@@ -432,9 +493,15 @@ export default function Scorecard() {
       completeRoundSupabase();
       completeRoundLocal(round.id);
       sendRoundCompletionNotifications();
+      capture('round_completed', {
+        round_id: round.id,
+        course_name: round.courseName,
+        holes: round.holes,
+        player_count: playersWithScores.length,
+      });
       navigate(`/round/${round.id}/complete`);
     }
-  }, [round, completeRoundSupabase, completeRoundLocal, navigate, setShowWinnerModal, sendRoundCompletionNotifications]);
+  }, [round, completeRoundSupabase, completeRoundLocal, navigate, setShowWinnerModal, sendRoundCompletionNotifications, playersWithScores.length]);
 
   const handleAddPress = useCallback((press: Press) => {
     if (round) {
@@ -442,6 +509,27 @@ export default function Scorecard() {
       addPressLocal(round.id, press);
     }
   }, [round, addPressToSupabase, addPressLocal]);
+
+  // Manual press wrapper — same as handleAddPress but also sends a "pressedBack"
+  // notification to the opponent. Used from the press modal UI so that
+  // auto/birdie press side effects don't double-notify.
+  const handleManualPress = useCallback((press: Press) => {
+    handleAddPress(press);
+    if (!round) return;
+    const initiator = playersWithScores.find(p => p.id === press.initiatedBy);
+    const initiatorName = (initiator?.name || 'A player').split(' ')[0];
+    const opponentProfileIds = playersWithScores
+      .filter(p => p.id !== press.initiatedBy && p.profileId)
+      .map(p => p.profileId as string);
+    if (opponentProfileIds.length === 0) return;
+    sendPushToProfiles({
+      profileIds: opponentProfileIds,
+      title: "You've been pressed ⛳",
+      body: `${initiatorName} wants more of your money. Bold.`,
+      data: { roundId: round.id, route: `/round/${round.id}` },
+      type: 'pressedBack',
+    });
+  }, [handleAddPress, round, playersWithScores]);
 
   // Auto-press check for Nassau
   useEffect(() => {
@@ -490,8 +578,8 @@ export default function Scorecard() {
       if (profileIds.length > 0 && round) {
         sendPushToProfiles({
           profileIds,
-          title: 'Auto-Press!',
-          body: `${(pressingPlayer?.name || 'Player').split(' ')[0]} is 2 down — press started at hole ${autoPress.startHole}`,
+          title: 'Auto-press! ⛳',
+          body: `${(pressingPlayer?.name || 'Player').split(' ')[0]} is 2 down and got desperate — $${nassauGame.stakes} press from hole ${autoPress.startHole}`,
           data: { roundId: round.id, route: `/round/${round.id}` },
           type: 'pressTriggered',
         });
@@ -870,7 +958,7 @@ export default function Scorecard() {
                 players={playersWithScores}
                 scores={roundScores}
                 currentHole={currentHole}
-                onAddPress={handleAddPress}
+                onAddPress={handleManualPress}
                 propBets={propBets}
               />
             </>

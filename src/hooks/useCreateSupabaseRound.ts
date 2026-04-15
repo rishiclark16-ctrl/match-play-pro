@@ -5,6 +5,7 @@ import { Json } from '@/integrations/supabase/types';
 import { captureException } from '@/lib/sentry';
 import { calculatePlayingHandicap, getStrokesPerHole } from '@/lib/handicapUtils';
 import { sendPushToProfiles } from '@/lib/pushUtils';
+import { capture } from '@/lib/posthog';
 
 interface CreateRoundInput {
   courseId: string;
@@ -177,8 +178,8 @@ export function useCreateSupabaseRound() {
         if (inviteeProfileIds.length > 0) {
           sendPushToProfiles({
             profileIds: inviteeProfileIds,
-            title: 'Round Started',
-            body: `You've been added to a round at ${input.courseName}`,
+            title: "You're teeing off ⛳",
+            body: `Added to a round at ${input.courseName}`,
             data: { roundId, route: `/round/${roundId}` },
             type: 'roundInvites',
           });
@@ -205,8 +206,8 @@ export function useCreateSupabaseRound() {
               const creatorName = input.players[0]?.name ?? 'A friend';
               sendPushToProfiles({
                 profileIds: friendIds,
-                title: 'Friend Playing Now',
-                body: `${creatorName} started a round at ${input.courseName}`,
+                title: `${creatorName} is on the course ⛳`,
+                body: `Live at ${input.courseName} — tap to spectate`,
                 data: { roundId, route: `/round/${roundId}?spectator=true` },
                 type: 'friendStartedRound',
               });
@@ -258,6 +259,14 @@ export function useCreateSupabaseRound() {
         teeSets: input.teeSets,
         mixedTees: input.mixedTees || false,
       };
+
+      capture('round_created', {
+        course_name: input.courseName,
+        holes: input.holes,
+        player_count: input.players.length,
+        game_types: input.games.map(g => g.type),
+        has_stakes: !!input.stakes,
+      });
 
       return { round };
     } catch (err) {

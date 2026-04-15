@@ -3,25 +3,51 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
 export interface NotificationPreferences {
+  // Rounds
   roundInvites: boolean;
+  friendStartedRound: boolean;
+  watch_party: boolean;
+  roundCompleted: boolean;
+  scoreEnteredForYou: boolean;
+  // Money / betting
   pressTriggered: boolean;
+  pressedBack: boolean;
   tabSettled: boolean;
   tabAddedTo: boolean;
-  friendStartedRound: boolean;
-  roundCompleted: boolean;
-  watch_party: boolean;
+  youWonBig: boolean;
+  youLostBig: boolean;
+  // Hype
+  holeInOne: boolean;
+  eagleLogged: boolean;
+  // Social
+  friendRequestReceived: boolean;
+  friendRequestAccepted: boolean;
+  groupInvite: boolean;
+  /** @deprecated split into friendRequestReceived + friendRequestAccepted; kept for backward-compat reads */
   friendRequests: boolean;
+  // Digest
+  weeklyRecap: boolean;
 }
 
 export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   roundInvites: true,
+  friendStartedRound: true,
+  watch_party: true,
+  roundCompleted: true,
+  scoreEnteredForYou: true,
   pressTriggered: true,
+  pressedBack: true,
   tabSettled: true,
   tabAddedTo: true,
-  friendStartedRound: true,
-  roundCompleted: true,
-  watch_party: true,
+  youWonBig: true,
+  youLostBig: true,
+  holeInOne: true,
+  eagleLogged: true,
+  friendRequestReceived: true,
+  friendRequestAccepted: true,
+  groupInvite: true,
   friendRequests: true,
+  weeklyRecap: true,
 };
 
 export interface Profile {

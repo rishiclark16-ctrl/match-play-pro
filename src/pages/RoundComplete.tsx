@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -25,6 +25,8 @@ import { buildConfig } from '@/engine/HouseGameEngine';
 import { isCustomPrimitive } from '@/types/houseGame';
 import { getPropBetLabel, getPropBetIcon } from '@/types/betting';
 import { useGroups } from '@/hooks/useGroups';
+import { useAuth } from '@/hooks/useAuth';
+import { useScorekeeper } from '@/hooks/useScorekeeper';
 import { useRoundLedgerSync } from '@/hooks/useRoundLedgerSync';
 import { ShareRoundResultsSheet } from '@/components/golf/ShareRoundResultsSheet';
 import {
@@ -67,6 +69,9 @@ export default function RoundComplete() {
   // Fetch round data
   const { round, players: rawPlayers, scores: rawScores, presses, loading, isLocalData } = useRoundData(id);
   const { groups } = useGroups();
+  const { user } = useAuth();
+  const { isScorekeeper } = useScorekeeper(id, rawPlayers);
+  const bigSettlementFiredRef = useRef(false);
   const { syncRoundToLedger } = useRoundLedgerSync();
 
   // Contextual push permission prompt — shown once after first completed round
@@ -301,6 +306,49 @@ export default function RoundComplete() {
     [settlements, ghostPlayerIds]
   );
 
+  // Big win/loss push — fires once from scorekeeper's device when a player is up/down ≥ $20 net
+  useEffect(() => {
+    if (bigSettlementFiredRef.current) return;
+    if (!round || !user || !isScorekeeper) return;
+    if (nonGhostSettlements.length === 0) return;
+
+    const BIG_THRESHOLD = 20;
+    const netByPlayer = new Map<string, number>();
+    for (const s of nonGhostSettlements) {
+      netByPlayer.set(s.toPlayerId, (netByPlayer.get(s.toPlayerId) ?? 0) + s.amount);
+      netByPlayer.set(s.fromPlayerId, (netByPlayer.get(s.fromPlayerId) ?? 0) - s.amount);
+    }
+
+    const roundUrl = `/round/${round.id}/complete`;
+    for (const player of rawPlayers) {
+      if (!player.profileId || ghostPlayerIds.has(player.id)) continue;
+      const net = netByPlayer.get(player.id) ?? 0;
+      if (Math.abs(net) < BIG_THRESHOLD) continue;
+
+      const firstName = (player.name || 'Player').split(' ')[0];
+      const amount = Math.abs(net).toFixed(2);
+
+      if (net > 0) {
+        sendPushToProfiles({
+          profileIds: [player.profileId],
+          title: 'Payday ⛳',
+          body: `You're up $${amount} this round. Collect before they conveniently forget 💸`,
+          data: { roundId: round.id, route: roundUrl },
+          type: 'youWonBig',
+        });
+      } else {
+        sendPushToProfiles({
+          profileIds: [player.profileId],
+          title: "Tab's due ⛳",
+          body: `${firstName}, you're down $${amount}. Venmo now, coward 😬`,
+          data: { roundId: round.id, route: roundUrl },
+          type: 'youLostBig',
+        });
+      }
+    }
+    bigSettlementFiredRef.current = true;
+  }, [round, user, isScorekeeper, nonGhostSettlements, rawPlayers, ghostPlayerIds]);
+
   // House game derived state
   const houseGameEntry = round?.games?.find(g => g.type === 'house');
   const houseGameConfig = useMemo(() => {
@@ -423,7 +471,7 @@ export default function RoundComplete() {
       if (owingProfileIds.length > 0) {
         sendPushToProfiles({
           profileIds: owingProfileIds,
-          title: 'Tab Updated',
+          title: 'Tab updated ⛳',
           body: `${round?.courseName ?? 'A round'} was added to your group tab`,
           data: { route: '/groups' },
           type: 'tabAddedTo',
