@@ -15,6 +15,7 @@ import {
 import { withRetry, isSupabaseRetryable } from '@/lib/retry';
 import { captureException } from '@/lib/sentry';
 import { toast } from 'sonner';
+import { capture } from '@/lib/posthog';
 
 export interface AsyncOperationResult {
   success: boolean;
@@ -229,6 +230,7 @@ export function useSupabaseRound(roundId: string | null) {
         }
       );
       setIsOnline(true);
+      capture('score_entered', { hole_number: holeNumber });
     } catch (err) {
       console.error('Error saving score after retries:', err);
       setIsOnline(false);

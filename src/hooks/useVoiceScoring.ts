@@ -20,6 +20,7 @@ import {
 } from '@/lib/voiceFeedback';
 import { toast } from 'sonner';
 import { GameConfig } from '@/types/golf';
+import { capture } from '@/lib/posthog';
 
 interface Player {
   id: string;
@@ -413,6 +414,7 @@ export function useVoiceScoring({
     feedbackVoiceSuccess();
     speakScoreConfirmation(scores);
     toast.success(`${scores.length} score${scores.length > 1 ? 's' : ''} saved!`, { duration: 2000 });
+    capture('voice_score_entered', { count: scores.length });
 
     restartListeningForContinuousMode();
   }, [onScoreSaved, restartListeningForContinuousMode]);

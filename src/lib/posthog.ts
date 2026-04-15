@@ -1,7 +1,7 @@
 import posthog from 'posthog-js';
 import { Capacitor } from '@capacitor/core';
 
-const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY;
+const POSTHOG_KEY = 'phc_wGZn3jEzjNtV3iQVoKfcFXWvVTbDTpbdPr4RANf7xnha';
 const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com';
 
 /**

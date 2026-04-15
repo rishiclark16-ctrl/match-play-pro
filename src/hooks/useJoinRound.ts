@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { validateJoinCode } from '@/lib/validation';
+import { capture } from '@/lib/posthog';
 
 interface JoinRoundResult {
   id: string;
@@ -42,6 +43,7 @@ export function useJoinRound() {
         return null;
       }
 
+      capture('round_joined', { round_id: rows[0].id });
       return rows[0];
     } catch (err) {
       setError('Failed to join round');

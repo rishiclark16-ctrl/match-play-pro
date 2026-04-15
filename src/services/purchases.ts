@@ -12,6 +12,7 @@
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
+import { capture } from '@/lib/posthog';
 
 // Define the plugin interface
 interface RevenueCatPlugin {
@@ -202,6 +203,10 @@ export async function purchasePackage(packageIdentifier: string): Promise<Purcha
       logger.warn('No customerInfo returned from purchase');
     }
 
+    if (response.success) {
+      capture('subscription_started', { package_id: packageIdentifier });
+    }
+
     return { success: response.success, customerInfo };
   } catch (error) {
     logger.error('Purchase failed', error);
@@ -227,6 +232,10 @@ export async function restorePurchases(): Promise<PurchaseResult> {
     // Sync to Supabase
     if (customerInfo) {
       await syncSubscriptionToSupabase(customerInfo);
+    }
+
+    if (response.success) {
+      capture('subscription_restored');
     }
 
     return { success: response.success, customerInfo };
