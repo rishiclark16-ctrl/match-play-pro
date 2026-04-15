@@ -132,20 +132,25 @@ export function useGolfCourseSearch(options: UseGolfCourseSearchOptions = {}) {
       return;
     }
 
-    // Check if a shorter prefix is cached and can give partial results instantly
+    // Check if a shorter prefix is cached and can give partial results instantly.
+    // We also keep this list around to merge with the API response — the upstream
+    // relevance ranking is inconsistent across prefix lengths (e.g. "son" returns
+    // Sonoma GC but "sono" doesn't), so we refuse to drop a course whose name we
+    // can locally verify still matches the current query.
     const trimmed = query.trim().toLowerCase();
+    const matchesTrimmed = (c: GolfCourseResult) =>
+      c.course_name.toLowerCase().includes(trimmed) ||
+      !!c.club_name?.toLowerCase().includes(trimmed) ||
+      !!c.location?.city?.toLowerCase().includes(trimmed);
+
+    let prefixMatches: GolfCourseResult[] = [];
     for (let len = trimmed.length - 1; len >= 3; len--) {
       const prefix = trimmed.slice(0, len);
       const prefixCached = getCachedSearch(prefix);
       if (prefixCached) {
-        // Show filtered prefix results immediately while full search loads
-        const filtered = prefixCached.filter(c =>
-          c.course_name.toLowerCase().includes(trimmed) ||
-          c.club_name?.toLowerCase().includes(trimmed) ||
-          c.location?.city?.toLowerCase().includes(trimmed)
-        );
-        if (filtered.length > 0) {
-          setSearchResults(sortByDistance(filtered));
+        prefixMatches = prefixCached.filter(matchesTrimmed);
+        if (prefixMatches.length > 0) {
+          setSearchResults(sortByDistance(prefixMatches));
         }
         break;
       }
@@ -160,9 +165,12 @@ export function useGolfCourseSearch(options: UseGolfCourseSearchOptions = {}) {
 
       // Only update if this is still the latest request
       if (requestId === latestRequestRef.current) {
-        const sorted = sortByDistance(courses);
+        const seenIds = new Set(courses.map(c => c.id));
+        const missing = prefixMatches.filter(c => !seenIds.has(c.id));
+        const merged = missing.length > 0 ? [...courses, ...missing] : courses;
+        const sorted = sortByDistance(merged);
         setSearchResults(sorted);
-        setCachedSearch(query, courses);
+        setCachedSearch(query, merged);
       }
     } catch (err) {
       if (requestId === latestRequestRef.current) {
