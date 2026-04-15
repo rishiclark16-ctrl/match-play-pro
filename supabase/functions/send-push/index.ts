@@ -328,7 +328,7 @@ serve(async (req) => {
       JSON.stringify({
         sent: results.length - failed.length,
         failed: failed.length,
-        cleared: deadProfileIds.length,
+        cleared: deadTokens.length,
       }),
       { headers: { ...cors, 'Content-Type': 'application/json' } },
     );
