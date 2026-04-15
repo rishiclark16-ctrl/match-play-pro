@@ -14,18 +14,18 @@ import {
 
 const mockSpeak = vi.fn();
 const mockCancel = vi.fn();
-const mockGetVoices = vi.fn(() => [] as any[]);
+const mockGetVoices = vi.fn(() => [] as SpeechSynthesisVoice[]);
 
 beforeEach(() => {
   vi.useFakeTimers();
 
-  (globalThis as any).SpeechSynthesisUtterance = class {
+  (globalThis as unknown as Record<string, unknown>).SpeechSynthesisUtterance = class {
     text = '';
     lang = '';
     rate = 1;
     pitch = 1;
     volume = 1;
-    voice: any = null;
+    voice: SpeechSynthesisVoice | null = null;
     onend: (() => void) | null = null;
     onerror: (() => void) | null = null;
     constructor(text: string) { this.text = text; }

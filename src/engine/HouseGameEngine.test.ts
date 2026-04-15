@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { validateConfig, buildConfig, summarizeScoringConfig, ScoringConfig } from './HouseGameEngine';
-import { ActivePrimitive } from '@/types/houseGame';
+import { ActivePrimitive, PrimitiveValue } from '@/types/houseGame';
 
 // Helper: build an ActivePrimitive array from id/value pairs
-const aps = (...pairs: Array<[string, any?]>): ActivePrimitive[] =>
-  pairs.map(([id, value = null]) => ({ id, value }));
+const aps = (...pairs: Array<[string, PrimitiveValue?]>): ActivePrimitive[] =>
+  pairs.map(([id, value = null]) => ({ id, value: value ?? null }));
 
 // Helper: single primitive
-const ap = (id: string, value: any = null): ActivePrimitive[] => [{ id, value }];
+const ap = (id: string, value: PrimitiveValue = null): ActivePrimitive[] => [{ id, value }];
 
 describe('validateConfig', () => {
   it('empty → { valid: true, errors: [] }', () => {
@@ -224,7 +224,7 @@ describe('buildConfig', () => {
 
 describe('summarizeScoringConfig', () => {
   // Helper: build a ScoringConfig from primitives
-  const configFrom = (...pairs: Array<[string, any?]>): ScoringConfig =>
+  const configFrom = (...pairs: Array<[string, PrimitiveValue?]>): ScoringConfig =>
     buildConfig(pairs.map(([id, value = null]) => ({ id, value })));
 
   it('nassau config → first line includes "Nassau"', () => {

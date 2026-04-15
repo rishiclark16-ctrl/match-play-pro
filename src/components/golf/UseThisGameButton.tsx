@@ -13,7 +13,7 @@ export function UseThisGameButton({ onUse, isPro, onPaywall }: UseThisGameButton
       whileTap={{ scale: 0.97 }}
       onClick={(e) => {
         e.stopPropagation();
-        isPro ? onUse() : onPaywall();
+        if (isPro) { onUse(); } else { onPaywall(); }
       }}
       className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#F0EE3A] text-[#0A0A0A] text-[12px] font-black mt-2"
       style={{ WebkitTapHighlightColor: 'transparent' }}

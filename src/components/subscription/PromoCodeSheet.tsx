@@ -38,7 +38,7 @@ export function PromoCodeSheet({ open, onOpenChange, onSuccess }: PromoCodeSheet
         let msg = 'Failed to redeem code. Please try again.';
         try {
           // FunctionsHttpError stores the Response in .context
-          const body = await (error as any).context?.json?.();
+          const body = await (error as { context?: { json?: () => Promise<{ error?: string }> } }).context?.json?.();
           if (body?.error) msg = body.error;
         } catch {
           // Fall through to generic message

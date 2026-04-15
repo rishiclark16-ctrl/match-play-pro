@@ -1,6 +1,8 @@
+export type PrimitiveValue = string | number | boolean | null;
+
 export interface ActivePrimitive {
   id: string;
-  value: any; // null for 'none' valueType primitives
+  value: PrimitiveValue; // null for 'none' valueType primitives
   // Custom primitive fields (only present when id starts with 'custom_')
   custom?: true;
   label?: string;
@@ -9,7 +11,7 @@ export interface ActivePrimitive {
 
 export interface ParsedPrimitive {
   id: string;
-  value: any;
+  value: PrimitiveValue;
   confidence: 'high' | 'medium' | 'low';
   // Custom primitive fields
   custom?: true;
@@ -65,7 +67,7 @@ export interface HouseGamePrimitive {
   description: string;
   valueType: PrimitiveValueType;
   valueConfig?: PrimitiveValueConfig;
-  defaultValue: any;
+  defaultValue: PrimitiveValue;
   implemented: boolean; // false = UI shows but scoring is stubbed
 }
 

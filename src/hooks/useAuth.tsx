@@ -5,6 +5,7 @@ import { setSentryUser } from '@/lib/sentry';
 import { Capacitor } from '@capacitor/core';
 import { SignInWithApple, SignInWithAppleOptions, SignInWithAppleResponse } from '@capacitor-community/apple-sign-in';
 import { initializePurchases } from '@/services/purchases';
+import { identifyUser, resetUser } from '@/lib/posthog';
 import { authRateLimiter, formatResetTime } from '@/lib/rateLimiter';
 
 export function useAuth() {
@@ -20,9 +21,10 @@ export function useAuth() {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Update Sentry user context for error tracking
+        // Update Sentry + PostHog user context
         if (session?.user) {
           setSentryUser({ id: session.user.id, email: session.user.email });
+          identifyUser(session.user.id, { email: session.user.email });
 
           // Initialize RevenueCat for in-app purchases on native platforms
           if (Capacitor.isNativePlatform()) {
@@ -30,6 +32,7 @@ export function useAuth() {
           }
         } else {
           setSentryUser(null);
+          resetUser();
         }
       }
     );

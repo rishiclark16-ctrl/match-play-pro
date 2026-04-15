@@ -105,7 +105,7 @@ export function useWatchParty(roundId: string | null) {
         .is('left_at', null);
 
       if (data) {
-        const members: WatchPartyMember[] = data.map((row: any) => ({
+        const members: WatchPartyMember[] = data.map((row: { id: string; profile_id: string; profiles?: { full_name?: string; avatar_url?: string } | null; joined_at: string }) => ({
           id: row.id,
           profileId: row.profile_id,
           fullName: row.profiles?.full_name ?? null,
@@ -141,7 +141,7 @@ export function useWatchParty(roundId: string | null) {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'rounds', filter: `id=eq.${roundId}` },
         (payload) => {
-          if ((payload.new as any).status === 'complete') {
+          if ((payload.new as Record<string, unknown>).status === 'complete') {
             setState(prev => ({ ...prev, isRoundComplete: true }));
           }
         }

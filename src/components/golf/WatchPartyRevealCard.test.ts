@@ -9,7 +9,7 @@ interface WatchPartyStats {
   firstMessageAuthor: string | null;
 }
 
-function parseStats(row: any): WatchPartyStats | null {
+function parseStats(row: Record<string, unknown>): WatchPartyStats | null {
   if (!row || Number(row.message_count) === 0) return null;
 
   return {

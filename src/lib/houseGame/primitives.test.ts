@@ -70,31 +70,31 @@ describe('PRIMITIVES array internal consistency', () => {
   it('primitives with valueType=number have valueConfig with min/max/step', () => {
     for (const p of PRIMITIVES.filter(x => x.valueType === 'number')) {
       expect(p.valueConfig, `"${p.id}" missing valueConfig`).toBeDefined();
-      expect(typeof (p.valueConfig as any)?.min).toBe('number');
-      expect(typeof (p.valueConfig as any)?.max).toBe('number');
-      expect(typeof (p.valueConfig as any)?.step).toBe('number');
+      expect(typeof p.valueConfig!.min).toBe('number');
+      expect(typeof p.valueConfig!.max).toBe('number');
+      expect(typeof p.valueConfig!.step).toBe('number');
     }
   });
 
   it('primitives with valueType=currency have valueConfig with min/max/step', () => {
     for (const p of PRIMITIVES.filter(x => x.valueType === 'currency')) {
       expect(p.valueConfig, `"${p.id}" missing valueConfig`).toBeDefined();
-      expect(typeof (p.valueConfig as any)?.min).toBe('number');
-      expect(typeof (p.valueConfig as any)?.max).toBe('number');
+      expect(typeof p.valueConfig!.min).toBe('number');
+      expect(typeof p.valueConfig!.max).toBe('number');
     }
   });
 
   it('primitives with valueType=distance have valueConfig with min/max/step', () => {
     for (const p of PRIMITIVES.filter(x => x.valueType === 'distance')) {
       expect(p.valueConfig, `"${p.id}" missing valueConfig`).toBeDefined();
-      expect(typeof (p.valueConfig as any)?.min).toBe('number');
-      expect(typeof (p.valueConfig as any)?.max).toBe('number');
+      expect(typeof p.valueConfig!.min).toBe('number');
+      expect(typeof p.valueConfig!.max).toBe('number');
     }
   });
 
   it('primitives with valueType=select have valueConfig.options array', () => {
     for (const p of PRIMITIVES.filter(x => x.valueType === 'select')) {
-      expect(Array.isArray((p.valueConfig as any)?.options), `"${p.id}" valueType=select but options is not array`).toBe(true);
+      expect(Array.isArray(p.valueConfig!.options), `"${p.id}" valueType=select but options is not array`).toBe(true);
     }
   });
 
@@ -160,7 +160,7 @@ describe('PRIMITIVES_BY_CATEGORY', () => {
   it('every category in CATEGORY_ORDER has a primitives array', () => {
     for (const cat of CATEGORY_ORDER) {
       expect(PRIMITIVES_BY_CATEGORY[cat], `No primitives for category "${cat}"`).toBeDefined();
-      expect((PRIMITIVES_BY_CATEGORY[cat] as any[]).length).toBeGreaterThan(0);
+      expect(PRIMITIVES_BY_CATEGORY[cat].length).toBeGreaterThan(0);
     }
   });
 

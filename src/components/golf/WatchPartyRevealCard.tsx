@@ -28,7 +28,7 @@ export function WatchPartyRevealCard({ roundId }: WatchPartyRevealCardProps) {
 
       if (error || !data || !Array.isArray(data) || data.length === 0) return;
 
-      const row = data[0] as any;
+      const row = data[0] as Record<string, unknown>;
       if (Number(row.message_count) === 0) return;
 
       setStats({

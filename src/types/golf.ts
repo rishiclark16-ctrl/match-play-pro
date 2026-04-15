@@ -38,7 +38,7 @@ export interface GameConfig {
   blindWolfMultiplier?: number;  // Wolf: Blind Wolf point multiplier (default 2x)
   wolfResults?: WolfHoleResult[]; // Wolf: Results for each hole
   // House Game extras (type === 'house' only)
-  activePrimitives?: Array<{ id: string; value: any }>;
+  activePrimitives?: Array<{ id: string; value: string | number | boolean | null }>;
   houseGameId?: string;
   bbbResults?: BingoBangoHoleResult[]; // House Game: Bingo Bango Bongo results
 }

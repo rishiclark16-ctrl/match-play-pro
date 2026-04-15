@@ -3,7 +3,7 @@ import { buildScoringConfig, summarizeConfig } from './engine';
 import { ActivePrimitive } from '@/types/houseGame';
 
 // Helper: build a single-primitive ActivePrimitive array
-const ap = (id: string, value: any = null): ActivePrimitive[] => [{ id, value }];
+const ap = (id: string, value: ActivePrimitive['value'] = null): ActivePrimitive[] => [{ id, value }];
 
 describe('buildScoringConfig', () => {
   describe('empty input → DEFAULT_CONFIG values', () => {

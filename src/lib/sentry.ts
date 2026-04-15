@@ -67,17 +67,6 @@ export function initSentry() {
         maskAllText: true,
         blockAllMedia: true,
       }),
-      Sentry.feedbackIntegration({
-        colorScheme: 'system',
-        showBranding: false,
-        triggerLabel: 'Report a Bug',
-        formTitle: 'Report a Bug',
-        submitButtonLabel: 'Send Report',
-        messagePlaceholder: 'What went wrong? What did you expect to happen?',
-        successMessageText: 'Thanks! We\'ll look into it.',
-        isNameRequired: false,
-        isEmailRequired: false,
-      }),
     ],
 
     // Global tags for filtering

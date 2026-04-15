@@ -1,12 +1,16 @@
 import { createRoot } from "react-dom/client";
 import { registerSW } from "virtual:pwa-register";
 import { initSentry } from "./lib/sentry";
+import { initPostHog } from "./lib/posthog";
 import { logger } from "./lib/logger";
 import App from "./App.tsx";
 import "./index.css";
 
 // Initialize Sentry error tracking before app renders
 initSentry();
+
+// Initialize PostHog analytics
+initPostHog();
 
 // Register service worker only on web (not in Capacitor native app)
 // Capacitor's WKWebView doesn't support ServiceWorkerRegistration

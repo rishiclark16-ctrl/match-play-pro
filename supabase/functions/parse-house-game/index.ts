@@ -132,7 +132,7 @@ Input: "Match play 90% handicap, birdies pay a unit, no blood rule"
 Output: [{"id":"format_match_play","value":null,"confidence":"high"},{"id":"handicap_90_pct","value":null,"confidence":"high"},{"id":"bonus_birdie_unit","value":1,"confidence":"high"},{"id":"casual_no_blood","value":null,"confidence":"high"}]
 </example>`;
 
-function parseClaudeJson(text: string): any[] {
+function parseClaudeJson(text: string): Record<string, unknown>[] {
   try {
     // Strip markdown code fences if present (```json ... ``` or ``` ... ```)
     const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
@@ -153,7 +153,7 @@ function stripHtml(s: string): string {
 }
 
 // Validate primitive values by ID — reject unexpected types
-function sanitizeValue(id: string, value: any): any {
+function sanitizeValue(id: string, value: unknown): string | number | null {
   // Number-valued primitives
   const numberIds = new Set([
     'press_auto_x_down', 'bonus_birdie_unit', 'bonus_eagle_unit',
@@ -170,7 +170,7 @@ function sanitizeValue(id: string, value: any): any {
   }
   // Select-valued primitives
   if (id === 'bonus_par3_special') {
-    return ['double', 'half', 'separate_pot'].includes(value) ? value : null;
+    return typeof value === 'string' && ['double', 'half', 'separate_pot'].includes(value) ? value : null;
   }
   // Custom primitives: only allow number or null
   if (id.startsWith('custom_')) {
@@ -180,7 +180,7 @@ function sanitizeValue(id: string, value: any): any {
   return null;
 }
 
-function sanitizePrimitives(items: any[]) {
+function sanitizePrimitives(items: Record<string, unknown>[]) {
   return items
     .filter(item =>
       item &&

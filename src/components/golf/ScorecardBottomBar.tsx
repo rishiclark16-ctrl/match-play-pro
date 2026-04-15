@@ -267,7 +267,7 @@ export function ScorecardBottomBar({
                     : '0 0 0 0 rgba(0,0,0,0)',
                 }}
                 exit={{ opacity: 0, y: -8 }}
-                // @ts-ignore — framer keyframe transition
+                // @ts-expect-error — framer keyframe transition
                 transition={{ duration: canFinish ? 2 : 0.3, repeat: canFinish ? Infinity : 0, type: canFinish ? undefined : 'spring', stiffness: 400, damping: 30 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={onShowFinishOptions}

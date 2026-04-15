@@ -81,9 +81,9 @@ describe('Issue 3: moneyTracker Nassau respects 9-hole rounds', () => {
     const players = [
       makePlayer('p1', 'Alice', undefined, 0),
       makePlayer('p2', 'Bob', undefined, 1),
-    ] as any[];
+    ] as unknown as Parameters<typeof calculateLiveMoney>[0];
     // Give them PlayerWithScores shape
-    players.forEach((p: any) => { p.scores = []; p.totalStrokes = 0; p.totalRelativeToPar = 0; p.holesPlayed = 9; });
+    players.forEach((p) => { (p as Record<string, unknown>).scores = []; (p as Record<string, unknown>).totalStrokes = 0; (p as Record<string, unknown>).totalRelativeToPar = 0; (p as Record<string, unknown>).holesPlayed = 9; });
 
     const holeInfo = makeHoleInfo(9);
     // p1 wins every hole by 1 stroke
@@ -112,8 +112,8 @@ describe('Issue 5: moneyTracker Wolf consistent with wolf.ts', () => {
       makePlayer('p2', 'Bob', undefined, 1),
       makePlayer('p3', 'Charlie', undefined, 2),
       makePlayer('p4', 'Dan', undefined, 3),
-    ] as any[];
-    players.forEach((p: any) => { p.scores = []; p.totalStrokes = 0; p.totalRelativeToPar = 0; p.holesPlayed = 1; });
+    ] as unknown as Parameters<typeof calculateLiveMoney>[0];
+    players.forEach((p) => { (p as Record<string, unknown>).scores = []; (p as Record<string, unknown>).totalStrokes = 0; (p as Record<string, unknown>).totalRelativeToPar = 0; (p as Record<string, unknown>).holesPlayed = 1; });
 
     const holeInfo = makeHoleInfo(18);
     const scores = [

@@ -840,7 +840,7 @@ export default function RoundComplete() {
               {!showGroupPicker ? (
                 <motion.button
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => { hapticLight(); groups.length === 1 ? handleAddToTab(groups[0].id) : setShowGroupPicker(true); }}
+                  onClick={() => { hapticLight(); if (groups.length === 1) { handleAddToTab(groups[0].id); } else { setShowGroupPicker(true); } }}
                   disabled={addingToTab}
                   className="w-full bg-white border-2 border-foreground/10 rounded-2xl py-3.5 flex items-center justify-center gap-2 disabled:opacity-50"
                 >

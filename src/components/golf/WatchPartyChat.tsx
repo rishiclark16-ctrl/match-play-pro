@@ -39,7 +39,7 @@ export function WatchPartyChat({ messages, currentUserId, isRoundComplete, submi
 
   // Initial scroll to bottom
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'instant' as any });
+    bottomRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
   }, []);
 
   const handleScroll = useCallback(() => {

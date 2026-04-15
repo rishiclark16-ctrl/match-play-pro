@@ -5,8 +5,9 @@ import Cropper, { Area } from 'react-easy-crop';
 import { Camera, ChevronRight, Check, X, ZoomIn, Phone } from 'lucide-react';
 import { useProfile, ProfileUpdate } from '@/hooks/useProfile';
 import { HomeCourseSelector } from '@/components/profile/HomeCourseSelector';
-import { hapticLight, hapticSuccess } from '@/lib/haptics';
+import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 async function getCroppedFile(imageSrc: string, cropArea: Area, fileName: string): Promise<File> {
   const image = new Image();
@@ -100,9 +101,23 @@ export default function Onboarding() {
       const blobUrl = URL.createObjectURL(croppedFile);
       setAvatarPreview(blobUrl);
       setCropImageSrc(null);
-      await uploadAvatar(croppedFile);
-      hapticSuccess();
-      URL.revokeObjectURL(blobUrl);
+
+      // Upload in background — don't block the user from continuing
+      uploadAvatar(croppedFile).then((url) => {
+        if (url) {
+          // Revoke blob URL once the real URL is saved
+          URL.revokeObjectURL(blobUrl);
+          hapticSuccess();
+        }
+      }).catch(() => {
+        // Upload failed but user already has a local preview — they can continue.
+        // The avatar just won't be saved server-side. They can re-upload from profile later.
+        toast.error('Photo upload failed — you can re-upload from your profile later');
+        hapticError();
+      });
+    } catch {
+      toast.error('Failed to crop photo. Please try again.');
+      hapticError();
     } finally {
       setUploading(false);
     }
@@ -110,15 +125,27 @@ export default function Onboarding() {
 
   const finish = async () => {
     setSaving(true);
-    const updates: ProfileUpdate = { has_onboarded: true };
-    if (handicap !== '') updates.handicap = Number(handicap);
-    if (teePreference) updates.tee_preference = teePreference;
-    if (homeCourseId) updates.home_course_id = homeCourseId;
-    if (homeCourseName) updates.home_course_name = homeCourseName;
-    if (phone) updates.phone = phone;
-    await updateProfile(updates);
-    setSaving(false);
-    navigate('/', { replace: true, state: { showTutorial: true, fromOnboarding: true } });
+    try {
+      const updates: ProfileUpdate = { has_onboarded: true };
+      if (handicap !== '') updates.handicap = Number(handicap);
+      if (teePreference) updates.tee_preference = teePreference;
+      if (homeCourseId) updates.home_course_id = homeCourseId;
+      if (homeCourseName) updates.home_course_name = homeCourseName;
+      if (phone.trim()) updates.phone = phone.trim();
+      const success = await updateProfile(updates);
+      if (!success) {
+        toast.error('Failed to save profile. Please try again.');
+        hapticError();
+        setSaving(false);
+        return;
+      }
+      hapticSuccess();
+      navigate('/', { replace: true, state: { showTutorial: true, fromOnboarding: true } });
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+      hapticError();
+      setSaving(false);
+    }
   };
 
   const handleContinue = () => {
@@ -187,13 +214,12 @@ export default function Onboarding() {
                 Add a profile photo
               </h1>
               <p className="text-[15px] text-muted-foreground leading-relaxed mb-10">
-                Your group sees this during rounds. You can change it anytime.
+                Your group sees this during rounds. You can always add one later.
               </p>
 
               <div className="flex justify-center">
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
                   className="relative"
                 >
                   <div className={cn(
@@ -204,12 +230,6 @@ export default function Onboarding() {
                   )}>
                     {avatarPreview ? (
                       <img src={avatarPreview} className="w-full h-full object-cover" alt="Profile" />
-                    ) : uploading ? (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                        className="w-8 h-8 rounded-full border-2 border-foreground border-t-transparent"
-                      />
                     ) : (
                       <div className="flex flex-col items-center gap-2">
                         <Camera className="w-8 h-8 text-muted-foreground" />
@@ -273,7 +293,7 @@ export default function Onboarding() {
                   />
                 </div>
               </div>
-              <p className="text-[12px] text-muted-foreground mt-2 ml-1">Required — helps your group find you</p>
+              <p className="text-[12px] text-muted-foreground mt-2 ml-1">Helps your group find you</p>
             </motion.div>
           )}
 
@@ -319,7 +339,7 @@ export default function Onboarding() {
             </motion.div>
           )}
 
-          {/* ── Step 3: Tee Preference ── */}
+          {/* ── Step 4: Tee Preference ── */}
           {step === 'tees' && (
             <motion.div
               key="tees"
@@ -366,7 +386,7 @@ export default function Onboarding() {
             </motion.div>
           )}
 
-          {/* ── Step 4: Home Course ── */}
+          {/* ── Step 5: Home Course ── */}
           {step === 'course' && (
             <motion.div
               key="course"
@@ -416,7 +436,7 @@ export default function Onboarding() {
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={handleContinue}
-            disabled={saving || uploading || (step === 'phone' && !phone.trim())}
+            disabled={saving}
             className="flex-1 bg-foreground text-background rounded-2xl h-[54px] font-bold text-[15px] flex items-center justify-center gap-2 disabled:opacity-40"
           >
             {saving ? (
@@ -455,10 +475,19 @@ export default function Onboarding() {
             <p className="text-white font-bold text-sm">Move and Scale</p>
             <button
               onClick={handleCropSave}
-              className="flex items-center gap-1.5 text-[#F0EE3A] active:text-[#F0EE3A]/50 text-sm font-bold py-2 px-1"
+              disabled={uploading}
+              className="flex items-center gap-1.5 text-[#F0EE3A] active:text-[#F0EE3A]/50 text-sm font-bold py-2 px-1 disabled:opacity-50"
             >
-              <Check className="w-5 h-5" />
-              Choose
+              {uploading ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                  className="w-4 h-4 rounded-full border-2 border-[#F0EE3A] border-t-transparent"
+                />
+              ) : (
+                <Check className="w-5 h-5" />
+              )}
+              {uploading ? 'Saving…' : 'Choose'}
             </button>
           </div>
           <div className="relative flex-1">

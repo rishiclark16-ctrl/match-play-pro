@@ -29,7 +29,7 @@ export function useWatchPartyChat(roundId: string | null) {
       if (error) throw error;
 
       setMessages(
-        ((data ?? []) as any[]).map((row) => ({
+        ((data ?? []) as Record<string, unknown>[]).map((row) => ({
           id: row.id,
           authorId: row.author_id,
           authorName: row.author_name ?? 'Unknown',
