@@ -16,9 +16,11 @@ const ALLOWED_ORIGINS = [
   'http://localhost',       // Android
 ];
 
+const IS_DEV = Deno.env.get('ENVIRONMENT') !== 'production';
+
 function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get('origin') ?? '';
-  const allowed = ALLOWED_ORIGINS.includes(origin) || origin.startsWith('http://localhost:');
+  const allowed = ALLOWED_ORIGINS.includes(origin) || (IS_DEV && origin.startsWith('http://localhost:'));
   return {
     'Access-Control-Allow-Origin': allowed ? origin : ALLOWED_ORIGINS[0],
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',

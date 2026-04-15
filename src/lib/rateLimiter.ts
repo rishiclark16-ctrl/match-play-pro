@@ -1,6 +1,6 @@
 /**
- * Simple in-memory rate limiter using sliding window approach
- * Tracks timestamps of actions and checks against limits
+ * Rate limiter using sliding window approach with localStorage persistence.
+ * Survives page refreshes and app restarts within the configured window.
  */
 
 interface RateLimitConfig {
@@ -14,8 +14,41 @@ interface RateLimitResult {
   resetInMs: number;
 }
 
-// Store timestamps for each action type
+const STORAGE_KEY = 'match-golf-rate-limits';
+
+// In-memory cache backed by localStorage
 const actionTimestamps: Map<string, number[]> = new Map();
+
+function hydrateFromStorage(): void {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return;
+    const data: Record<string, number[]> = JSON.parse(stored);
+    const now = Date.now();
+    for (const [key, timestamps] of Object.entries(data)) {
+      // Only restore timestamps from the last 15 minutes (max window)
+      const valid = timestamps.filter((ts) => now - ts < 15 * 60 * 1000);
+      if (valid.length > 0) actionTimestamps.set(key, valid);
+    }
+  } catch {
+    // Corrupted data — start fresh
+  }
+}
+
+function persistToStorage(): void {
+  try {
+    const data: Record<string, number[]> = {};
+    for (const [key, timestamps] of actionTimestamps.entries()) {
+      if (timestamps.length > 0) data[key] = timestamps;
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    // Storage full or unavailable — continue with in-memory only
+  }
+}
+
+// Hydrate on module load
+hydrateFromStorage();
 
 /**
  * Creates a rate limiter for a specific action type
@@ -52,6 +85,7 @@ export function createRateLimiter(actionType: string, config: RateLimitConfig) {
       // Check if action is allowed
       if (timestamps.length >= config.maxRequests) {
         actionTimestamps.set(key, timestamps);
+        persistToStorage();
         return {
           allowed: false,
           remainingRequests: 0,
@@ -62,6 +96,7 @@ export function createRateLimiter(actionType: string, config: RateLimitConfig) {
       // Record the action
       timestamps.push(now);
       actionTimestamps.set(key, timestamps);
+      persistToStorage();
 
       return {
         allowed: true,
@@ -103,6 +138,7 @@ export function createRateLimiter(actionType: string, config: RateLimitConfig) {
     reset(userId: string): void {
       const key = getKey(userId);
       actionTimestamps.delete(key);
+      persistToStorage();
     },
 
     /**
@@ -115,6 +151,7 @@ export function createRateLimiter(actionType: string, config: RateLimitConfig) {
           actionTimestamps.delete(key);
         }
       }
+      persistToStorage();
     },
   };
 }

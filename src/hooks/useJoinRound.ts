@@ -1,14 +1,19 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Round } from '@/types/golf';
-import { transformRound } from '@/lib/transformers';
 import { validateJoinCode } from '@/lib/validation';
+
+interface JoinRoundResult {
+  id: string;
+  course_name: string;
+  status: string;
+  created_at: string;
+}
 
 export function useJoinRound() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const joinRound = useCallback(async (joinCode: string): Promise<Round | null> => {
+  const joinRound = useCallback(async (joinCode: string): Promise<JoinRoundResult | null> => {
     setLoading(true);
     setError(null);
 
@@ -21,23 +26,23 @@ export function useJoinRound() {
     }
 
     try {
-      const { data, error: fetchError } = await supabase
-        .from('rounds')
-        .select('*')
-        .eq('join_code', validation.data)
-        .maybeSingle();
+      // Use SECURITY DEFINER RPC to bypass RLS — user has no access to the
+      // round yet, so a direct table query would return nothing.
+      const { data, error: rpcError } = await supabase
+        .rpc('lookup_round_by_join_code', { code: validation.data });
 
-      if (fetchError) {
+      if (rpcError) {
         setError('Failed to join round');
         return null;
       }
 
-      if (!data) {
+      const rows = data as JoinRoundResult[] | null;
+      if (!rows || rows.length === 0) {
         setError('Round not found. Check the code and try again.');
         return null;
       }
 
-      return transformRound(data);
+      return rows[0];
     } catch (err) {
       setError('Failed to join round');
       return null;
