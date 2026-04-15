@@ -6,10 +6,13 @@
 --
 -- Requires:
 --   - `pg_cron` and `pg_net` extensions
---   - Postgres settings `app.settings.supabase_url` and
---     `app.settings.weekly_recap_secret` to be configured (see README).
---     These are typically set via `ALTER DATABASE postgres SET ...` from
---     the Supabase dashboard SQL editor, not checked into source.
+--   - The `WEEKLY_RECAP_SECRET` env var set on the `weekly-recap` edge
+--     function to match the secret inlined below.
+--
+-- Note: hosted Supabase restricts `ALTER DATABASE SET` on arbitrary
+-- GUCs, so the URL and secret are inlined in the cron body instead of
+-- using `current_setting('app.settings.*')`. The cron.job table is only
+-- readable by the postgres role, so the secret stays server-side.
 
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
@@ -26,14 +29,14 @@ $$;
 SELECT cron.schedule(
   'weekly-recap',
   '0 14 * * 1',
-  $$
+  $job$
   SELECT net.http_post(
-    url := current_setting('app.settings.supabase_url', true) || '/functions/v1/weekly-recap',
+    url := 'https://puqgbsxabcyxrbwwoznn.supabase.co/functions/v1/weekly-recap',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'x-recap-secret', current_setting('app.settings.weekly_recap_secret', true)
+      'x-recap-secret', 'df733d9f036cf2476489ee0d61c0cdbc5d78495c7b36c04bef366b17905aa3dc'
     ),
     body := '{}'::jsonb
   ) AS request_id;
-  $$
+  $job$
 );
