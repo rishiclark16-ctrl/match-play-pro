@@ -1,10 +1,10 @@
-import { Score, Player, HoleInfo } from '@/types/golf';
+import { Score, Player, HoleInfo, Team } from '@/types/golf';
 
 export type StrokesPerHoleMap = Map<string, Map<number, number>>;
 
 export interface MatchPlayHoleResult {
   holeNumber: number;
-  winnerId: string | null; // null = halved
+  winnerId: string | null; // null = halved (singles: player id, fourball: team id)
   grossScores: Record<string, number>;
   netScores: Record<string, number>;
   strokesReceived: Record<string, number>;
@@ -12,14 +12,16 @@ export interface MatchPlayHoleResult {
 
 export interface MatchPlayResult {
   holeResults: MatchPlayHoleResult[];
-  leaderId: string | null;
-  holesUp: number; // positive = leader is up by this many
+  leaderId: string | null; // singles: player id, fourball: team id
+  holesUp: number;
   holesPlayed: number;
   holesRemaining: number;
   matchStatus: 'ongoing' | 'dormie' | 'won' | 'halved' | 'not_started';
   winnerId: string | null;
-  statusText: string; // "Jack 2 UP", "All Square", "Tim 3&2"
-  winMargin?: string; // "3&2", "1 UP", etc.
+  statusText: string;
+  winMargin?: string;
+  format: 'singles' | 'fourball';
+  teams?: Team[];
 }
 
 /**
@@ -147,6 +149,138 @@ export function calculateMatchPlay(
     winnerId,
     statusText,
     winMargin,
+    format: 'singles' as const,
+  };
+}
+
+/**
+ * Calculate Fourball (Better Ball) Match Play for 3-4 players in 2 teams.
+ * Each player plays their own ball; best net score per team wins the hole.
+ */
+export function calculateFourballMatchPlay(
+  scores: Score[],
+  players: Player[],
+  holeInfo: HoleInfo[],
+  strokesPerHole: StrokesPerHoleMap | undefined,
+  totalHoles: 9 | 18,
+  teams: Team[]
+): MatchPlayResult {
+  if (teams.length !== 2) {
+    return {
+      holeResults: [],
+      leaderId: null,
+      holesUp: 0,
+      holesPlayed: 0,
+      holesRemaining: totalHoles,
+      matchStatus: 'not_started',
+      winnerId: null,
+      statusText: 'Fourball requires 2 teams',
+      format: 'fourball',
+      teams,
+    };
+  }
+
+  const [teamA, teamB] = teams;
+  const holeResults: MatchPlayHoleResult[] = [];
+
+  let teamAWins = 0;
+  let teamBWins = 0;
+  let holesPlayed = 0;
+
+  for (let holeNum = 1; holeNum <= totalHoles; holeNum++) {
+    const holeData = holeInfo.find(h => h.number === holeNum);
+    if (!holeData) continue;
+
+    const getTeamBestNet = (team: Team): { bestNet: number; grossScores: Record<string, number>; netScores: Record<string, number>; strokesRec: Record<string, number> } | null => {
+      let bestNet = Infinity;
+      const grossScores: Record<string, number> = {};
+      const netScores: Record<string, number> = {};
+      const strokesRec: Record<string, number> = {};
+      let anyScored = false;
+
+      for (const pid of team.playerIds) {
+        const score = scores.find(s => s.playerId === pid && s.holeNumber === holeNum);
+        if (!score) continue;
+        anyScored = true;
+        const strokes = strokesPerHole?.get(pid)?.get(holeNum) ?? 0;
+        const net = score.strokes - strokes;
+        grossScores[pid] = score.strokes;
+        netScores[pid] = net;
+        strokesRec[pid] = strokes;
+        if (net < bestNet) bestNet = net;
+      }
+
+      return anyScored ? { bestNet, grossScores, netScores, strokesRec } : null;
+    };
+
+    const teamAResult = getTeamBestNet(teamA);
+    const teamBResult = getTeamBestNet(teamB);
+
+    if (!teamAResult || !teamBResult) continue;
+
+    holesPlayed++;
+
+    let winnerId: string | null = null;
+    if (teamAResult.bestNet < teamBResult.bestNet) {
+      winnerId = teamA.id;
+      teamAWins++;
+    } else if (teamBResult.bestNet < teamAResult.bestNet) {
+      winnerId = teamB.id;
+      teamBWins++;
+    }
+
+    holeResults.push({
+      holeNumber: holeNum,
+      winnerId,
+      grossScores: { ...teamAResult.grossScores, ...teamBResult.grossScores },
+      netScores: { ...teamAResult.netScores, ...teamBResult.netScores },
+      strokesReceived: { ...teamAResult.strokesRec, ...teamBResult.strokesRec },
+    });
+  }
+
+  const holesRemaining = totalHoles - holesPlayed;
+  const diff = teamAWins - teamBWins;
+  const holesUp = Math.abs(diff);
+  const leaderId = diff > 0 ? teamA.id : diff < 0 ? teamB.id : null;
+  const leaderName = leaderId === teamA.id ? teamA.name : leaderId === teamB.id ? teamB.name : null;
+
+  let matchStatus: MatchPlayResult['matchStatus'] = 'ongoing';
+  let winnerId: string | null = null;
+  let statusText = 'All Square';
+  let winMargin: string | undefined;
+
+  if (holesPlayed === 0) {
+    matchStatus = 'not_started';
+    statusText = 'Match not started';
+  } else if (holesUp > holesRemaining) {
+    matchStatus = 'won';
+    winnerId = leaderId;
+    winMargin = holesRemaining === 0 ? `${holesUp} UP` : `${holesUp}&${holesRemaining}`;
+    statusText = `${leaderName} wins ${winMargin}`;
+  } else if (holesUp === holesRemaining && holesUp > 0) {
+    matchStatus = 'dormie';
+    statusText = `${leaderName} ${holesUp} UP (Dormie)`;
+  } else if (holesRemaining === 0 && holesUp === 0) {
+    matchStatus = 'halved';
+    statusText = 'Match Halved';
+  } else if (holesUp === 0) {
+    statusText = 'All Square';
+  } else {
+    statusText = `${leaderName} ${holesUp} UP`;
+  }
+
+  return {
+    holeResults,
+    leaderId,
+    holesUp,
+    holesPlayed,
+    holesRemaining,
+    matchStatus,
+    winnerId,
+    statusText,
+    winMargin,
+    format: 'fourball',
+    teams,
   };
 }
 
@@ -176,6 +310,20 @@ export function generateMatchPlayHeadline(
 ): string | null {
   if (result.matchStatus === 'not_started' || result.matchStatus === 'ongoing') return null;
   if (result.matchStatus === 'dormie') return null;
+
+  if (result.format === 'fourball' && result.teams?.length === 2) {
+    const [tA, tB] = result.teams;
+    if (result.matchStatus === 'halved') {
+      return `${tA.name} and ${tB.name} halved their match`;
+    }
+    if (result.matchStatus === 'won' && result.winnerId) {
+      const winner = result.teams.find(t => t.id === result.winnerId);
+      const loser = result.teams.find(t => t.id !== result.winnerId);
+      if (!winner || !loser) return null;
+      return `${winner.name} beat ${loser.name} ${result.winMargin || '1 UP'}`;
+    }
+    return null;
+  }
 
   if (result.matchStatus === 'halved') {
     const names = players.map(p => p.name.split(' ')[0]);

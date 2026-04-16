@@ -7,7 +7,7 @@ import { calculateNassau, canPress, createPress } from '@/lib/games/nassau';
 import { calculateStableford } from '@/lib/games/stableford';
 import { calculateBestBall } from '@/lib/games/bestball';
 import { calculateWolf } from '@/lib/games/wolf';
-import { calculateMatchPlay } from '@/lib/games/matchPlay';
+import { calculateMatchPlay, calculateFourballMatchPlay } from '@/lib/games/matchPlay';
 import { calculateVegas } from '@/lib/games/vegas';
 import { calculateNines } from '@/lib/games/nines';
 import { calculateDefender } from '@/lib/games/defender';
@@ -137,9 +137,14 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
   }, [sixesGame, scores, players, round.holeInfo, buildStrokesMap]);
 
   const matchPlayResult = useMemo(() => {
-    if (!hasMatchPlay || players.length !== 2) return null;
+    if (!hasMatchPlay) return null;
+    const isFourball = matchGame?.matchPlayFormat === 'fourball' && matchGame?.matchPlayTeams?.length === 2;
+    if (isFourball) {
+      return calculateFourballMatchPlay(scores, players, round.holeInfo, buildStrokesMap, round.holes, matchGame.matchPlayTeams!);
+    }
+    if (players.length !== 2) return null;
     return calculateMatchPlay(scores, players, round.holeInfo, buildStrokesMap, round.holes);
-  }, [hasMatchPlay, scores, players, round.holeInfo, buildStrokesMap, round.holes]);
+  }, [hasMatchPlay, matchGame, scores, players, round.holeInfo, buildStrokesMap, round.holes]);
 
   const pressablePlayer = useMemo(() => {
     if (!nassauResult || players.length !== 2) return null;
@@ -206,7 +211,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
     );
   }
 
-  if (hasMatchPlay && matchPlayResult && players.length === 2) {
+  if (hasMatchPlay && matchPlayResult) {
     sections.push(<MatchPlaySection key="match" matchGame={matchGame} matchPlayResult={matchPlayResult} players={players} />);
   }
 

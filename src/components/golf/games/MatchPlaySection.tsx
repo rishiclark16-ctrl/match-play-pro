@@ -14,22 +14,35 @@ export function MatchPlaySection({
   matchPlayResult: MatchPlayResult;
   players: PlayerWithScores[];
 }) {
+  const isFourball = matchPlayResult.format === 'fourball' && matchPlayResult.teams?.length === 2;
   const [p1, p2] = players;
   const isOver = matchPlayResult.matchStatus === 'won' || matchPlayResult.matchStatus === 'halved';
   const isDormie = matchPlayResult.matchStatus === 'dormie';
   const isAllSquare = matchPlayResult.holesUp === 0 && !isOver;
   const notStarted = matchPlayResult.matchStatus === 'not_started';
 
-  // Build hole dots from holeResults
+  const firstEntityId = isFourball ? matchPlayResult.teams![0].id : p1?.id;
+
   const holeDots: ('W' | 'L' | 'H' | null)[] = matchPlayResult.holeResults.map(hr => {
     if (hr.winnerId === null) return 'H';
-    if (hr.winnerId === p1?.id) return 'W';
+    if (hr.winnerId === firstEntityId) return 'W';
     return 'L';
   });
 
   const leaderName = matchPlayResult.leaderId
-    ? players.find(p => p.id === matchPlayResult.leaderId)?.name?.split(' ')[0] ?? ''
+    ? isFourball
+      ? matchPlayResult.teams!.find(t => t.id === matchPlayResult.leaderId)?.name ?? ''
+      : players.find(p => p.id === matchPlayResult.leaderId)?.name?.split(' ')[0] ?? ''
     : '';
+
+  const getTeamPlayerNames = (teamId: string) => {
+    const team = matchPlayResult.teams?.find(t => t.id === teamId);
+    if (!team) return '';
+    return team.playerIds
+      .map(pid => players.find(p => p.id === pid)?.name?.split(' ')[0] ?? '')
+      .filter(Boolean)
+      .join(' & ');
+  };
 
   const statusBg = isOver
     ? 'bg-[#DCFCE7] border-[#22C55E]/30'
@@ -45,7 +58,7 @@ export function MatchPlaySection({
         <div className="flex items-center gap-2">
           <LiveDot />
           <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-            Match Play
+            {isFourball ? 'Fourball Match Play' : 'Match Play'}
           </span>
           {matchGame?.stakes && matchGame.stakes > 0 && (
             <span className="text-[10px] text-muted-foreground">(${matchGame.stakes})</span>
@@ -86,53 +99,90 @@ export function MatchPlaySection({
         )}
       </div>
 
-      {/* Player rows */}
+      {/* Team/Player rows */}
       <div className="space-y-1.5">
-        {players.map(player => {
-          const isLeader = matchPlayResult.leaderId === player.id;
-          const isWinner = matchPlayResult.winnerId === player.id;
-          const strokesReceived = player.strokesPerHole
-            ? Array.from(player.strokesPerHole.values()).reduce((s, v) => s + v, 0)
-            : 0;
-
-          return (
-            <div
-              key={player.id}
-              className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50"
-            >
-              <div className="flex items-center gap-2">
-                {isWinner && <Trophy className="w-3 h-3 text-[#22C55E]" />}
-                <span className={cn('text-sm', isLeader && !isOver && 'font-bold text-[#0A0A0A]', (!isLeader || isOver) && 'font-medium text-slate-600')}>
-                  {player.name}
-                </span>
-                {strokesReceived > 0 && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#F0EE3A]/60 text-[#5A5700]">
-                    +{strokesReceived}
-                  </span>
-                )}
-              </div>
-              <span
-                className={cn(
-                  'text-sm font-bold tabular-nums',
-                  getMatchPlayStatusColor(matchPlayResult, player.id),
-                )}
+        {isFourball ? (
+          matchPlayResult.teams!.map(team => {
+            const isLeader = matchPlayResult.leaderId === team.id;
+            const isWinner = matchPlayResult.winnerId === team.id;
+            return (
+              <div
+                key={team.id}
+                className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50"
               >
-                {isLeader && matchPlayResult.holesUp > 0
-                  ? `${matchPlayResult.holesUp} UP`
-                  : matchPlayResult.holesUp === 0
-                  ? 'AS'
-                  : `${matchPlayResult.holesUp} DN`}
-              </span>
-            </div>
-          );
-        })}
+                <div className="flex items-center gap-2">
+                  {isWinner && <Trophy className="w-3 h-3 text-[#22C55E]" />}
+                  <div>
+                    <span className={cn('text-sm', isLeader && !isOver && 'font-bold text-[#0A0A0A]', (!isLeader || isOver) && 'font-medium text-slate-600')}>
+                      {team.name}
+                    </span>
+                    <p className="text-[10px] text-slate-400">{getTeamPlayerNames(team.id)}</p>
+                  </div>
+                </div>
+                <span
+                  className={cn(
+                    'text-sm font-bold tabular-nums',
+                    getMatchPlayStatusColor(matchPlayResult, team.id),
+                  )}
+                >
+                  {isLeader && matchPlayResult.holesUp > 0
+                    ? `${matchPlayResult.holesUp} UP`
+                    : matchPlayResult.holesUp === 0
+                    ? 'AS'
+                    : `${matchPlayResult.holesUp} DN`}
+                </span>
+              </div>
+            );
+          })
+        ) : (
+          players.map(player => {
+            const isLeader = matchPlayResult.leaderId === player.id;
+            const isWinner = matchPlayResult.winnerId === player.id;
+            const strokesReceived = player.strokesPerHole
+              ? Array.from(player.strokesPerHole.values()).reduce((s, v) => s + v, 0)
+              : 0;
+
+            return (
+              <div
+                key={player.id}
+                className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50"
+              >
+                <div className="flex items-center gap-2">
+                  {isWinner && <Trophy className="w-3 h-3 text-[#22C55E]" />}
+                  <span className={cn('text-sm', isLeader && !isOver && 'font-bold text-[#0A0A0A]', (!isLeader || isOver) && 'font-medium text-slate-600')}>
+                    {player.name}
+                  </span>
+                  {strokesReceived > 0 && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#F0EE3A]/60 text-[#5A5700]">
+                      +{strokesReceived}
+                    </span>
+                  )}
+                </div>
+                <span
+                  className={cn(
+                    'text-sm font-bold tabular-nums',
+                    getMatchPlayStatusColor(matchPlayResult, player.id),
+                  )}
+                >
+                  {isLeader && matchPlayResult.holesUp > 0
+                    ? `${matchPlayResult.holesUp} UP`
+                    : matchPlayResult.holesUp === 0
+                    ? 'AS'
+                    : `${matchPlayResult.holesUp} DN`}
+                </span>
+              </div>
+            );
+          })
+        )}
       </div>
 
       {/* Hole-by-hole dots */}
-      {holeDots.length > 0 && p1 && (
+      {holeDots.length > 0 && (isFourball ? matchPlayResult.teams?.[0] : p1) && (
         <div className="space-y-1">
           <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-400">
-            {p1.name.split(' ')[0]} result per hole
+            {isFourball
+              ? `${matchPlayResult.teams![0].name} result per hole`
+              : `${p1.name.split(' ')[0]} result per hole`}
           </p>
           <div className="flex flex-wrap gap-1">
             {holeDots.map((dot, i) => (

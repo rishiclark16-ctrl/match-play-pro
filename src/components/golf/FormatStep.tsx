@@ -24,9 +24,14 @@ interface FormatStepProps {
   // Scoring format
   strokePlay: boolean;
   matchPlay: boolean;
+  matchPlayFormat: 'singles' | 'fourball';
+  matchPlayTeamA: string[];
+  matchPlayTeamB: string[];
   stakes: string;
   onStrokePlayChange: (enabled: boolean) => void;
   onMatchPlayChange: (enabled: boolean) => void;
+  onMatchPlayFormatChange: (format: 'singles' | 'fourball') => void;
+  onMatchPlayTeamsChange: (teamA: string[], teamB: string[]) => void;
   onStakesChange: (stakes: string) => void;
   // Skins
   skinsEnabled: boolean;
@@ -98,9 +103,14 @@ export function FormatStep({
   players,
   strokePlay,
   matchPlay,
+  matchPlayFormat,
+  matchPlayTeamA,
+  matchPlayTeamB,
   stakes,
   onStrokePlayChange,
   onMatchPlayChange,
+  onMatchPlayFormatChange,
+  onMatchPlayTeamsChange,
   onStakesChange,
   skinsEnabled,
   skinsStakes,
@@ -414,9 +424,107 @@ export function FormatStep({
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={springTransition}
-            className="pt-3 mt-3 border-t border-border/50"
+            className="pt-3 mt-3 border-t border-border/50 space-y-3"
             onClick={e => e.stopPropagation()}
           >
+            {/* Format picker — show when 3-4 players */}
+            {playerCount >= 3 && playerCount <= 4 && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Format</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onMatchPlayFormatChange('singles')}
+                    className={cn(
+                      'p-2.5 rounded-xl border text-center transition-colors',
+                      matchPlayFormat === 'singles'
+                        ? 'border-foreground bg-foreground text-background'
+                        : 'border-border bg-muted/50 text-foreground'
+                    )}
+                  >
+                    <p className="text-xs font-bold">Singles</p>
+                    <p className="text-[10px] text-inherit opacity-60 mt-0.5">1v1 head-to-head</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onMatchPlayFormatChange('fourball')}
+                    className={cn(
+                      'p-2.5 rounded-xl border text-center transition-colors',
+                      matchPlayFormat === 'fourball'
+                        ? 'border-foreground bg-foreground text-background'
+                        : 'border-border bg-muted/50 text-foreground'
+                    )}
+                  >
+                    <p className="text-xs font-bold">Fourball</p>
+                    <p className="text-[10px] text-inherit opacity-60 mt-0.5">Best ball per team</p>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Team assignment — fourball with 3-4 players */}
+            {matchPlayFormat === 'fourball' && playerCount >= 3 && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Teams</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-3 rounded-xl bg-[#22C55E]/10 border border-[#22C55E]/30 space-y-1.5">
+                    <p className="text-[10px] font-semibold text-[#22C55E] uppercase tracking-wide">Team A</p>
+                    {validPlayers.map(p => {
+                      const isOnA = matchPlayTeamA.includes(p.id);
+                      const isOnB = matchPlayTeamB.includes(p.id);
+                      if (isOnB) return null;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            if (isOnA) {
+                              onMatchPlayTeamsChange(matchPlayTeamA.filter(id => id !== p.id), matchPlayTeamB);
+                            } else {
+                              onMatchPlayTeamsChange(matchPlayTeamA.filter(id => id !== p.id), [...matchPlayTeamB, p.id]);
+                            }
+                          }}
+                          className={cn(
+                            'w-full text-left text-sm font-medium px-2 py-1 rounded-lg transition-colors',
+                            isOnA ? 'bg-[#22C55E]/20 text-foreground' : 'text-muted-foreground'
+                          )}
+                        >
+                          {p.name.split(' ')[0]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="p-3 rounded-xl bg-foreground/5 border border-foreground/20 space-y-1.5">
+                    <p className="text-[10px] font-semibold text-foreground/60 uppercase tracking-wide">Team B</p>
+                    {validPlayers.map(p => {
+                      const isOnA = matchPlayTeamA.includes(p.id);
+                      const isOnB = matchPlayTeamB.includes(p.id);
+                      if (isOnA) return null;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            if (isOnB) {
+                              onMatchPlayTeamsChange(matchPlayTeamA, matchPlayTeamB.filter(id => id !== p.id));
+                            } else {
+                              onMatchPlayTeamsChange([...matchPlayTeamA, p.id], matchPlayTeamB.filter(id => id !== p.id));
+                            }
+                          }}
+                          className={cn(
+                            'w-full text-left text-sm font-medium px-2 py-1 rounded-lg transition-colors',
+                            isOnB ? 'bg-foreground/10 text-foreground' : 'text-muted-foreground'
+                          )}
+                        >
+                          {p.name.split(' ')[0]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-muted-foreground">$</span>
               <Input

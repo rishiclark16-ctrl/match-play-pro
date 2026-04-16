@@ -34,6 +34,8 @@ export interface GameConfig {
   autoPress?: boolean;           // Nassau: auto-press when 2 down
   modifiedStableford?: boolean;  // Stableford: modified scoring (negative points)
   teams?: Team[];                // Best Ball: team assignments
+  matchPlayFormat?: 'singles' | 'fourball'; // Match Play: singles (2p) or fourball (3-4p teams)
+  matchPlayTeams?: Team[];       // Match Play fourball: team assignments
   useNet?: boolean;              // Use handicap strokes for this game
   blindWolfMultiplier?: number;  // Wolf: Blind Wolf point multiplier (default 2x)
   wolfResults?: WolfHoleResult[]; // Wolf: Results for each hole

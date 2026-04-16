@@ -77,6 +77,9 @@ export default function NewRound() {
   // Format state
   const [strokePlay, setStrokePlay] = useState(true);
   const [matchPlay, setMatchPlay] = useState(false);
+  const [matchPlayFormat, setMatchPlayFormat] = useState<'singles' | 'fourball'>('singles');
+  const [matchPlayTeamA, setMatchPlayTeamA] = useState<string[]>([]);
+  const [matchPlayTeamB, setMatchPlayTeamB] = useState<string[]>([]);
   const [stakes, setStakes] = useState('');
   const [skinsEnabled, setSkinsEnabled] = useState(false);
   const [skinsStakes, setSkinsStakes] = useState('2');
@@ -530,11 +533,21 @@ export default function NewRound() {
       }
 
       if (matchPlay && stakes) {
-        games.push({
+        const validPlayerList = players.filter(p => p.name.trim());
+        const mpFormat = validPlayerList.length >= 3 ? matchPlayFormat : 'singles';
+        const matchConfig: GameConfig = {
           id: generateId(),
           type: 'match',
           stakes: Number(stakes) || 0,
-        });
+          matchPlayFormat: mpFormat,
+        };
+        if (mpFormat === 'fourball' && matchPlayTeamA.length > 0 && matchPlayTeamB.length > 0) {
+          matchConfig.matchPlayTeams = [
+            { id: 'team-a', name: 'Team A', playerIds: matchPlayTeamA, color: '#22C55E' },
+            { id: 'team-b', name: 'Team B', playerIds: matchPlayTeamB, color: '#6366F1' },
+          ];
+        }
+        games.push(matchConfig);
       }
 
       // Build player list, appending ghost if active
@@ -820,9 +833,21 @@ export default function NewRound() {
               players={players}
               strokePlay={strokePlay}
               matchPlay={matchPlay}
+              matchPlayFormat={matchPlayFormat}
+              matchPlayTeamA={matchPlayTeamA}
+              matchPlayTeamB={matchPlayTeamB}
               stakes={stakes}
               onStrokePlayChange={setStrokePlay}
               onMatchPlayChange={setMatchPlay}
+              onMatchPlayFormatChange={(fmt) => {
+                setMatchPlayFormat(fmt);
+                if (fmt === 'fourball' && matchPlayTeamA.length === 0 && matchPlayTeamB.length === 0) {
+                  const half = Math.ceil(players.length / 2);
+                  setMatchPlayTeamA(players.slice(0, half).map(p => p.id));
+                  setMatchPlayTeamB(players.slice(half).map(p => p.id));
+                }
+              }}
+              onMatchPlayTeamsChange={(a, b) => { setMatchPlayTeamA(a); setMatchPlayTeamB(b); }}
               onStakesChange={setStakes}
               skinsEnabled={skinsEnabled}
               skinsStakes={skinsStakes}
