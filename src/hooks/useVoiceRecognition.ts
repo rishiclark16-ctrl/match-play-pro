@@ -30,9 +30,10 @@ const SILENCE_AFTER_SPEECH_MS = 1400;
 const MAX_UTTERANCE_MS = 10000;
 /**
  * If AnalyserNode never reports audio (iOS Capacitor), auto-stop
- * recording after this many ms regardless.
+ * recording after this many ms regardless. Needs to be long enough
+ * for the user to say "Rishi 5 Jake 6" comfortably.
  */
-const IOS_FALLBACK_MS = 4000;
+const IOS_FALLBACK_MS = 8000;
 /** Delay before starting next VAD cycle after processing (ms) */
 const CYCLE_RESTART_MS = 300;
 
@@ -69,6 +70,7 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
 
   // Refs — mic stream is kept open across recording cycles
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const analyserStreamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -133,6 +135,10 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
     }
     recorderRef.current = null;
     stopMonitoring();
+    if (analyserStreamRef.current) {
+      analyserStreamRef.current.getTracks().forEach(t => t.stop());
+      analyserStreamRef.current = null;
+    }
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach(t => t.stop());
       mediaStreamRef.current = null;
@@ -171,9 +177,9 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
       setInterimTranscript(null);
 
       if (!result.transcript) {
-        // Empty transcript — restart cycle, no error
         setIsProcessing(false);
         awaitingResetRef.current = false;
+        setError('Didn\u2019t catch that. Tap the mic and try again.');
         return;
       }
 
@@ -205,7 +211,9 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
     const stream = mediaStreamRef.current;
     if (!stream || !sessionActiveRef.current) return;
 
-    // Set up AnalyserNode if not already running
+    // Set up AnalyserNode if not already running.
+    // On iOS WebKit, AudioContext connected to a MediaStream can cause
+    // MediaRecorder to capture silence. Use a cloned stream for the analyser.
     if (!analyserRef.current) {
       try {
         const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -216,7 +224,9 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
           analyser.fftSize = 256;
           analyser.smoothingTimeConstant = 0.8;
           analyserRef.current = analyser;
-          ctx.createMediaStreamSource(stream).connect(analyser);
+          const cloned = stream.clone();
+          analyserStreamRef.current = cloned;
+          ctx.createMediaStreamSource(cloned).connect(analyser);
         }
       } catch {
         // Will use fallback timer
@@ -391,8 +401,9 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
   }, [isSupported, startRecordingCycle]);
 
   const stopListening = useCallback(() => {
-    // Stop the recorder — this triggers onstop → transcribeBlob
-    // The mic stream stays alive until transcription completes and reset() is called
+    // Stop the recorder — this triggers onstop → transcribeBlob.
+    // If the iOS fallback already stopped the recorder (isRecordingRef is
+    // false), transcription is already in flight — just hide the UI.
     if (isRecordingRef.current) {
       stopCurrentRecorder();
     }
@@ -419,6 +430,10 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
       sessionActiveRef.current = false;
       setIsListening(false);
       stopMonitoring();
+      if (analyserStreamRef.current) {
+        analyserStreamRef.current.getTracks().forEach(t => t.stop());
+        analyserStreamRef.current = null;
+      }
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach(t => t.stop());
         mediaStreamRef.current = null;
