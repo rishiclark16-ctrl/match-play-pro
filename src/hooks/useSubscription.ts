@@ -16,7 +16,7 @@ export type SubscriptionStatus = 'free' | 'active' | 'expired' | 'cancelled' | '
 export type SubscriptionTier = 'free' | 'pro';
 
 // Game types for gating
-export type GameType = 'stroke' | 'match' | 'skins' | 'nassau' | 'wolf' | 'bestball' | 'stableford';
+export type GameType = 'stroke' | 'match' | 'skins' | 'nassau' | 'wolf' | 'bestball' | 'stableford' | 'vegas' | 'nines' | 'defender' | 'sixes' | 'quota' | 'rabbit';
 
 // Subscription record from database
 export interface Subscription {
@@ -50,7 +50,7 @@ export const TIER_LIMITS = {
     maxPlayers: 8,
     maxFriends: Infinity,
     maxGroups: Infinity,
-    availableGames: ['stroke', 'match', 'skins', 'nassau', 'wolf', 'bestball', 'stableford'] as GameType[],
+    availableGames: ['stroke', 'match', 'skins', 'nassau', 'wolf', 'bestball', 'stableford', 'vegas', 'nines', 'defender', 'sixes', 'quota', 'rabbit'] as GameType[],
     skinsCarryover: true,
     availablePropBets: ['ctp', 'longest_drive', 'greenie', 'sandie', 'barkie', 'polie', 'arnie', 'ferret', 'snake', 'custom'] as PropBetType[],
     hasFullStats: true,
