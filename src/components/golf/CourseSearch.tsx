@@ -49,7 +49,7 @@ export function CourseSearch({ courses, onSelectCourse, onCreateNew, onSelectApi
   return (
     <div>
       {/* Search Input */}
-      <div className="bg-white rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex items-center px-4 py-0 mb-4 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex items-center px-4 py-0 mb-4 overflow-hidden">
         <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
         <input
           type="text"
@@ -214,7 +214,7 @@ export function CourseSearch({ courses, onSelectCourse, onCreateNew, onSelectApi
       <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={onCreateNew}
-        className="border-2 border-dashed border-border rounded-2xl py-4 w-full flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground mt-2"
+        className="bg-muted/50 rounded-2xl py-4 w-full flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground mt-2"
       >
         <Plus className="w-4 h-4" />
         Add Course Manually
