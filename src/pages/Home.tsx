@@ -188,11 +188,11 @@ function SectionLabel({ children, live }: { children: React.ReactNode; live?: bo
 // ─── App Logo ─────────────────────────────────────────────────────────────────
 function AnimatedLogo() {
   return (
-    <img
-      src="/app-icon.png"
-      alt="MATCH"
-      className="w-10 h-10 rounded-[12px] flex-shrink-0"
-    />
+    <div className="w-10 h-10 rounded-[12px] flex-shrink-0 bg-[#0A0A0A] flex items-center justify-center">
+      <span className="text-[11px] font-black tracking-[-0.04em] leading-none text-white select-none">
+        M<span className="text-[#F0EE3A]">A</span>TCH
+      </span>
+    </div>
   );
 }
 
@@ -283,10 +283,9 @@ export default function Home() {
     <div className="px-6 pb-4 flex items-center justify-between pt-safe-content">
       {/* Logo */}
       <div className="flex items-center gap-[10px]">
-        <AnimatedLogo />
-        <div>
-          <h1 className="text-[22px] font-extrabold tracking-[-0.04em] leading-none text-foreground">MATCH</h1>
-        </div>
+        <h1 className="text-[28px] font-black tracking-[-0.04em] leading-none text-foreground select-none">
+          M<span className="text-[#F0EE3A]">A</span>TCH
+        </h1>
         <OfflineIndicator
           isOnline={isOnline}
           isSyncing={isSyncing}
