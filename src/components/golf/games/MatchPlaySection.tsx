@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
-import { Trophy } from 'lucide-react';
+import { Trophy, Circle } from 'lucide-react';
 import { Round, PlayerWithScores } from '@/types/golf';
-import { MatchPlayResult, getMatchPlayStatusColor } from '@/lib/games/matchPlay';
+import { MatchPlayResult, MatchPlayHoleResult, getMatchPlayStatusColor } from '@/lib/games/matchPlay';
 import { cn } from '@/lib/utils';
 import { LiveDot, HoleDot, SPRING } from './shared';
 
@@ -29,12 +29,6 @@ export function MatchPlaySection({
     return 'L';
   });
 
-  const leaderName = matchPlayResult.leaderId
-    ? isFourball
-      ? matchPlayResult.teams!.find(t => t.id === matchPlayResult.leaderId)?.name ?? ''
-      : players.find(p => p.id === matchPlayResult.leaderId)?.name?.split(' ')[0] ?? ''
-    : '';
-
   const getTeamPlayerNames = (teamId: string) => {
     const team = matchPlayResult.teams?.find(t => t.id === teamId);
     if (!team) return '';
@@ -44,6 +38,16 @@ export function MatchPlaySection({
       .join(' & ');
   };
 
+  const getTeamBestNet = (hr: MatchPlayHoleResult, teamId: string): number | null => {
+    const team = matchPlayResult.teams?.find(t => t.id === teamId);
+    if (!team) return null;
+    let best = Infinity;
+    for (const pid of team.playerIds) {
+      if (hr.netScores[pid] != null) best = Math.min(best, hr.netScores[pid]);
+    }
+    return best === Infinity ? null : best;
+  };
+
   const statusBg = isOver
     ? 'bg-[#DCFCE7] border-[#22C55E]/30'
     : isDormie
@@ -51,6 +55,25 @@ export function MatchPlaySection({
     : isAllSquare
     ? 'bg-slate-50 border-slate-200'
     : 'bg-[#0A0A0A]/5 border-[#0A0A0A]/10';
+
+  // Build running match score per hole for the table
+  const runningScores: { holeNum: number; teamANet: number | null; teamBNet: number | null; winnerId: string | null; runningText: string }[] = [];
+  if (isFourball) {
+    const [tA, tB] = matchPlayResult.teams!;
+    let aWins = 0;
+    let bWins = 0;
+    for (const hr of matchPlayResult.holeResults) {
+      const teamANet = getTeamBestNet(hr, tA.id);
+      const teamBNet = getTeamBestNet(hr, tB.id);
+      if (hr.winnerId === tA.id) aWins++;
+      else if (hr.winnerId === tB.id) bWins++;
+      const diff = aWins - bWins;
+      let runningText = 'AS';
+      if (diff > 0) runningText = `${tA.name} ${diff} UP`;
+      else if (diff < 0) runningText = `${tB.name} ${Math.abs(diff)} UP`;
+      runningScores.push({ holeNum: hr.holeNumber, teamANet, teamBNet, winnerId: hr.winnerId, runningText });
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -108,10 +131,13 @@ export function MatchPlaySection({
             return (
               <div
                 key={team.id}
-                className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50"
+                className={cn(
+                  'flex items-center justify-between px-3 py-2.5 rounded-xl',
+                  isWinner ? 'bg-[#DCFCE7]' : isLeader && !isOver ? 'bg-slate-100' : 'bg-slate-50',
+                )}
               >
                 <div className="flex items-center gap-2">
-                  {isWinner && <Trophy className="w-3 h-3 text-[#22C55E]" />}
+                  {isWinner && <Trophy className="w-3.5 h-3.5 text-[#22C55E]" />}
                   <div>
                     <span className={cn('text-sm', isLeader && !isOver && 'font-bold text-[#0A0A0A]', (!isLeader || isOver) && 'font-medium text-slate-600')}>
                       {team.name}
@@ -176,13 +202,66 @@ export function MatchPlaySection({
         )}
       </div>
 
-      {/* Hole-by-hole dots */}
-      {holeDots.length > 0 && (isFourball ? matchPlayResult.teams?.[0] : p1) && (
+      {/* Fourball hole-by-hole table */}
+      {isFourball && runningScores.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-400">
+            Best Ball Per Hole
+          </p>
+          <div className="rounded-xl overflow-hidden border border-slate-100">
+            {/* Header */}
+            <div className="grid grid-cols-[40px_1fr_1fr_1fr] bg-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+              <span className="px-2 py-1.5 text-center">Hole</span>
+              <span className="px-2 py-1.5 text-center">{matchPlayResult.teams![0].name}</span>
+              <span className="px-2 py-1.5 text-center">{matchPlayResult.teams![1].name}</span>
+              <span className="px-2 py-1.5 text-center">Match</span>
+            </div>
+            {/* Rows */}
+            {runningScores.map((row) => {
+              const tAId = matchPlayResult.teams![0].id;
+              const tBId = matchPlayResult.teams![1].id;
+              const aWon = row.winnerId === tAId;
+              const bWon = row.winnerId === tBId;
+              return (
+                <div
+                  key={row.holeNum}
+                  className={cn(
+                    'grid grid-cols-[40px_1fr_1fr_1fr] text-xs border-t border-slate-50',
+                    aWon && 'bg-emerald-50/50',
+                    bWon && 'bg-red-50/30',
+                    !aWon && !bWon && 'bg-white',
+                  )}
+                >
+                  <span className="px-2 py-1.5 text-center font-bold text-slate-400 tabular-nums">
+                    {row.holeNum}
+                  </span>
+                  <span className={cn(
+                    'px-2 py-1.5 text-center tabular-nums font-semibold',
+                    aWon ? 'text-emerald-600 font-bold' : 'text-slate-500',
+                  )}>
+                    {row.teamANet ?? '–'}
+                  </span>
+                  <span className={cn(
+                    'px-2 py-1.5 text-center tabular-nums font-semibold',
+                    bWon ? 'text-red-500 font-bold' : 'text-slate-500',
+                  )}>
+                    {row.teamBNet ?? '–'}
+                  </span>
+                  <span className="px-2 py-1.5 text-center text-[10px] font-medium text-slate-400 truncate">
+                    {row.runningText}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Hole-by-hole dots (singles) */}
+      {!isFourball && holeDots.length > 0 && p1 && (
         <div className="space-y-1">
           <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-400">
-            {isFourball
-              ? `${matchPlayResult.teams![0].name} result per hole`
-              : `${p1.name.split(' ')[0]} result per hole`}
+            {p1.name.split(' ')[0]} result per hole
           </p>
           <div className="flex flex-wrap gap-1">
             {holeDots.map((dot, i) => (

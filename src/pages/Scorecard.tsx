@@ -33,7 +33,7 @@ import { usePlayersWithScores } from '@/hooks/usePlayersWithScores';
 import { useSettlementPreview } from '@/hooks/useSettlementPreview';
 import { Press, PlayerWithScores, GameConfig, BingoBangoHoleResult } from '@/types/golf';
 import { checkAutoPress, createPress } from '@/lib/games/nassau';
-import { calculateMatchPlay, generateMatchPlayHeadline } from '@/lib/games/matchPlay';
+import { calculateMatchPlay, calculateFourballMatchPlay, generateMatchPlayHeadline } from '@/lib/games/matchPlay';
 import { sendPushToProfiles } from '@/lib/pushUtils';
 import { capture } from '@/lib/posthog';
 import { supabase } from '@/integrations/supabase/client';
@@ -403,8 +403,9 @@ export default function Scorecard() {
     const headlines: string[] = [];
     const matchPlayGame = round.games?.find(g => g.type === 'match_play');
 
-    if (matchPlayGame && playersWithScores.length === 2) {
-      // Build strokes map for net scoring
+    if (matchPlayGame) {
+      const isFourball = matchPlayGame.matchPlayFormat === 'fourball' && matchPlayGame.matchPlayTeams?.length === 2;
+
       let strokesPerHole: Map<string, Map<number, number>> | undefined;
       if (matchPlayGame.useNet) {
         strokesPerHole = new Map();
@@ -416,23 +417,21 @@ export default function Scorecard() {
         if (strokesPerHole.size === 0) strokesPerHole = undefined;
       }
 
-      const mpResult = calculateMatchPlay(
-        roundScores,
-        playersWithScores,
-        round.holeInfo,
-        strokesPerHole,
-        round.holes as 9 | 18
-      );
+      const mpResult = isFourball
+        ? calculateFourballMatchPlay(roundScores, playersWithScores, round.holeInfo, strokesPerHole, round.holes as 9 | 18, matchPlayGame.matchPlayTeams!)
+        : playersWithScores.length === 2
+          ? calculateMatchPlay(roundScores, playersWithScores, round.holeInfo, strokesPerHole, round.holes as 9 | 18)
+          : null;
 
-      const headline = generateMatchPlayHeadline(mpResult, playersWithScores);
-      if (headline) {
-        headlines.push(headline);
-
-        // Store result headline in the game config for feed display
-        const updatedGames = (round.games || []).map(g =>
-          g.type === 'match_play' ? { ...g, resultHeadline: headline } : g
-        );
-        updateGamesSupabase(updatedGames);
+      if (mpResult) {
+        const headline = generateMatchPlayHeadline(mpResult, playersWithScores);
+        if (headline) {
+          headlines.push(headline);
+          const updatedGames = (round.games || []).map(g =>
+            g.type === 'match_play' ? { ...g, resultHeadline: headline } : g
+          );
+          updateGamesSupabase(updatedGames);
+        }
       }
     }
 
