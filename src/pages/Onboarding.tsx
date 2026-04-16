@@ -140,6 +140,7 @@ export default function Onboarding() {
         return;
       }
       hapticSuccess();
+      sessionStorage.setItem('onboarded', '1');
       navigate('/', { replace: true, state: { showTutorial: true, fromOnboarding: true } });
     } catch {
       toast.error('Something went wrong. Please try again.');

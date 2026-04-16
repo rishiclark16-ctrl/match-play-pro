@@ -52,8 +52,11 @@ function OnboardingRedirect() {
 
   useEffect(() => {
     if (loading || !profile) return;
-    // Skip redirect if the user just finished onboarding (state flag set by Onboarding.tsx)
-    if ((location.state as { fromOnboarding?: boolean } | null)?.fromOnboarding) return;
+    if ((location.state as { fromOnboarding?: boolean } | null)?.fromOnboarding) {
+      sessionStorage.setItem('onboarded', '1');
+      return;
+    }
+    if (sessionStorage.getItem('onboarded')) return;
     if (profile.has_onboarded === false && location.pathname !== '/onboarding') {
       navigate('/onboarding', { replace: true });
     }
