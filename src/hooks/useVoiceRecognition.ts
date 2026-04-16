@@ -164,7 +164,7 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
 
       if (blob.size < 200) {
         console.log('[Voice] Blob too small, skipping');
-        // Don't show error — just restart the cycle silently
+
         setIsProcessing(false);
         setInterimTranscript(null);
         awaitingResetRef.current = false;
@@ -253,6 +253,7 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
       const chunks = chunksRef.current;
       chunksRef.current = [];
 
+
       if (chunks.length > 0 && sessionActiveRef.current) {
         const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
         transcribeBlob(blob);
@@ -278,6 +279,7 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
     fallbackTimerRef.current = setTimeout(() => {
       if (isRecordingRef.current && !analyserWorkingRef.current && sessionActiveRef.current) {
         console.log('[Voice] iOS fallback — stopping recording');
+
         stopCurrentRecorder();
       }
     }, IOS_FALLBACK_MS);
@@ -340,6 +342,7 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}): U
           silenceTimerRef.current = setTimeout(() => {
             if (isRecordingRef.current && sessionActiveRef.current) {
               console.log('[Voice] Silence detected — stopping recording');
+
               stopCurrentRecorder();
             }
           }, SILENCE_AFTER_SPEECH_MS);

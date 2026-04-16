@@ -14,7 +14,7 @@ function getCorsHeaders(req: Request): Record<string, string> {
   const allowed = ALLOWED_ORIGINS.includes(origin) || (IS_DEV && origin.startsWith('http://localhost:'));
   return {
     'Access-Control-Allow-Origin': allowed ? origin : ALLOWED_ORIGINS[0],
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-player-names',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-player-names, x-user-token',
     'Vary': 'Origin',
   };
 }
@@ -67,21 +67,21 @@ async function transcribeWithDeepgram(
     language: 'en-US',
     smart_format: 'false',
     punctuate: 'false',
-    alternatives: '3',
+    alternatives: '1',
     utterances: 'false',
   });
 
-  // Player names — high boost (3)
+  // Player names — high boost (Nova-3 uses `keyterm` not `keywords`)
   for (const name of playerNames) {
     const firstName = name.split(' ')[0].trim();
     if (firstName.length >= 2) {
-      params.append('keywords', `${firstName}:3`);
+      params.append('keyterm', `${firstName}:3`);
     }
   }
 
-  // Golf terms — medium boost (2)
+  // Golf terms — medium boost
   for (const term of GOLF_KEYWORDS) {
-    params.append('keywords', `${term}:2`);
+    params.append('keyterm', `${term}:2`);
   }
 
   const response = await fetch(
@@ -99,7 +99,7 @@ async function transcribeWithDeepgram(
   if (!response.ok) {
     const errorText = await response.text();
     console.error('Deepgram error:', response.status, errorText);
-    throw new Error(`Deepgram failed: ${response.status}`);
+    throw new Error(`Deepgram ${response.status}: ${errorText.slice(0, 200)}`);
   }
 
   const data = await response.json();
@@ -192,9 +192,19 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authorization
+    // Verify authorization — supports both direct JWT and relay bypass.
+    // When the client's session JWT uses ES256 (Apple Sign-In on newer
+    // Supabase projects), the edge function relay rejects it. The client
+    // sends the anon key as Bearer (to pass the relay) and the real user
+    // token in X-User-Token. We verify the user token server-side via
+    // GoTrue which supports all algorithms.
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
+    const userTokenHeader = req.headers.get('X-User-Token');
+    const effectiveAuth = userTokenHeader
+      ? `Bearer ${userTokenHeader}`
+      : authHeader;
+
+    if (!effectiveAuth?.startsWith('Bearer ')) {
       return new Response(
         JSON.stringify({ error: 'Missing authorization' }),
         { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } },
@@ -204,7 +214,7 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: { Authorization: effectiveAuth } },
     });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -283,9 +293,10 @@ serve(async (req) => {
       { headers: { ...cors, 'Content-Type': 'application/json' } },
     );
   } catch (err) {
-    console.error('speech-to-text error:', err);
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error('speech-to-text error:', detail);
     return new Response(
-      JSON.stringify({ error: 'Transcription failed' }),
+      JSON.stringify({ error: `Transcription failed: ${detail}` }),
       { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } },
     );
   }

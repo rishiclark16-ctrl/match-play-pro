@@ -9,13 +9,6 @@ import {
   feedbackVoiceError,
   feedbackAllScored,
   feedbackNextHole,
-  speakScoreConfirmation,
-  speakAllScored,
-  speakError,
-  speakCorrection,
-  speakNavigation,
-  speakScoreQuery,
-  speakMissingPlayers,
   setSpeechEnabled,
 } from '@/lib/voiceFeedback';
 import { toast } from 'sonner';
@@ -113,15 +106,8 @@ export function useVoiceScoring({
   }, [isListening, isProcessing]);
 
   const restartListeningForContinuousMode = useCallback(() => {
-    if (continuousVoice && isSupported) {
-      if (continuousVoiceTimeoutRef.current) {
-        clearTimeout(continuousVoiceTimeoutRef.current);
-      }
-      continuousVoiceTimeoutRef.current = setTimeout(() => {
-        startListening();
-      }, 1500);
-    }
-  }, [continuousVoice, isSupported, startListening]);
+    // Disabled — single-utterance mode. User taps mic each time.
+  }, []);
 
   // Adjust confidence based on browser's Speech API confidence score
   const adjustConfidence = useCallback((result: ParseResult): ParseResult => {
@@ -200,7 +186,6 @@ export function useVoiceScoring({
     if (queryScoreCmd && queryScoreCmd.queryPlayerId && getPlayerScore) {
       const score = getPlayerScore(queryScoreCmd.queryPlayerId);
       if (score !== null) {
-        speakScoreQuery(queryScoreCmd.queryPlayerName || '', score, currentHole);
         toast.info(`${(queryScoreCmd.queryPlayerName || '').split(' ')[0]}: ${score}`, { duration: 2000 });
       } else {
         toast.info(`${(queryScoreCmd.queryPlayerName || '').split(' ')[0]} hasn't scored yet`, { duration: 2000 });
@@ -217,7 +202,6 @@ export function useVoiceScoring({
         toast.success('Everyone has scored!', { duration: 2000 });
       } else {
         const names = missing.map(p => p.name);
-        speakMissingPlayers(names);
         toast.info(`Waiting: ${names.map(n => n.split(' ')[0]).join(', ')}`, { duration: 3000 });
       }
       resetVoice();
@@ -227,7 +211,6 @@ export function useVoiceScoring({
 
     const queryParCmd = commands.find(c => c.type === 'query_par');
     if (queryParCmd) {
-      speakNavigation(currentHole, par);
       toast.info(`Hole ${currentHole} — Par ${par}`, { duration: 2000 });
       resetVoice();
       restartListeningForContinuousMode();
@@ -268,7 +251,6 @@ export function useVoiceScoring({
         const targetHole = Math.min(totalHoles, Math.max(1, navCommand.holeNumber));
         onNavigateToHole(targetHole);
         feedbackNextHole();
-        speakNavigation(targetHole);
         toast.info(`Hole ${targetHole}`, { duration: 1500 });
         resetVoice();
         restartListeningForContinuousMode();
@@ -277,7 +259,6 @@ export function useVoiceScoring({
         const targetHole = Math.min(totalHoles, Math.max(1, navCommand.holeNumber));
         onNavigateToHole(targetHole);
         feedbackNextHole();
-        speakNavigation(targetHole);
         toast.info(`Hole ${targetHole}`, { duration: 1500 });
         resetVoice();
         restartListeningForContinuousMode();
@@ -286,7 +267,6 @@ export function useVoiceScoring({
         if (currentHole < totalHoles) {
           onNavigateToHole(currentHole + 1);
           feedbackNextHole();
-          speakNavigation(currentHole + 1);
           toast.info(`Hole ${currentHole + 1}`, { duration: 1500 });
         }
         resetVoice();
@@ -296,7 +276,6 @@ export function useVoiceScoring({
         if (currentHole > 1) {
           onNavigateToHole(currentHole - 1);
           feedbackNextHole();
-          speakNavigation(currentHole - 1);
           toast.info(`Hole ${currentHole - 1}`, { duration: 1500 });
         }
         resetVoice();
@@ -310,7 +289,6 @@ export function useVoiceScoring({
     if (correction) {
       onScoreSaved(correction.playerId, correction.newScore);
       feedbackVoiceSuccess();
-      speakCorrection(correction.playerName, correction.newScore);
       toast.success(`${correction.playerName.split(' ')[0]} → ${correction.newScore}`, { duration: 2000 });
       resetVoice();
       restartListeningForContinuousMode();
@@ -342,11 +320,9 @@ export function useVoiceScoring({
 
         if (result.scores.length === players.length) {
           feedbackAllScored();
-          speakAllScored(currentHole);
           toast.success(`All ${result.scores.length} scores saved!`, { duration: 5000 });
         } else {
           feedbackVoiceSuccess();
-          speakScoreConfirmation(result.scores);
           const scoresSummary = result.scores
             .map(s => `${s.playerName.split(' ')[0]} ${s.score}`)
             .join(', ');
@@ -363,7 +339,6 @@ export function useVoiceScoring({
       } else {
         // Low confidence - show error modal
         feedbackVoiceError();
-        speakError();
         setParseResult(result);
         setShowVoiceModal(true);
         resetVoice();
@@ -371,7 +346,6 @@ export function useVoiceScoring({
     } else {
       // No score content detected
       feedbackVoiceError();
-      speakError();
       setParseResult({
         success: false,
         scores: [],
@@ -412,7 +386,6 @@ export function useVoiceScoring({
     setShowVoiceModal(false);
     setParseResult(null);
     feedbackVoiceSuccess();
-    speakScoreConfirmation(scores);
     toast.success(`${scores.length} score${scores.length > 1 ? 's' : ''} saved!`, { duration: 2000 });
     capture('voice_score_entered', { count: scores.length });
 

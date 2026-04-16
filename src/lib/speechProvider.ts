@@ -61,16 +61,37 @@ export async function transcribeAudio(
   const apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   const url = `${supabaseUrl}/functions/v1/speech-to-text`;
+
+  // Supabase edge function relay rejects ES256 JWTs (common with Apple
+  // Sign-In on newer Supabase projects). Send the anon key as Bearer
+  // to pass the relay, and the user's token in a custom header for
+  // server-side verification via GoTrue.
+  let bearerToken = session.access_token;
+  let userTokenHeader: string | undefined;
+  try {
+    const header = JSON.parse(atob(session.access_token.split('.')[0]));
+    console.log('[SpeechProvider] JWT alg:', header.alg);
+    if (header.alg !== 'HS256') {
+      bearerToken = apiKey;
+      userTokenHeader = session.access_token;
+    }
+  } catch { /* proceed with session token */ }
+
   console.log('[SpeechProvider] POST', url, 'blob:', audioBlob.size, 'bytes, type:', audioBlob.type, 'players:', playerNames);
+
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${bearerToken}`,
+    'Content-Type': audioBlob.type || 'audio/webm;codecs=opus',
+    'X-Player-Names': playerNames.join(','),
+    'apikey': apiKey,
+  };
+  if (userTokenHeader) {
+    headers['X-User-Token'] = userTokenHeader;
+  }
 
   const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${session.access_token}`,
-      'Content-Type': audioBlob.type || 'audio/webm;codecs=opus',
-      'X-Player-Names': playerNames.join(','),
-      'apikey': apiKey,
-    },
+    headers,
     body: audioBlob,
   });
 

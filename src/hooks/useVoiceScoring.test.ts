@@ -577,7 +577,7 @@ describe('useVoiceScoring', () => {
       expect(feedbackVoiceSuccess()).toHaveBeenCalled();
     });
 
-    it('should restart listening in continuous mode', () => {
+    it('should NOT restart listening after confirm (single-utterance mode)', () => {
       const { result } = renderHook(() =>
         useVoiceScoring({
           ...defaultOptions,
@@ -593,7 +593,7 @@ describe('useVoiceScoring', () => {
         vi.advanceTimersByTime(1500);
       });
 
-      expect(mockVoiceRecognition.startListening).toHaveBeenCalled();
+      expect(mockVoiceRecognition.startListening).not.toHaveBeenCalled();
     });
   });
 
@@ -658,7 +658,7 @@ describe('useVoiceScoring', () => {
   });
 
   describe('continuous voice mode', () => {
-    it('should restart listening after high confidence save', () => {
+    it('should NOT restart listening after high confidence save (single-utterance mode)', () => {
       hasScoreContentSpy.mockReturnValue(true);
       parseVoiceInputSpy.mockReturnValue({
         success: true,
@@ -688,7 +688,7 @@ describe('useVoiceScoring', () => {
         vi.advanceTimersByTime(1500);
       });
 
-      expect(mockVoiceRecognition.startListening).toHaveBeenCalled();
+      expect(mockVoiceRecognition.startListening).not.toHaveBeenCalled();
     });
 
     it('should not restart listening when continuousVoice is false', () => {
