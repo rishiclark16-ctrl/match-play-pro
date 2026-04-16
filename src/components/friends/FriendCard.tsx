@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -11,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { UserMinus, MapPin, Swords } from 'lucide-react';
+import { UserMinus, MapPin, Swords, ChevronRight } from 'lucide-react';
 import type { Friend } from '@/hooks/useFriends';
 import { useHeadToHead } from '@/hooks/useHeadToHead';
 
@@ -23,6 +24,7 @@ interface FriendCardProps {
 
 export function FriendCard({ friend, onRemove, isRemoving }: FriendCardProps) {
   const [showConfirm, setShowConfirm] = useState(false);
+  const navigate = useNavigate();
   const { record } = useHeadToHead(friend.id);
 
   const getInitials = (name: string | null) => {
@@ -32,15 +34,21 @@ export function FriendCard({ friend, onRemove, isRemoving }: FriendCardProps) {
 
   return (
     <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] px-4 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <Avatar className="h-11 w-11 rounded-xl border-0 overflow-hidden">
+      <button
+        onClick={() => navigate(`/profile/${friend.id}`)}
+        className="flex items-center gap-3 flex-1 min-w-0 text-left"
+      >
+        <Avatar className="h-11 w-11 rounded-xl border-0 overflow-hidden shrink-0">
           <AvatarImage src={friend.avatarUrl || undefined} alt={friend.fullName || 'Friend'} />
           <AvatarFallback className="bg-muted text-foreground text-sm font-bold rounded-xl">
             {getInitials(friend.fullName)}
           </AvatarFallback>
         </Avatar>
-        <div>
-          <p className="font-semibold text-foreground">{friend.fullName || 'Unknown'}</p>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1">
+            <p className="font-semibold text-foreground truncate">{friend.fullName || 'Unknown'}</p>
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+          </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {friend.handicap !== null && (
               <span className="font-mono font-bold bg-muted px-1.5 py-0.5 rounded-lg text-[11px]">
@@ -65,12 +73,12 @@ export function FriendCard({ friend, onRemove, isRemoving }: FriendCardProps) {
             </div>
           )}
         </div>
-      </div>
+      </button>
       <motion.button
         whileTap={{ scale: 0.88 }}
         onClick={() => setShowConfirm(true)}
         disabled={isRemoving}
-        className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground disabled:opacity-40"
+        className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground disabled:opacity-40 shrink-0 ml-2"
       >
         <UserMinus className="h-4 w-4" />
       </motion.button>
