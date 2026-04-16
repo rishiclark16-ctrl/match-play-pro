@@ -25,6 +25,8 @@ export function initPostHog() {
     respect_dnt: true,
     // Disable session recording on native (webview limitations)
     disable_session_recording: Capacitor.isNativePlatform(),
+    // Hide in-app survey/feedback widget
+    disable_surveys: true,
     // Persist across sessions
     persistence: 'localStorage',
     // Bootstrap with platform info
