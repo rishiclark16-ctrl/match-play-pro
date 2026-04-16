@@ -58,16 +58,19 @@ export function initSentry() {
       return event;
     },
 
-    // Integrations
-    integrations: [
-      Sentry.browserTracingIntegration({
-        enableInp: true, // Interaction to Next Paint
-      }),
-      Sentry.replayIntegration({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
-    ],
+    // Integrations — strip any auto-injected feedback widget
+    integrations(defaults) {
+      return [
+        ...defaults.filter(i => !i.name.includes('Feedback')),
+        Sentry.browserTracingIntegration({
+          enableInp: true,
+        }),
+        Sentry.replayIntegration({
+          maskAllText: true,
+          blockAllMedia: true,
+        }),
+      ];
+    },
 
     // Global tags for filtering
     initialScope: {
@@ -155,15 +158,6 @@ export async function withSpan<T>(
   });
 }
 
-/**
- * Show the Sentry user feedback dialog
- */
-export function showFeedbackDialog() {
-  const feedback = Sentry.getFeedback();
-  if (feedback) {
-    feedback.createForm().then(form => form.appendToDom());
-  }
-}
 
 // Export Sentry for advanced usage (ErrorBoundary, etc.)
 export { Sentry };

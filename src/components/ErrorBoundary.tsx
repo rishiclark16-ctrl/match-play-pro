@@ -1,6 +1,6 @@
 import React, { Component, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { captureException, addBreadcrumb, showFeedbackDialog } from '@/lib/sentry';
+import { captureException, addBreadcrumb } from '@/lib/sentry';
 
 interface Props {
   children: ReactNode;
@@ -47,7 +47,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   handleReportBug = (): void => {
-    showFeedbackDialog();
+    window.location.href = '/support';
   };
 
   render(): ReactNode {
