@@ -97,7 +97,9 @@ export function computeAllTimeStats(
     }
 
     // ── bestPayout ──
-    if (userTotal === minTotal && allTotals.filter(t => t === minTotal).length === 1) {
+    // Solo rounds (no games configured) can't produce a payout — skip.
+    const hasBettingGame = Array.isArray(round.games) && round.games.length > 0;
+    if (hasBettingGame && userTotal === minTotal && allTotals.filter(t => t === minTotal).length === 1) {
       if (round.stakes) {
         const otherPlayers = Object.keys(playerTotals).length - 1;
         const payout = (round.stakes as number) * otherPlayers;

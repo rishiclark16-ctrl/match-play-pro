@@ -124,14 +124,14 @@ describe('computeAllTimeStats — bestPayout', () => {
   });
 
   it('returns null when user does not win', () => {
-    const round = makeFullRound('r-1', 'Course', 5, 4, { stakes: 10 }); // user loses
+    const round = makeFullRound('r-1', 'Course', 5, 4, { stakes: 10, games: [{ type: 'nassau' }] }); // user loses
     const result = computeAllTimeStats([round], USER_ID);
     expect(result.bestPayout).toBeNull();
   });
 
   it('calculates payout as stakes × number of other players', () => {
     // 2 players total → 1 other player → payout = stakes × 1
-    const round = makeFullRound('r-1', 'Windy Course', 4, 5, { stakes: 20 });
+    const round = makeFullRound('r-1', 'Windy Course', 4, 5, { stakes: 20, games: [{ type: 'nassau' }] });
     const result = computeAllTimeStats([round], USER_ID);
     expect(result.bestPayout).not.toBeNull();
     expect(result.bestPayout!.amount).toBe(20); // 20 × 1
@@ -146,15 +146,16 @@ describe('computeAllTimeStats — bestPayout', () => {
       scores.push(makeScore(OTHER_PLAYER_ID, hole, 5, 4));
       scores.push(makeScore(THIRD_PLAYER_ID, hole, 5, 4));
     }
-    const round = makeRound({ id: 'r-1', course_name: 'Big Game', scores, stakes: 15 });
+    const round = makeRound({ id: 'r-1', course_name: 'Big Game', scores, stakes: 15, games: [{ type: 'nassau' }] });
     const result = computeAllTimeStats([round], USER_ID);
     expect(result.bestPayout!.amount).toBe(30); // 15 × 2
   });
 
   it('picks the highest single-round payout across multiple rounds', () => {
-    const roundSmall = makeFullRound('r-1', 'Small Stakes', 4, 5, { stakes: 10 });
-    const roundBig   = makeFullRound('r-2', 'Big Stakes',   4, 5, { stakes: 50 });
-    const roundLoss  = makeFullRound('r-3', 'Loss Round',   5, 4, { stakes: 100 });
+    const games = [{ type: 'nassau' }];
+    const roundSmall = makeFullRound('r-1', 'Small Stakes', 4, 5, { stakes: 10,  games });
+    const roundBig   = makeFullRound('r-2', 'Big Stakes',   4, 5, { stakes: 50,  games });
+    const roundLoss  = makeFullRound('r-3', 'Loss Round',   5, 4, { stakes: 100, games });
 
     const result = computeAllTimeStats([roundSmall, roundBig, roundLoss], USER_ID);
     expect(result.bestPayout!.amount).toBe(50);
@@ -168,7 +169,18 @@ describe('computeAllTimeStats — bestPayout', () => {
       scores.push(makeScore(USER_PLAYER_ID, hole, 4, 4));
       scores.push(makeScore(OTHER_PLAYER_ID, hole, 4, 4));
     }
-    const round = makeRound({ scores, stakes: 20 });
+    const round = makeRound({ scores, stakes: 20, games: [{ type: 'nassau' }] });
+    const result = computeAllTimeStats([round], USER_ID);
+    expect(result.bestPayout).toBeNull();
+  });
+
+  it('excludes solo rounds (no games) from bestPayout even if stakes set', () => {
+    // Solo round: only the user has scores, games array is empty.
+    const scores: RoundDataForStats['scores'] = [];
+    for (let hole = 1; hole <= 18; hole++) {
+      scores.push(makeScore(USER_PLAYER_ID, hole, 4, 4));
+    }
+    const round = makeRound({ scores, stakes: 20, games: [] });
     const result = computeAllTimeStats([round], USER_ID);
     expect(result.bestPayout).toBeNull();
   });
