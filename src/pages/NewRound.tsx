@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Loader2, Flag, Users, Gamepad2, Sparkles, ToggleLeft, ToggleRight, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, Flag, Users, Gamepad2, Sparkles, ToggleLeft, ToggleRight, ChevronRight, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TeeSelector } from '@/components/golf/TeeSelector';
 import { CourseStep } from '@/components/golf/CourseStep';
@@ -26,7 +26,8 @@ import { toast } from 'sonner';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { PaywallModal } from '@/components/subscription/PaywallModal';
 
-type Step = 'course' | 'players' | 'format';
+type Step = 'mode' | 'course' | 'players' | 'format';
+type RoundMode = 'solo' | 'multi';
 
 interface PlayerData {
   id: string;
@@ -51,7 +52,8 @@ export default function NewRound() {
 
   // UI state
   const [isCreating, setIsCreating] = useState(false);
-  const [step, setStep] = useState<Step>('course');
+  const [step, setStep] = useState<Step>('mode');
+  const [mode, setMode] = useState<RoundMode>('multi');
   const [showPaywall, setShowPaywall] = useState(false);
   const [isLoadingApiCourse, setIsLoadingApiCourse] = useState(false);
   const [showTeeSelector, setShowTeeSelector] = useState(false);
@@ -229,6 +231,7 @@ export default function NewRound() {
   useEffect(() => {
     const preSelectFormatId = (location.state as { preSelectFormatId?: string } | null)?.preSelectFormatId;
     if (preSelectFormatId) {
+      setMode('multi');
       setSelectedPersonalFormatId(preSelectFormatId);
 
       // Restore form state saved before navigating to the AI builder
@@ -411,6 +414,49 @@ export default function NewRound() {
       }
       return next;
     });
+  };
+
+  // Solo round creator — single player, no games, minimal fields.
+  const handleStartSoloRound = async () => {
+    if (!selectedCourse || isCreating) return;
+    setIsCreating(true);
+    try {
+      const holeInfo: HoleInfo[] = selectedCourse.holes.slice(0, holeCount);
+      const soloName = (profile?.full_name?.trim()) || 'Me';
+      const result = await createRound({
+        courseId: selectedCourse.id,
+        courseName: selectedCourse.name,
+        holes: holeCount,
+        holeInfo,
+        strokePlay: true,
+        matchPlay: false,
+        slope: selectedCourse.slope,
+        rating: selectedCourse.rating,
+        handicapMode: 'auto',
+        games: [],
+        players: [{
+          name: soloName,
+          handicap: profile?.handicap ?? undefined,
+          manualStrokes: 0,
+          profileId: undefined,
+          isGhost: false,
+        }],
+      });
+
+      if (result.round) {
+        toast.success('Solo round started — good luck!');
+        navigate(`/round/${result.round.id}`);
+      } else if (result.error) {
+        toast.error(result.error.message);
+        if (result.error.isAuthError) navigate('/auth');
+      } else {
+        toast.error('Failed to create round. Please try again.');
+      }
+    } catch {
+      toast.error('Failed to create round. Please try again.');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   // Start round handler
@@ -630,13 +676,18 @@ export default function NewRound() {
     }
   };
 
-  const steps: Step[] = ['course', 'players', 'format'];
+  const steps: Step[] = mode === 'solo'
+    ? ['mode', 'course']
+    : ['mode', 'course', 'players', 'format'];
   const currentStepIndex = steps.indexOf(step);
   const stepConfig = {
+    mode: { title: 'New Round', icon: Flag },
     course: { title: 'Course Setup', icon: Flag },
     players: { title: 'Add Players', icon: Users },
     format: { title: 'Game Format', icon: Gamepad2 },
   };
+
+  const isFinalStep = step === steps[steps.length - 1];
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background relative">
@@ -685,6 +736,60 @@ export default function NewRound() {
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <AnimatePresence mode="wait">
+          {step === 'mode' && (
+            <motion.div
+              key="mode"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              className="pt-4 space-y-3"
+            >
+              <p className="text-[13px] text-muted-foreground mb-1 px-1">
+                How do you want to play today?
+              </p>
+
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => { hapticLight(); setMode('multi'); setStep('course'); }}
+                className={cn(
+                  'w-full rounded-2xl border-2 px-4 py-5 flex items-center gap-4 text-left transition-colors',
+                  'bg-[#0A0A0A] border-[#0A0A0A]'
+                )}
+              >
+                <div className="w-11 h-11 rounded-xl bg-[#F0EE3A] flex items-center justify-center flex-shrink-0">
+                  <Users className="w-5 h-5 text-[#0A0A0A]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-bold text-white">With Others</p>
+                  <p className="text-[12px] text-white/60 leading-snug">
+                    Scoring, betting games, match play
+                  </p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-white/60 flex-shrink-0" />
+              </motion.button>
+
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => { hapticLight(); setMode('solo'); setStep('course'); }}
+                className={cn(
+                  'w-full rounded-2xl border-2 px-4 py-5 flex items-center gap-4 text-left transition-colors',
+                  'bg-white border-border/40'
+                )}
+              >
+                <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+                  <Target className="w-5 h-5 text-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-bold text-foreground">Solo</p>
+                  <p className="text-[12px] text-muted-foreground leading-snug">
+                    Track just your stats — no bets, no teams
+                  </p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+              </motion.button>
+            </motion.div>
+          )}
           {step === 'course' && (
             <CourseStep
               key="course"
@@ -916,42 +1021,62 @@ export default function NewRound() {
       </main>
 
       {/* Bottom CTA Area */}
-      <div
-        className="fixed bottom-0 left-0 right-0 z-20 border-t border-[rgba(0,0,0,0.06)] bg-background px-6 py-4"
-        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
-      >
-        {step !== 'format' ? (
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setStep(steps[currentStepIndex + 1])}
-            disabled={step === 'course' ? !canProceedCourse : !canProceedPlayers}
-            animate={{ opacity: (step === 'course' ? !canProceedCourse : !canProceedPlayers) ? 0.4 : 1 }}
-            transition={{ duration: 0.2 }}
-            className="w-full bg-foreground text-background rounded-2xl h-[52px] font-bold text-[15px] flex items-center justify-center gap-2"
-          >
-            Next
-            <ArrowRight className="w-5 h-5" />
-          </motion.button>
-        ) : (
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            onClick={handleStartRound}
-            disabled={(!formatActive && !strokePlay && !matchPlay) || isCreating}
-            animate={{ opacity: ((!formatActive && !strokePlay && !matchPlay) || isCreating) ? 0.4 : 1 }}
-            transition={{ duration: 0.2 }}
-            className="w-full bg-foreground text-background rounded-2xl h-[52px] font-bold text-[15px] flex items-center justify-center gap-2"
-          >
-            {isCreating ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Creating Round...
-              </>
-            ) : (
-              'Start Round'
-            )}
-          </motion.button>
-        )}
-      </div>
+      {step !== 'mode' && (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-20 border-t border-[rgba(0,0,0,0.06)] bg-background px-6 py-4"
+          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+        >
+          {mode === 'solo' && step === 'course' ? (
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={handleStartSoloRound}
+              disabled={!canProceedCourse || isCreating}
+              animate={{ opacity: (!canProceedCourse || isCreating) ? 0.4 : 1 }}
+              transition={{ duration: 0.2 }}
+              className="w-full bg-foreground text-background rounded-2xl h-[52px] font-bold text-[15px] flex items-center justify-center gap-2"
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Starting Solo Round...
+                </>
+              ) : (
+                'Start Solo Round'
+              )}
+            </motion.button>
+          ) : !isFinalStep ? (
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setStep(steps[currentStepIndex + 1])}
+              disabled={step === 'course' ? !canProceedCourse : !canProceedPlayers}
+              animate={{ opacity: (step === 'course' ? !canProceedCourse : !canProceedPlayers) ? 0.4 : 1 }}
+              transition={{ duration: 0.2 }}
+              className="w-full bg-foreground text-background rounded-2xl h-[52px] font-bold text-[15px] flex items-center justify-center gap-2"
+            >
+              Next
+              <ArrowRight className="w-5 h-5" />
+            </motion.button>
+          ) : (
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={handleStartRound}
+              disabled={(!formatActive && !strokePlay && !matchPlay) || isCreating}
+              animate={{ opacity: ((!formatActive && !strokePlay && !matchPlay) || isCreating) ? 0.4 : 1 }}
+              transition={{ duration: 0.2 }}
+              className="w-full bg-foreground text-background rounded-2xl h-[52px] font-bold text-[15px] flex items-center justify-center gap-2"
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Creating Round...
+                </>
+              ) : (
+                'Start Round'
+              )}
+            </motion.button>
+          )}
+        </div>
+      )}
 
       {/* Tee Selector Modal */}
       <TeeSelector
