@@ -54,6 +54,9 @@ function B_RoundCard({
         return '';
       })
     : [];
+  // Solo round detection at the card level — a round with exactly 1 player
+  // and no betting games is a solo/stats-only round.
+  const isSolo = (playerCount ?? 0) === 1 && games.length === 0;
 
   const holesTotal = round.holes ?? 18;
   const progress = currentHole && holesTotal ? currentHole / holesTotal : 0;
@@ -128,7 +131,7 @@ function B_RoundCard({
             isActive ? 'text-white/60' : 'text-[#6B7280]'
           )}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            <strong className={cn('font-semibold', isActive ? 'text-white/80' : 'text-[#374151]')}>{playerCount}</strong> players
+            <strong className={cn('font-semibold', isActive ? 'text-white/80' : 'text-[#374151]')}>{playerCount}</strong> {playerCount === 1 ? 'player' : 'players'}
           </span>
         )}
         <span className={cn('text-[12px]', isActive ? 'text-white/60' : 'text-[#6B7280]')}>
@@ -136,8 +139,21 @@ function B_RoundCard({
         </span>
       </div>
 
-      {/* Game tags */}
-      {games.length > 0 && (
+      {/* Game tags — or "Solo" pill for solo rounds */}
+      {isSolo ? (
+        <div className="flex flex-wrap gap-1.5 mb-2.5">
+          <span
+            className={cn(
+              'text-[11px] font-medium px-[9px] py-[3px] rounded-[6px] uppercase tracking-wide',
+              isActive
+                ? 'bg-white/10 text-white/50'
+                : 'bg-[#F3F4F6] text-[#374151]'
+            )}
+          >
+            Solo
+          </span>
+        </div>
+      ) : games.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2.5">
           {games.map((g, i) => (
             <span
@@ -186,44 +202,18 @@ function SectionLabel({ children, live }: { children: React.ReactNode; live?: bo
 }
 
 // ─── App Logo ─────────────────────────────────────────────────────────────────
-function NapkinMark({ size = 32 }: { size?: number }) {
+function NapkinMark({ size = 36 }: { size?: number }) {
   return (
-    <svg
+    <img
+      src="/app-icon.png"
       width={size}
       height={size}
-      viewBox="0 0 1024 1024"
-      className="flex-shrink-0 rounded-[8px]"
+      alt=""
       aria-hidden="true"
-    >
-      <rect width="1024" height="1024" fill="#EFEADB" />
-      <g stroke="#D8D2BF" strokeWidth="2" opacity="0.6">
-        <line x1="512" y1="0" x2="512" y2="1024" />
-        <line x1="0" y1="512" x2="1024" y2="512" />
-      </g>
-      <path d="M 0 0 L 180 0 L 0 180 Z" fill="#E0D9C2" />
-      <g transform="translate(512 540) rotate(-6)">
-        <text
-          x="0"
-          y="0"
-          fill="#1A1A1A"
-          fontFamily="'Brush Script MT', 'Snell Roundhand', cursive"
-          fontWeight="700"
-          fontSize="720"
-          textAnchor="middle"
-          dominantBaseline="central"
-        >
-          M
-        </text>
-      </g>
-      <path
-        d="M 280 740 Q 400 720 520 740 T 760 720"
-        stroke="#F0EE3A"
-        strokeWidth="18"
-        fill="none"
-        strokeLinecap="round"
-        opacity="0.9"
-      />
-    </svg>
+      className="flex-shrink-0 rounded-[10px] select-none ring-1 ring-black/5"
+      style={{ width: size, height: size }}
+      draggable={false}
+    />
   );
 }
 
@@ -314,8 +304,8 @@ export default function Home() {
     <div className="px-6 pb-4 flex items-center justify-between pt-safe-content">
       {/* Logo */}
       <div className="flex items-center gap-[10px]">
-        <NapkinMark size={32} />
-        <h1 className="text-[28px] font-black tracking-[-0.04em] leading-none text-foreground select-none">
+        <NapkinMark size={36} />
+        <h1 className="text-[26px] font-black tracking-[-0.04em] leading-none text-foreground select-none">
           MATCH
         </h1>
         <OfflineIndicator

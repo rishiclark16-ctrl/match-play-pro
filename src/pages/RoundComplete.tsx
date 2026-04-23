@@ -45,6 +45,8 @@ import { GameResultsSection } from '@/components/golf/GameResultsSection';
 import { HighlightsSection } from '@/components/golf/HighlightsSection';
 import { RoundCompleteActions } from '@/components/golf/RoundCompleteActions';
 import { WatchPartyRevealCard } from '@/components/golf/WatchPartyRevealCard';
+import { SoloRoundSummary } from '@/components/golf/SoloRoundSummary';
+import { isSoloRound } from '@/lib/soloRound';
 
 export default function RoundComplete() {
   const { id } = useParams<{ id: string }>();
@@ -605,6 +607,13 @@ export default function RoundComplete() {
         </div>
       </div>
     );
+  }
+
+  // Solo rounds: render a stripped-down summary — no settlements, no game
+  // results, no Final Standings (only 1 player). Short-circuits the whole
+  // multiplayer tree below.
+  if (isSoloRound(round, rawPlayers) && playersWithScores.length === 1) {
+    return <SoloRoundSummary round={round} player={playersWithScores[0]} />;
   }
 
   return (
