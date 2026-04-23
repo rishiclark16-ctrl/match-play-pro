@@ -1,6 +1,7 @@
 import Foundation
 import Capacitor
 import RevenueCat
+import StoreKit
 import UIKit
 
 /// Capacitor plugin to bridge RevenueCat functionality to JavaScript
@@ -18,7 +19,8 @@ public class RevenueCatPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "purchasePackage", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "restorePurchases", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "checkProStatus", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "openManagementUrl", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "openManagementUrl", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "presentCodeRedemptionSheet", returnType: CAPPluginReturnPromise)
     ]
 
     // MARK: - Configure
@@ -173,5 +175,39 @@ public class RevenueCatPlugin: CAPPlugin, CAPBridgedPlugin {
                 call.reject("Could not open subscription management")
             }
         }
+    }
+
+    // MARK: - Offer Code Redemption
+
+    /// Presents Apple's native offer-code redemption sheet (StoreKit, iOS 14+).
+    /// Apple handles entry, validation, and the transaction. RevenueCat picks up
+    /// the resulting entitlement on the next customerInfo refresh.
+    @objc func presentCodeRedemptionSheet(_ call: CAPPluginCall) {
+        Task { @MainActor in
+            if #available(iOS 16.0, *) {
+                guard let scene = UIApplication.shared.firstActiveWindowScene else {
+                    call.reject("No active window scene available")
+                    return
+                }
+                do {
+                    try await AppStore.presentOfferCodeRedeemSheet(in: scene)
+                    call.resolve(["success": true])
+                } catch {
+                    call.reject("Failed to present redemption sheet: \(error.localizedDescription)")
+                }
+            } else if #available(iOS 14.0, *) {
+                SKPaymentQueue.default().presentCodeRedemptionSheet()
+                call.resolve(["success": true])
+            } else {
+                call.reject("Offer code redemption requires iOS 14 or later")
+            }
+        }
+    }
+}
+
+private extension UIApplication {
+    var firstActiveWindowScene: UIWindowScene? {
+        let scenes = connectedScenes.compactMap { $0 as? UIWindowScene }
+        return scenes.first { $0.activationState == .foregroundActive } ?? scenes.first
     }
 }

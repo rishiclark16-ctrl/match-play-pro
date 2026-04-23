@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, Crown, Users, Zap, Trophy, BarChart3, Loader2 } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { PromoCodeSheet } from './PromoCodeSheet';
 import { useSubscription } from '@/hooks/useSubscription';
 import {
   getOfferings,
   purchasePackage,
   restorePurchases,
+  presentCodeRedemptionSheet,
   PurchaseOffering,
 } from '@/services/purchases';
 import { Capacitor } from '@capacitor/core';
@@ -37,7 +37,6 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
   const [loading, setLoading] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const [showPromo, setShowPromo] = useState(false);
 
   // Fetch offerings on open
   useEffect(() => {
@@ -82,6 +81,22 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
     } finally {
       setPurchasing(false);
     }
+  };
+
+  const handleRedeemCode = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      toast.error('Code redemption is only available in the app');
+      return;
+    }
+    const opened = await presentCodeRedemptionSheet();
+    if (!opened) {
+      toast.error('Could not open redemption sheet');
+      return;
+    }
+    // After Apple's sheet closes, refresh entitlement; may take a moment for StoreKit to post.
+    setTimeout(async () => {
+      await refreshSubscription();
+    }, 1500);
   };
 
   const handleRestore = async () => {
@@ -267,12 +282,12 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
               >
                 {restoring ? 'Restoring...' : 'Restore Purchases'}
               </button>
-              <span className="text-muted-foreground/30">·</span>
+              <span className="text-muted-foreground/40 text-[13px]">·</span>
               <button
-                onClick={() => setShowPromo(true)}
+                onClick={handleRedeemCode}
                 className="text-muted-foreground text-[13px] font-medium py-2"
               >
-                Promo Code
+                Redeem Code
               </button>
             </div>
 
@@ -287,11 +302,6 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
           </div>
         </div>
 
-        <PromoCodeSheet
-          open={showPromo}
-          onOpenChange={setShowPromo}
-          onSuccess={() => { refreshSubscription(); onOpenChange(false); }}
-        />
       </SheetContent>
     </Sheet>
   );

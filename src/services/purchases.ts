@@ -25,6 +25,7 @@ interface RevenueCatPlugin {
   restorePurchases(): Promise<PurchaseResponse>;
   checkProStatus(): Promise<{ isPro: boolean }>;
   openManagementUrl(): Promise<{ success: boolean }>;
+  presentCodeRedemptionSheet(): Promise<{ success: boolean }>;
 }
 
 interface CustomerInfoResponse {
@@ -331,6 +332,25 @@ export async function syncSubscriptionToSupabase(customerInfo: CustomerInfo): Pr
   } catch (error) {
     // Catch FunctionsHttpError so it doesn't bubble to Sentry as unhandled
     logger.warn('Sync subscription error (non-fatal)', error);
+    return false;
+  }
+}
+
+/**
+ * Present Apple's native offer-code redemption sheet.
+ * Codes are generated in App Store Connect (Subscriptions → Offer Codes) and distributed externally.
+ * Apple's sheet handles entry & validation; RevenueCat picks up the entitlement on next refresh.
+ */
+export async function presentCodeRedemptionSheet(): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) {
+    return false;
+  }
+
+  try {
+    const response = await RevenueCat.presentCodeRedemptionSheet();
+    return response.success;
+  } catch (error) {
+    logger.error('Failed to present code redemption sheet', error);
     return false;
   }
 }

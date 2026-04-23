@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Mic, Crown, ExternalLink, Trash2, AlertTriangle, Bell, ChevronRight, Settings, Sparkles, Globe, Gift } from 'lucide-react';
+import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Mic, Crown, ExternalLink, Trash2, AlertTriangle, Bell, ChevronRight, Settings, Sparkles, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,6 @@ import { useSettings } from '@/hooks/useSettings';
 import { useSubscription } from '@/hooks/useSubscription';
 import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { PaywallModal } from '@/components/subscription/PaywallModal';
-import { PromoCodeSheet } from '@/components/subscription/PromoCodeSheet';
 import { restorePurchases, openManagementUrl } from '@/services/purchases';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { Capacitor } from '@capacitor/core';
@@ -87,7 +86,6 @@ export default function Profile() {
   const publicFormats = myFormats.filter(f => f.isPublic);
   const [copied, setCopied] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
-  const [showPromoSheet, setShowPromoSheet] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
 
   const [fullName, setFullName] = useState('');
@@ -141,37 +139,42 @@ export default function Profile() {
 
   useEffect(() => {
     if (!isInitialized.current || !profile) return;
+
+    // Canonicalize inputs to match exactly what updateProfile will persist.
+    // Without this, normalization (trim, lowercase, handicap rounding) would cause
+    // `hasChanges` to stay true after save → infinite save loop → toast flicker on iPad.
+    const canonicalName = sanitizeString(fullName) || null;
+    const parsedHandicap = handicap ? parseFloat(handicap) : NaN;
+    const canonicalHandicap = isNaN(parsedHandicap) ? null : Math.round(parsedHandicap * 10) / 10;
+    const canonicalEmail = discoveryEmail.trim().toLowerCase() || null;
+    const canonicalPhone = sanitizeString(discoveryPhone) || null;
+
     const hasChanges =
-      fullName !== (profile.full_name || '') ||
-      handicap !== (profile.handicap?.toString() || '') ||
+      canonicalName !== (profile.full_name ?? null) ||
+      canonicalHandicap !== (profile.handicap ?? null) ||
       teePreference !== profile.tee_preference ||
       homeCourseId !== profile.home_course_id ||
-      discoveryEmail !== (profile.email || '') ||
-      discoveryPhone !== (profile.phone || '');
+      canonicalEmail !== (profile.email ?? null) ||
+      canonicalPhone !== (profile.phone ?? null);
     if (!hasChanges) return;
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
-      const trimmedName = fullName.trim();
-      let validatedName: string | null = null;
-      if (trimmedName) {
-        const r = validatePlayerName(trimmedName);
+      if (fullName.trim()) {
+        const r = validatePlayerName(fullName.trim());
         if (!r.success) { toast.error('Invalid name', { description: r.error ?? 'Validation failed' }); return; }
-        validatedName = r.data;
       }
-      let validatedHandicap: number | null = null;
       if (handicap) {
         const r = validateHandicap(handicap);
         if (!r.success) { toast.error('Invalid handicap', { description: r.error ?? 'Validation failed' }); return; }
-        validatedHandicap = r.data ?? null;
       }
       autoSave({
-        full_name: validatedName,
-        handicap: validatedHandicap,
+        full_name: canonicalName,
+        handicap: canonicalHandicap,
         tee_preference: teePreference,
         home_course_id: homeCourseId,
         home_course_name: homeCourseName,
-        email: discoveryEmail.trim().toLowerCase() || null,
-        phone: sanitizeString(discoveryPhone) || null,
+        email: canonicalEmail,
+        phone: canonicalPhone,
       });
     }, 800);
     return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
@@ -431,25 +434,6 @@ export default function Profile() {
               </button>
             </div>
           </motion.div>
-        )}
-
-        {/* ── PROMO CODE CARD ─────────────────────────────────────── */}
-        {!isPro && (
-          <motion.button
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.06 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => { hapticLight(); setShowPromoSheet(true); }}
-            className="w-full bg-white rounded-2xl p-4 mb-5 flex items-center gap-3.5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] text-left"
-          >
-            <div className="w-11 h-11 rounded-2xl bg-[#F0EE3A]/15 flex items-center justify-center flex-shrink-0">
-              <Gift className="w-5 h-5 text-[#C4C200]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-black tracking-[-0.02em] text-foreground">Have a promo code?</p>
-              <p className="text-[12px] text-muted-foreground mt-0.5">Redeem a code to unlock Pro for free</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
-          </motion.button>
         )}
 
         {/* ── GOLF INFO ─────────────────────────────────────────────── */}
@@ -842,7 +826,6 @@ export default function Profile() {
       )}
 
       <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} feature="Pro" />
-      <PromoCodeSheet open={showPromoSheet} onOpenChange={setShowPromoSheet} onSuccess={refreshSubscription} />
     </AppLayout>
   );
 }
