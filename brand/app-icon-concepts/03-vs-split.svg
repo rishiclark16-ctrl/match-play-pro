@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#0A0A0A"/>
+  <!-- Diagonal chartreuse triangle top-left -->
+  <path d="M 0 0 L 1024 0 L 0 1024 Z" fill="#F0EE3A"/>
+  <!-- V on black side -->
+  <text x="720" y="700" fill="#F0EE3A"
+    font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
+    font-weight="900" font-size="440" text-anchor="middle"
+    dominant-baseline="central" letter-spacing="-20">VS</text>
+  <!-- M on yellow side -->
+  <text x="280" y="340" fill="#0A0A0A"
+    font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
+    font-weight="900" font-size="440" text-anchor="middle"
+    dominant-baseline="central">M</text>
+</svg>

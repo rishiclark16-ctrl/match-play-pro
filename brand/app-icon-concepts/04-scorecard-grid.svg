@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#F5F5F0"/>
+  <!-- 3x3 grid of scorecard cells, one highlighted -->
+  <g font-family="'JetBrains Mono', 'SF Mono', Menlo, monospace" font-weight="700" font-size="120" text-anchor="middle" dominant-baseline="central">
+    <!-- Row 1 -->
+    <rect x="160" y="160" width="224" height="224" fill="none" stroke="#0A0A0A" stroke-width="10"/>
+    <text x="272" y="272" fill="#0A0A0A">4</text>
+    <rect x="400" y="160" width="224" height="224" fill="none" stroke="#0A0A0A" stroke-width="10"/>
+    <text x="512" y="272" fill="#0A0A0A">3</text>
+    <rect x="640" y="160" width="224" height="224" fill="none" stroke="#0A0A0A" stroke-width="10"/>
+    <text x="752" y="272" fill="#0A0A0A">5</text>
+    <!-- Row 2 -->
+    <rect x="160" y="400" width="224" height="224" fill="none" stroke="#0A0A0A" stroke-width="10"/>
+    <text x="272" y="512" fill="#0A0A0A">4</text>
+    <rect x="400" y="400" width="224" height="224" fill="#F0EE3A" stroke="#0A0A0A" stroke-width="10"/>
+    <text x="512" y="512" fill="#0A0A0A">2</text>
+    <rect x="640" y="400" width="224" height="224" fill="none" stroke="#0A0A0A" stroke-width="10"/>
+    <text x="752" y="512" fill="#0A0A0A">4</text>
+    <!-- Row 3 -->
+    <rect x="160" y="640" width="224" height="224" fill="none" stroke="#0A0A0A" stroke-width="10"/>
+    <text x="272" y="752" fill="#0A0A0A">3</text>
+    <rect x="400" y="640" width="224" height="224" fill="none" stroke="#0A0A0A" stroke-width="10"/>
+    <text x="512" y="752" fill="#0A0A0A">4</text>
+    <rect x="640" y="640" width="224" height="224" fill="none" stroke="#0A0A0A" stroke-width="10"/>
+    <text x="752" y="752" fill="#0A0A0A">5</text>
+  </g>
+</svg>

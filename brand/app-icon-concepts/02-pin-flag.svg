@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#0A0A0A"/>
+  <!-- Pin pole -->
+  <rect x="498" y="220" width="28" height="620" fill="#F5F5F0"/>
+  <!-- Flag triangle -->
+  <path d="M 526 220 L 840 340 L 526 460 Z" fill="#F0EE3A"/>
+  <!-- Ground hash -->
+  <rect x="340" y="840" width="344" height="14" fill="#F5F5F0" opacity="0.6"/>
+  <!-- Ball -->
+  <circle cx="640" cy="820" r="44" fill="#F5F5F0"/>
+  <circle cx="628" cy="810" r="6" fill="#D8D7C8"/>
+  <circle cx="652" cy="812" r="6" fill="#D8D7C8"/>
+  <circle cx="640" cy="834" r="6" fill="#D8D7C8"/>
+</svg>

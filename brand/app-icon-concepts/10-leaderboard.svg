@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#0A0A0A"/>
+  <!-- Three leaderboard rows -->
+  <g font-family="'JetBrains Mono', 'SF Mono', Menlo, monospace" font-weight="700" font-size="96" dominant-baseline="central">
+    <!-- Row 1: 1st place, chartreuse fill -->
+    <rect x="120" y="260" width="784" height="140" rx="20" fill="#F0EE3A"/>
+    <text x="170" y="330" fill="#0A0A0A">1</text>
+    <text x="320" y="330" fill="#0A0A0A">RC</text>
+    <text x="820" y="330" fill="#0A0A0A" text-anchor="end">-4</text>
+    <!-- Row 2: 2nd, mid gray -->
+    <rect x="120" y="430" width="784" height="140" rx="20" fill="#3A3A3A"/>
+    <text x="170" y="500" fill="#F5F5F0">2</text>
+    <text x="320" y="500" fill="#F5F5F0">JM</text>
+    <text x="820" y="500" fill="#F5F5F0" text-anchor="end">-1</text>
+    <!-- Row 3: 3rd, darker -->
+    <rect x="120" y="600" width="784" height="140" rx="20" fill="#242424"/>
+    <text x="170" y="670" fill="#F5F5F0">3</text>
+    <text x="320" y="670" fill="#F5F5F0">TB</text>
+    <text x="820" y="670" fill="#F5F5F0" text-anchor="end">+2</text>
+  </g>
+</svg>

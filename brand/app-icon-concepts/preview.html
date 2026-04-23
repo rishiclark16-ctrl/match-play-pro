@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MATCH Golf — App Icon Concepts</title>
+<style>
+  body { margin: 0; padding: 40px; background: #1a1a1a; color: #F5F5F0; font-family: -apple-system, Inter, sans-serif; }
+  h1 { font-weight: 900; letter-spacing: -0.02em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 28px; margin-top: 24px; }
+  .card { background: #0f0f0f; border-radius: 14px; padding: 16px; }
+  .row { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; }
+  .icon-lg { width: 180px; height: 180px; border-radius: 40px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.6); flex-shrink: 0; }
+  .sizes { display: flex; gap: 8px; align-items: flex-end; }
+  .sz { border-radius: 22%; overflow: hidden; }
+  .sz-60 { width: 60px; height: 60px; }
+  .sz-40 { width: 40px; height: 40px; border-radius: 20%; }
+  .sz-29 { width: 29px; height: 29px; border-radius: 22%; }
+  h2 { margin: 0 0 6px; font-size: 14px; font-weight: 700; letter-spacing: 0.02em; }
+  p { margin: 0; color: #8a8a8a; font-size: 12px; line-height: 1.5; }
+  img { width: 100%; height: 100%; display: block; }
+</style>
+</head>
+<body>
+  <h1>MATCH Golf — App Icon Concepts</h1>
+  <p>iOS masks icons to squircle automatically. Test each at 29×29 (Settings) — the smallest size where they must still read.</p>
+  <div class="grid" id="grid"></div>
+  <script>
+    const icons = [
+      { file: '01-monogram-M.svg', name: '01. Monogram M', desc: 'Chartreuse field, heavy black M. Classic, fearless, highest legibility at all sizes.' },
+      { file: '02-pin-flag.svg', name: '02. Pin Flag', desc: 'Literal golf pin + ball. Says "golf" instantly. Most obvious category signal.' },
+      { file: '03-vs-split.svg', name: '03. VS Split', desc: 'Diagonal black/yellow split, M vs VS. Communicates head-to-head betting.' },
+      { file: '04-scorecard-grid.svg', name: '04. Scorecard Grid', desc: 'Paper-style 3×3 grid with a highlighted "2". Says scoring app, stands out from competitors.' },
+      { file: '05-dollar-flag.svg', name: '05. Dollar Flag', desc: 'Green fairway + flag with $ pennant. Betting + golf in one glance.' },
+      { file: '06-dimpled-ball.svg', name: '06. Dimpled Ball', desc: 'Full-bleed dimple grid with single chartreuse accent. Abstract, premium, pattern-forward.' },
+      { file: '07-bracket-dollar.svg', name: '07. Bracket $', desc: 'Yellow brackets framing a $. Ties to kinetic-reel motif, pure money focus.' },
+      { file: '08-napkin-M.svg', name: '08. Napkin M', desc: 'Cream napkin with handwritten M + underline. Plays on "from the back of a napkin" narrative.' },
+      { file: '09-tee-ball.svg', name: '09. Tee + Ball', desc: 'Yellow field, tee silhouette, ball on top. Friendliest, most literal golf cue.' },
+      { file: '10-leaderboard.svg', name: '10. Leaderboard', desc: 'Three stacked rows, top in chartreuse showing -4. Competitive/stats-forward.' }
+    ];
+    const grid = document.getElementById('grid');
+    icons.forEach(i => {
+      grid.insertAdjacentHTML('beforeend', `
+        <div class="card">
+          <div class="row">
+            <div class="icon-lg"><img src="${i.file}"></div>
+            <div>
+              <h2>${i.name}</h2>
+              <p>${i.desc}</p>
+            </div>
+          </div>
+          <div class="sizes">
+            <div class="sz sz-60"><img src="${i.file}"></div>
+            <div class="sz sz-40"><img src="${i.file}"></div>
+            <div class="sz sz-29"><img src="${i.file}"></div>
+          </div>
+        </div>
+      `);
+    });
+  </script>
+</body>
+</html>

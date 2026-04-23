@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#F0EE3A"/>
+  <text x="512" y="512" fill="#0A0A0A"
+    font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
+    font-weight="900" font-size="820" text-anchor="middle"
+    dominant-baseline="central" letter-spacing="-48">M</text>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#F0EE3A"/>
+  <!-- Tee shape (trapezoid + stem) -->
+  <g fill="#0A0A0A">
+    <!-- Top cup -->
+    <path d="M 360 440 L 664 440 L 620 500 L 404 500 Z"/>
+    <!-- Stem -->
+    <path d="M 480 500 L 544 500 L 524 820 L 500 820 Z"/>
+    <!-- Base ground line -->
+    <rect x="220" y="820" width="584" height="14"/>
+  </g>
+  <!-- Ball sitting on tee -->
+  <circle cx="512" cy="360" r="118" fill="#F5F5F0"/>
+  <g fill="#D8D7C8">
+    <circle cx="478" cy="340" r="12"/>
+    <circle cx="512" cy="322" r="12"/>
+    <circle cx="546" cy="340" r="12"/>
+    <circle cx="478" cy="378" r="12"/>
+    <circle cx="546" cy="378" r="12"/>
+    <circle cx="512" cy="398" r="12"/>
+  </g>
+</svg>

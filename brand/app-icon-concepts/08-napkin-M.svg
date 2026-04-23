@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Cream napkin background -->
+  <rect width="1024" height="1024" fill="#EFEADB"/>
+  <!-- Paper texture via subtle fold lines -->
+  <g stroke="#D8D2BF" stroke-width="2" opacity="0.6">
+    <line x1="512" y1="0" x2="512" y2="1024"/>
+    <line x1="0" y1="512" x2="1024" y2="512"/>
+  </g>
+  <!-- Corner fold -->
+  <path d="M 0 0 L 180 0 L 0 180 Z" fill="#E0D9C2"/>
+  <!-- Handwritten-style M (bold cursive) -->
+  <g transform="translate(512 540) rotate(-6)">
+    <text x="0" y="0" fill="#1A1A1A"
+      font-family="'Brush Script MT', 'Snell Roundhand', cursive"
+      font-weight="700" font-size="720" text-anchor="middle"
+      dominant-baseline="central">M</text>
+  </g>
+  <!-- Faint chartreuse underline scribble -->
+  <path d="M 280 740 Q 400 720 520 740 T 760 720" stroke="#F0EE3A" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.9"/>
+</svg>

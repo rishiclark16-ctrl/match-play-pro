@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Full bleed dimpled ball -->
+  <rect width="1024" height="1024" fill="#F5F5F0"/>
+  <g fill="#D8D7C8">
+    <!-- Hexagonal dimple grid -->
+    <circle cx="128" cy="128" r="36"/>
+    <circle cx="256" cy="128" r="36"/>
+    <circle cx="384" cy="128" r="36"/>
+    <circle cx="512" cy="128" r="36"/>
+    <circle cx="640" cy="128" r="36"/>
+    <circle cx="768" cy="128" r="36"/>
+    <circle cx="896" cy="128" r="36"/>
+    <circle cx="192" cy="238" r="36"/>
+    <circle cx="320" cy="238" r="36"/>
+    <circle cx="448" cy="238" r="36"/>
+    <circle cx="576" cy="238" r="36"/>
+    <circle cx="704" cy="238" r="36"/>
+    <circle cx="832" cy="238" r="36"/>
+    <circle cx="128" cy="348" r="36"/>
+    <circle cx="256" cy="348" r="36"/>
+    <circle cx="384" cy="348" r="36"/>
+    <circle cx="640" cy="348" r="36"/>
+    <circle cx="768" cy="348" r="36"/>
+    <circle cx="896" cy="348" r="36"/>
+    <circle cx="192" cy="458" r="36"/>
+    <circle cx="320" cy="458" r="36"/>
+    <circle cx="448" cy="458" r="36"/>
+    <circle cx="576" cy="458" r="36"/>
+    <circle cx="704" cy="458" r="36"/>
+    <circle cx="832" cy="458" r="36"/>
+    <circle cx="128" cy="568" r="36"/>
+    <circle cx="256" cy="568" r="36"/>
+    <circle cx="384" cy="568" r="36"/>
+    <circle cx="640" cy="568" r="36"/>
+    <circle cx="768" cy="568" r="36"/>
+    <circle cx="896" cy="568" r="36"/>
+    <circle cx="192" cy="678" r="36"/>
+    <circle cx="320" cy="678" r="36"/>
+    <circle cx="448" cy="678" r="36"/>
+    <circle cx="576" cy="678" r="36"/>
+    <circle cx="704" cy="678" r="36"/>
+    <circle cx="832" cy="678" r="36"/>
+    <circle cx="128" cy="788" r="36"/>
+    <circle cx="256" cy="788" r="36"/>
+    <circle cx="384" cy="788" r="36"/>
+    <circle cx="512" cy="788" r="36"/>
+    <circle cx="640" cy="788" r="36"/>
+    <circle cx="768" cy="788" r="36"/>
+    <circle cx="896" cy="788" r="36"/>
+    <circle cx="192" cy="898" r="36"/>
+    <circle cx="320" cy="898" r="36"/>
+    <circle cx="448" cy="898" r="36"/>
+    <circle cx="576" cy="898" r="36"/>
+    <circle cx="704" cy="898" r="36"/>
+    <circle cx="832" cy="898" r="36"/>
+  </g>
+  <!-- Central accent dimples -->
+  <circle cx="512" cy="348" r="36" fill="#0A0A0A"/>
+  <circle cx="512" cy="568" r="36" fill="#F0EE3A"/>
+</svg>

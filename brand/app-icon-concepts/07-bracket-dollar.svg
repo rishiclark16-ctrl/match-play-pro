@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#0A0A0A"/>
+  <!-- Left bracket -->
+  <g stroke="#F0EE3A" stroke-width="72" fill="none" stroke-linecap="square">
+    <path d="M 348 260 L 240 260 L 240 764 L 348 764"/>
+    <path d="M 676 260 L 784 260 L 784 764 L 676 764"/>
+  </g>
+  <!-- $ inside -->
+  <text x="512" y="512" fill="#F0EE3A"
+    font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
+    font-weight="900" font-size="440" text-anchor="middle"
+    dominant-baseline="central">$</text>
+</svg>
