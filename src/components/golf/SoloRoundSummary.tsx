@@ -2,9 +2,10 @@ import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Home as HomeIcon, Share2, Target } from 'lucide-react';
-import { PlayerWithScores, Round, formatRelativeToPar, getScoreColor, getScoreType } from '@/types/golf';
+import { PlayerWithScores, Round, formatRelativeToPar, getScoreColor } from '@/types/golf';
 import { shareText } from '@/lib/shareResults';
 import { cn } from '@/lib/utils';
+import { calcScoreBreakdown, calcBestHole } from '@/lib/soloStats';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 
@@ -25,30 +26,15 @@ export function SoloRoundSummary({ round, player }: Props) {
     [round.holeInfo],
   );
 
-  const scoreTypeCounts = useMemo(() => {
-    const counts = { eagle: 0, birdie: 0, par: 0, bogey: 0, double: 0, triple: 0, worse: 0, ace: 0, albatross: 0 };
-    for (const s of player.scores) {
-      const hole = round.holeInfo.find(h => h.number === s.holeNumber);
-      if (!hole) continue;
-      const type = getScoreType(s.strokes, hole.par);
-      counts[type]++;
-    }
-    return counts;
-  }, [player.scores, round.holeInfo]);
+  const scoreTypeCounts = useMemo(
+    () => calcScoreBreakdown(player, round.holeInfo),
+    [player, round.holeInfo],
+  );
 
-  const bestHole = useMemo(() => {
-    if (player.scores.length === 0) return null;
-    let best: { hole: number; diff: number; strokes: number; par: number } | null = null;
-    for (const s of player.scores) {
-      const hole = round.holeInfo.find(h => h.number === s.holeNumber);
-      if (!hole) continue;
-      const diff = s.strokes - hole.par;
-      if (!best || diff < best.diff) {
-        best = { hole: s.holeNumber, diff, strokes: s.strokes, par: hole.par };
-      }
-    }
-    return best;
-  }, [player.scores, round.holeInfo]);
+  const bestHole = useMemo(
+    () => calcBestHole(player, round.holeInfo),
+    [player, round.holeInfo],
+  );
 
   const handleShare = async () => {
     hapticLight();
