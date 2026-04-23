@@ -186,13 +186,44 @@ function SectionLabel({ children, live }: { children: React.ReactNode; live?: bo
 }
 
 // ─── App Logo ─────────────────────────────────────────────────────────────────
-function AnimatedLogo() {
+function NapkinMark({ size = 32 }: { size?: number }) {
   return (
-    <div className="w-10 h-10 rounded-[12px] flex-shrink-0 bg-[#0A0A0A] flex items-center justify-center">
-      <span className="text-[11px] font-black tracking-[-0.04em] leading-none text-white select-none">
-        M<span className="text-[#F0EE3A]">A</span>TCH
-      </span>
-    </div>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 1024 1024"
+      className="flex-shrink-0 rounded-[8px]"
+      aria-hidden="true"
+    >
+      <rect width="1024" height="1024" fill="#EFEADB" />
+      <g stroke="#D8D2BF" strokeWidth="2" opacity="0.6">
+        <line x1="512" y1="0" x2="512" y2="1024" />
+        <line x1="0" y1="512" x2="1024" y2="512" />
+      </g>
+      <path d="M 0 0 L 180 0 L 0 180 Z" fill="#E0D9C2" />
+      <g transform="translate(512 540) rotate(-6)">
+        <text
+          x="0"
+          y="0"
+          fill="#1A1A1A"
+          fontFamily="'Brush Script MT', 'Snell Roundhand', cursive"
+          fontWeight="700"
+          fontSize="720"
+          textAnchor="middle"
+          dominantBaseline="central"
+        >
+          M
+        </text>
+      </g>
+      <path
+        d="M 280 740 Q 400 720 520 740 T 760 720"
+        stroke="#F0EE3A"
+        strokeWidth="18"
+        fill="none"
+        strokeLinecap="round"
+        opacity="0.9"
+      />
+    </svg>
   );
 }
 
@@ -283,8 +314,9 @@ export default function Home() {
     <div className="px-6 pb-4 flex items-center justify-between pt-safe-content">
       {/* Logo */}
       <div className="flex items-center gap-[10px]">
+        <NapkinMark size={32} />
         <h1 className="text-[28px] font-black tracking-[-0.04em] leading-none text-foreground select-none">
-          M<span className="text-[#F0EE3A]">A</span>TCH
+          MATCH
         </h1>
         <OfflineIndicator
           isOnline={isOnline}
