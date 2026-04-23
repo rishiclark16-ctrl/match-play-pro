@@ -21,6 +21,8 @@ interface ScorecardHeaderProps {
   onAddScorekeeper: (playerId: string) => Promise<void>;
   onRemoveScorekeeper: (playerId: string) => Promise<void>;
   onUpdateGames: (games: GameConfig[]) => Promise<void>;
+  /** Solo round — hide Share / Scorekeepers / Game Settings / join code. */
+  isSolo?: boolean;
 }
 
 export function ScorecardHeader({
@@ -36,6 +38,7 @@ export function ScorecardHeader({
   onAddScorekeeper,
   onRemoveScorekeeper,
   onUpdateGames,
+  isSolo = false,
 }: ScorecardHeaderProps) {
   const [showScorekeepersSheet, setShowScorekeepersSheet] = useState(false);
   const [showGameSettingsSheet, setShowGameSettingsSheet] = useState(false);
@@ -67,7 +70,7 @@ export function ScorecardHeader({
           <div className="text-center flex-1 min-w-0">
             <h1 className="text-base font-black tracking-[-0.04em] text-foreground truncate">{round.courseName}</h1>
             <p className="text-[11px] font-mono tracking-[0.15em] text-muted-foreground">
-              {round.joinCode}
+              {isSolo ? 'SOLO' : round.joinCode}
             </p>
           </div>
 
@@ -88,15 +91,17 @@ export function ScorecardHeader({
               sideOffset={8}
               className="w-52 z-50 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.12)] border-0 p-1"
             >
-              <DropdownMenuItem
-                onClick={onShowShareModal}
-                className="rounded-xl text-sm font-medium py-2.5 px-3 hover:bg-muted focus:bg-muted"
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                Share Round
-              </DropdownMenuItem>
+              {!isSolo && (
+                <DropdownMenuItem
+                  onClick={onShowShareModal}
+                  className="rounded-xl text-sm font-medium py-2.5 px-3 hover:bg-muted focus:bg-muted"
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share Round
+                </DropdownMenuItem>
+              )}
 
-              {canEditScores && (
+              {!isSolo && canEditScores && (
                 <DropdownMenuItem
                   onClick={() => setShowGameSettingsSheet(true)}
                   className="rounded-xl text-sm font-medium py-2.5 px-3 hover:bg-muted focus:bg-muted"
@@ -106,7 +111,7 @@ export function ScorecardHeader({
                 </DropdownMenuItem>
               )}
 
-              {isCreator && !isSpectator && (
+              {!isSolo && isCreator && !isSpectator && (
                 <DropdownMenuItem
                   onClick={() => setShowScorekeepersSheet(true)}
                   className="rounded-xl text-sm font-medium py-2.5 px-3 hover:bg-muted focus:bg-muted"

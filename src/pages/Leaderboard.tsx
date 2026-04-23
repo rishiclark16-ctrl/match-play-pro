@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { isSoloRound } from '@/lib/soloRound';
 import { ArrowLeft, RefreshCw, Trophy, Target, TrendingUp, TrendingDown, Minus, Medal, Award, Sparkles } from 'lucide-react';
 import { useRounds } from '@/hooks/useRounds';
 import { useSupabaseRound } from '@/hooks/useSupabaseRound';
@@ -39,6 +40,14 @@ export default function Leaderboard() {
 
   const localRound = getRoundById(id || '');
   const round = supabaseRound || localRound;
+
+  // Redirect solo rounds back to the scorecard — there's no meaningful
+  // leaderboard for a single player.
+  useEffect(() => {
+    if (round && isSoloRound(round, supabasePlayers)) {
+      navigate(`/round/${id}`, { replace: true });
+    }
+  }, [round, supabasePlayers, id, navigate]);
 
   const playersWithScores: PlayerWithScores[] = useMemo(() => {
     if (!round) return [];

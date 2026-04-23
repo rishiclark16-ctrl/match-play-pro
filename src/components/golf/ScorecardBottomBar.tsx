@@ -42,6 +42,8 @@ interface ScorecardBottomBarProps {
   onPropBetAdded: (bet: PropBet) => Promise<{ success: boolean; error?: string }>;
   onPropBetUpdated: (bet: PropBet) => Promise<{ success: boolean; error?: string }>;
   onShowShare?: () => void;
+  /** Solo round — hide leaderboard, prop bets, share, and junk banner. */
+  isSolo?: boolean;
 }
 
 export function ScorecardBottomBar({
@@ -77,6 +79,7 @@ export function ScorecardBottomBar({
   onPropBetAdded,
   onPropBetUpdated,
   onShowShare,
+  isSolo = false,
 }: ScorecardBottomBarProps) {
   const isLastHole = currentHole === totalHoles;
   const isFinishState = (canFinish || hole18FullyScored) && !isSpectator && playoffHole === 0;
@@ -96,7 +99,8 @@ export function ScorecardBottomBar({
   }, [currentHole]);
 
   // Show junk prompt when all players have scored (if not dismissed for this hole)
-  const showJunkBanner = !isSpectator && playoffHole === 0 && !!allCurrentHoleScored
+  // Junk bets only make sense in a betting round — never in solo.
+  const showJunkBanner = !isSolo && !isSpectator && playoffHole === 0 && !!allCurrentHoleScored
     && !junkDismissedRef.current.has(currentHole);
 
   const handleJunkDismiss = () => {
@@ -147,18 +151,22 @@ export function ScorecardBottomBar({
 
       {/* Secondary Actions Row */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2 gap-2">
-        {/* Leaderboard */}
-        <motion.button
-          whileTap={{ scale: 0.93 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-          onClick={onNavigateToLeaderboard}
-          aria-label="View leaderboard"
-          className="bg-white rounded-xl shadow-sm px-3.5 py-2 flex items-center gap-1.5 touch-manipulation"
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-        >
-          <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-xs font-bold text-foreground uppercase tracking-[0.06em]">Board</span>
-        </motion.button>
+        {/* Leaderboard — hidden for solo rounds (no one else to rank against) */}
+        {!isSolo ? (
+          <motion.button
+            whileTap={{ scale: 0.93 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            onClick={onNavigateToLeaderboard}
+            aria-label="View leaderboard"
+            className="bg-white rounded-xl shadow-sm px-3.5 py-2 flex items-center gap-1.5 touch-manipulation"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+          >
+            <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs font-bold text-foreground uppercase tracking-[0.06em]">Board</span>
+          </motion.button>
+        ) : (
+          <div /> /* spacer to keep layout */
+        )}
 
         {/* Center: progress indicator */}
         <div className="flex-1 flex items-center justify-center">
@@ -169,8 +177,8 @@ export function ScorecardBottomBar({
 
         {/* Right group: Prop Bets + Share */}
         <div className="flex items-center gap-2">
-          {/* Prop Bets — only for non-spectators on regular holes */}
-          {!isSpectator && playoffHole === 0 && (
+          {/* Prop Bets — hidden for solo (no other players to bet against) */}
+          {!isSolo && !isSpectator && playoffHole === 0 && (
             <div className="bg-white rounded-xl shadow-sm">
               <PropBetSheet
                 roundId={roundId}
@@ -184,8 +192,8 @@ export function ScorecardBottomBar({
             </div>
           )}
 
-          {/* Share */}
-          {onShowShare && (
+          {/* Share — hidden for solo rounds (no one to invite) */}
+          {!isSolo && onShowShare && (
             <motion.button
               whileTap={{ scale: 0.93 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}

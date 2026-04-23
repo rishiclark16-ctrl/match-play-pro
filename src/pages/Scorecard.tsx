@@ -31,6 +31,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { setSpeechEnabled } from '@/lib/voiceFeedback';
 import { usePlayersWithScores } from '@/hooks/usePlayersWithScores';
 import { useSettlementPreview } from '@/hooks/useSettlementPreview';
+import { isSoloRound } from '@/lib/soloRound';
 import { Press, PlayerWithScores, GameConfig, BingoBangoHoleResult } from '@/types/golf';
 import { checkAutoPress, createPress } from '@/lib/games/nassau';
 import { calculateMatchPlay, calculateFourballMatchPlay, generateMatchPlayHeadline } from '@/lib/games/matchPlay';
@@ -166,6 +167,12 @@ export default function Scorecard() {
 
   // Use appropriate players list
   const playersWithScores: PlayerWithScores[] = useSupabaseData ? supabasePlayersWithScores : localPlayersWithScores;
+
+  // Detect solo rounds (1 real player, 0 games) so we can strip the multiplayer UI.
+  const isSolo = useMemo(
+    () => isSoloRound(round, playersWithScores),
+    [round, playersWithScores],
+  );
 
   // Calculate how many holes have been fully scored
   const completedHoles = useMemo(() => {
@@ -802,6 +809,7 @@ export default function Scorecard() {
         onAddScorekeeper={addScorekeeper}
         onRemoveScorekeeper={removeScorekeeper}
         onUpdateGames={handleUpdateGames}
+        isSolo={isSolo}
       />
 
       {/* Hole Navigator — hide during playoff */}
@@ -856,8 +864,8 @@ export default function Scorecard() {
           scrollBehavior: 'smooth',
         }}
       >
-        {/* Live Leaderboard — hide during playoff */}
-        {playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && (
+        {/* Live Leaderboard — hide during playoff and for solo rounds (nothing to rank) */}
+        {!isSolo && playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && (
           <div className="mb-4">
             <LiveLeaderboard
               ref={leaderboardRef}
@@ -974,8 +982,11 @@ export default function Scorecard() {
           >
             <Mic className="w-3 h-3 text-muted-foreground/50" />
             <p className="text-xs text-muted-foreground/60 font-medium">
-              Say "{(playersWithScores[0]?.name || 'Mike').split(' ')[0]} 5,{' '}
-              {(playersWithScores[1]?.name || 'Tim').split(' ')[0]} 4" to score
+              {isSolo
+                ? `Say "I made a 4 on ${currentHole}" to score`
+                : <>Say "{(playersWithScores[0]?.name || 'Mike').split(' ')[0]} 5,{' '}
+                    {(playersWithScores[1]?.name || 'Tim').split(' ')[0]} 4" to score</>
+              }
             </p>
           </motion.div>
         )}
@@ -1028,6 +1039,7 @@ export default function Scorecard() {
         onPropBetAdded={addPropBet}
         onPropBetUpdated={updatePropBet}
         onShowShare={() => setShowShareModal(true)}
+        isSolo={isSolo}
       />
 
       {/* Tutorial Overlay */}
