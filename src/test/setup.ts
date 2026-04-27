@@ -26,6 +26,56 @@ mock.module('@capacitor/app', () => ({
     exitApp: () => Promise.resolve(),
   },
 }));
+mock.module('@capacitor/status-bar', () => ({
+  StatusBar: {
+    setStyle: () => Promise.resolve(),
+    setBackgroundColor: () => Promise.resolve(),
+    show: () => Promise.resolve(),
+    hide: () => Promise.resolve(),
+  },
+  Style: { Light: 'LIGHT', Dark: 'DARK', Default: 'DEFAULT' },
+}));
+mock.module('@capacitor/haptics', () => ({
+  Haptics: {
+    impact: () => Promise.resolve(),
+    notification: () => Promise.resolve(),
+    vibrate: () => Promise.resolve(),
+    selectionStart: () => Promise.resolve(),
+    selectionChanged: () => Promise.resolve(),
+    selectionEnd: () => Promise.resolve(),
+  },
+  ImpactStyle: { Heavy: 'HEAVY', Medium: 'MEDIUM', Light: 'LIGHT' },
+  NotificationType: { Success: 'SUCCESS', Warning: 'WARNING', Error: 'ERROR' },
+}));
+mock.module('@capacitor/push-notifications', () => ({
+  PushNotifications: {
+    register: () => Promise.resolve(),
+    requestPermissions: () => Promise.resolve({ receive: 'granted' }),
+    addListener: () => Promise.resolve({ remove: () => {} }),
+    removeAllListeners: () => Promise.resolve(),
+    getDeliveredNotifications: () => Promise.resolve({ notifications: [] }),
+    removeAllDeliveredNotifications: () => Promise.resolve(),
+  },
+}));
+mock.module('@capacitor/splash-screen', () => ({
+  SplashScreen: { show: () => Promise.resolve(), hide: () => Promise.resolve() },
+}));
+mock.module('@capacitor-community/keep-awake', () => ({
+  KeepAwake: {
+    keepAwake: () => Promise.resolve(),
+    allowSleep: () => Promise.resolve(),
+    isSupported: () => Promise.resolve({ isSupported: false }),
+  },
+}));
+mock.module('@capacitor-community/apple-sign-in', () => ({
+  SignInWithApple: { authorize: () => Promise.resolve({ response: {} }) },
+}));
+mock.module('@capacitor-community/contacts', () => ({
+  Contacts: {
+    requestPermissions: () => Promise.resolve({ contacts: 'granted' }),
+    getContacts: () => Promise.resolve({ contacts: [] }),
+  },
+}));
 
 // In CI we get env vars via process.env (workflow `env:` block); bun's
 // import.meta.env normally pulls from the local .env file, which doesn't
@@ -75,6 +125,23 @@ if (typeof document === 'undefined') {
   (globalThis as Record<string, unknown>).localStorage = win.localStorage;
   (globalThis as Record<string, unknown>).sessionStorage = win.sessionStorage;
   (globalThis as Record<string, unknown>).matchMedia = win.matchMedia?.bind(win) ?? (() => ({ matches: false, addListener: () => {}, removeListener: () => {}, addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => false }));
+}
+
+// number-flow (used by some UI components) calls customElements.define at
+// import time. JSDOM doesn't always provide it; stub a no-op registry so
+// tests that pull these components render without throwing.
+if (typeof globalThis.customElements === 'undefined') {
+  const registry = new Map<string, CustomElementConstructor>();
+  (globalThis as { customElements: CustomElementRegistry }).customElements = {
+    // Idempotent: silently no-op on re-registration so tests across files
+    // can repeatedly load modules that call customElements.define at import.
+    define: (name: string, ctor: CustomElementConstructor) => {
+      if (!registry.has(name)) registry.set(name, ctor);
+    },
+    get: (name: string) => registry.get(name),
+    upgrade: () => {},
+    whenDefined: () => Promise.resolve(undefined as unknown as CustomElementConstructor),
+  } as unknown as CustomElementRegistry;
 }
 
 import '@testing-library/jest-dom';

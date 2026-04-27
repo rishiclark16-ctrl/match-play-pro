@@ -257,7 +257,7 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1140 pass, 0 fail** (1140 tests across 44 files). All tests pass. Run with `bun run test:run`.
+**1143 pass, 0 fail** (1143 tests across 46 files). All tests pass. Run with `bun test`. Includes the first page-level smoke tests (Scorecard, NewRound).
 
 Test infrastructure notes:
 - `bunfig.toml` preloads `src/test/setup.ts` which polyfills jsdom, localStorage, sessionStorage, and indexedDB for all test files
@@ -333,8 +333,16 @@ Open items (Phase P2+):
   - 1x extension `pg_net` in public schema — cosmetic, low risk.
   - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional — deny-all by default; service role bypasses).
 - File-size violators (>500 lines): `FormatStep.tsx` 1224, `Scorecard.tsx` 1123, `NewRound.tsx` 1100, `RoundComplete.tsx` 976, `Stats.tsx` 833, `Profile.tsx` 831, `Home.tsx` 699.
-- Component/page test coverage is essentially zero — only game logic + a few hooks tested.
+- Component/page test coverage is bootstrapping — Scorecard + NewRound have early-return smoke tests; rest of pages still untested.
 - 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
+
+Phase P2.4 (page smoke tests) complete:
+- Added `src/pages/Scorecard.test.tsx` — exercises the loading + "round not found" early-return branches with all 14 hooks mocked at minimum non-throwing return shapes.
+- Added `src/pages/NewRound.test.tsx` — asserts the mode-selection step renders.
+- Augmented `src/test/setup.ts`:
+  - Idempotent `customElements.define` stub (number-flow registers a custom element at import time; would throw on second test file).
+  - `mock.module()` stubs for all Capacitor plugins used by the app: `@capacitor/core`, `@capacitor/app`, `@capacitor/status-bar`, `@capacitor/haptics`, `@capacitor/push-notifications`, `@capacitor/splash-screen`, `@capacitor-community/keep-awake`, `@capacitor-community/apple-sign-in`, `@capacitor-community/contacts`. CI-safe; bun's `mock.module` intercepts both ESM imports and CJS requires.
+- Pattern for future page tests: mock the supabase client with `from`, `channel`, `removeChannel`, `auth.getUser` — anything less and React Testing Library's cleanup phase throws when one of the upstream tests has set up a realtime subscription.
 Phase P2.2 + P2.2b (bundle profiling + on-demand QR) complete:
 - Added `vendor-sentry` (262 kB), `vendor-posthog` (184 kB), `vendor-capacitor` (12 kB) to `manualChunks` in `vite.config.ts`. Removed `vendor-qr` grouping.
 - `QRCodeScanner.tsx` switched to dynamic `await import('html5-qrcode')` inside the effect — `Html5Qrcode` is type-only at the module level. Result: 334 kB QR library now ships in its own lazy chunk loaded only when the scanner opens.
