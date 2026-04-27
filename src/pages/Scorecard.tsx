@@ -33,9 +33,11 @@ import { usePlayersWithScores } from '@/hooks/usePlayersWithScores';
 import { useSettlementPreview } from '@/hooks/useSettlementPreview';
 import { isSoloRound } from '@/lib/soloRound';
 import { Press, PlayerWithScores, GameConfig, BingoBangoHoleResult } from '@/types/golf';
-import { checkAutoPress, createPress } from '@/lib/games/nassau';
-import { calculateMatchPlay, calculateFourballMatchPlay, generateMatchPlayHeadline } from '@/lib/games/matchPlay';
+import { createPress } from '@/lib/games/nassau';
 import { sendPushToProfiles } from '@/lib/pushUtils';
+import { sendRoundCompletionNotifications as sendRoundCompletionNotificationsImpl } from '@/lib/roundCompletionNotifier';
+import { fireScoreSideEffects as fireScoreSideEffectsImpl } from '@/lib/scoreSideEffects';
+import { useNassauAutoPress } from '@/hooks/useNassauAutoPress';
 import { capture } from '@/lib/posthog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -271,51 +273,15 @@ export default function Scorecard() {
   // a score is saved. Non-critical — never throws, never blocks save.
   const fireScoreSideEffects = useCallback((playerId: string, score: number) => {
     if (!round || !user) return;
-    const scoredPlayer = playersWithScores.find(p => p.id === playerId);
-    if (!scoredPlayer) return;
-    const par = currentHoleInfo.par;
-    const firstName = (scoredPlayer.name || 'Player').split(' ')[0];
-    const roundUrl = `/round/${round.id}`;
-
-    // Everyone else in the round with a profile — the "hype" audience.
-    const otherProfileIds = playersWithScores
-      .filter(p => p.id !== playerId && p.profileId)
-      .map(p => p.profileId as string);
-
-    // Hole-in-one — only par 3s, score of 1
-    if (par === 3 && score === 1 && otherProfileIds.length > 0) {
-      sendPushToProfiles({
-        profileIds: otherProfileIds,
-        title: 'ACE! ⛳',
-        body: `${firstName} just made a hole-in-one on #${currentHole}. The drinks are on them 🍻`,
-        data: { roundId: round.id, route: roundUrl },
-        type: 'holeInOne',
-      });
-    } else if (score === par - 2 && otherProfileIds.length > 0) {
-      // Eagle — par-2, but not a hole-in-one (that's already handled above)
-      sendPushToProfiles({
-        profileIds: otherProfileIds,
-        title: 'Eagle spotted ⛳',
-        body: `${firstName} went -2 on #${currentHole}. Nice grip.`,
-        data: { roundId: round.id, route: roundUrl },
-        type: 'eagleLogged',
-      });
-    }
-
-    // Score-entered-for-you: notify the scored player if someone else logged it.
-    if (
-      scoredPlayer.profileId &&
-      scoredPlayer.profileId !== user.id
-    ) {
-      const scorekeeperName = (user.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? 'Someone';
-      sendPushToProfiles({
-        profileIds: [scoredPlayer.profileId],
-        title: 'Score posted ⛳',
-        body: `${scorekeeperName} put you down for a ${score} on #${currentHole}`,
-        data: { roundId: round.id, route: roundUrl },
-        type: 'scoreEnteredForYou',
-      });
-    }
+    fireScoreSideEffectsImpl({
+      round,
+      user,
+      playersWithScores,
+      currentHole,
+      currentHolePar: currentHoleInfo.par,
+      playerId,
+      score,
+    });
   }, [round, user, playersWithScores, currentHole, currentHoleInfo.par]);
 
   // Score saving callback for voice
@@ -405,77 +371,13 @@ export default function Scorecard() {
   // Send match result notifications to friends after round completion
   const sendRoundCompletionNotifications = useCallback(async () => {
     if (!round || !user) return;
-
-    // Build game result headlines
-    const headlines: string[] = [];
-    const matchPlayGame = round.games?.find(g => g.type === 'match_play');
-
-    if (matchPlayGame) {
-      const isFourball = matchPlayGame.matchPlayFormat === 'fourball' && matchPlayGame.matchPlayTeams?.length === 2;
-
-      let strokesPerHole: Map<string, Map<number, number>> | undefined;
-      if (matchPlayGame.useNet) {
-        strokesPerHole = new Map();
-        for (const player of playersWithScores) {
-          if (player.strokesPerHole) {
-            strokesPerHole.set(player.id, player.strokesPerHole);
-          }
-        }
-        if (strokesPerHole.size === 0) strokesPerHole = undefined;
-      }
-
-      const mpResult = isFourball
-        ? calculateFourballMatchPlay(roundScores, playersWithScores, round.holeInfo, strokesPerHole, round.holes as 9 | 18, matchPlayGame.matchPlayTeams!)
-        : playersWithScores.length === 2
-          ? calculateMatchPlay(roundScores, playersWithScores, round.holeInfo, strokesPerHole, round.holes as 9 | 18)
-          : null;
-
-      if (mpResult) {
-        const headline = generateMatchPlayHeadline(mpResult, playersWithScores);
-        if (headline) {
-          headlines.push(headline);
-          const updatedGames = (round.games || []).map(g =>
-            g.type === 'match_play' ? { ...g, resultHeadline: headline } : g
-          );
-          updateGamesSupabase(updatedGames);
-        }
-      }
-    }
-
-    if (headlines.length === 0) return;
-
-    // Get friends of the current user to notify
-    try {
-      const { data: friendships } = await supabase
-        .from('friendships')
-        .select('user_id, friend_id')
-        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
-        .eq('status', 'accepted');
-
-      if (!friendships?.length) return;
-
-      const friendIds = friendships.map(f =>
-        f.user_id === user.id ? f.friend_id : f.user_id
-      );
-
-      // Exclude players already in the round (they'll see the result directly)
-      const playerProfileIds = playersWithScores
-        .map(p => p.profileId)
-        .filter(Boolean) as string[];
-      const notifyIds = friendIds.filter(id => !playerProfileIds.includes(id));
-
-      if (notifyIds.length > 0) {
-        sendPushToProfiles({
-          profileIds: notifyIds,
-          title: 'Match over ⛳',
-          body: `${headlines[0]} at ${round.courseName}`,
-          data: { roundId: round.id, route: `/round/${round.id}/complete` },
-          type: 'roundCompleted',
-        });
-      }
-    } catch {
-      // Notification is non-critical
-    }
+    await sendRoundCompletionNotificationsImpl({
+      round,
+      userId: user.id,
+      playersWithScores,
+      roundScores,
+      updateGames: updateGamesSupabase,
+    });
   }, [round, user, playersWithScores, roundScores, updateGamesSupabase]);
 
   const handleFinishRound = useCallback(() => {
@@ -538,60 +440,7 @@ export default function Scorecard() {
   }, [handleAddPress, round, playersWithScores]);
 
   // Auto-press check for Nassau
-  useEffect(() => {
-    if (!round) return;
-
-    const nassauGame = round.games?.find(g => g.type === 'nassau');
-    if (!nassauGame || !nassauGame.autoPress) return;
-    if (playersWithScores.length !== 2) return;
-
-    // Build strokes map if using net scoring
-    let strokesPerHole: Map<string, Map<number, number>> | undefined;
-    if (nassauGame.useNet) {
-      strokesPerHole = new Map();
-      for (const player of playersWithScores) {
-        if (player.strokesPerHole) {
-          strokesPerHole.set(player.id, player.strokesPerHole);
-        }
-      }
-      if (strokesPerHole.size === 0) strokesPerHole = undefined;
-    }
-
-    const autoPress = checkAutoPress(
-      roundScores,
-      playersWithScores,
-      nassauGame.stakes,
-      round.presses || [],
-      round.holes,
-      strokesPerHole
-    );
-
-    if (autoPress) {
-      // Find who triggered the press
-      const pressingPlayer = playersWithScores.find(p => p.id === autoPress.initiatedBy);
-      handleAddPress(autoPress);
-      toast.info(
-        `Auto-Press! ${(pressingPlayer?.name || 'Player').split(' ')[0]} is 2 down`,
-        {
-          description: `Press $${nassauGame.stakes} starting hole ${autoPress.startHole}`,
-          duration: 4000,
-        }
-      );
-      // Notify all players with accounts
-      const profileIds = playersWithScores
-        .filter(p => p.profileId)
-        .map(p => p.profileId as string);
-      if (profileIds.length > 0 && round) {
-        sendPushToProfiles({
-          profileIds,
-          title: 'Auto-press! ⛳',
-          body: `${(pressingPlayer?.name || 'Player').split(' ')[0]} is 2 down and got desperate — $${nassauGame.stakes} press from hole ${autoPress.startHole}`,
-          data: { roundId: round.id, route: `/round/${round.id}` },
-          type: 'pressTriggered',
-        });
-      }
-    }
-  }, [round, roundScores, playersWithScores, handleAddPress]);
+  useNassauAutoPress({ round, roundScores, playersWithScores, onAddPress: handleAddPress });
 
   const handleUpdateGames = useCallback(async (games: GameConfig[]) => {
     if (round) {
