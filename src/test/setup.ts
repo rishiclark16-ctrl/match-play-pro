@@ -1,5 +1,31 @@
 import 'fake-indexeddb/auto';
 import { JSDOM } from 'jsdom';
+import { mock } from 'bun:test';
+
+// Stub Capacitor's CommonJS plugin registration before any test or app
+// module loads. @capacitor/app/dist/plugin.cjs.js calls
+// require('@capacitor/core').registerPlugin(...) at module init; in CI
+// the resolved core module doesn't expose registerPlugin via the vi.mock
+// shim because it's a CJS require, not an ESM import. Mock at the bun
+// runtime level so every code path sees the stub.
+mock.module('@capacitor/core', () => ({
+  Capacitor: {
+    isNativePlatform: () => false,
+    getPlatform: () => 'web',
+    isPluginAvailable: () => false,
+  },
+  registerPlugin: () => new Proxy({}, { get: () => () => Promise.resolve() }),
+  WebPlugin: class WebPlugin {},
+}));
+mock.module('@capacitor/app', () => ({
+  App: {
+    addListener: () => Promise.resolve({ remove: () => {} }),
+    removeAllListeners: () => Promise.resolve(),
+    getInfo: () => Promise.resolve({ name: 'test', id: 'test', build: '1', version: '1' }),
+    getState: () => Promise.resolve({ isActive: true }),
+    exitApp: () => Promise.resolve(),
+  },
+}));
 
 // In CI we get env vars via process.env (workflow `env:` block); bun's
 // import.meta.env normally pulls from the local .env file, which doesn't
