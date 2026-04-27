@@ -33,11 +33,12 @@ import { usePlayersWithScores } from '@/hooks/usePlayersWithScores';
 import { useSettlementPreview } from '@/hooks/useSettlementPreview';
 import { isSoloRound } from '@/lib/soloRound';
 import { Press, PlayerWithScores, GameConfig, BingoBangoHoleResult } from '@/types/golf';
-import { createPress } from '@/lib/games/nassau';
 import { sendPushToProfiles } from '@/lib/pushUtils';
 import { sendRoundCompletionNotifications as sendRoundCompletionNotificationsImpl } from '@/lib/roundCompletionNotifier';
 import { fireScoreSideEffects as fireScoreSideEffectsImpl } from '@/lib/scoreSideEffects';
 import { useNassauAutoPress } from '@/hooks/useNassauAutoPress';
+import { useBirdiePress } from '@/hooks/useBirdiePress';
+import { ScorecardLoading, ScorecardNotFound } from '@/components/golf/ScorecardEmptyStates';
 import { capture } from '@/lib/posthog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -47,9 +48,6 @@ import { toast } from 'sonner';
 import { hapticSuccess } from '@/lib/haptics';
 import { setStatusBarDefault } from '@/lib/statusBar';
 import { broadcastWatchPartyNotification } from '@/lib/watchPartyNotification';
-
-// MATCH logo M path
-const MATCH_M_PATH = 'M16 58 L16 22 L40 46 L64 22 L64 58';
 
 export default function Scorecard() {
   const { id } = useParams<{ id: string }>();
@@ -484,38 +482,15 @@ export default function Scorecard() {
   }, [selectedPlayerId, round, pickupScore, currentHole, saveScoreToSupabase, setPlayerScore]);
 
   // Auto-press on net birdie (press_auto_birdie)
-  useEffect(() => {
-    if (!round || !houseGameConfig) return;
-    if (houseGameConfig.pressRules.trigger !== 'birdie') return;
-    const houseGame = round.games?.find(g => g.type === 'house');
-    if (!houseGame) return;
-    const stakes = houseGame.stakes || 1;
-    const existingPresses = round.presses || [];
-    if (existingPresses.length >= 3) return; // max 3 presses guard
-
-    for (const player of playersWithScores) {
-      const score = player.scores.find(s => s.holeNumber === currentHole);
-      if (!score) continue;
-      const handicapStrokes = player.strokesPerHole?.get(currentHole) ?? 0;
-      const netDiff = score.strokes - handicapStrokes - currentHoleInfo.par;
-      if (netDiff !== -1) continue; // only net birdie
-
-      // Check if a press starting on next hole already exists for this player
-      const nextHole = currentHole + 1;
-      if (nextHole > round.holes) continue;
-      const alreadyPressed = existingPresses.some(
-        p => p.startHole === nextHole && p.initiatedBy === player.id
-      );
-      if (alreadyPressed) continue;
-
-      const press = createPress(player.id, nextHole, stakes);
-      handleAddPress(press);
-      toast.info(
-        `Birdie Press! ${player.name.split(' ')[0]} nets a birdie`,
-        { description: `Press $${stakes} starting hole ${nextHole}`, duration: 4000 }
-      );
-    }
-  }, [roundScores, currentHole, round]); // eslint-disable-line react-hooks/exhaustive-deps
+  useBirdiePress({
+    round,
+    roundScores,
+    currentHole,
+    currentHolePar: currentHoleInfo.par,
+    playersWithScores,
+    houseGameConfig,
+    onAddPress: handleAddPress,
+  });
 
   // Trigger BBB sheet when all players have scored current hole + BBB is active
   useEffect(() => {
@@ -535,89 +510,8 @@ export default function Scorecard() {
     setShowBBBSheet(true);
   }, [allCurrentHoleScored, currentHole]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Loading state — full-screen with MATCH M logo
-  if (supabaseLoading) {
-    return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="flex flex-col items-center gap-5"
-        >
-          <svg
-            width="80"
-            height="80"
-            viewBox="0 0 80 80"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-label="MATCH logo"
-          >
-            <motion.path
-              d={MATCH_M_PATH}
-              stroke="#F0EE3A"
-              strokeWidth="6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 1 }}
-              transition={{ duration: 0.8, ease: 'easeInOut' }}
-            />
-          </svg>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-white/50 text-sm font-medium tracking-wider uppercase"
-          >
-            Loading round...
-          </motion.p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // Round not found — clean error card
-  if (!round) {
-    return (
-      <div className="min-h-screen bg-[#F8F8F6] flex items-center justify-center px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-          className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-border/30 p-8 text-center"
-        >
-          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
-            <svg width="28" height="28" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d={MATCH_M_PATH}
-                stroke="currentColor"
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-                className="text-muted-foreground"
-              />
-            </svg>
-          </div>
-          <h2 className="text-lg font-bold mb-1">Round not found</h2>
-          <p className="text-muted-foreground text-sm mb-6">
-            This round may have been deleted or the link is invalid.
-          </p>
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            onClick={() => navigate('/')}
-            className="w-full bg-foreground text-background font-bold py-3 rounded-xl touch-manipulation"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-          >
-            Go Home
-          </motion.button>
-        </motion.div>
-      </div>
-    );
-  }
+  if (supabaseLoading) return <ScorecardLoading />;
+  if (!round) return <ScorecardNotFound onGoHome={() => navigate('/')} />;
 
   return (
     <div className="bg-[#F8F8F6] h-screen flex flex-col overflow-hidden relative">

@@ -332,15 +332,17 @@ Open items (Phase P2+):
   - 1x leaked-password protection — Supabase dashboard toggle (Auth → Settings → Auth Providers → Email).
   - 1x extension `pg_net` in public schema — cosmetic, low risk.
   - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional — deny-all by default; service role bypasses).
-- File-size violators (>500 lines): `FormatStep.tsx` 1224, `Scorecard.tsx` 972 (was 1123, P2.3 extractions), `NewRound.tsx` 1100, `RoundComplete.tsx` 976, `Stats.tsx` 833, `Profile.tsx` 831, `Home.tsx` 699.
+- File-size violators (>500 lines): `FormatStep.tsx` 1224, `Scorecard.tsx` 866 (was 1123, after P2.3), `NewRound.tsx` 1100, `RoundComplete.tsx` 976, `Stats.tsx` 833, `Profile.tsx` 831, `Home.tsx` 699.
 - Component/page test coverage is bootstrapping — Scorecard + NewRound have early-return smoke tests; rest of pages still untested.
 - 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
 
-Phase P2.3 (Scorecard split) — in progress, partial:
-- Extracted `sendRoundCompletionNotifications` (73 lines) → `src/lib/roundCompletionNotifier.ts` (pure helper).
-- Extracted `fireScoreSideEffects` (47 lines) → `src/lib/scoreSideEffects.ts` (pure helper that fires hole-in-one / eagle / score-entered-for-you push notifications).
+Phase P2.3 (Scorecard split) complete (first wave):
+- Extracted `sendRoundCompletionNotifications` (73 lines) → `src/lib/roundCompletionNotifier.ts`.
+- Extracted `fireScoreSideEffects` (47 lines) → `src/lib/scoreSideEffects.ts` (hole-in-one / eagle / score-entered-for-you push notifications).
 - Extracted Nassau auto-press effect (53 lines) → `src/hooks/useNassauAutoPress.ts`.
-- Result: `Scorecard.tsx` 1123 → 972 lines. Still over the 500-line target — further extractions queued (handlers + render subtrees).
+- Extracted house-game birdie-press effect (32 lines) → `src/hooks/useBirdiePress.ts`.
+- Extracted loading + "round not found" UI (~80 lines) → `src/components/golf/ScorecardEmptyStates.tsx` exporting `<ScorecardLoading />` and `<ScorecardNotFound />`.
+- Result: `Scorecard.tsx` 1123 → 866 lines (−23%). Still over the 500-line target. **P2.3b queued**: handler hooks (`handleSaveScore`, `handleQuickScore`, `handleScoreSelect`, `handleFinishRound`, `handlePickup`) and render-subtree extractions (header bar / banner stack / hole nav).
 
 Phase P2.4 (page smoke tests) complete:
 - Added `src/pages/Scorecard.test.tsx` — exercises the loading + "round not found" early-return branches with all 14 hooks mocked at minimum non-throwing return shapes.
