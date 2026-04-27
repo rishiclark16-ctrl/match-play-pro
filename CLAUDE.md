@@ -302,7 +302,8 @@ Full scoring audit against golf betting reference document. Fixes + new games:
 ## Production Audit (2026-04-27, Phase P0)
 Phase 0 (ship-blockers) complete:
 - **Failing test fixed:** `useGroups.test.ts:545` — mock for `group_members` was missing `.select().eq()` shape used by `updateMembers` to snapshot existing members. Now 1140/1140 pass across 44 files.
-- **CI workflow added:** `.github/workflows/ci.yml` runs lint (src only), `bun run test:run`, and `bun run build:dev` on PRs and main pushes. Requires `VITE_SUPABASE_PUBLISHABLE_KEY` GitHub secret.
+- **CI workflow added + verified green:** `.github/workflows/ci.yml` runs `bunx eslint src` (max 50 warnings), `bun test` (1140), and `bun run build:dev` on PRs and main pushes. Secret `VITE_SUPABASE_PUBLISHABLE_KEY` is configured. First successful run on commit `f36a55c` (~38s end-to-end).
+  - `src/test/setup.ts` mirrors `process.env.VITE_*` onto `import.meta.env` for runners that don't auto-load `.env`, and uses `bun:test` `mock.module()` to stub `@capacitor/core` + `@capacitor/app` so the CJS plugin registration in `@capacitor/app/dist/plugin.cjs.js` doesn't crash on Linux runners.
 - **RLS gaps closed:** `supabase/migrations/20260427000000_lock_down_rls_gaps.sql`
   - Dropped `promo_codes "Anyone can read"` policy — was leaking unredeemed codes (edge fn uses service-role anyway).
   - `get_season_leaderboard` and `get_head_to_head` now pin `viewer_id` to `auth.uid()` server-side. Previously any authenticated user could query another user's standings by passing a different uuid.
