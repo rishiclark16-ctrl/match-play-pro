@@ -516,6 +516,7 @@ describe('useGroups', () => {
               in: vi.fn().mockReturnValue({
                 order: vi.fn().mockResolvedValue({ data: [], error: null }),
               }),
+              eq: vi.fn().mockResolvedValue({ data: [], error: null }),
             }),
             delete: deleteMembersMock,
             insert: insertMembersMock,

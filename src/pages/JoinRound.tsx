@@ -21,11 +21,14 @@ export default function JoinRound() {
   const [joining, setJoining] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
 
-  // Auto-join if code is in URL
+  // Auto-join if code is in URL — one-shot on mount only.
+  // codeFromUrl/handleWatchLive are intentionally omitted: re-running on
+  // change would double-fire joins as the page re-renders.
   useEffect(() => {
     if (codeFromUrl && codeFromUrl.length === 6) {
       handleWatchLive();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleWatchLive = async () => {

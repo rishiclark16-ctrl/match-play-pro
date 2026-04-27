@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, Test, Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      VITE_SUPABASE_PROJECT_ID: puqgbsxabcyxrbwwoznn
+      VITE_SUPABASE_URL: https://puqgbsxabcyxrbwwoznn.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint (src only)
+        run: bunx eslint src --max-warnings 50
+
+      - name: Unit tests
+        # Use bun's native test runner — vitest has hoisting issues with
+        # the project's vi.mock factory style (see CLAUDE.md test infra notes).
+        run: bun test --rerun-each 0
+
+      - name: Build (development mode, no Sentry upload)
+        run: bun run build:dev

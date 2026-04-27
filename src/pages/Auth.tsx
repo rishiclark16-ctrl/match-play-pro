@@ -111,6 +111,9 @@ function GolfCanvas() {
     });
 
     return () => cleanups.forEach((fn) => fn());
+    // videoRefs is an array of stable useRefs; wrapping array changes identity each render
+    // so we intentionally run this once on mount.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

@@ -150,7 +150,9 @@ export default function Social() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [searchParams, friendCode, sendFriendRequest]);
+    // atFriendLimit must be in deps — without it, the paywall check uses a
+    // stale value if the user's friend count crosses the limit mid-flow.
+  }, [searchParams, friendCode, sendFriendRequest, atFriendLimit]);
 
   const handleAccept = async (friendshipId: string) => {
     if (atFriendLimit) { setShowPaywall(true); return; }

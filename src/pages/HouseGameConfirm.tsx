@@ -26,7 +26,12 @@ export default function HouseGameConfirm() {
   const state = location.state as LocationState | null;
 
   const description = state?.description ?? '';
-  const parsedPrimitives: ParsedPrimitive[] = state?.parsedPrimitives ?? [];
+  // Stabilize identity: state?.parsedPrimitives ?? [] returns a new array
+  // on each render, which would invalidate downstream useMemos.
+  const parsedPrimitives: ParsedPrimitive[] = useMemo(
+    () => state?.parsedPrimitives ?? [],
+    [state?.parsedPrimitives],
+  );
   const returnTo = state?.returnTo;
 
   const { saving: groupSaving, saveHouseGame } = useHouseGame(isPersonal ? null : groupId ?? null);

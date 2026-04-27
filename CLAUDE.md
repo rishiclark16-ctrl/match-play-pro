@@ -1,5 +1,22 @@
 # MATCH Golf — Claude Code Context
 
+## ⚠️ Documentation Discipline (read before starting any task)
+
+**Before** starting any task in this repo, the assistant MUST:
+1. Read this file (`CLAUDE.md`) end-to-end.
+2. Read the relevant section(s) for the area being touched (e.g., game logic → `Core Features` + audit history; security/DB → `Production Audit` + `supabase/migrations/`).
+3. Skim recent changes in any file it intends to edit so it doesn't undo prior work.
+
+**After** finishing any task, the assistant MUST:
+1. Update `CLAUDE.md` to reflect what changed — test baselines, file-size violations, new migrations, new audit entries, feature status.
+2. Update any other docs touched by the change (`README.md`, ADRs, etc.).
+3. End the response with the literal line:
+   `claude md and documentation updated`
+
+If a task does not require any doc change, still print the confirmation line so it's clear the doc check happened.
+
+---
+
 ## What This App Is
 MATCH Golf is a mobile-first React + Capacitor iOS app for real-time golf scoring with multiplayer support, betting games, voice scoring, and handicap calculations. It targets iOS primarily (with Android support). Users can score rounds, track multiple betting games simultaneously, manage settlements, and play with friends in real-time.
 
@@ -240,7 +257,7 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**865 pass, 0 fail** (865 tests across 26 files). All tests pass.
+**1140 pass, 0 fail** (1140 tests across 44 files). All tests pass. Run with `bun run test:run`.
 
 Test infrastructure notes:
 - `bunfig.toml` preloads `src/test/setup.ts` which polyfills jsdom, localStorage, sessionStorage, and indexedDB for all test files
@@ -279,6 +296,39 @@ Full scoring audit against golf betting reference document. Fixes + new games:
 - `primitives.ts` — added `format_nines`, set implemented=true for all new/fixed games
 - Wolf tests updated for 3-player, Quota tests updated for correct point table
 - Test baseline after scoring audit: **865 pass, 0 fail** (865 total)
+
+---
+
+## Production Audit (2026-04-27, Phase P0)
+Phase 0 (ship-blockers) complete:
+- **Failing test fixed:** `useGroups.test.ts:545` — mock for `group_members` was missing `.select().eq()` shape used by `updateMembers` to snapshot existing members. Now 1140/1140 pass across 44 files.
+- **CI workflow added:** `.github/workflows/ci.yml` runs lint (src only), `bun run test:run`, and `bun run build:dev` on PRs and main pushes. Requires `VITE_SUPABASE_PUBLISHABLE_KEY` GitHub secret.
+- **RLS gaps closed:** `supabase/migrations/20260427000000_lock_down_rls_gaps.sql`
+  - Dropped `promo_codes "Anyone can read"` policy — was leaking unredeemed codes (edge fn uses service-role anyway).
+  - `get_season_leaderboard` and `get_head_to_head` now pin `viewer_id` to `auth.uid()` server-side. Previously any authenticated user could query another user's standings by passing a different uuid.
+  - **Migration applied to production** on 2026-04-27 via Supabase MCP (`apply_migration` name `lock_down_rls_gaps`). `supabase db push` will be a no-op since the local file matches the applied state.
+
+Phase P1 (robustness) complete:
+- **Lint error fixed:** `remotion/LaunchVideoV2.tsx:139` — replaced `as any` with proper `React.CSSProperties['textAlign']` cast. Repo lint: 0 errors, 19 warnings.
+- **Per-route ErrorBoundary added:** `src/components/RouteErrorBoundary.tsx` wraps the entire `<Routes>` block in `App.tsx`. Auto-resets when `useLocation().pathname` changes, so navigating away from a crashed page recovers without an app reload. Reports route name to Sentry breadcrumbs. Root `ErrorBoundary` is still the catch-all.
+- **4 critical useEffect deps reviewed:**
+  - `Auth.tsx:114` — intentional mount-only (videoRefs array identity changes each render); `eslint-disable-next-line` with intent comment.
+  - `JoinRound.tsx:29` — intentional one-shot auto-join; same treatment.
+  - `Social.tsx:153` — **real bug fixed**: added `atFriendLimit` to deps. Previously the deep-link friend-add path could bypass the paywall if the user crossed the friend limit between mount and the 500ms `setTimeout`.
+  - `HouseGameConfirm.tsx:29` — wrapped `parsedPrimitives` in `useMemo` so identity is stable across renders (was invalidating downstream `configWarnings` memo every render).
+
+Open items (Phase P2+):
+- **Supabase security advisors** (66 WARN, run via MCP `get_advisors`):
+  - 54x SECURITY DEFINER functions callable by `anon`/`authenticated` via `/rest/v1/rpc/*` (e.g., `are_friends`, `is_round_owner`). Most enforce auth.uid() internally, but each should be reviewed; revoke EXECUTE from anon for any not meant to be client-callable.
+  - 9x function_search_path_mutable — defense-in-depth: add `SET search_path = public` to remaining functions.
+  - 1x storage bucket `avatars` allows listing — tighten policy so only object URL access works.
+  - 1x leaked-password protection disabled in Auth settings (dashboard toggle).
+  - 1x extension `pg_net` in public schema (low-risk, cosmetic).
+- File-size violators (>500 lines): `FormatStep.tsx` 1224, `Scorecard.tsx` 1123, `NewRound.tsx` 1100, `RoundComplete.tsx` 976, `Stats.tsx` 833, `Profile.tsx` 831, `Home.tsx` 699.
+- Component/page test coverage is essentially zero — only game logic + a few hooks tested.
+- Bundle: main `index.js = 515kB`, `vendor-qr = 334kB`. Profile what's eager-loaded in `index.js`.
+- 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
+- **GitHub secret `VITE_SUPABASE_PUBLISHABLE_KEY`** still needs to be added to the repo's Actions secrets so CI builds succeed. (Repo Settings → Secrets and variables → Actions → New repository secret.) The publishable key is the same anon key used in `.env`.
 
 ---
 
