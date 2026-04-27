@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import type { Html5Qrcode } from 'html5-qrcode';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X, Camera, ScanLine } from 'lucide-react';
@@ -43,7 +43,10 @@ export function QRCodeScanner({ open, onClose, onScan }: QRCodeScannerProps) {
       if (!container) return;
 
       try {
-        const html5QrCode = new Html5Qrcode(containerId);
+        // Lazy-load the 334 kB html5-qrcode bundle only when the user
+        // actually opens the scanner.
+        const { Html5Qrcode: Html5QrcodeCtor } = await import('html5-qrcode');
+        const html5QrCode = new Html5QrcodeCtor(containerId);
         scannerRef.current = html5QrCode;
 
         await html5QrCode.start(

@@ -318,17 +318,27 @@ Phase P1 (robustness) complete:
   - `Social.tsx:153` — **real bug fixed**: added `atFriendLimit` to deps. Previously the deep-link friend-add path could bypass the paywall if the user crossed the friend limit between mount and the 500ms `setTimeout`.
   - `HouseGameConfirm.tsx:29` — wrapped `parsedPrimitives` in `useMemo` so identity is stable across renders (was invalidating downstream `configWarnings` memo every render).
 
+Phase P2.1 (Supabase advisor hardening) complete:
+- Migration `20260427100000_advisor_security_hardening` (applied to prod):
+  - Dropped `Anyone can view avatars` SELECT policy on `storage.objects` so the public bucket no longer allows file enumeration. `getPublicUrl`/uploads still work.
+  - Pinned `auth.uid()` in 4 client-called RPCs that took a viewer_id parameter: `get_round_reactions`, `get_social_feed_rounds`, `get_upcoming_rounds`, `is_friend_of_any_player`. Callers can now only query their own scope.
+  - Membership-gated 3 watch-party RPCs (`get_watch_party_messages`, `get_watch_party_recipients`, `get_watch_party_stats`) — caller must be a player or watch-party member.
+  - Added `SET search_path = public` to 9 trigger/utility functions (8 in main migration + `has_round_access` in followup).
+- Advisor count: 66 → 57 WARN (9 fixed). Remaining 57 documented below.
+
 Open items (Phase P2+):
-- **Supabase security advisors** (66 WARN, run via MCP `get_advisors`):
-  - 54x SECURITY DEFINER functions callable by `anon`/`authenticated` via `/rest/v1/rpc/*` (e.g., `are_friends`, `is_round_owner`). Most enforce auth.uid() internally, but each should be reviewed; revoke EXECUTE from anon for any not meant to be client-callable.
-  - 9x function_search_path_mutable — defense-in-depth: add `SET search_path = public` to remaining functions.
-  - 1x storage bucket `avatars` allows listing — tighten policy so only object URL access works.
-  - 1x leaked-password protection disabled in Auth settings (dashboard toggle).
-  - 1x extension `pg_net` in public schema (low-risk, cosmetic).
+- **Supabase security advisors** (57 WARN, run via MCP `get_advisors`):
+  - 54x SECURITY DEFINER predicate functions callable by `anon`/`authenticated` via `/rest/v1/rpc/*` (e.g., `are_friends`, `is_round_owner`, `has_round_access`). These are used inside RLS policies, so `authenticated` must keep EXECUTE for RLS to work. Defense-in-depth refactor (P2.1b): make each predicate ignore its `user_id` parameter and use `auth.uid()` internally so RPC callers cannot probe other users.
+  - 1x leaked-password protection — Supabase dashboard toggle (Auth → Settings → Auth Providers → Email).
+  - 1x extension `pg_net` in public schema — cosmetic, low risk.
+  - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional — deny-all by default; service role bypasses).
 - File-size violators (>500 lines): `FormatStep.tsx` 1224, `Scorecard.tsx` 1123, `NewRound.tsx` 1100, `RoundComplete.tsx` 976, `Stats.tsx` 833, `Profile.tsx` 831, `Home.tsx` 699.
 - Component/page test coverage is essentially zero — only game logic + a few hooks tested.
-- Bundle: main `index.js = 515kB`, `vendor-qr = 334kB`. Profile what's eager-loaded in `index.js`.
 - 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
+Phase P2.2 + P2.2b (bundle profiling + on-demand QR) complete:
+- Added `vendor-sentry` (262 kB), `vendor-posthog` (184 kB), `vendor-capacitor` (12 kB) to `manualChunks` in `vite.config.ts`. Removed `vendor-qr` grouping.
+- `QRCodeScanner.tsx` switched to dynamic `await import('html5-qrcode')` inside the effect — `Html5Qrcode` is type-only at the module level. Result: 334 kB QR library now ships in its own lazy chunk loaded only when the scanner opens.
+- Result: **main `index.js` 515 kB → 58.7 kB (−89%)**, gzip 170 kB → 19.5 kB. JoinRound chunk dropped from 88 kB → 4 kB. Initial app load no longer pays for QR scanning, error tracking SDK, analytics SDK, or Capacitor wrappers up front; each is a separate parallel-cacheable chunk.
 - **GitHub secret `VITE_SUPABASE_PUBLISHABLE_KEY`** still needs to be added to the repo's Actions secrets so CI builds succeed. (Repo Settings → Secrets and variables → Actions → New repository secret.) The publishable key is the same anon key used in `.env`.
 
 ---
