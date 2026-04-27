@@ -1,6 +1,22 @@
 import 'fake-indexeddb/auto';
 import { JSDOM } from 'jsdom';
 
+// In CI we get env vars via process.env (workflow `env:` block); bun's
+// import.meta.env normally pulls from the local .env file, which doesn't
+// exist on the runner. Mirror VITE_* vars from process.env onto
+// import.meta.env so client.ts and friends see them in both contexts.
+const meta = (import.meta as unknown as { env: Record<string, string | undefined> });
+if (!meta.env) (meta as { env: Record<string, string | undefined> }).env = {};
+for (const k of Object.keys(process.env)) {
+  if (k.startsWith('VITE_') && meta.env[k] === undefined) {
+    meta.env[k] = process.env[k];
+  }
+}
+// Provide harmless defaults so Supabase client construction succeeds even
+// when the workflow forgot to pass a publishable key.
+if (!meta.env.VITE_SUPABASE_URL) meta.env.VITE_SUPABASE_URL = 'http://localhost:54321';
+if (!meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) meta.env.VITE_SUPABASE_PUBLISHABLE_KEY = 'test-anon-key';
+
 // Set up jsdom environment for bun test runner (which doesn't provide DOM by default)
 if (typeof document === 'undefined') {
   const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>', {
