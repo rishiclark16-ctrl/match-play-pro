@@ -336,17 +336,22 @@ Open items (Phase P2+):
   - 1x leaked-password protection — Supabase dashboard toggle (Auth → Settings → Auth Providers → Email).
   - 1x extension `pg_net` in public schema — cosmetic, low risk.
   - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional — deny-all by default; service role bypasses).
-- File-size violators (>500 lines): `FormatStep.tsx` 1224, `Scorecard.tsx` 866 (was 1123, after P2.3), `NewRound.tsx` 1100, `RoundComplete.tsx` 976, `Stats.tsx` 833, `Profile.tsx` 831, `Home.tsx` 699.
+- File-size violators (>500 lines): `FormatStep.tsx` 1081 (was 1224), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 1100, `RoundComplete.tsx` 976, `Stats.tsx` 833, `Profile.tsx` 831, `Home.tsx` 699.
 - Component/page test coverage is bootstrapping — Scorecard + NewRound have early-return smoke tests; rest of pages still untested.
 - 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
 
-Phase P2.3 (Scorecard split) complete (first wave):
+Phase P2.3 (Scorecard split) — multi-wave:
 - Extracted `sendRoundCompletionNotifications` (73 lines) → `src/lib/roundCompletionNotifier.ts`.
 - Extracted `fireScoreSideEffects` (47 lines) → `src/lib/scoreSideEffects.ts` (hole-in-one / eagle / score-entered-for-you push notifications).
 - Extracted Nassau auto-press effect (53 lines) → `src/hooks/useNassauAutoPress.ts`.
 - Extracted house-game birdie-press effect (32 lines) → `src/hooks/useBirdiePress.ts`.
 - Extracted loading + "round not found" UI (~80 lines) → `src/components/golf/ScorecardEmptyStates.tsx` exporting `<ScorecardLoading />` and `<ScorecardNotFound />`.
-- Result: `Scorecard.tsx` 1123 → 866 lines (−23%). Still over the 500-line target. **P2.3b queued**: handler hooks (`handleSaveScore`, `handleQuickScore`, `handleScoreSelect`, `handleFinishRound`, `handlePickup`) and render-subtree extractions (header bar / banner stack / hole nav).
+- Extracted `handleFinishRound` + `handleFinishWithWinner` (~28 lines) → `src/hooks/useFinishRound.ts`.
+- Result: `Scorecard.tsx` 1123 → 844 lines (−25%). Still over the 500-line target. P2.3 queued: remaining handler hooks (`handleSaveScore`, `handleQuickScore`, `handleScoreSelect`, `handlePickup`) + render-subtree extractions (header bar / banner stack / hole nav).
+
+Phase P2.5 (FormatStep split) — first wave:
+- Extracted saved-formats picker UI (~150 lines: group-assigned format card + saved formats list with toggle + Format Active banner) → `src/components/golf/SavedFormatsPicker.tsx`.
+- Result: `FormatStep.tsx` 1224 → 1081 lines. Per-game scoring sections (Skins, Nassau, Wolf, Vegas, Nines, Defender, Sixes, Stableford, BestBall) remain inline; future waves can extract a `<GameToggleCard>` shared shell.
 
 Phase P2.4 (page smoke tests) — partial / rolled back:
 - Page tests for Scorecard + NewRound were authored but reverted because `vi.mock`-style hook stubs leaked into downstream test files in CI's shared-worker model (broke 75+ unrelated tests). Approach to revisit: dynamic `await import` + `mock.module` per-test to keep mocks scoped, or run page tests as a separate `bun test` invocation.
