@@ -257,8 +257,8 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1163 pass, 0 fail** (1163 tests across 47 files). All tests pass. Run with `bun test`. CI splits into two invocations:
-- `bun test src/hooks src/lib src/engine src/components` (1160 tests)
+**1171 pass, 0 fail** (1171 tests across 48 files). All tests pass. Run with `bun test`. CI splits into two invocations:
+- `bun test src/hooks src/lib src/engine src/components` (1168 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
 **Why split:** module mocks (`vi.mock` and bun's `mock.module`) leak into downstream files when bun's CI scheduler reuses workers. Running pages in their own `bun test` invocation gives them a fresh process and keeps hook/lib tests pristine. Page-test factories must include every named export the page tree imports at module load (e.g., `TIER_LIMITS` from `useSubscription` is read by `PlayersStep`).
@@ -336,7 +336,7 @@ Open items (Phase P2+):
   - 1x leaked-password protection — Supabase dashboard toggle (Auth → Settings → Auth Providers → Email).
   - 1x extension `pg_net` in public schema — cosmetic, low risk.
   - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional — deny-all by default; service role bypasses).
-- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224, under target), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 892 (was 1100), `RoundComplete.tsx` 976, `Stats.tsx` 833, `Profile.tsx` 831, `Home.tsx` 699.
+- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224, under target), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 892 (was 1100), `RoundComplete.tsx` 931 (was 976), `Stats.tsx` 833, `Profile.tsx` 831, `Home.tsx` 699.
 - Component/page test coverage is bootstrapping — Scorecard + NewRound have early-return smoke tests; rest of pages still untested.
 - 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
 
@@ -348,6 +348,11 @@ Phase P2.3 (Scorecard split) — multi-wave:
 - Extracted loading + "round not found" UI (~80 lines) → `src/components/golf/ScorecardEmptyStates.tsx` exporting `<ScorecardLoading />` and `<ScorecardNotFound />`.
 - Extracted `handleFinishRound` + `handleFinishWithWinner` (~28 lines) → `src/hooks/useFinishRound.ts`.
 - Result: `Scorecard.tsx` 1123 → 844 lines (−25%). Still over the 500-line target. P2.3 queued: remaining handler hooks (`handleSaveScore`, `handleQuickScore`, `handleScoreSelect`, `handlePickup`) + render-subtree extractions (header bar / banner stack / hole nav).
+
+Phase P2.7 (RoundComplete split) — first wave:
+- Extracted big-settlement notification effect (~42 lines) → `src/hooks/useBigSettlementNotifier.ts`. One-shot push when any profiled player crosses ±$threshold for the round; only the scorekeeper triggers it. Threshold defaults to $20 and is now configurable.
+- Extracted house-game share text builder (~25 lines) → `src/lib/shareHouseGameText.ts` (pure, 8 unit tests). Matches existing string format including the `$-N` quirk (preserves the `$` before negatives by design — documented in tests).
+- Result: `RoundComplete.tsx` 976 → 931 lines (−5%). Many derived useMemos still inline; a follow-up `useRoundCompleteState` hook would consolidate them.
 
 Phase P2.6 (NewRound split) — multi-wave:
 - Extracted format-active sync effect (~37 lines) → `src/hooks/useFormatActiveSync.ts`. When a saved format becomes active the hook saves all 11 toggle values, disables them, and restores them on deselect.

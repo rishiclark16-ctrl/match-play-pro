@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -47,6 +47,8 @@ import { RoundCompleteActions } from '@/components/golf/RoundCompleteActions';
 import { WatchPartyRevealCard } from '@/components/golf/WatchPartyRevealCard';
 import { SoloRoundSummary } from '@/components/golf/SoloRoundSummary';
 import { isSoloRound } from '@/lib/soloRound';
+import { useBigSettlementNotifier } from '@/hooks/useBigSettlementNotifier';
+import { buildHouseGameShareText } from '@/lib/shareHouseGameText';
 
 export default function RoundComplete() {
   const { id } = useParams<{ id: string }>();
@@ -73,7 +75,6 @@ export default function RoundComplete() {
   const { groups } = useGroups();
   const { user } = useAuth();
   const { isScorekeeper } = useScorekeeper(id, rawPlayers);
-  const bigSettlementFiredRef = useRef(false);
   const { syncRoundToLedger } = useRoundLedgerSync();
 
   // Contextual push permission prompt — shown once after first completed round
@@ -309,47 +310,14 @@ export default function RoundComplete() {
   );
 
   // Big win/loss push — fires once from scorekeeper's device when a player is up/down ≥ $20 net
-  useEffect(() => {
-    if (bigSettlementFiredRef.current) return;
-    if (!round || !user || !isScorekeeper) return;
-    if (nonGhostSettlements.length === 0) return;
-
-    const BIG_THRESHOLD = 20;
-    const netByPlayer = new Map<string, number>();
-    for (const s of nonGhostSettlements) {
-      netByPlayer.set(s.toPlayerId, (netByPlayer.get(s.toPlayerId) ?? 0) + s.amount);
-      netByPlayer.set(s.fromPlayerId, (netByPlayer.get(s.fromPlayerId) ?? 0) - s.amount);
-    }
-
-    const roundUrl = `/round/${round.id}/complete`;
-    for (const player of rawPlayers) {
-      if (!player.profileId || ghostPlayerIds.has(player.id)) continue;
-      const net = netByPlayer.get(player.id) ?? 0;
-      if (Math.abs(net) < BIG_THRESHOLD) continue;
-
-      const firstName = (player.name || 'Player').split(' ')[0];
-      const amount = Math.abs(net).toFixed(2);
-
-      if (net > 0) {
-        sendPushToProfiles({
-          profileIds: [player.profileId],
-          title: 'Payday ⛳',
-          body: `You're up $${amount} this round. Collect before they conveniently forget 💸`,
-          data: { roundId: round.id, route: roundUrl },
-          type: 'youWonBig',
-        });
-      } else {
-        sendPushToProfiles({
-          profileIds: [player.profileId],
-          title: "Tab's due ⛳",
-          body: `${firstName}, you're down $${amount}. Venmo now, coward 😬`,
-          data: { roundId: round.id, route: roundUrl },
-          type: 'youLostBig',
-        });
-      }
-    }
-    bigSettlementFiredRef.current = true;
-  }, [round, user, isScorekeeper, nonGhostSettlements, rawPlayers, ghostPlayerIds]);
+  useBigSettlementNotifier({
+    round,
+    user,
+    isScorekeeper,
+    nonGhostSettlements,
+    rawPlayers,
+    ghostPlayerIds,
+  });
 
   // House game derived state
   const houseGameEntry = round?.games?.find(g => g.type === 'house');
@@ -544,25 +512,12 @@ export default function RoundComplete() {
   const handleShareHouseGame = async () => {
     if (!round) return;
     hapticLight();
-
-    const standings = gameResults?.houseGameResult?.standings ?? [];
-    const dateStr = new Date(round.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const courseLine = `${round.courseName} — ${dateStr}`;
-
-    const standingsLines = standings
-      .slice()
-      .sort((a, b) => b.netEarnings - a.netEarnings)
-      .map(s => {
-        const sign = s.netEarnings >= 0 ? '+' : '';
-        return `  ${s.playerName.split(' ')[0]}: ${sign}$${s.netEarnings.toFixed(0)}`;
-      });
-
-    const junkLine = junkSummary.length > 0
-      ? `\nJunk: ${junkSummary.map(e => `${e.name.split(' ')[0]} ${e.net >= 0 ? '+' : ''}$${e.net.toFixed(0)}`).join(', ')}`
-      : '';
-
-    const text = [courseLine, 'House Game Results:', ...standingsLines, junkLine].filter(Boolean).join('\n');
-
+    const text = buildHouseGameShareText({
+      courseName: round.courseName,
+      date: round.date,
+      standings: gameResults?.houseGameResult?.standings ?? [],
+      junkSummary,
+    });
     try {
       if (navigator.share) {
         await navigator.share({ text });
