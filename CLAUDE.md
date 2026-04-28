@@ -257,7 +257,9 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1143 pass, 0 fail** (1143 tests across 46 files). All tests pass. Run with `bun test`. Includes the first page-level smoke tests (Scorecard, NewRound).
+**1140 pass, 0 fail** (1140 tests across 44 files). All tests pass. Run with `bun test`.
+
+**Note on page-level tests:** P2.4 attempted Scorecard + NewRound smoke tests via `vi.mock` of every hook. Locally green; CI repeatedly poisoned downstream files (`useVoiceScoring`, `voiceFeedback`, `useGroups`, `useFriends`) because bun's CI workers share module-mock state across files in ways `vi.mock` cannot scope. Tests removed pending a different strategy (e.g., dynamic-import + `mock.module` per-test, or moving page tests to a separate `bun test` invocation). The capacitor + customElements stubs in `src/test/setup.ts` were retained — they unblock the existing hook tests on Linux runners.
 
 Test infrastructure notes:
 - `bunfig.toml` preloads `src/test/setup.ts` which polyfills jsdom, localStorage, sessionStorage, and indexedDB for all test files
@@ -344,13 +346,12 @@ Phase P2.3 (Scorecard split) complete (first wave):
 - Extracted loading + "round not found" UI (~80 lines) → `src/components/golf/ScorecardEmptyStates.tsx` exporting `<ScorecardLoading />` and `<ScorecardNotFound />`.
 - Result: `Scorecard.tsx` 1123 → 866 lines (−23%). Still over the 500-line target. **P2.3b queued**: handler hooks (`handleSaveScore`, `handleQuickScore`, `handleScoreSelect`, `handleFinishRound`, `handlePickup`) and render-subtree extractions (header bar / banner stack / hole nav).
 
-Phase P2.4 (page smoke tests) complete:
-- Added `src/pages/Scorecard.test.tsx` — exercises the loading + "round not found" early-return branches with all 14 hooks mocked at minimum non-throwing return shapes.
-- Added `src/pages/NewRound.test.tsx` — asserts the mode-selection step renders.
-- Augmented `src/test/setup.ts`:
-  - Idempotent `customElements.define` stub (number-flow registers a custom element at import time; would throw on second test file).
-  - `mock.module()` stubs for all Capacitor plugins used by the app: `@capacitor/core`, `@capacitor/app`, `@capacitor/status-bar`, `@capacitor/haptics`, `@capacitor/push-notifications`, `@capacitor/splash-screen`, `@capacitor-community/keep-awake`, `@capacitor-community/apple-sign-in`, `@capacitor-community/contacts`. CI-safe; bun's `mock.module` intercepts both ESM imports and CJS requires.
-- Pattern for future page tests: mock the supabase client with `from`, `channel`, `removeChannel`, `auth.getUser` — anything less and React Testing Library's cleanup phase throws when one of the upstream tests has set up a realtime subscription.
+Phase P2.4 (page smoke tests) — partial / rolled back:
+- Page tests for Scorecard + NewRound were authored but reverted because `vi.mock`-style hook stubs leaked into downstream test files in CI's shared-worker model (broke 75+ unrelated tests). Approach to revisit: dynamic `await import` + `mock.module` per-test to keep mocks scoped, or run page tests as a separate `bun test` invocation.
+- **Test-infra improvements retained** in `src/test/setup.ts`:
+  - Idempotent `customElements.define` stub (number-flow registers a custom element at import time).
+  - `mock.module()` stubs for `@capacitor/core`, `@capacitor/app`, `@capacitor/status-bar`, `@capacitor/haptics`, `@capacitor/push-notifications`, `@capacitor/splash-screen`, `@capacitor-community/keep-awake`, `@capacitor-community/apple-sign-in`, `@capacitor-community/contacts`. Required because `@capacitor/*/dist/plugin.cjs.js` calls `require('@capacitor/core').registerPlugin(...)` at module init, which `vi.mock`'s ESM-only interception cannot stub on Linux.
+  - `import.meta.env` mirroring from `process.env` so `import.meta.env.VITE_*` resolves in the test runner where bun does not auto-load `.env` (e.g., CI).
 Phase P2.2 + P2.2b (bundle profiling + on-demand QR) complete:
 - Added `vendor-sentry` (262 kB), `vendor-posthog` (184 kB), `vendor-capacitor` (12 kB) to `manualChunks` in `vite.config.ts`. Removed `vendor-qr` grouping.
 - `QRCodeScanner.tsx` switched to dynamic `await import('html5-qrcode')` inside the effect — `Html5Qrcode` is type-only at the module level. Result: 334 kB QR library now ships in its own lazy chunk loaded only when the scanner opens.
