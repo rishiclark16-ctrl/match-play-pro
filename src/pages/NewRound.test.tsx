@@ -9,6 +9,11 @@ import { mock as bunMock } from 'bun:test';
 beforeAll(() => {
   bunMock.module('@/hooks/useSubscription', () => ({
     useSubscription: () => ({ isPro: false, tier: 'free', loading: false }),
+    // PlayersStep + FormatStep import TIER_LIMITS at module load.
+    TIER_LIMITS: {
+      free: { maxPlayers: 4, maxFriends: 4, maxGroups: 1, availableGames: ['stroke', 'match', 'skins'], skinsCarryover: false, hasFullStats: false, hasSettlementTracking: false },
+      pro:  { maxPlayers: 8, maxFriends: Infinity, maxGroups: Infinity, availableGames: ['stroke', 'match', 'skins', 'nassau', 'wolf', 'stableford', 'best_ball', 'vegas', 'nines', 'defender', 'sixes', 'quota', 'rabbit'], skinsCarryover: true, hasFullStats: true, hasSettlementTracking: true },
+    },
   }));
   bunMock.module('@/hooks/useCreateSupabaseRound', () => ({
     useCreateSupabaseRound: () => ({

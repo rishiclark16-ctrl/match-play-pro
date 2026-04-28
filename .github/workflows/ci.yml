@@ -36,10 +36,15 @@ jobs:
       - name: Lint (src only)
         run: bunx eslint src --max-warnings 50
 
-      - name: Unit tests
-        # Use bun's native test runner — vitest has hoisting issues with
-        # the project's vi.mock factory style (see CLAUDE.md test infra notes).
-        run: bun test --rerun-each 0
+      - name: Unit tests (hooks/lib/engine/components)
+        # Page tests are run separately because their module mocks leak
+        # into the same worker process under bun's CI scheduler.
+        # (vitest also has vi.mock hoisting issues with this codebase —
+        # see CLAUDE.md test infra notes.)
+        run: bun test src/hooks src/lib src/engine src/components
+
+      - name: Page tests (isolated process)
+        run: bun test src/pages
 
       - name: Build (development mode, no Sentry upload)
         run: bun run build:dev
