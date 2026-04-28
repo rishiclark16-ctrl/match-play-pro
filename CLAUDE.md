@@ -336,7 +336,7 @@ Open items (Phase P2+):
   - 1x leaked-password protection — Supabase dashboard toggle (Auth → Settings → Auth Providers → Email).
   - 1x extension `pg_net` in public schema — cosmetic, low risk.
   - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional — deny-all by default; service role bypasses).
-- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224, under target), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 892 (was 1100), `RoundComplete.tsx` 931 (was 976), `Stats.tsx` 833, `Profile.tsx` 831, `Home.tsx` 699.
+- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224, under target), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 892 (was 1100), `RoundComplete.tsx` 931 (was 976), `Stats.tsx` 520 (was 833, just over target), `Profile.tsx` 831, `Home.tsx` 699.
 - Component/page test coverage is bootstrapping — Scorecard + NewRound have early-return smoke tests; rest of pages still untested.
 - 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
 
@@ -348,6 +348,11 @@ Phase P2.3 (Scorecard split) — multi-wave:
 - Extracted loading + "round not found" UI (~80 lines) → `src/components/golf/ScorecardEmptyStates.tsx` exporting `<ScorecardLoading />` and `<ScorecardNotFound />`.
 - Extracted `handleFinishRound` + `handleFinishWithWinner` (~28 lines) → `src/hooks/useFinishRound.ts`.
 - Result: `Scorecard.tsx` 1123 → 844 lines (−25%). Still over the 500-line target. P2.3 queued: remaining handler hooks (`handleSaveScore`, `handleQuickScore`, `handleScoreSelect`, `handlePickup`) + render-subtree extractions (header bar / banner stack / hole nav).
+
+Phase P2.8 (Stats split) — first wave:
+- Extracted 3 animation primitives (`CountUp`, `RingProgress`, `StatBar` ~95 lines) → `src/components/stats/StatsAnimations.tsx`. Reusable across the stats page and any future stat surfaces.
+- Extracted `fetchStats` (~205 lines of supabase aggregation) → `src/lib/computeUserStats.ts`. Pure async helper that takes `(userId, supabaseClient)` and returns a typed `GolfStats`. Caller owns loading state and error UI. The `GolfStats` + `ScoreDistribution` types now live in the lib (re-imported as a type-only import from the page).
+- Result: `Stats.tsx` 833 → 520 lines (−38%). Just over the 500-line target; the remaining body is mostly the JSX render tree, broken further only by extracting visual sections.
 
 Phase P2.1b (predicate hardening) complete:
 - Migration `20260428000000_pin_auth_uid_in_predicates` (applied to prod): 13 SECURITY DEFINER predicate functions now ignore their `_user_id` parameter and use `auth.uid()` internally. RLS policies still pass `auth.uid()` through the param so behavior inside policies is unchanged. Functions: `is_round_owner`, `is_round_participant`, `has_round_access`, `can_edit_round`, `is_round_creator`, `is_scorekeeper`, `is_group_owner`, `is_group_member`, `is_watch_party_member`, `is_pro_user`, `are_friends` (caller must be one of the two parties), `get_friend_count`, `get_group_count`.
