@@ -331,8 +331,8 @@ Phase P2.1 (Supabase advisor hardening) complete:
 - Advisor count: 66 → 57 WARN (9 fixed). Remaining 57 documented below.
 
 Open items (Phase P2+):
-- **Supabase security advisors** (57 WARN, run via MCP `get_advisors`):
-  - 54x SECURITY DEFINER predicate functions callable by `anon`/`authenticated` via `/rest/v1/rpc/*` (e.g., `are_friends`, `is_round_owner`, `has_round_access`). These are used inside RLS policies, so `authenticated` must keep EXECUTE for RLS to work. Defense-in-depth refactor (P2.1b): make each predicate ignore its `user_id` parameter and use `auth.uid()` internally so RPC callers cannot probe other users.
+- **Supabase security advisors** (56 WARN — most are false-positives now):
+  - 54x SECURITY DEFINER predicate functions still flagged as callable by `anon`/`authenticated` via `/rest/v1/rpc/*`. **As of P2.1b they internally use `auth.uid()`** so RPC probing returns false/0/empty for any caller other than the auth'd user themselves. The advisor can't introspect that, so the warnings persist; the functions are no longer exploitable. RLS policies still pass `auth.uid()` through the `_user_id` param — preserved for compatibility.
   - 1x leaked-password protection — Supabase dashboard toggle (Auth → Settings → Auth Providers → Email).
   - 1x extension `pg_net` in public schema — cosmetic, low risk.
   - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional — deny-all by default; service role bypasses).
@@ -348,6 +348,10 @@ Phase P2.3 (Scorecard split) — multi-wave:
 - Extracted loading + "round not found" UI (~80 lines) → `src/components/golf/ScorecardEmptyStates.tsx` exporting `<ScorecardLoading />` and `<ScorecardNotFound />`.
 - Extracted `handleFinishRound` + `handleFinishWithWinner` (~28 lines) → `src/hooks/useFinishRound.ts`.
 - Result: `Scorecard.tsx` 1123 → 844 lines (−25%). Still over the 500-line target. P2.3 queued: remaining handler hooks (`handleSaveScore`, `handleQuickScore`, `handleScoreSelect`, `handlePickup`) + render-subtree extractions (header bar / banner stack / hole nav).
+
+Phase P2.1b (predicate hardening) complete:
+- Migration `20260428000000_pin_auth_uid_in_predicates` (applied to prod): 13 SECURITY DEFINER predicate functions now ignore their `_user_id` parameter and use `auth.uid()` internally. RLS policies still pass `auth.uid()` through the param so behavior inside policies is unchanged. Functions: `is_round_owner`, `is_round_participant`, `has_round_access`, `can_edit_round`, `is_round_creator`, `is_scorekeeper`, `is_group_owner`, `is_group_member`, `is_watch_party_member`, `is_pro_user`, `are_friends` (caller must be one of the two parties), `get_friend_count`, `get_group_count`.
+- The advisor still flags these because it does a static check (SECURITY DEFINER + REST-callable). The actual exploitability is closed. Verified: calling each predicate from an admin/null-auth context returns `false`/`0` for unrelated ids.
 
 Phase P2.7 (RoundComplete split) — first wave:
 - Extracted big-settlement notification effect (~42 lines) → `src/hooks/useBigSettlementNotifier.ts`. One-shot push when any profiled player crosses ±$threshold for the round; only the scorekeeper triggers it. Threshold defaults to $20 and is now configurable.
