@@ -336,7 +336,7 @@ Open items (Phase P2+):
   - 1x leaked-password protection — Supabase dashboard toggle (Auth → Settings → Auth Providers → Email).
   - 1x extension `pg_net` in public schema — cosmetic, low risk.
   - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional — deny-all by default; service role bypasses).
-- File-size violators (>500 lines): `FormatStep.tsx` 934 (was 1224), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 1100, `RoundComplete.tsx` 976, `Stats.tsx` 833, `Profile.tsx` 831, `Home.tsx` 699.
+- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224, now under target), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 1100, `RoundComplete.tsx` 976, `Stats.tsx` 833, `Profile.tsx` 831, `Home.tsx` 699.
 - Component/page test coverage is bootstrapping — Scorecard + NewRound have early-return smoke tests; rest of pages still untested.
 - 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
 
@@ -349,11 +349,12 @@ Phase P2.3 (Scorecard split) — multi-wave:
 - Extracted `handleFinishRound` + `handleFinishWithWinner` (~28 lines) → `src/hooks/useFinishRound.ts`.
 - Result: `Scorecard.tsx` 1123 → 844 lines (−25%). Still over the 500-line target. P2.3 queued: remaining handler hooks (`handleSaveScore`, `handleQuickScore`, `handleScoreSelect`, `handlePickup`) + render-subtree extractions (header bar / banner stack / hole nav).
 
-Phase P2.5 (FormatStep split) — multi-wave:
+Phase P2.5 (FormatStep split) complete:
 - Extracted saved-formats picker UI (~150 lines) → `src/components/golf/SavedFormatsPicker.tsx`.
-- Lifted shared style constants (`gameCardBase`, `gameCardSelected`, `iconBoxClass`, `iconClass`, `springTransition`, `sectionLabel`) to `src/components/golf/formatStepStyles.ts` so per-game sections can reuse them without re-declaring.
-- Extracted Match Play section (~145 lines) → `src/components/golf/MatchPlaySection.tsx` — handles the singles/fourball format picker, team-assignment grid, and stakes input.
-- Result: `FormatStep.tsx` 1224 → 934 lines (−24%). Remaining game-toggle sections (Skins, Nassau, Wolf, Vegas, Nines, Defender, Sixes, Stableford, BestBall) follow the same shape and can be extracted in a single sweep when next this file is touched.
+- Lifted shared style constants (`gameCardBase`, `gameCardSelected`, `iconBoxClass`, `iconClass`, `springTransition`, `sectionLabel`) to `src/components/golf/formatStepStyles.ts`.
+- Extracted Match Play section (~145 lines) → `src/components/golf/MatchPlaySection.tsx`.
+- **P2.5b sweep:** Extracted all 8 remaining game-toggle sections (Skins, Nassau, Stableford, Best Ball, Wolf, Vegas, Nines, Defender, Sixes) plus the shared `<ProLabel>` component → single barrel file `src/components/golf/formatStepSections.tsx`. Each section is a typed component that accepts only the state + handlers it needs and an `onProFeatureBlock(label)` callback so the parent owns paywall presentation.
+- **Result: `FormatStep.tsx` 1224 → 365 lines (−70%, now under the 500-line target).** Only Stroke Play (~22 lines, trivial) remains inline alongside section orchestration and the `PaywallModal`.
 
 Phase P2.4 (page smoke tests) — partial / rolled back:
 - Page tests for Scorecard + NewRound were authored but reverted because `vi.mock`-style hook stubs leaked into downstream test files in CI's shared-worker model (broke 75+ unrelated tests). Approach to revisit: dynamic `await import` + `mock.module` per-test to keep mocks scoped, or run page tests as a separate `bun test` invocation.
