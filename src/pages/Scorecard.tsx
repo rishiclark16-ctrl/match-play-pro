@@ -38,8 +38,8 @@ import { sendRoundCompletionNotifications as sendRoundCompletionNotificationsImp
 import { fireScoreSideEffects as fireScoreSideEffectsImpl } from '@/lib/scoreSideEffects';
 import { useNassauAutoPress } from '@/hooks/useNassauAutoPress';
 import { useBirdiePress } from '@/hooks/useBirdiePress';
+import { useFinishRound } from '@/hooks/useFinishRound';
 import { ScorecardLoading, ScorecardNotFound } from '@/components/golf/ScorecardEmptyStates';
-import { capture } from '@/lib/posthog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { buildConfig } from '@/engine/HouseGameEngine';
@@ -378,36 +378,14 @@ export default function Scorecard() {
     });
   }, [round, user, playersWithScores, roundScores, updateGamesSupabase]);
 
-  const handleFinishRound = useCallback(() => {
-    if (round) {
-      completeRoundSupabase();
-      completeRoundLocal(round.id);
-      sendRoundCompletionNotifications();
-      capture('round_completed', {
-        round_id: round.id,
-        course_name: round.courseName,
-        holes: round.holes,
-        player_count: playersWithScores.length,
-      });
-      navigate(`/round/${round.id}/complete`);
-    }
-  }, [round, completeRoundSupabase, completeRoundLocal, navigate, sendRoundCompletionNotifications, playersWithScores.length]);
-
-  const handleFinishWithWinner = useCallback(() => {
-    if (round) {
-      setShowWinnerModal(false);
-      completeRoundSupabase();
-      completeRoundLocal(round.id);
-      sendRoundCompletionNotifications();
-      capture('round_completed', {
-        round_id: round.id,
-        course_name: round.courseName,
-        holes: round.holes,
-        player_count: playersWithScores.length,
-      });
-      navigate(`/round/${round.id}/complete`);
-    }
-  }, [round, completeRoundSupabase, completeRoundLocal, navigate, setShowWinnerModal, sendRoundCompletionNotifications, playersWithScores.length]);
+  const { handleFinishRound, handleFinishWithWinner } = useFinishRound({
+    round,
+    playerCount: playersWithScores.length,
+    completeRoundSupabase,
+    completeRoundLocal,
+    sendRoundCompletionNotifications,
+    setShowWinnerModal,
+  });
 
   const handleAddPress = useCallback((press: Press) => {
     if (round) {

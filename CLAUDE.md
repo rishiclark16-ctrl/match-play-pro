@@ -257,9 +257,11 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1140 pass, 0 fail** (1140 tests across 44 files). All tests pass. Run with `bun test`.
+**1143 pass, 0 fail** (1143 tests across 46 files). All tests pass. Run with `bun test`. CI splits into two invocations:
+- `bun test src/hooks src/lib src/engine src/components` (1140 tests)
+- `bun test src/pages` (3 tests — page smoke tests)
 
-**Note on page-level tests:** P2.4 attempted Scorecard + NewRound smoke tests via `vi.mock` of every hook. Locally green; CI repeatedly poisoned downstream files (`useVoiceScoring`, `voiceFeedback`, `useGroups`, `useFriends`) because bun's CI workers share module-mock state across files in ways `vi.mock` cannot scope. Tests removed pending a different strategy (e.g., dynamic-import + `mock.module` per-test, or moving page tests to a separate `bun test` invocation). The capacitor + customElements stubs in `src/test/setup.ts` were retained — they unblock the existing hook tests on Linux runners.
+**Why split:** module mocks (`vi.mock` and bun's `mock.module`) leak into downstream files when bun's CI scheduler reuses workers. Running pages in their own `bun test` invocation gives them a fresh process and keeps hook/lib tests pristine. Page-test factories must include every named export the page tree imports at module load (e.g., `TIER_LIMITS` from `useSubscription` is read by `PlayersStep`).
 
 Test infrastructure notes:
 - `bunfig.toml` preloads `src/test/setup.ts` which polyfills jsdom, localStorage, sessionStorage, and indexedDB for all test files
