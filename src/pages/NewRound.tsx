@@ -17,14 +17,15 @@ import { useHouseGame } from '@/hooks/useHouseGame';
 import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { useGroupFormats } from '@/hooks/useGroupFormats';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Course, HoleInfo, GameConfig, Team, TeeSet, generateId } from '@/types/golf';
+import { Course, HoleInfo, Team, TeeSet, generateId } from '@/types/golf';
 import { PersonalGameFormat } from '@/types/houseGame';
-import { createDefaultTeams } from '@/lib/games/bestball';
 import { buildConfig, summarizeScoringConfig } from '@/engine/HouseGameEngine';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { PaywallModal } from '@/components/subscription/PaywallModal';
+import { useFormatActiveSync } from '@/hooks/useFormatActiveSync';
+import { buildGamesFromToggles } from '@/lib/buildGamesFromToggles';
 
 type Step = 'mode' | 'course' | 'players' | 'format';
 type RoundMode = 'solo' | 'multi';
@@ -125,44 +126,16 @@ export default function NewRound() {
   const formatActive = !!selectedPersonalFormat;
 
   // Store previous toggle state so we can restore on deselect
-  const [savedToggles, setSavedToggles] = useState<{
-    strokePlay: boolean; matchPlay: boolean; skinsEnabled: boolean;
-    nassauEnabled: boolean; stablefordEnabled: boolean; bestBallEnabled: boolean; wolfEnabled: boolean;
-    vegasEnabled: boolean; ninesEnabled: boolean; defenderEnabled: boolean; sixesEnabled: boolean;
-  } | null>(null);
-
-  useEffect(() => {
-    if (formatActive) {
-      // Save current toggles and disable them all
-      setSavedToggles({ strokePlay, matchPlay, skinsEnabled, nassauEnabled, stablefordEnabled, bestBallEnabled, wolfEnabled, vegasEnabled, ninesEnabled, defenderEnabled, sixesEnabled });
-      setStrokePlay(false);
-      setMatchPlay(false);
-      setSkinsEnabled(false);
-      setNassauEnabled(false);
-      setStablefordEnabled(false);
-      setBestBallEnabled(false);
-      setWolfEnabled(false);
-      setVegasEnabled(false);
-      setNinesEnabled(false);
-      setDefenderEnabled(false);
-      setSixesEnabled(false);
-    } else if (savedToggles) {
-      // Restore previous toggles
-      setStrokePlay(savedToggles.strokePlay);
-      setMatchPlay(savedToggles.matchPlay);
-      setSkinsEnabled(savedToggles.skinsEnabled);
-      setNassauEnabled(savedToggles.nassauEnabled);
-      setStablefordEnabled(savedToggles.stablefordEnabled);
-      setBestBallEnabled(savedToggles.bestBallEnabled);
-      setWolfEnabled(savedToggles.wolfEnabled);
-      setVegasEnabled(savedToggles.vegasEnabled);
-      setNinesEnabled(savedToggles.ninesEnabled);
-      setDefenderEnabled(savedToggles.defenderEnabled);
-      setSixesEnabled(savedToggles.sixesEnabled);
-      setSavedToggles(null);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formatActive]);
+  useFormatActiveSync({
+    formatActive,
+    current: { strokePlay, matchPlay, skinsEnabled, nassauEnabled, stablefordEnabled, bestBallEnabled, wolfEnabled, vegasEnabled, ninesEnabled, defenderEnabled, sixesEnabled },
+    setters: {
+      strokePlay: setStrokePlay, matchPlay: setMatchPlay, skinsEnabled: setSkinsEnabled,
+      nassauEnabled: setNassauEnabled, stablefordEnabled: setStablefordEnabled,
+      bestBallEnabled: setBestBallEnabled, wolfEnabled: setWolfEnabled, vegasEnabled: setVegasEnabled,
+      ninesEnabled: setNinesEnabled, defenderEnabled: setDefenderEnabled, sixesEnabled: setSixesEnabled,
+    },
+  });
 
   // Ghost player — active when house game or personal format has handicap_ghost_player primitive
   const ghostPrimitiveActive =
@@ -466,135 +439,24 @@ export default function NewRound() {
 
     try {
       const holeInfo: HoleInfo[] = selectedCourse.holes.slice(0, holeCount);
-      const games: GameConfig[] = [];
+      const validPlayerList = players.filter(p => p.name.trim());
 
-      if (skinsEnabled) {
-        games.push({
-          id: generateId(),
-          type: 'skins',
-          stakes: Number(skinsStakes) || 2,
-          carryover: skinsCarryover,
-        });
-      }
-
-      if (nassauEnabled) {
-        games.push({
-          id: generateId(),
-          type: 'nassau',
-          stakes: Number(nassauStakes) || 5,
-          autoPress: nassauAutoPress,
-        });
-      }
-
-      if (stablefordEnabled) {
-        games.push({
-          id: generateId(),
-          type: 'stableford',
-          stakes: 0,
-          modifiedStableford: stablefordModified,
-        });
-      }
-
-      if (bestBallEnabled && players.filter(p => p.name.trim()).length >= 2) {
-        const validPlayers = players.filter(p => p.name.trim());
-        const teams =
-          bestBallTeams.length > 0
-            ? bestBallTeams
-            : createDefaultTeams(
-                validPlayers.map((p, i) => ({ id: p.id, roundId: '', name: p.name, orderIndex: i }))
-              );
-
-        games.push({
-          id: generateId(),
-          type: 'bestball',
-          stakes: 0,
-          teams,
-        });
-      }
-
-      if (wolfEnabled && [3, 4].includes(players.filter(p => p.name.trim()).length)) {
-        games.push({
-          id: generateId(),
-          type: 'wolf',
-          stakes: Number(wolfStakes) || 2,
-          carryover: wolfCarryover,
-        });
-      }
-
-      if (vegasEnabled && players.filter(p => p.name.trim()).length === 4) {
-        games.push({
-          id: generateId(),
-          type: 'vegas',
-          stakes: Number(vegasStakes) || 1,
-          carryover: vegasCarryover,
-        });
-      }
-
-      if (ninesEnabled && players.filter(p => p.name.trim()).length === 3) {
-        games.push({
-          id: generateId(),
-          type: 'nines',
-          stakes: Number(ninesStakes) || 1,
-        });
-      }
-
-      if (defenderEnabled && [3, 4].includes(players.filter(p => p.name.trim()).length)) {
-        games.push({
-          id: generateId(),
-          type: 'defender',
-          stakes: Number(defenderStakes) || 1,
-        });
-      }
-
-      if (sixesEnabled && players.filter(p => p.name.trim()).length === 4) {
-        games.push({
-          id: generateId(),
-          type: 'sixes',
-          stakes: Number(sixesStakes) || 1,
-        });
-      }
-
-      // House game — add as a single 'house' entry containing all primitives
-      if (houseGame && houseGameEnabled && houseGame.activePrimitives.length > 0) {
-        const hgConfig = buildConfig(houseGame.activePrimitives);
-        games.push({
-          id: generateId(),
-          type: 'house',
-          stakes: hgConfig.settlementConfig.unitValue,
-          activePrimitives: houseGame.activePrimitives,
-          houseGameId: houseGame.id,
-        });
-      }
-
-      // Personal saved format — add as a 'house' entry when selected
-      if (selectedPersonalFormat && selectedPersonalFormat.activePrimitives.length > 0) {
-        const pfConfig = buildConfig(selectedPersonalFormat.activePrimitives);
-        games.push({
-          id: generateId(),
-          type: 'house',
-          stakes: pfConfig.settlementConfig.unitValue,
-          activePrimitives: selectedPersonalFormat.activePrimitives,
-          houseGameId: selectedPersonalFormat.id,
-        });
-      }
-
-      if (matchPlay && stakes) {
-        const validPlayerList = players.filter(p => p.name.trim());
-        const mpFormat = validPlayerList.length >= 3 ? matchPlayFormat : 'singles';
-        const matchConfig: GameConfig = {
-          id: generateId(),
-          type: 'match',
-          stakes: Number(stakes) || 0,
-          matchPlayFormat: mpFormat,
-        };
-        if (mpFormat === 'fourball' && matchPlayTeamA.length > 0 && matchPlayTeamB.length > 0) {
-          matchConfig.matchPlayTeams = [
-            { id: 'team-a', name: 'Team A', playerIds: matchPlayTeamA, color: '#22C55E' },
-            { id: 'team-b', name: 'Team B', playerIds: matchPlayTeamB, color: '#6366F1' },
-          ];
-        }
-        games.push(matchConfig);
-      }
+      const { games, hasHouseGame } = buildGamesFromToggles({
+        validPlayerCount: validPlayerList.length,
+        validPlayers: validPlayerList.map(p => ({ id: p.id, name: p.name })),
+        matchPlay, matchPlayFormat, matchPlayTeamA, matchPlayTeamB, stakes,
+        skinsEnabled, skinsStakes, skinsCarryover,
+        nassauEnabled, nassauStakes, nassauAutoPress,
+        stablefordEnabled, stablefordModified,
+        bestBallEnabled, bestBallTeams,
+        wolfEnabled, wolfStakes, wolfCarryover,
+        vegasEnabled, vegasStakes, vegasCarryover,
+        ninesEnabled, ninesStakes,
+        defenderEnabled, defenderStakes,
+        sixesEnabled, sixesStakes,
+        houseGame, houseGameEnabled, selectedPersonalFormat,
+        generateId,
+      });
 
       // Build player list, appending ghost if active
       const roundPlayers = players
@@ -622,7 +484,6 @@ export default function NewRound() {
 
       // When a house game format is active, disable stroke play so the scorecard
       // shows the format's scoring (skins, nassau, etc.) instead of redundant stroke totals
-      const hasHouseGame = games.some(g => g.type === 'house');
       const effectiveStrokePlay = hasHouseGame ? false : strokePlay;
 
       const result = await createRound({
