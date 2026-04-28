@@ -257,8 +257,8 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1143 pass, 0 fail** (1143 tests across 46 files). All tests pass. Run with `bun test`. CI splits into two invocations:
-- `bun test src/hooks src/lib src/engine src/components` (1140 tests)
+**1163 pass, 0 fail** (1163 tests across 47 files). All tests pass. Run with `bun test`. CI splits into two invocations:
+- `bun test src/hooks src/lib src/engine src/components` (1160 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
 **Why split:** module mocks (`vi.mock` and bun's `mock.module`) leak into downstream files when bun's CI scheduler reuses workers. Running pages in their own `bun test` invocation gives them a fresh process and keeps hook/lib tests pristine. Page-test factories must include every named export the page tree imports at module load (e.g., `TIER_LIMITS` from `useSubscription` is read by `PlayersStep`).
