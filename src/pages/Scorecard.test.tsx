@@ -105,15 +105,10 @@ vi.mock('@/hooks/useSettlementPreview', () => ({
   useSettlementPreview: () => [],
 }));
 
-// External libs that touch native or storage
-vi.mock('@/lib/statusBar', () => ({ setStatusBarDefault: vi.fn() }));
-vi.mock('@/lib/posthog', () => ({ capture: vi.fn() }));
-vi.mock('@/lib/voiceFeedback', () => ({ setSpeechEnabled: vi.fn() }));
-vi.mock('@/lib/pushUtils', () => ({ sendPushToProfiles: vi.fn() }));
-vi.mock('@/lib/watchPartyNotification', () => ({ broadcastWatchPartyNotification: vi.fn() }));
-vi.mock('@/lib/haptics', () => ({
-  hapticSuccess: vi.fn(), hapticError: vi.fn(), hapticLight: vi.fn(), hapticWarning: vi.fn(),
-}));
+// Only mock what's actually exercised on the early-return render paths.
+// Mocking @/lib/voiceFeedback / posthog / pushUtils etc. here would
+// overwrite their module exports for the entire test process and break
+// downstream test files (CI runs share workers).
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
