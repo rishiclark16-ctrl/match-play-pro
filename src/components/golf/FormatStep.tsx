@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Flag, Swords, DollarSign, Trophy, BarChart3, Users, Crown, Dice3, Shield, RotateCcw, Layers } from 'lucide-react';
+import { Lock, Flag, DollarSign, Trophy, BarChart3, Users, Crown, Dice3, Shield, RotateCcw, Layers } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -9,6 +9,15 @@ import { ProBadge, PaywallModal } from '@/components/subscription';
 import { cn } from '@/lib/utils';
 import { PersonalGameFormat } from '@/types/houseGame';
 import { SavedFormatsPicker } from './SavedFormatsPicker';
+import { MatchPlaySection } from './MatchPlaySection';
+import {
+  springTransition,
+  sectionLabel,
+  gameCardBase,
+  gameCardSelected,
+  iconBoxClass,
+  iconClass,
+} from './formatStepStyles';
 
 interface PlayerData {
   id: string;
@@ -95,8 +104,6 @@ interface FormatStepProps {
   onPaywall?: () => void;
 }
 
-const springTransition = { type: 'spring', stiffness: 300, damping: 28 };
-
 export function FormatStep({
   players,
   strokePlay,
@@ -176,29 +183,6 @@ export function FormatStep({
     setShowPaywall(true);
   };
 
-  const sectionLabel = 'text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2 mt-5';
-
-  const gameCardBase =
-    'bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-4 mb-2 cursor-pointer w-full text-left';
-  const gameCardSelected = 'ring-2 ring-foreground';
-
-  // Icon box helper
-  const iconBoxClass = (active: boolean, locked?: boolean) =>
-    cn(
-      'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
-      active && !locked
-        ? 'bg-foreground'
-        : locked
-        ? 'bg-muted'
-        : 'bg-muted'
-    );
-
-  const iconClass = (active: boolean, locked?: boolean) =>
-    cn(
-      'w-4 h-4',
-      active && !locked ? 'text-white' : locked ? 'text-muted-foreground' : 'text-foreground'
-    );
-
   const ProLabel = () => (
     <span className="bg-foreground text-[#F0EE3A] text-[9px] font-black tracking-[0.1em] px-1.5 py-0.5 rounded-md">
       PRO
@@ -253,150 +237,19 @@ export function FormatStep({
         </div>
       </motion.div>
 
-      {/* Match Play */}
-      <motion.div
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1 * 0.04, ...springTransition }}
-        whileTap={{ scale: 0.99 }}
-        onClick={() => onMatchPlayChange(!matchPlay)}
-        className={cn(gameCardBase, matchPlay && gameCardSelected)}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={iconBoxClass(matchPlay)}>
-              <Swords className={iconClass(matchPlay)} />
-            </div>
-            <div>
-              <p className="font-bold text-sm text-foreground">Match Play</p>
-              <p className="text-[12px] text-muted-foreground mt-0.5">Hole-by-hole competition</p>
-            </div>
-          </div>
-          <Switch checked={matchPlay} onCheckedChange={onMatchPlayChange} onClick={e => e.stopPropagation()} />
-        </div>
-
-        {matchPlay && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={springTransition}
-            className="pt-3 mt-3 border-t border-border/50 space-y-3"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Format picker — show when 3-4 players */}
-            {playerCount >= 3 && playerCount <= 4 && (
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Format</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onMatchPlayFormatChange('singles')}
-                    className={cn(
-                      'p-2.5 rounded-xl border text-center transition-colors',
-                      matchPlayFormat === 'singles'
-                        ? 'border-foreground bg-foreground text-background'
-                        : 'border-border bg-muted/50 text-foreground'
-                    )}
-                  >
-                    <p className="text-xs font-bold">Singles</p>
-                    <p className="text-[10px] text-inherit opacity-60 mt-0.5">1v1 head-to-head</p>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onMatchPlayFormatChange('fourball')}
-                    className={cn(
-                      'p-2.5 rounded-xl border text-center transition-colors',
-                      matchPlayFormat === 'fourball'
-                        ? 'border-foreground bg-foreground text-background'
-                        : 'border-border bg-muted/50 text-foreground'
-                    )}
-                  >
-                    <p className="text-xs font-bold">Fourball</p>
-                    <p className="text-[10px] text-inherit opacity-60 mt-0.5">Best ball per team</p>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Team assignment — fourball with 3-4 players */}
-            {matchPlayFormat === 'fourball' && playerCount >= 3 && (
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Teams</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="p-3 rounded-xl bg-[#22C55E]/10 border border-[#22C55E]/30 space-y-1.5">
-                    <p className="text-[10px] font-semibold text-[#22C55E] uppercase tracking-wide">Team A</p>
-                    {validPlayers.map(p => {
-                      const isOnA = matchPlayTeamA.includes(p.id);
-                      const isOnB = matchPlayTeamB.includes(p.id);
-                      if (isOnB) return null;
-                      return (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => {
-                            if (isOnA) {
-                              onMatchPlayTeamsChange(matchPlayTeamA.filter(id => id !== p.id), matchPlayTeamB);
-                            } else {
-                              onMatchPlayTeamsChange(matchPlayTeamA.filter(id => id !== p.id), [...matchPlayTeamB, p.id]);
-                            }
-                          }}
-                          className={cn(
-                            'w-full text-left text-sm font-medium px-2 py-1 rounded-lg transition-colors',
-                            isOnA ? 'bg-[#22C55E]/20 text-foreground' : 'text-muted-foreground'
-                          )}
-                        >
-                          {p.name.split(' ')[0]}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="p-3 rounded-xl bg-foreground/5 border border-foreground/20 space-y-1.5">
-                    <p className="text-[10px] font-semibold text-foreground/60 uppercase tracking-wide">Team B</p>
-                    {validPlayers.map(p => {
-                      const isOnA = matchPlayTeamA.includes(p.id);
-                      const isOnB = matchPlayTeamB.includes(p.id);
-                      if (isOnA) return null;
-                      return (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => {
-                            if (isOnB) {
-                              onMatchPlayTeamsChange(matchPlayTeamA, matchPlayTeamB.filter(id => id !== p.id));
-                            } else {
-                              onMatchPlayTeamsChange([...matchPlayTeamA, p.id], matchPlayTeamB.filter(id => id !== p.id));
-                            }
-                          }}
-                          className={cn(
-                            'w-full text-left text-sm font-medium px-2 py-1 rounded-lg transition-colors',
-                            isOnB ? 'bg-foreground/10 text-foreground' : 'text-muted-foreground'
-                          )}
-                        >
-                          {p.name.split(' ')[0]}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-muted-foreground">$</span>
-              <Input
-                type="number"
-                placeholder="0"
-                value={stakes}
-                onChange={e => onStakesChange(e.target.value)}
-                className="w-24 text-center font-mono bg-muted/50 rounded-xl border-0 py-2.5 text-sm"
-                min={0}
-              />
-              <span className="text-sm text-muted-foreground">per match</span>
-            </div>
-          </motion.div>
-        )}
-      </motion.div>
+      <MatchPlaySection
+        matchPlay={matchPlay}
+        matchPlayFormat={matchPlayFormat}
+        matchPlayTeamA={matchPlayTeamA}
+        matchPlayTeamB={matchPlayTeamB}
+        stakes={stakes}
+        validPlayers={validPlayers}
+        playerCount={playerCount}
+        onMatchPlayChange={onMatchPlayChange}
+        onMatchPlayFormatChange={onMatchPlayFormatChange}
+        onMatchPlayTeamsChange={onMatchPlayTeamsChange}
+        onStakesChange={onStakesChange}
+      />
 
       {/* Side Games */}
       <p className={sectionLabel}>Side Games</p>
