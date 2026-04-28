@@ -336,7 +336,7 @@ Open items (Phase P2+):
   - 1x leaked-password protection — Supabase dashboard toggle (Auth → Settings → Auth Providers → Email).
   - 1x extension `pg_net` in public schema — cosmetic, low risk.
   - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional — deny-all by default; service role bypasses).
-- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224, under target), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 961 (was 1100), `RoundComplete.tsx` 976, `Stats.tsx` 833, `Profile.tsx` 831, `Home.tsx` 699.
+- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224, under target), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 892 (was 1100), `RoundComplete.tsx` 976, `Stats.tsx` 833, `Profile.tsx` 831, `Home.tsx` 699.
 - Component/page test coverage is bootstrapping — Scorecard + NewRound have early-return smoke tests; rest of pages still untested.
 - 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
 
@@ -349,10 +349,12 @@ Phase P2.3 (Scorecard split) — multi-wave:
 - Extracted `handleFinishRound` + `handleFinishWithWinner` (~28 lines) → `src/hooks/useFinishRound.ts`.
 - Result: `Scorecard.tsx` 1123 → 844 lines (−25%). Still over the 500-line target. P2.3 queued: remaining handler hooks (`handleSaveScore`, `handleQuickScore`, `handleScoreSelect`, `handlePickup`) + render-subtree extractions (header bar / banner stack / hole nav).
 
-Phase P2.6 (NewRound split) — first wave:
+Phase P2.6 (NewRound split) — multi-wave:
 - Extracted format-active sync effect (~37 lines) → `src/hooks/useFormatActiveSync.ts`. When a saved format becomes active the hook saves all 11 toggle values, disables them, and restores them on deselect.
-- Extracted `games[]` array construction (~128 lines) → `src/lib/buildGamesFromToggles.ts`. Pure function with a typed input surface and a `(generateId)` injection seam for testability. Encapsulates all the player-count gates (Wolf needs 3-4, Vegas needs 4, Nines needs exactly 3, etc.) and the house-game/personal-format inclusion rules.
-- Result: `NewRound.tsx` 1100 → 961 lines (−13%). Solo round handler + step renderers remain inline; further extraction is queued.
+- Extracted `games[]` array construction (~128 lines) → `src/lib/buildGamesFromToggles.ts`. Pure function with a typed input surface and a `(generateId)` injection seam for testability. Encapsulates all the player-count gates and the house-game/personal-format inclusion rules. **20 unit tests** cover every gate and ordering rule.
+- Extracted solo-round flow (~41 lines) → `src/lib/createSoloRound.ts`. Pure async helper returning a discriminated `{ ok, ...}` outcome. Page owns isCreating + toast presentation.
+- Extracted API course selection flow (~80 lines: 5 useStates + 3 handlers + finalize helper) → `src/hooks/useApiCourseSelection.ts`. Encapsulates the search → tee dialog → finalize sequence; page reads exposed state for prop wiring.
+- Result: `NewRound.tsx` 1100 → 892 lines (−19%).
 
 Phase P2.5 (FormatStep split) complete:
 - Extracted saved-formats picker UI (~150 lines) → `src/components/golf/SavedFormatsPicker.tsx`.

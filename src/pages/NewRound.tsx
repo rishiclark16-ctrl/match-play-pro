@@ -26,6 +26,8 @@ import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { PaywallModal } from '@/components/subscription/PaywallModal';
 import { useFormatActiveSync } from '@/hooks/useFormatActiveSync';
 import { buildGamesFromToggles } from '@/lib/buildGamesFromToggles';
+import { createSoloRound } from '@/lib/createSoloRound';
+import { useApiCourseSelection } from '@/hooks/useApiCourseSelection';
 
 type Step = 'mode' | 'course' | 'players' | 'format';
 type RoundMode = 'solo' | 'multi';
@@ -56,10 +58,6 @@ export default function NewRound() {
   const [step, setStep] = useState<Step>('mode');
   const [mode, setMode] = useState<RoundMode>('multi');
   const [showPaywall, setShowPaywall] = useState(false);
-  const [isLoadingApiCourse, setIsLoadingApiCourse] = useState(false);
-  const [showTeeSelector, setShowTeeSelector] = useState(false);
-  const [pendingCourseDetails, setPendingCourseDetails] = useState<GolfCourseDetails | null>(null);
-  const [pendingApiCourse, setPendingApiCourse] = useState<GolfCourseResult | null>(null);
 
   // Course state
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -67,6 +65,24 @@ export default function NewRound() {
   const [courseName, setCourseName] = useState('');
   const [courseLocation, setCourseLocation] = useState('');
   const [holeCount, setHoleCount] = useState<9 | 18>(18);
+
+  // API course selection (search → tee dialog → finalize)
+  const {
+    isLoadingApiCourse,
+    showTeeSelector,
+    setShowTeeSelector,
+    pendingCourseDetails,
+    courseApiDetails,
+    handleSelectApiCourse,
+    handleTeeSelect,
+  } = useApiCourseSelection({
+    getCourseDetails,
+    convertToHoleInfo,
+    getTeeInfo,
+    createCourse,
+    setSelectedCourse,
+    setHoleCount,
+  });
 
   // Players state
   const [players, setPlayers] = useState<PlayerData[]>([
@@ -147,7 +163,6 @@ export default function NewRound() {
 
   // Mixed tees
   const [mixedTees, setMixedTees] = useState(false);
-  const [courseApiDetails, setCourseApiDetails] = useState<GolfCourseDetails | null>(null);
   const [roundTeeSets, setRoundTeeSets] = useState<TeeSet[]>([
     { id: 'blue', name: 'Blue', gender: 'mens', slope: 130, courseRating: 71.5, par: 72 },
     { id: 'red', name: 'Red', gender: 'womens', slope: 113, courseRating: 68.2, par: 72 },
@@ -254,62 +269,6 @@ export default function NewRound() {
     }
   };
 
-  const handleSelectApiCourse = async (apiCourse: GolfCourseResult) => {
-    setIsLoadingApiCourse(true);
-    try {
-      const details = await getCourseDetails(apiCourse.id);
-      if (details) {
-        const hasTees = (details.tees?.male?.length || 0) + (details.tees?.female?.length || 0) > 0;
-        if (hasTees) {
-          setPendingCourseDetails(details);
-          setPendingApiCourse(apiCourse);
-          setShowTeeSelector(true);
-        } else {
-          finalizeCourseSelection(details, apiCourse);
-        }
-      }
-    } catch {
-      toast.error('Failed to load course details');
-    } finally {
-      setIsLoadingApiCourse(false);
-    }
-  };
-
-  const handleTeeSelect = (teeName: string, gender: 'male' | 'female') => {
-    if (!pendingCourseDetails || !pendingApiCourse) return;
-    const teeInfo = getTeeInfo(pendingCourseDetails, teeName, gender);
-    finalizeCourseSelection(pendingCourseDetails, pendingApiCourse, teeName, gender, teeInfo);
-    setShowTeeSelector(false);
-    setPendingCourseDetails(null);
-    setPendingApiCourse(null);
-  };
-
-  const finalizeCourseSelection = (
-    details: GolfCourseDetails,
-    apiCourse: GolfCourseResult,
-    teeName?: string,
-    gender: 'male' | 'female' = 'male',
-    teeInfo?: { slope_rating: number; course_rating: number }
-  ) => {
-    const holes = convertToHoleInfo(details, teeName, gender);
-    const location = [details.location?.city, details.location?.state].filter(Boolean).join(', ');
-    const name = details.course_name || apiCourse.course_name;
-    const displayName = teeName ? `${name} (${teeName})` : name;
-
-    const course = createCourse(
-      displayName,
-      location || undefined,
-      holes,
-      teeInfo?.slope_rating || details.tees?.male?.[0]?.slope_rating,
-      teeInfo?.course_rating || details.tees?.male?.[0]?.course_rating
-    );
-
-    setSelectedCourse(course);
-    setHoleCount(holes.length === 9 ? 9 : 18);
-    setCourseApiDetails(details);
-    toast.success(`Loaded ${displayName} with real par data!`);
-  };
-
   // Player handlers
   const addPlayer = () => {
     if (players.length < 4) {
@@ -393,43 +352,15 @@ export default function NewRound() {
   const handleStartSoloRound = async () => {
     if (!selectedCourse || isCreating) return;
     setIsCreating(true);
-    try {
-      const holeInfo: HoleInfo[] = selectedCourse.holes.slice(0, holeCount);
-      const soloName = (profile?.full_name?.trim()) || 'Me';
-      const result = await createRound({
-        courseId: selectedCourse.id,
-        courseName: selectedCourse.name,
-        holes: holeCount,
-        holeInfo,
-        strokePlay: true,
-        matchPlay: false,
-        slope: selectedCourse.slope,
-        rating: selectedCourse.rating,
-        handicapMode: 'auto',
-        games: [],
-        players: [{
-          name: soloName,
-          handicap: profile?.handicap ?? undefined,
-          manualStrokes: 0,
-          profileId: undefined,
-          isGhost: false,
-        }],
-      });
-
-      if (result.round) {
-        toast.success('Solo round started — good luck!');
-        navigate(`/round/${result.round.id}`);
-      } else if (result.error) {
-        toast.error(result.error.message);
-        if (result.error.isAuthError) navigate('/auth');
-      } else {
-        toast.error('Failed to create round. Please try again.');
-      }
-    } catch {
-      toast.error('Failed to create round. Please try again.');
-    } finally {
-      setIsCreating(false);
+    const outcome = await createSoloRound({ selectedCourse, holeCount, profile, createRound });
+    if (outcome.ok) {
+      toast.success('Solo round started — good luck!');
+      navigate(`/round/${outcome.roundId}`);
+    } else {
+      toast.error(outcome.message);
+      if (outcome.isAuthError) navigate('/auth');
     }
+    setIsCreating(false);
   };
 
   // Start round handler
