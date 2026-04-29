@@ -336,7 +336,7 @@ Open items (Phase P2+):
   - 1x leaked-password protection — Supabase dashboard toggle (Auth → Settings → Auth Providers → Email).
   - 1x extension `pg_net` in public schema — cosmetic, low risk.
   - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional — deny-all by default; service role bypasses).
-- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224, under target), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 892 (was 1100), `RoundComplete.tsx` 639 (was 976), `Stats.tsx` 520 (was 833, just over), `Profile.tsx` 709 (was 831), `Home.tsx` 509 (was 699, just 9 over).
+- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224), ✅ `NewRound.tsx` **494** (was 1100, under target), `Scorecard.tsx` 732 (was 1123), `RoundComplete.tsx` 639 (was 976), `Profile.tsx` 709 (was 831), `Stats.tsx` 520 (was 833, just over), `Home.tsx` 509 (was 699, just 9 over).
 - Component/page test coverage is bootstrapping — Scorecard + NewRound have early-return smoke tests; rest of pages still untested.
 - 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
 
