@@ -23,6 +23,8 @@ import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { validatePlayerName, validateHandicap, sanitizeString } from '@/lib/validation';
+import { RowLabel, Row, SectionLabel, Card } from '@/components/profile/ProfileRowPrimitives';
+import { NotificationSettings } from '@/components/profile/NotificationSettings';
 
 const TEE_OPTIONS = [
   { value: 'back',  label: 'Black', color: 'bg-gray-900 text-white' },
@@ -31,49 +33,6 @@ const TEE_OPTIONS = [
   { value: 'gold',  label: 'Gold',  color: 'bg-yellow-500 text-foreground' },
   { value: 'red',   label: 'Red',   color: 'bg-red-600 text-white' },
 ];
-
-// ─── Row primitives ───────────────────────────────────────────────────────────
-
-function RowLabel({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <span className={cn('text-[14px] font-medium text-foreground', className)}>{children}</span>;
-}
-
-function Row({ children, last, onClick }: { children: React.ReactNode; last?: boolean; onClick?: () => void }) {
-  if (onClick) {
-    return (
-      <motion.button
-        whileTap={{ scale: 0.98 }}
-        onClick={onClick}
-        className={cn('w-full px-5 py-4 flex items-center justify-between gap-4 text-left', !last && 'border-b border-border/30')}
-      >
-        {children}
-      </motion.button>
-    );
-  }
-  return (
-    <div className={cn('px-5 py-4 flex items-center justify-between gap-4', !last && 'border-b border-border/30')}>
-      {children}
-    </div>
-  );
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground px-1 mb-2 mt-5 first:mt-0">
-      {children}
-    </p>
-  );
-}
-
-function Card({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={cn('bg-white rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.06)]', className)}>
-      {children}
-    </div>
-  );
-}
-
-// ─── Main component ────────────────────────────────────────────────────────────
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -650,94 +609,13 @@ export default function Profile() {
           </Card>
         </motion.div>
 
-        {/* ── NOTIFICATIONS ────────────────────────────────────────── */}
-        {Capacitor.isNativePlatform() && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.18 }}>
-            <SectionLabel>Notifications</SectionLabel>
-            <Card className="mb-5">
-              <Row className={pushPermission === 'granted' ? '' : undefined}>
-                <div className="flex-1">
-                  <p className="text-[14px] font-medium text-foreground">Push Notifications</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {pushPermission === 'granted' ? 'Enabled' : pushPermission === 'denied' ? 'Blocked in Settings' : 'Not enabled'}
-                  </p>
-                </div>
-                {pushPermission === 'granted' ? (
-                  <span className="text-[11px] font-black text-[#22C55E] bg-[#F0FFF4] px-2.5 py-1 rounded-full">On</span>
-                ) : pushPermission === 'denied' ? (
-                  <button
-                    onClick={() => {
-                      hapticLight();
-                      import('@capacitor/core').then(({ Capacitor: Cap }) => {
-                        if (Cap.isNativePlatform()) import('@capacitor/app').then(({ App }) => { App.openUrl({ url: 'app-settings:' }); });
-                      });
-                    }}
-                    className="text-[12px] font-bold text-primary flex items-center gap-1"
-                  >
-                    Open Settings <ExternalLink className="w-3 h-3" />
-                  </button>
-                ) : shouldPromptForPush() ? (
-                  <button
-                    onClick={async () => {
-                      hapticLight();
-                      const granted = await requestPushPermission();
-                      setPushPermission(granted ? 'granted' : 'denied');
-                      if (granted) hapticSuccess();
-                    }}
-                    className="text-[12px] font-black text-foreground bg-[#F0EE3A] px-3 py-1.5 rounded-xl"
-                  >
-                    Enable
-                  </button>
-                ) : null}
-              </Row>
-              {pushPermission === 'granted' && (
-                <>
-                  {([
-                    // Rounds
-                    { key: 'roundInvites', label: 'Round Invites', desc: "When someone adds you to a round" },
-                    { key: 'friendStartedRound', label: 'Friend Playing', desc: 'When a friend starts a round you can watch' },
-                    { key: 'watch_party', label: 'Watch Party', desc: 'When friends tee off — join the chat' },
-                    { key: 'roundCompleted', label: 'Match Results', desc: 'When a friend finishes a round' },
-                    { key: 'scoreEnteredForYou', label: 'Score Posted', desc: 'When someone logs a score on your behalf' },
-                    // Money / betting
-                    { key: 'pressTriggered', label: 'Auto-Press', desc: 'When an auto-press fires in your round' },
-                    { key: 'pressedBack', label: 'Pressed!', desc: 'When an opponent presses you manually' },
-                    { key: 'youWonBig', label: 'Payday', desc: "When you're owed money after a round" },
-                    { key: 'youLostBig', label: "Tab's Due", desc: 'When you owe money after a round' },
-                    { key: 'tabSettled', label: 'Tab Settled', desc: 'When group debts are settled' },
-                    { key: 'tabAddedTo', label: 'Tab Added', desc: 'When a round is added to your group tab' },
-                    // Hype
-                    { key: 'holeInOne', label: 'Hole-in-One 🏆', desc: 'When anyone in your round aces a hole' },
-                    { key: 'eagleLogged', label: 'Eagle Spotted', desc: 'When anyone in your round logs an eagle' },
-                    // Social
-                    { key: 'friendRequestReceived', label: 'New Friend Requests', desc: 'When someone sends you a request' },
-                    { key: 'friendRequestAccepted', label: 'Friend Accepted', desc: 'When someone accepts your request' },
-                    { key: 'groupInvite', label: 'Group Invites', desc: 'When you\'re added to a golf group' },
-                    // Digest
-                    { key: 'weeklyRecap', label: 'Weekly Recap', desc: 'Monday morning summary of your week on the course' },
-                  ] as { key: keyof NotificationPreferences; label: string; desc: string }[]).map(({ key, label, desc }, i, arr) => (
-                    <Row key={key} last={i === arr.length - 1}>
-                      <div className="flex-1">
-                        <p className="text-[14px] font-medium text-foreground">{label}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{desc}</p>
-                      </div>
-                      <Switch
-                        checked={notifPrefs[key]}
-                        onCheckedChange={(checked) => {
-                          hapticLight();
-                          const updated = { ...notifPrefs, [key]: checked };
-                          setNotifPrefs(updated);
-                          updateProfile({ notification_preferences: updated });
-                        }}
-                        className="data-[state=checked]:bg-foreground"
-                      />
-                    </Row>
-                  ))}
-                </>
-              )}
-            </Card>
-          </motion.div>
-        )}
+        <NotificationSettings
+          pushPermission={pushPermission}
+          setPushPermission={setPushPermission}
+          notifPrefs={notifPrefs}
+          setNotifPrefs={setNotifPrefs}
+          onUpdateProfile={updateProfile}
+        />
 
         {/* ── LINKS ────────────────────────────────────────────────── */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }}>

@@ -336,7 +336,7 @@ Open items (Phase P2+):
   - 1x leaked-password protection — Supabase dashboard toggle (Auth → Settings → Auth Providers → Email).
   - 1x extension `pg_net` in public schema — cosmetic, low risk.
   - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional — deny-all by default; service role bypasses).
-- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224, under target), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 892 (was 1100), `RoundComplete.tsx` 931 (was 976), `Stats.tsx` 520 (was 833, just over target), `Profile.tsx` 831, `Home.tsx` 699.
+- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224, under target), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 892 (was 1100), `RoundComplete.tsx` 931 (was 976), `Stats.tsx` 520 (was 833, just over), `Profile.tsx` 709 (was 831), `Home.tsx` 699.
 - Component/page test coverage is bootstrapping — Scorecard + NewRound have early-return smoke tests; rest of pages still untested.
 - 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
 
@@ -348,6 +348,11 @@ Phase P2.3 (Scorecard split) — multi-wave:
 - Extracted loading + "round not found" UI (~80 lines) → `src/components/golf/ScorecardEmptyStates.tsx` exporting `<ScorecardLoading />` and `<ScorecardNotFound />`.
 - Extracted `handleFinishRound` + `handleFinishWithWinner` (~28 lines) → `src/hooks/useFinishRound.ts`.
 - Result: `Scorecard.tsx` 1123 → 844 lines (−25%). Still over the 500-line target. P2.3 queued: remaining handler hooks (`handleSaveScore`, `handleQuickScore`, `handleScoreSelect`, `handlePickup`) + render-subtree extractions (header bar / banner stack / hole nav).
+
+Phase P2.9 (Profile split) — first wave:
+- Extracted 4 layout primitives (`RowLabel`, `Row`, `SectionLabel`, `Card`) → `src/components/profile/ProfileRowPrimitives.tsx`. Reusable across any future settings-style screen.
+- Extracted notifications section (~88 lines) → `src/components/profile/NotificationSettings.tsx`. Native-only (returns null on web). Owns toggle row UX; parent owns persistent state.
+- Result: `Profile.tsx` 831 → 709 lines (−15%).
 
 Phase P2.8 (Stats split) — first wave:
 - Extracted 3 animation primitives (`CountUp`, `RingProgress`, `StatBar` ~95 lines) → `src/components/stats/StatsAnimations.tsx`. Reusable across the stats page and any future stat surfaces.
