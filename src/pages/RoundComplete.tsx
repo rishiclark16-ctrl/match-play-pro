@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -11,17 +11,11 @@ import { useSettlementTracking } from '@/hooks/useSettlementTracking';
 import { useRoundData } from '@/hooks/useRoundData';
 import { useGameResults } from '@/hooks/useGameResults';
 import { useRoundHighlights } from '@/hooks/useRoundHighlights';
-import { Player, PlayerWithScores } from '@/types/golf';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { shareResults, shareText } from '@/lib/shareResults';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { supabase } from '@/integrations/supabase/client';
-import { sendPushToProfiles, shouldPromptForPush, requestPushPermission } from '@/lib/pushUtils';
-import { StrokesPerHoleMap } from '@/lib/games/skins';
-import { calculateSettlement, NetSettlement } from '@/lib/games/settlement';
-import { calculateMatchPlay, MatchPlayResult } from '@/lib/games/matchPlay';
-import { buildConfig } from '@/engine/HouseGameEngine';
+import { shouldPromptForPush, requestPushPermission } from '@/lib/pushUtils';
 import { isCustomPrimitive } from '@/types/houseGame';
 import { getPropBetLabel, getPropBetIcon } from '@/types/betting';
 import { useGroups } from '@/hooks/useGroups';
@@ -29,12 +23,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useScorekeeper } from '@/hooks/useScorekeeper';
 import { useRoundLedgerSync } from '@/hooks/useRoundLedgerSync';
 import { ShareRoundResultsSheet } from '@/components/golf/ShareRoundResultsSheet';
-import {
-  calculateMatchPlayStrokes,
-  buildMatchPlayStrokesMap,
-  calculatePlayingHandicap,
-  calculateTotalNetStrokes,
-} from '@/lib/handicapUtils';
 
 // Components
 import { RoundCompleteHeader } from '@/components/golf/RoundCompleteHeader';
@@ -48,6 +36,9 @@ import { WatchPartyRevealCard } from '@/components/golf/WatchPartyRevealCard';
 import { SoloRoundSummary } from '@/components/golf/SoloRoundSummary';
 import { isSoloRound } from '@/lib/soloRound';
 import { useBigSettlementNotifier } from '@/hooks/useBigSettlementNotifier';
+import { useRoundCompletePlayers, useRoundCompleteSettlements } from '@/hooks/useRoundCompleteState';
+import { useAddToTab } from '@/hooks/useAddToTab';
+import { useRoundShareHandlers } from '@/hooks/useRoundShareHandlers';
 import { buildHouseGameShareText } from '@/lib/shareHouseGameText';
 
 export default function RoundComplete() {
@@ -59,16 +50,11 @@ export default function RoundComplete() {
   const { propBets } = usePropBets(id);
 
   // UI state
-  const [isSharing, setIsSharing] = useState(false);
-  const [shareMode, setShareMode] = useState<'image' | 'text' | null>(null);
   const [sharedWithFriends, setSharedWithFriends] = useState(false);
   const [showSettlements, setShowSettlements] = useState(true);
   const [showHighlights, setShowHighlights] = useState(false);
   const [showGames, setShowGames] = useState(true);
   const [showShareSheet, setShowShareSheet] = useState(false);
-  const [showGroupPicker, setShowGroupPicker] = useState(false);
-  const [addedToGroupId, setAddedToGroupId] = useState<string | null>(null);
-  const [addingToTab, setAddingToTab] = useState(false);
 
   // Fetch round data
   const { round, players: rawPlayers, scores: rawScores, presses, loading, isLocalData } = useRoundData(id);
@@ -137,123 +123,22 @@ export default function RoundComplete() {
     autoShare();
   }, [round, sharedWithFriends, shareRoundWithFriends]);
 
-  // Calculate players with scores (including net scores)
-  const playersWithScores = useMemo((): PlayerWithScores[] => {
-    if (!round || rawPlayers.length === 0) return [];
+  // Derived player state (scores, sort, winner, tie, ghost ids).
+  const {
+    playersWithScores,
+    matchPlayResult,
+    sortedPlayers,
+    winner,
+    hasTie,
+    ghostPlayerIds,
+  } = useRoundCompletePlayers({
+    round,
+    rawPlayers,
+    rawScores,
+    useNetScoring: settings.useNetScoring,
+  });
 
-    return rawPlayers.map(player => {
-      const playerScores = rawScores.filter(s => s.playerId === player.id);
-      const totalStrokes = playerScores.reduce((sum, s) => sum + s.strokes, 0);
-
-      const totalRelativeToPar = playerScores.reduce((sum, s) => {
-        const hole = round.holeInfo.find(h => h.number === s.holeNumber);
-        return sum + (s.strokes - (hole?.par || 4));
-      }, 0);
-
-      // Calculate net scores — respect manual handicap mode and mixed tees
-      const parTotal = round.holeInfo.reduce((sum, h) => sum + h.par, 0);
-      const isManualMode = round.handicapMode === 'manual';
-      let playingHandicap: number;
-      if (isManualMode) {
-        playingHandicap = player.manualStrokes ?? 0;
-      } else if (player.handicap !== undefined) {
-        // In mixed tees mode, use the player's specific tee data
-        const playerTee = (round.mixedTees && round.teeSets)
-          ? round.teeSets.find(t => t.id === player.teeSetId)
-          : undefined;
-        const slope = playerTee?.slope ?? round.slope ?? 113;
-        const rating = playerTee?.courseRating ?? round.rating;
-        const par = playerTee?.par ?? parTotal;
-        playingHandicap = calculatePlayingHandicap(player.handicap, slope, round.holes, rating, par);
-      } else {
-        playingHandicap = 0;
-      }
-      const totalNetStrokes = calculateTotalNetStrokes(
-        totalStrokes,
-        playingHandicap,
-        playerScores.length,
-        round.holes
-      );
-      // Use par prorated to holes actually played
-      const playedPar = playerScores.reduce((sum, s) => {
-        const hole = round.holeInfo.find(h => h.number === s.holeNumber);
-        return sum + (hole?.par || 4);
-      }, 0);
-      const netRelativeToPar = totalNetStrokes - playedPar;
-
-      return {
-        ...player,
-        scores: playerScores,
-        totalStrokes,
-        totalRelativeToPar,
-        holesPlayed: playerScores.length,
-        playingHandicap,
-        totalNetStrokes,
-        netRelativeToPar,
-      };
-    });
-  }, [round, rawPlayers, rawScores]);
-
-  // Build strokes map for match play net scoring
-  const strokesPerHoleMap = useMemo((): StrokesPerHoleMap | undefined => {
-    if (!round || rawPlayers.length !== 2) return undefined;
-
-    const [p1, p2] = rawPlayers;
-    const totalCoursePar = round.holeInfo.reduce((sum, h) => sum + h.par, 0);
-    const matchInfo = calculateMatchPlayStrokes(
-      { id: p1.id, name: p1.name, handicap: p1.handicap, manualStrokes: p1.manualStrokes },
-      { id: p2.id, name: p2.name, handicap: p2.handicap, manualStrokes: p2.manualStrokes },
-      round.slope || 113,
-      round.holes,
-      round.handicapMode || 'auto',
-      round.rating,
-      totalCoursePar
-    );
-    return buildMatchPlayStrokesMap(matchInfo, round.holeInfo);
-  }, [round, rawPlayers]);
-
-  // Calculate match play result using proper net scoring
-  const matchPlayResult = useMemo((): MatchPlayResult | null => {
-    if (!round?.matchPlay || playersWithScores.length !== 2) return null;
-    return calculateMatchPlay(
-      rawScores,
-      playersWithScores,
-      round.holeInfo,
-      settings.useNetScoring ? strokesPerHoleMap : undefined,
-      round.holes
-    );
-  }, [round, playersWithScores, rawScores, strokesPerHoleMap, settings.useNetScoring]);
-
-  // Sort by net or gross strokes based on settings (lowest first)
-  const sortedPlayers = useMemo(() => {
-    return [...playersWithScores].sort((a, b) => {
-      if (settings.useNetScoring) {
-        return (a.totalNetStrokes ?? a.totalStrokes) - (b.totalNetStrokes ?? b.totalStrokes);
-      }
-      return a.totalStrokes - b.totalStrokes;
-    });
-  }, [playersWithScores, settings.useNetScoring]);
-
-  // Determine winner - use match play result if match play is enabled
-  const winner = useMemo(() => {
-    if (round?.matchPlay && matchPlayResult?.winnerId) {
-      return playersWithScores.find(p => p.id === matchPlayResult.winnerId) || sortedPlayers[0];
-    }
-    return sortedPlayers[0];
-  }, [round, matchPlayResult, playersWithScores, sortedPlayers]);
-
-  const hasTie = useMemo(() => {
-    if (round?.matchPlay && matchPlayResult) {
-      return matchPlayResult.matchStatus === 'halved';
-    }
-    if (sortedPlayers.length < 2) return false;
-    if (settings.useNetScoring) {
-      return (sortedPlayers[0]?.totalNetStrokes ?? 0) === (sortedPlayers[1]?.totalNetStrokes ?? 0);
-    }
-    return sortedPlayers[0]?.totalStrokes === sortedPlayers[1]?.totalStrokes;
-  }, [round, matchPlayResult, sortedPlayers, settings.useNetScoring]);
-
-  // Calculate game results
+  // Calculate game results (depends on playersWithScores)
   const gameResults = useGameResults({
     round,
     players: rawPlayers,
@@ -262,52 +147,27 @@ export default function RoundComplete() {
     playersWithScores,
   });
 
-  // Calculate settlements
-  const settlements = useMemo(() => {
-    if (!round || playersWithScores.length === 0) return [];
-
-    const matchPlayWinnerId = matchPlayResult?.winnerId || null;
-    const wolfGame = round.games?.find(g => g.type === 'wolf');
-
-    return calculateSettlement(
-      rawPlayers,
-      gameResults?.skinsResult,
-      gameResults?.nassauResult,
-      matchPlayWinnerId,
-      round.stakes,
-      wolfGame?.wolfResults,
-      wolfGame?.stakes,
-      propBets,
-      gameResults?.houseGameResult,
-      gameResults?.vegasResult,
-      gameResults?.ninesResult,
-      gameResults?.defenderResult,
-      gameResults?.sixesResult,
-    );
-  }, [round, playersWithScores, rawPlayers, gameResults, matchPlayResult, propBets]);
-
-  // Ghost player settlement handling
-  const ghostPlayerIds = useMemo(
-    () => new Set(rawPlayers.filter(p => p.isGhost).map(p => p.id)),
-    [rawPlayers]
-  );
-
-  // Ghost pot: amounts that would flow TO ghost players — real players owe this to the pot
-  const ghostPotEntries = useMemo(
-    () => settlements.filter(s => ghostPlayerIds.has(s.toPlayerId)),
-    [settlements, ghostPlayerIds]
-  );
-
-  const ghostPotAmount = useMemo(
-    () => ghostPotEntries.reduce((sum, s) => sum + s.amount, 0),
-    [ghostPotEntries]
-  );
-
-  // Exclude all ghost-involving settlements from regular settlement tracking
-  const nonGhostSettlements = useMemo(
-    () => settlements.filter(s => !ghostPlayerIds.has(s.fromPlayerId) && !ghostPlayerIds.has(s.toPlayerId)),
-    [settlements, ghostPlayerIds]
-  );
+  // Settlements + ghost pot + house game + junk summary (depends on gameResults)
+  const {
+    settlements,
+    ghostPotEntries,
+    ghostPotAmount,
+    nonGhostSettlements,
+    houseGameConfig,
+    houseGameSettlements,
+    isRainShortened,
+    wonJunkBets,
+    junkSummary,
+  } = useRoundCompleteSettlements({
+    round,
+    rawPlayers,
+    rawScores,
+    playersWithScores,
+    matchPlayResult,
+    ghostPlayerIds,
+    gameResults,
+    propBets,
+  });
 
   // Big win/loss push — fires once from scorekeeper's device when a player is up/down ≥ $20 net
   useBigSettlementNotifier({
@@ -319,72 +179,9 @@ export default function RoundComplete() {
     ghostPlayerIds,
   });
 
-  // House game derived state
+  // The `houseGameEntry` is needed below for the custom-rules manual-settlement
+  // reminder section (which inspects activePrimitives for `isCustomPrimitive`).
   const houseGameEntry = round?.games?.find(g => g.type === 'house');
-  const houseGameConfig = useMemo(() => {
-    if (!houseGameEntry?.activePrimitives?.length) return null;
-    return buildConfig(houseGameEntry.activePrimitives);
-  }, [houseGameEntry]);
-
-  // House game settlements from standings
-  const houseGameSettlements = useMemo((): NetSettlement[] => {
-    const result = gameResults?.houseGameResult;
-    if (!result) return [];
-    const { standings } = result;
-    const winners = standings.filter(s => s.netEarnings > 0);
-    const losers  = standings.filter(s => s.netEarnings < 0);
-    if (winners.length === 0 || losers.length === 0) return [];
-    const totalWinnings = winners.reduce((sum, w) => sum + w.netEarnings, 0);
-    const out: NetSettlement[] = [];
-    losers.forEach(loser => {
-      winners.forEach(winner => {
-        const proportion = totalWinnings > 0 ? winner.netEarnings / totalWinnings : 1 / winners.length;
-        const amount = Math.round(proportion * Math.abs(loser.netEarnings) * 100) / 100;
-        if (amount > 0.01) {
-          out.push({
-            fromPlayerId: loser.playerId,
-            fromPlayerName: loser.playerName,
-            toPlayerId: winner.playerId,
-            toPlayerName: winner.playerName,
-            amount,
-          });
-        }
-      });
-    });
-    return out;
-  }, [gameResults?.houseGameResult]);
-
-  // Rain-shortened: did the round end early (< holes played for back 9)?
-  const isRainShortened = useMemo(() => {
-    if (!houseGameConfig?.settlementConfig.rainShortened) return false;
-    const holesPlayed = Math.max(0, ...rawPlayers.map(p =>
-      rawScores.filter(s => s.playerId === p.id).length
-    ));
-    return holesPlayed < (round?.holes ?? 18);
-  }, [houseGameConfig, rawPlayers, rawScores, round]);
-
-  // Active garbage bets list (from house game config)
-  const activeGarbageBets = houseGameConfig?.garbageBets ?? [];
-
-  // Won junk bets (greenie/sandie/barkie/oozle/chippy) from prop_bets table
-  const JUNK_TYPES = new Set(['greenie', 'sandie', 'barkie', 'oozle', 'chippy']);
-  const wonJunkBets = propBets.filter(b => JUNK_TYPES.has(b.type) && !!b.winnerId);
-
-  // Per-player junk summary: net earnings (won bets - paid bets)
-  const junkSummary = useMemo(() => {
-    const map = new Map<string, { name: string; won: number; net: number }>();
-    rawPlayers.forEach(p => map.set(p.id, { name: p.name, won: 0, net: 0 }));
-    wonJunkBets.forEach(bet => {
-      if (!bet.winnerId) return;
-      const winner = map.get(bet.winnerId);
-      if (winner) { winner.won++; winner.net += bet.stakes * (rawPlayers.length - 1); }
-      rawPlayers.filter(p => p.id !== bet.winnerId).forEach(p => {
-        const entry = map.get(p.id);
-        if (entry) entry.net -= bet.stakes;
-      });
-    });
-    return Array.from(map.values()).filter(e => e.won > 0 || e.net !== 0);
-  }, [wonJunkBets, rawPlayers]);
 
   // Settlement payment tracking
   const {
@@ -404,110 +201,21 @@ export default function RoundComplete() {
   });
 
   // Add round results to a group's running tab
-  const handleAddToTab = async (groupId: string) => {
-    if (!round || !id) return;
-    setAddingToTab(true);
-    hapticLight();
-    try {
-      // Build per-player net amounts from settlements
-      const netByPlayer = new Map<string, number>();
-      settlements.forEach(s => {
-        netByPlayer.set(s.fromPlayerId, (netByPlayer.get(s.fromPlayerId) ?? 0) - s.amount);
-        netByPlayer.set(s.toPlayerId, (netByPlayer.get(s.toPlayerId) ?? 0) + s.amount);
-      });
+  const {
+    addingToTab,
+    addedToGroupId,
+    showGroupPicker,
+    setShowGroupPicker,
+    handleAddToTab,
+  } = useAddToTab({ round, id, settlements, rawPlayers, syncRoundToLedger });
 
-      const entries = rawPlayers
-        .filter(p => p.profileId)
-        .map(p => ({
-          profileId: p.profileId!,
-          amount: netByPlayer.get(p.id) ?? 0,
-          gameBreakdown: { round: netByPlayer.get(p.id) ?? 0 },
-        }));
-
-      if (entries.length === 0) {
-        toast.error('No linked profiles — players must have accounts to add to tab');
-        return;
-      }
-
-      await syncRoundToLedger(id, groupId, entries);
-      hapticSuccess();
-      setAddedToGroupId(groupId);
-      setShowGroupPicker(false);
-      toast.success('Round added to group tab!');
-      // Notify players with negative net amounts (they owe money)
-      const owingProfileIds = entries
-        .filter(e => e.amount < 0)
-        .map(e => e.profileId);
-      if (owingProfileIds.length > 0) {
-        sendPushToProfiles({
-          profileIds: owingProfileIds,
-          title: 'Tab updated ⛳',
-          body: `${round?.courseName ?? 'A round'} was added to your group tab`,
-          data: { route: '/groups' },
-          type: 'tabAddedTo',
-        });
-      }
-    } catch {
-      hapticError();
-      toast.error('Failed to add to tab — try again');
-    } finally {
-      setAddingToTab(false);
-    }
-  };
-
-  // Share handlers
-  const handleShareImage = async () => {
-    if (!round) return;
-    hapticLight();
-    setIsSharing(true);
-    setShareMode('image');
-
-    const players: Player[] = playersWithScores.map(p => ({
-      id: p.id,
-      roundId: round.id,
-      name: p.name,
-      handicap: p.handicap,
-      orderIndex: 0,
-    }));
-
-    try {
-      await shareResults(round, players, rawScores);
-      hapticSuccess();
-      toast.success('Results shared!');
-    } catch {
-      hapticError();
-      toast.error('Failed to share. Trying text instead...');
-      try {
-        await shareText(round, playersWithScores);
-        hapticSuccess();
-        toast.success('Results copied to clipboard!');
-      } catch {
-        toast.error('Share failed. Please try again.');
-      }
-    } finally {
-      setIsSharing(false);
-      setShareMode(null);
-    }
-  };
-
-  const handleShareText = async () => {
-    if (!round) return;
-    hapticLight();
-    setIsSharing(true);
-    setShareMode('text');
-
-    try {
-      await shareText(round, playersWithScores);
-      hapticSuccess();
-      toast.success(navigator.share ? 'Results shared!' : 'Results copied to clipboard!');
-    } catch {
-      hapticError();
-      toast.error('Failed to share');
-    } finally {
-      setIsSharing(false);
-      setShareMode(null);
-    }
-  };
+  // Image / text share handlers
+  const {
+    isSharing,
+    shareMode,
+    handleShareImage,
+    handleShareText,
+  } = useRoundShareHandlers({ round, playersWithScores, rawScores });
 
   const handleShareHouseGame = async () => {
     if (!round) return;

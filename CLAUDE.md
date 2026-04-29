@@ -330,28 +330,13 @@ Phase P2.1 (Supabase advisor hardening) complete:
   - Added `SET search_path = public` to 9 trigger/utility functions (8 in main migration + `has_round_access` in followup).
 - Advisor count: 66 → 57 WARN (9 fixed). Remaining 57 documented below.
 
-Phase P3 audits landed (no production code changed — docs only):
-- **`docs/sentry-release-tracking.md`** (C1 audit). 3 HIGH gaps:
-  1. CI never builds in production mode → Sentry release plugin always short-circuits → no source maps uploaded by automation.
-  2. iOS Xcode archive has no `bun run build:production && npx cap sync ios` step → whatever is sitting in `ios/App/App/public/` ships in the App Store binary.
-  3. `docs/NATIVE_BUILD.md` runbook never mentions the 4 Sentry env vars (`VITE_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`).
-  - The happy path **does** work locally if all 4 envs are set + `bun run build:production` is invoked. Past App Store builds have likely shipped without uploaded sourcemaps.
-  - **Side issue:** if `SENTRY_AUTH_TOKEN` is missing, vite still emits `.map` files (since `build.sourcemap` is unconditionally true in production) — they leak into the iOS bundle.
-- **`docs/ios-release-pipeline.md`** (C2 audit). Maturity score 3/10. Top 3 blockers:
-  1. No App Store Connect API key wired into the Fastfile → `upload_to_testflight` would hang on 2FA.
-  2. No `match`-managed signing repo + no `Matchfile`. `lane :certs` is dead code.
-  3. No `.github/workflows/ios-release.yml`; code signing is `Automatic`.
-  - **Critical side finding:** `REVENUECAT_API_KEY = appl_xWFD…JGt` is a literal string in `ios/App/App.xcodeproj/project.pbxproj`, **committed to git**. RevenueCat publishable keys are designed to be public-ish (they're shipped to clients anyway), but having it in git history forever is suboptimal hygiene; rotation requires a new key + Xcode build settings update + new App Store binary.
-  - `Gemfile.lock` not committed → fastlane version drifts every run.
-  - Estimated effort to close: ~9 hours total.
-
 Open items (Phase P2+):
 - **Supabase security advisors** (56 WARN — most are false-positives now):
   - 54x SECURITY DEFINER predicate functions still flagged as callable by `anon`/`authenticated` via `/rest/v1/rpc/*`. **As of P2.1b they internally use `auth.uid()`** so RPC probing returns false/0/empty for any caller other than the auth'd user themselves. The advisor can't introspect that, so the warnings persist; the functions are no longer exploitable. RLS policies still pass `auth.uid()` through the `_user_id` param — preserved for compatibility.
   - 1x leaked-password protection — Supabase dashboard toggle (Auth → Settings → Auth Providers → Email).
   - 1x extension `pg_net` in public schema — cosmetic, low risk.
   - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional — deny-all by default; service role bypasses).
-- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224, under target), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 892 (was 1100), `RoundComplete.tsx` 931 (was 976), `Stats.tsx` 520 (was 833, just over), `Profile.tsx` 709 (was 831), `Home.tsx` 509 (was 699, just 9 over).
+- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224, under target), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 892 (was 1100), `RoundComplete.tsx` 639 (was 976), `Stats.tsx` 520 (was 833, just over), `Profile.tsx` 709 (was 831), `Home.tsx` 509 (was 699, just 9 over).
 - Component/page test coverage is bootstrapping — Scorecard + NewRound have early-return smoke tests; rest of pages still untested.
 - 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
 
@@ -384,10 +369,15 @@ Phase P2.1b (predicate hardening) complete:
 - Migration `20260428000000_pin_auth_uid_in_predicates` (applied to prod): 13 SECURITY DEFINER predicate functions now ignore their `_user_id` parameter and use `auth.uid()` internally. RLS policies still pass `auth.uid()` through the param so behavior inside policies is unchanged. Functions: `is_round_owner`, `is_round_participant`, `has_round_access`, `can_edit_round`, `is_round_creator`, `is_scorekeeper`, `is_group_owner`, `is_group_member`, `is_watch_party_member`, `is_pro_user`, `are_friends` (caller must be one of the two parties), `get_friend_count`, `get_group_count`.
 - The advisor still flags these because it does a static check (SECURITY DEFINER + REST-callable). The actual exploitability is closed. Verified: calling each predicate from an admin/null-auth context returns `false`/`0` for unrelated ids.
 
-Phase P2.7 (RoundComplete split) — first wave:
+Phase P2.7 (RoundComplete split) — multi-wave:
 - Extracted big-settlement notification effect (~42 lines) → `src/hooks/useBigSettlementNotifier.ts`. One-shot push when any profiled player crosses ±$threshold for the round; only the scorekeeper triggers it. Threshold defaults to $20 and is now configurable.
 - Extracted house-game share text builder (~25 lines) → `src/lib/shareHouseGameText.ts` (pure, 8 unit tests). Matches existing string format including the `$-N` quirk (preserves the `$` before negatives by design — documented in tests).
-- Result: `RoundComplete.tsx` 976 → 931 lines (−5%). Many derived useMemos still inline; a follow-up `useRoundCompleteState` hook would consolidate them.
+- **P2.7b sweep:** Extracted derived state into two hooks in `src/hooks/useRoundCompleteState.ts`:
+  - `useRoundCompletePlayers({ round, rawPlayers, rawScores, useNetScoring })` returns `playersWithScores`, `strokesPerHoleMap`, `matchPlayResult`, `sortedPlayers`, `winner`, `hasTie`, `ghostPlayerIds`. Has no game-results dependency so it runs before `useGameResults`.
+  - `useRoundCompleteSettlements({ round, rawPlayers, rawScores, playersWithScores, matchPlayResult, ghostPlayerIds, gameResults, propBets })` returns `settlements`, `ghostPotEntries`, `ghostPotAmount`, `nonGhostSettlements`, `houseGameConfig`, `houseGameSettlements`, `isRainShortened`, `wonJunkBets`, `junkSummary`. Runs after `useGameResults`.
+- Extracted "Add to Group Tab" handler + state (~55 lines) → `src/hooks/useAddToTab.ts`. Owns `addingToTab`, `addedToGroupId`, `showGroupPicker`, and the `handleAddToTab(groupId)` handler that builds per-player ledger entries from settlements, calls `syncRoundToLedger`, and pushes to profiles that owe money.
+- Extracted image/text share handlers (~52 lines) → `src/hooks/useRoundShareHandlers.ts`. Owns `isSharing`, `shareMode`, and the `handleShareImage`/`handleShareText` handlers (image falls back to text on failure).
+- Result: `RoundComplete.tsx` 931 → 639 lines (−31%). Still over 500-line target; remaining mass is the JSX render tree (Ghost Pot card, House Game settlement card, Custom Rules section, Junk Bets section, Add to Group Tab modal stack — ~250 lines combined). Each is a candidate for a `src/components/golf/*` extraction in a follow-up wave.
 
 Phase P2.6 (NewRound split) — multi-wave:
 - Extracted format-active sync effect (~37 lines) → `src/hooks/useFormatActiveSync.ts`. When a saved format becomes active the hook saves all 11 toggle values, disables them, and restores them on deselect.
