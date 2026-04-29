@@ -485,6 +485,8 @@ export default function Scorecard() {
               isMatchPlay={round.matchPlay}
               holeInfo={round.holeInfo}
               scores={roundScores}
+              matchPlayFormat={round.games?.find(g => g.type === 'match')?.matchPlayFormat}
+              matchPlayTeams={round.games?.find(g => g.type === 'match')?.matchPlayTeams}
             />
           </div>
         )}

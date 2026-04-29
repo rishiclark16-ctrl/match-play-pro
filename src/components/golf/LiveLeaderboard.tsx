@@ -1,9 +1,10 @@
 import { useMemo, forwardRef } from 'react';
 import { motion } from 'framer-motion';
 import { Crown, Swords } from 'lucide-react';
-import { PlayerWithScores, HoleInfo, Score } from '@/types/golf';
+import { PlayerWithScores, HoleInfo, Score, Team } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { calculateFourballMatchPlay, StrokesPerHoleMap } from '@/lib/games/matchPlay';
 
 interface LiveLeaderboardProps {
   players: PlayerWithScores[];
@@ -11,6 +12,9 @@ interface LiveLeaderboardProps {
   isMatchPlay?: boolean;
   holeInfo?: HoleInfo[];
   scores?: Score[];
+  /** When set + matchPlayTeams has 2 entries, renders the team-vs-team match status. */
+  matchPlayFormat?: 'singles' | 'fourball';
+  matchPlayTeams?: Team[];
 }
 
 function getInitials(name: string | null | undefined): string {
@@ -118,7 +122,9 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
   useNetScoring = false,
   isMatchPlay = false,
   holeInfo = [],
-  scores = []
+  scores = [],
+  matchPlayFormat,
+  matchPlayTeams,
 }, ref) {
 
   // Calculate match play status for 2-player matches
@@ -126,6 +132,19 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
     if (!isMatchPlay || players.length !== 2) return null;
     return calculateMatchPlayStatus(players, holeInfo, scores, useNetScoring);
   }, [isMatchPlay, players, holeInfo, scores, useNetScoring]);
+
+  // Fourball team-vs-team match status — only when 4 players + 2 teams configured.
+  const fourballResult = useMemo(() => {
+    if (matchPlayFormat !== 'fourball') return null;
+    if (!matchPlayTeams || matchPlayTeams.length !== 2) return null;
+    if (players.length !== 4) return null;
+    if (holeInfo.length === 0) return null;
+    const strokesMap: StrokesPerHoleMap | undefined = useNetScoring
+      ? new Map(players.filter(p => p.strokesPerHole).map(p => [p.id, p.strokesPerHole as Map<number, number>]))
+      : undefined;
+    const totalHoles = (holeInfo.length === 9 ? 9 : 18) as 9 | 18;
+    return calculateFourballMatchPlay(scores, players, holeInfo, strokesMap, totalHoles, matchPlayTeams);
+  }, [matchPlayFormat, matchPlayTeams, players, scores, holeInfo, useNetScoring]);
 
   // Sort players by score (relative to par) for stroke play
   const sortedPlayers = useMemo(() => {
@@ -154,6 +173,99 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
 
   if (sortedPlayers.length === 0) {
     return null;
+  }
+
+  // Match Play fourball (2v2) display — team-vs-team status, not individual deltas.
+  if (fourballResult && matchPlayTeams && matchPlayTeams.length === 2) {
+    const [teamA, teamB] = matchPlayTeams;
+    const leaderId = fourballResult.leaderId;
+    const isAllSquare = leaderId === null && fourballResult.holesUp === 0;
+    const isOver = fourballResult.matchStatus === 'won' || fourballResult.matchStatus === 'halved';
+    const isDormie = fourballResult.matchStatus === 'dormie';
+
+    const teamFirstNames = (team: Team) =>
+      team.playerIds
+        .map(pid => (players.find(p => p.id === pid)?.name || '').split(' ')[0])
+        .filter(Boolean)
+        .join(' & ');
+
+    const renderTeamSide = (team: Team, align: 'left' | 'right') => {
+      const isLeader = leaderId === team.id;
+      const initials = team.name.replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || 'T';
+      return (
+        <div className={cn('flex-1 flex items-center gap-3', align === 'right' && 'justify-end')}>
+          {align === 'right' && (
+            <div className="min-w-0 text-right">
+              <p className="font-bold text-sm text-foreground truncate">{team.name}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{teamFirstNames(team)}</p>
+            </div>
+          )}
+          <div className="relative">
+            <Avatar className={cn('w-12 h-12 border-2', isLeader ? 'border-[#22C55E] ring-2 ring-[#22C55E]/30' : 'border-border')}>
+              <AvatarFallback className={cn('font-bold text-lg', isLeader ? 'bg-[#22C55E] text-white' : 'bg-muted text-muted-foreground')}>
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            {isLeader && (
+              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#F0EE3A] flex items-center justify-center">
+                <Crown className="w-3 h-3 text-[#0A0A0A]" />
+              </div>
+            )}
+          </div>
+          {align === 'left' && (
+            <div className="min-w-0">
+              <p className="font-bold text-sm text-foreground truncate">{team.name}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{teamFirstNames(team)}</p>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    return (
+      <motion.div
+        ref={ref}
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+        className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]"
+      >
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <Swords className="w-4 h-4 text-muted-foreground" />
+            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">
+              Fourball Match Play
+            </span>
+            {isDormie && (
+              <span className="bg-[#FEF2F2] text-[#EF4444] text-[10px] font-bold px-2 py-0.5 rounded-full">DORMIE</span>
+            )}
+            {isAllSquare && !isOver && (
+              <span className="bg-[#FFFBEB] text-[#D97706] text-[10px] font-bold px-2 py-0.5 rounded-full">TIED</span>
+            )}
+            {isOver && (
+              <span className="bg-muted text-muted-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">MATCH OVER</span>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            {renderTeamSide(teamA, 'left')}
+            <div className="flex flex-col items-center px-4">
+              <div className="font-black text-xl text-foreground">
+                {isAllSquare
+                  ? 'AS'
+                  : isOver && fourballResult.winMargin
+                    ? fourballResult.winMargin
+                    : `${fourballResult.holesUp} UP`}
+              </div>
+              <p className="text-[10px] text-muted-foreground font-medium">
+                Thru {fourballResult.holesPlayed} • {fourballResult.holesRemaining} to play
+              </p>
+            </div>
+            {renderTeamSide(teamB, 'right')}
+          </div>
+        </div>
+      </motion.div>
+    );
   }
 
   // Match Play 2-player display
