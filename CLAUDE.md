@@ -330,6 +330,21 @@ Phase P2.1 (Supabase advisor hardening) complete:
   - Added `SET search_path = public` to 9 trigger/utility functions (8 in main migration + `has_round_access` in followup).
 - Advisor count: 66 → 57 WARN (9 fixed). Remaining 57 documented below.
 
+Phase P3 audits landed (no production code changed — docs only):
+- **`docs/sentry-release-tracking.md`** (C1 audit). 3 HIGH gaps:
+  1. CI never builds in production mode → Sentry release plugin always short-circuits → no source maps uploaded by automation.
+  2. iOS Xcode archive has no `bun run build:production && npx cap sync ios` step → whatever is sitting in `ios/App/App/public/` ships in the App Store binary.
+  3. `docs/NATIVE_BUILD.md` runbook never mentions the 4 Sentry env vars (`VITE_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`).
+  - The happy path **does** work locally if all 4 envs are set + `bun run build:production` is invoked. Past App Store builds have likely shipped without uploaded sourcemaps.
+  - **Side issue:** if `SENTRY_AUTH_TOKEN` is missing, vite still emits `.map` files (since `build.sourcemap` is unconditionally true in production) — they leak into the iOS bundle.
+- **`docs/ios-release-pipeline.md`** (C2 audit). Maturity score 3/10. Top 3 blockers:
+  1. No App Store Connect API key wired into the Fastfile → `upload_to_testflight` would hang on 2FA.
+  2. No `match`-managed signing repo + no `Matchfile`. `lane :certs` is dead code.
+  3. No `.github/workflows/ios-release.yml`; code signing is `Automatic`.
+  - **Critical side finding:** `REVENUECAT_API_KEY = appl_xWFD…JGt` is a literal string in `ios/App/App.xcodeproj/project.pbxproj`, **committed to git**. RevenueCat publishable keys are designed to be public-ish (they're shipped to clients anyway), but having it in git history forever is suboptimal hygiene; rotation requires a new key + Xcode build settings update + new App Store binary.
+  - `Gemfile.lock` not committed → fastlane version drifts every run.
+  - Estimated effort to close: ~9 hours total.
+
 Open items (Phase P2+):
 - **Supabase security advisors** (56 WARN — most are false-positives now):
   - 54x SECURITY DEFINER predicate functions still flagged as callable by `anon`/`authenticated` via `/rest/v1/rpc/*`. **As of P2.1b they internally use `auth.uid()`** so RPC probing returns false/0/empty for any caller other than the auth'd user themselves. The advisor can't introspect that, so the warnings persist; the functions are no longer exploitable. RLS policies still pass `auth.uid()` through the `_user_id` param — preserved for compatibility.
