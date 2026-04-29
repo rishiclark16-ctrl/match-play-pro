@@ -1,6 +1,6 @@
 import { calculateMatchPlay, calculateFourballMatchPlay, generateMatchPlayHeadline } from './games/matchPlay';
-import { sendPushToProfiles } from './pushUtils';
-import { supabase } from '@/integrations/supabase/client';
+import { sendPushToProfiles as defaultSendPushToProfiles } from './pushUtils';
+import { supabase as defaultSupabase } from '@/integrations/supabase/client';
 import type { GameConfig, PlayerWithScores } from '@/types/golf';
 
 interface NotifyArgs {
@@ -16,6 +16,10 @@ interface NotifyArgs {
   roundScores: Array<{ player_id: string; hole_number: number; strokes: number }>;
   /** Persists updated games (e.g. with the resultHeadline) back to Supabase. */
   updateGames: (games: GameConfig[]) => void;
+  /** Test injection seam — defaults to the real sendPushToProfiles. */
+  sendPushToProfiles?: typeof defaultSendPushToProfiles;
+  /** Test injection seam — defaults to the real supabase client. */
+  supabase?: typeof defaultSupabase;
 }
 
 /**
@@ -30,6 +34,8 @@ export async function sendRoundCompletionNotifications({
   playersWithScores,
   roundScores,
   updateGames,
+  sendPushToProfiles = defaultSendPushToProfiles,
+  supabase = defaultSupabase,
 }: NotifyArgs): Promise<void> {
   // Build game result headlines
   const headlines: string[] = [];
