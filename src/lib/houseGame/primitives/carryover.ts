@@ -1,0 +1,50 @@
+import { HouseGamePrimitive } from '@/types/houseGame';
+
+export const CARRYOVER_PRIMITIVES: HouseGamePrimitive[] = [
+  {
+    id: 'carryover_skins_halved',
+    category: 'carryover',
+    label: 'Skins carry on halved holes',
+    description: 'When a skins hole is halved (tied), the skin carries over and adds to the next hole\'s value.',
+    valueType: 'none',
+    defaultValue: null,
+    implemented: true,
+  },
+  {
+    id: 'carryover_cap',
+    category: 'carryover',
+    label: 'Carryover cap',
+    description: 'Limit the maximum number of skins (or units) that can accumulate via carryover.',
+    valueType: 'number',
+    valueConfig: { min: 1, max: 18, step: 1 },
+    defaultValue: 5,
+    implemented: true,
+  },
+  {
+    id: 'carryover_jackpot_18',
+    category: 'carryover',
+    label: 'Jackpot on hole 18',
+    description: 'All unclaimed carryover skins are decided on hole 18 regardless of a tie.',
+    valueType: 'none',
+    defaultValue: null,
+    implemented: true,
+  },
+  {
+    id: 'carryover_reset_on_win',
+    category: 'carryover',
+    label: 'Reset carryover after win',
+    description: 'The carryover pot resets to zero after any player wins it.',
+    valueType: 'none',
+    defaultValue: null,
+    implemented: false,
+  },
+  {
+    id: 'carryover_nassau_halved',
+    category: 'carryover',
+    label: 'Nassau carry on halved nine',
+    description: 'If a nine-hole Nassau match is halved, the stakes carry over to the next nine.',
+    valueType: 'none',
+    defaultValue: null,
+    implemented: false,
+  },
+];
