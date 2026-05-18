@@ -16,16 +16,15 @@ def capacitor_pods
   pod 'CapacitorCommunityKeepAwake', :path => '../../node_modules/@capacitor-community/keep-awake'
   pod 'CapacitorApp', :path => '../../node_modules/@capacitor/app'
   pod 'CapacitorHaptics', :path => '../../node_modules/@capacitor/haptics'
+  pod 'CapacitorPushNotifications', :path => '../../node_modules/@capacitor/push-notifications'
   pod 'CapacitorSplashScreen', :path => '../../node_modules/@capacitor/splash-screen'
   pod 'CapacitorStatusBar', :path => '../../node_modules/@capacitor/status-bar'
-
-  # RevenueCat for subscriptions
-  pod 'RevenueCat', '~> 5.0'
 end
 
 target 'App' do
   capacitor_pods
-  # Add your Pods here
+  # RevenueCat for subscriptions (must stay after cap sync; cap regenerates capacitor_pods but leaves this target block alone)
+  pod 'RevenueCat', '~> 5.0'
 end
 
 post_install do |installer|
