@@ -72,7 +72,7 @@ ios/
 └── fastlane/
 
 supabase/
-├── functions/      # Edge functions (delete-account, validate-revenucat-webhook, etc.)
+├── functions/      # Edge functions (delete-account, subscription-webhook, etc.)
 └── migrations/     # 18 migration files
 ```
 
@@ -252,13 +252,13 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 ## Supabase Project
 - **Project ID:** `puqgbsxabcyxrbwwoznn`
 - **URL:** `https://puqgbsxabcyxrbwwoznn.supabase.co`
-- **Edge functions:** delete-account, validate-revenucat-webhook (+ others)
+- **Edge functions:** delete-account, subscription-webhook, sync-subscription, send-push, parse-house-game, golf-course-lookup, redeem-promo, sentry-webhook, speech-to-text, weekly-recap
 - **Migrations:** 20 files in `supabase/migrations/`
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1171 pass, 0 fail** (1171 tests across 48 files). All tests pass. Run with `bun test`. CI splits into two invocations:
-- `bun test src/hooks src/lib src/engine src/components` (1168 tests)
+**1204 pass, 0 fail** (1204 tests across 52 files). All tests pass. Run with `bun test`. CI splits into two invocations:
+- `bun test src/hooks src/lib src/engine src/components` (1201 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
 **Why split:** module mocks (`vi.mock` and bun's `mock.module`) leak into downstream files when bun's CI scheduler reuses workers. Running pages in their own `bun test` invocation gives them a fresh process and keeps hook/lib tests pristine. Page-test factories must include every named export the page tree imports at module load (e.g., `TIER_LIMITS` from `useSubscription` is read by `PlayersStep`).
@@ -339,6 +339,12 @@ Open items (Phase P2+):
 - File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224), ✅ `NewRound.tsx` **494** (was 1100, under target), `Scorecard.tsx` 732 (was 1123), `RoundComplete.tsx` 639 (was 976), `Profile.tsx` 709 (was 831), `Stats.tsx` 520 (was 833, just over), `Home.tsx` 509 (was 699, just 9 over).
 - Component/page test coverage is bootstrapping — Scorecard + NewRound have early-return smoke tests; rest of pages still untested.
 - 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
+
+Phase P2.11 (subscription observability) — 2026-05-18:
+- **First paying user identified:** David Hooper (auth user `ade8435c-233a-4c33-bdd7-eee2d29e443f`, Apple relay `gskvthf467@privaterelay.appleid.com`). Signed up 2026-05-15 12:54 UTC, fired `subscription_started` 14 min later at 13:08 UTC after `response.success === true` from RevenueCat. Profile still shows `subscription_tier: free` because the Supabase write path is broken at two points (see below).
+- **Root cause of subscription pipeline outage:** `subscription-webhook` was deployed with Supabase's default `verify_jwt = true`. RevenueCat sends `Authorization: Bearer <REVENUECAT_WEBHOOK_AUTH>` (a random shared secret, not a Supabase JWT), so Supabase's API gateway rejected every webhook with 401 *before the function code ran* — that's why edge function logs were empty and `subscription_transactions` was empty across all time. Every RC webhook delivery since 2026-02-26 (~30 deliveries) shows Failure in the RC dashboard for the same reason. Fixed in `supabase/config.toml` by adding `[functions.subscription-webhook] verify_jwt = false`. The function still validates the `REVENUECAT_WEBHOOK_AUTH` bearer at line 300, so disabling the platform-level JWT check does not weaken auth. **Requires `supabase functions deploy subscription-webhook` to take effect in prod.** After deploy, retry the failed deliveries from the RC dashboard (or wait for the next renewal) to auto-recover David's row via the webhook's `INITIAL_PURCHASE` upsert path.
+- **Silent failure in `syncSubscriptionToSupabase`** (`src/services/purchases.ts`): previously all three failure paths used `logger.warn`, which does not report to Sentry unless `report: true` is passed (see `src/lib/logger.ts:53-60`). All three branches now use `logger.error`, which auto-reports in production. Call site in `purchasePackage` now escalates to `logger.error` when `response.success === true` but `synced === false` (Apple charged, Supabase didn't record).
+- Pending: (1) recover David's `subscriptions` row once `original_transaction_id`/`product_id`/`expires_at` are pulled from the RevenueCat dashboard, (2) verify and re-configure the RevenueCat webhook endpoint + auth header.
 
 Phase P2.3 (Scorecard split) — multi-wave:
 - Extracted `sendRoundCompletionNotifications` (73 lines) → `src/lib/roundCompletionNotifier.ts`.

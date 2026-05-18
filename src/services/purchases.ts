@@ -196,12 +196,21 @@ export async function purchasePackage(packageIdentifier: string): Promise<Purcha
 
     logger.debug('Parsed customerInfo', { data: { customerInfo } });
 
-    // Sync to Supabase
+    // Sync to Supabase — if Apple confirmed the purchase but Supabase didn't
+    // record it, the user paid and has no Pro entitlement in our DB. Escalate.
     if (customerInfo) {
       const synced = await syncSubscriptionToSupabase(customerInfo);
-      logger.debug('Sync result', { data: { synced } });
-    } else {
-      logger.warn('No customerInfo returned from purchase');
+      if (response.success && !synced) {
+        logger.error('Purchase succeeded at Apple but Supabase sync failed', undefined, {
+          data: { packageId: packageIdentifier, activeSubscription: customerInfo.activeSubscription },
+        });
+      } else {
+        logger.debug('Sync result', { data: { synced } });
+      }
+    } else if (response.success) {
+      logger.error('Purchase succeeded but no customerInfo returned', undefined, {
+        data: { packageId: packageIdentifier },
+      });
     }
 
     if (response.success) {
@@ -309,7 +318,9 @@ export async function syncSubscriptionToSupabase(customerInfo: CustomerInfo): Pr
     // Refresh session before calling edge function to avoid 401 on stale tokens
     const { error: refreshError } = await supabase.auth.refreshSession();
     if (refreshError) {
-      logger.warn('Session refresh failed before sync', refreshError);
+      logger.error('sync-subscription: session refresh failed', refreshError, {
+        data: { isPro: customerInfo.isPro, activeSubscription: customerInfo.activeSubscription },
+      });
       return false;
     }
 
@@ -323,15 +334,18 @@ export async function syncSubscriptionToSupabase(customerInfo: CustomerInfo): Pr
     });
 
     if (error) {
-      logger.warn('Failed to sync to Supabase', error);
+      logger.error('sync-subscription: edge function returned error', error, {
+        data: { isPro: customerInfo.isPro, activeSubscription: customerInfo.activeSubscription },
+      });
       return false;
     }
 
     logger.debug('Sync successful', { data: { result: data } });
     return true;
   } catch (error) {
-    // Catch FunctionsHttpError so it doesn't bubble to Sentry as unhandled
-    logger.warn('Sync subscription error (non-fatal)', error);
+    logger.error('sync-subscription: unexpected exception', error, {
+      data: { isPro: customerInfo.isPro, activeSubscription: customerInfo.activeSubscription },
+    });
     return false;
   }
 }
