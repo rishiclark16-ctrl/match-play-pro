@@ -331,20 +331,39 @@ Phase P2.1 (Supabase advisor hardening) complete:
 - Advisor count: 66 → 57 WARN (9 fixed). Remaining 57 documented below.
 
 Open items (Phase P2+):
-- **Supabase security advisors** (56 WARN — most are false-positives now):
-  - 54x SECURITY DEFINER predicate functions still flagged as callable by `anon`/`authenticated` via `/rest/v1/rpc/*`. **As of P2.1b they internally use `auth.uid()`** so RPC probing returns false/0/empty for any caller other than the auth'd user themselves. The advisor can't introspect that, so the warnings persist; the functions are no longer exploitable. RLS policies still pass `auth.uid()` through the `_user_id` param — preserved for compatibility.
+- **Supabase security advisors** (now documented in `docs/supabase-advisors.md`):
+  - 54x SECURITY DEFINER predicate functions internally use `auth.uid()` (migrations 20260427100000 + 20260428000000 + 20260518000000) — advisor still flags them but they're not exploitable.
   - 1x leaked-password protection — Supabase dashboard toggle (Auth → Settings → Auth Providers → Email).
   - 1x extension `pg_net` in public schema — cosmetic, low risk.
-  - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional — deny-all by default; service role bypasses).
-- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224), ✅ `NewRound.tsx` **494** (was 1100, under target), `Scorecard.tsx` 732 (was 1123), `RoundComplete.tsx` 639 (was 976), `Profile.tsx` 709 (was 831), `Stats.tsx` 520 (was 833, just over), `Home.tsx` 509 (was 699, just 9 over).
+  - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional deny-all; service role bypasses).
+- File-size violators (>500 lines): `Scorecard.tsx` 732 (was 1123), `RoundComplete.tsx` 639 (was 976), `Profile.tsx` 709 (was 831), `Stats.tsx` 520 (was 833), `Home.tsx` 509 (was 699). Many P2.x splits already shipped — see phases below.
 - Component/page test coverage is bootstrapping — Scorecard + NewRound have early-return smoke tests; rest of pages still untested.
-- 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
+- 14 lint warnings (all `react-refresh/only-export-components` HMR cosmetic, no functional impact).
+- 19 lingering `useEffect` dep warnings (non-critical paths — review opportunistically).
+- **Untracked working-tree decisions still pending**: `remotion/` (marketing video code in limbo), `brand/`, `Match Golf Documentation/`, `content/`, `public/audio/`, `public/screens/`, `out/` (rendered video output, NOT a build artifact). User must decide commit-or-gitignore for each.
+- **29 historical RC webhook deliveries** in the dashboard still show Failure. Resend in the RC dashboard to backfill any test transactions / renewal events (David's INITIAL_PURCHASE on 2026-05-15 already resent and recovered).
+- **PostHog free tier caps**: 2 alerts max + no scheduled subscriptions. Exception-anomaly alert and weekly Slack digest both blocked by paywall (dashboard itself exists at PostHog dashboard 1597463).
 
 Phase P2.11 (subscription observability) — 2026-05-18:
 - **First paying user identified:** David Hooper (auth user `ade8435c-233a-4c33-bdd7-eee2d29e443f`, Apple relay `gskvthf467@privaterelay.appleid.com`). Signed up 2026-05-15 12:54 UTC, fired `subscription_started` 14 min later at 13:08 UTC after `response.success === true` from RevenueCat. Profile still shows `subscription_tier: free` because the Supabase write path is broken at two points (see below).
 - **Root cause of subscription pipeline outage:** `subscription-webhook` was deployed with Supabase's default `verify_jwt = true`. RevenueCat sends `Authorization: Bearer <REVENUECAT_WEBHOOK_AUTH>` (a random shared secret, not a Supabase JWT), so Supabase's API gateway rejected every webhook with 401 *before the function code ran* — that's why edge function logs were empty and `subscription_transactions` was empty across all time. Every RC webhook delivery since 2026-02-26 (~30 deliveries) shows Failure in the RC dashboard for the same reason. Fixed in `supabase/config.toml` by adding `[functions.subscription-webhook] verify_jwt = false`. The function still validates the `REVENUECAT_WEBHOOK_AUTH` bearer at line 300, so disabling the platform-level JWT check does not weaken auth. **Requires `supabase functions deploy subscription-webhook` to take effect in prod.** After deploy, retry the failed deliveries from the RC dashboard (or wait for the next renewal) to auto-recover David's row via the webhook's `INITIAL_PURCHASE` upsert path.
 - **Silent failure in `syncSubscriptionToSupabase`** (`src/services/purchases.ts`): previously all three failure paths used `logger.warn`, which does not report to Sentry unless `report: true` is passed (see `src/lib/logger.ts:53-60`). All three branches now use `logger.error`, which auto-reports in production. Call site in `purchasePackage` now escalates to `logger.error` when `response.success === true` but `synced === false` (Apple charged, Supabase didn't record).
 - Pending: (1) recover David's `subscriptions` row once `original_transaction_id`/`product_id`/`expires_at` are pulled from the RevenueCat dashboard, (2) verify and re-configure the RevenueCat webhook endpoint + auth header.
+- **Resolved 2026-05-18 (later same day):** David's row recovered with full RC data via webhook retry. `subscriptions.product_id=dev.matchgolf.pro_annual`, `original_transaction_id=200003362012807`, `expires_at=2027-05-15 13:08:33+00`. First `subscription_transactions` row in DB ever. Pipeline fully functional going forward.
+
+Phase P2.12 (cleanup sweep + analytics) — 2026-05-18:
+- **Sentry webhook unblocked**: same JWT-gateway bug as `subscription-webhook`. Added `[functions.sentry-webhook] verify_jwt = false` to `supabase/config.toml`, redeployed via MCP (v9). `redeem-promo` audited and intentionally left as `verify_jwt = true` (uses Supabase `auth.getUser()`). Smoke-tested both with bogus bearer.
+- **Security migration `20260518000000_close_remaining_advisor_gaps`** (applied to prod): closed 2 real exploits found by the audit — `handle_new_user()` and `check_push_rate_limit(p_user_id, ...)` are now revoked from `anon`, `authenticated`, `PUBLIC`. `get_social_feed_round_ids(viewer_id)` rewritten to pin `auth.uid()` internally (matches sibling `get_social_feed_rounds` from migration `20260427100000`). 3 lower-priority items (`is_round_complete`, `lookup_round_by_join_code` — intentional, `get_social_feed_round_ids` variant) are documented in `docs/supabase-advisors.md`.
+- **`.gitignore` hygiene**: 4 entries added (`.claude-flow/`, `.agents/`, `.playwright-mcp/`, `ios/App/.claude-flow/`). 67 untracked files → ~50 (the remaining ~50 are marketing/asset directories pending user decision).
+- **iOS CI added**: new GHA job `ios-sync-check` on `macos-latest` (~25 min, Pods cached by Podfile.lock hash). Runs `bun install` + `bun run build` + `bunx cap sync ios` + `pod install`. Catches Capacitor/CocoaPods drift before App Store submission.
+- **Three file splits** (P2.x continuation):
+  - `formatStepSections.tsx` 785 → 12 (barrel) + 10 files under `src/components/golf/formatSections/`.
+  - `GroupLedgerView.tsx` 716 → 391 + 6 files under `src/components/groups/ledger/`.
+  - `houseGame/primitives.ts` 742 → 48 (barrel) + 8 files under `src/lib/houseGame/primitives/`.
+- **PostHog ↔ Slack** (Match Golf workspace, integration id 172350):
+  - Layer 1 (real-time → `#match-events`, channel `C0B4H4G6EM7`): 4 destinations on `subscription_started` / `user_signed_up` / `subscription_restored` / `Application installed`.
+  - Layer 2 (alerts → `#match-alerts`, channel `C0B4BT8UR7F`): insights `SYo55j3o` + `Me67c7Jz` paired with alerts that fire when value < 1 on the trailing 7d / 24h windows. Internal destinations route firing events. **3rd alert (exception anomaly) blocked by 2-alert free-tier cap** — use Sentry → Slack instead for error spikes.
+  - Layer 3 (weekly digest → `#match-weekly`, channel `C0B4D7AL8QN`): dashboard 1597463 ("MATCH Golf — Weekly Health") with 5 tiles (signups, paying customers, rounds completed, DAU, exceptions). **Scheduled subscription blocked by free-tier paywall** — dashboard is built and pinned-ready, user has to either upgrade PostHog or wire a Supabase cron → PostHog query → Slack webhook as a workaround.
 
 Phase P2.3 (Scorecard split) — multi-wave:
 - Extracted `sendRoundCompletionNotifications` (73 lines) → `src/lib/roundCompletionNotifier.ts`.
