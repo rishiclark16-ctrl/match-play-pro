@@ -47,3 +47,9 @@ test-results/
 *.sw?
 ios/App/App/Config.xcconfig
 AuthKey_*.p8
+
+# Agent runtime / build output noise
+.claude-flow/
+.agents/
+.playwright-mcp/
+ios/App/.claude-flow/
