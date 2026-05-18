@@ -22,7 +22,7 @@ import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { validatePlayerName, validateHandicap, sanitizeString } from '@/lib/validation';
+import { validatePlayerName, validateHandicap, sanitizeString, normalizePhone } from '@/lib/validation';
 import { RowLabel, Row, SectionLabel, Card } from '@/components/profile/ProfileRowPrimitives';
 import { NotificationSettings } from '@/components/profile/NotificationSettings';
 
@@ -106,7 +106,9 @@ export default function Profile() {
     const parsedHandicap = handicap ? parseFloat(handicap) : NaN;
     const canonicalHandicap = isNaN(parsedHandicap) ? null : Math.round(parsedHandicap * 10) / 10;
     const canonicalEmail = discoveryEmail.trim().toLowerCase() || null;
-    const canonicalPhone = sanitizeString(discoveryPhone) || null;
+    // Phone is stored digits-only (matches the normalize_profile_fields trigger),
+    // so canonicalize the same way or hasChanges never settles → infinite save loop.
+    const canonicalPhone = normalizePhone(discoveryPhone) || null;
 
     const hasChanges =
       canonicalName !== (profile.full_name ?? null) ||

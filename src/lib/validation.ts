@@ -18,6 +18,15 @@ export function sanitizeString(input: string): string {
 }
 
 /**
+ * Normalizes a phone number to digits only.
+ * Storage and search MUST use the same canonical form — this matches the
+ * `normalize_profile_fields` DB trigger so friend search reliably matches.
+ */
+export function normalizePhone(input: string | null | undefined): string {
+  return (input ?? '').replace(/\D/g, '');
+}
+
+/**
  * Player name validation
  * - 1-50 characters after trimming
  * - No HTML tags or dangerous characters

@@ -8,6 +8,7 @@ import {
   searchRateLimiter,
   formatResetTime,
 } from '@/lib/rateLimiter';
+import { normalizePhone } from '@/lib/validation';
 
 export interface Friend {
   id: string;
@@ -365,8 +366,8 @@ export function useFriends() {
     }
 
     try {
-      // Normalize phone - remove common formatting characters
-      const normalizedPhone = phone.replace(/[\s\-()+ ]/g, '').trim();
+      // Normalize phone to digits only — matches how profiles.phone is stored
+      const normalizedPhone = normalizePhone(phone);
 
       // Find user by phone in profiles (try both with and without formatting)
       const { data: profiles, error: profileError } = await supabase
@@ -378,7 +379,8 @@ export function useFriends() {
 
       // Find matching phone (normalize stored phones too)
       const matchingProfile = profiles?.find((p) => {
-        const storedPhone = p.phone?.replace(/[\s\-()+ ]/g, '') || '';
+        const storedPhone = normalizePhone(p.phone);
+        if (!storedPhone || !normalizedPhone) return false;
         return (
           storedPhone === normalizedPhone ||
           storedPhone.endsWith(normalizedPhone) ||
@@ -477,8 +479,10 @@ export function useFriends() {
     }
   };
 
-  const searchByName = useCallback(async (query: string): Promise<SearchResult[]> => {
-    if (!query || query.length < 2) return [];
+  const searchByName = useCallback(async (rawQuery: string): Promise<SearchResult[]> => {
+    // Trim so accidental leading/trailing spaces don't break the ILIKE match
+    const query = (rawQuery ?? '').trim();
+    if (query.length < 2) return [];
     if (!user) return [];
 
     const rateLimitResult = searchRateLimiter.checkAndRecord(user.id);
@@ -486,8 +490,8 @@ export function useFriends() {
 
     try {
       // Search by name OR email prefix (e.g. "rishiclark16" matches email)
-      // Normalize query for phone matching (strip formatting)
-      const phoneQuery = query.replace(/[\s\-()+ ]/g, '');
+      // Normalize query for phone matching (digits only — matches stored form)
+      const phoneQuery = normalizePhone(query);
       const isPhoneLike = /^\d{3,}$/.test(phoneQuery);
 
       let orFilter = `full_name.ilike.%${query}%,email.ilike.${query}%`;
@@ -522,8 +526,9 @@ export function useFriends() {
     }
   }, [user]);
 
-  const searchByCode = useCallback(async (code: string): Promise<SearchResult | null> => {
-    if (!code || code.length < 3) return null;
+  const searchByCode = useCallback(async (rawCode: string): Promise<SearchResult | null> => {
+    const code = (rawCode ?? '').trim();
+    if (code.length < 3) return null;
     if (!user) return null;
 
     const rateLimitResult = searchRateLimiter.checkAndRecord(user.id);

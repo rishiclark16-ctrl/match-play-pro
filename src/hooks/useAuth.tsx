@@ -180,16 +180,29 @@ export function useAuth() {
         }
       }
 
-      // Update user metadata with Apple-provided name if available
+      // Persist the Apple-provided name. Apple delivers the name in the native
+      // credential (not the identity-token JWT), so the handle_new_user trigger
+      // has already created the profile row with a NULL name by this point.
+      // Write the name to BOTH auth metadata and the profile row directly so
+      // the user is searchable by name immediately. The profile UPDATE only
+      // fills a NULL so a returning user's edited name is never clobbered.
       if (result.response.givenName || result.response.familyName) {
         const fullName = [result.response.givenName, result.response.familyName]
           .filter(Boolean)
-          .join(' ');
+          .join(' ')
+          .trim();
 
         if (fullName) {
           await supabase.auth.updateUser({
             data: { full_name: fullName }
           });
+          if (data.user?.id) {
+            await supabase
+              .from('profiles')
+              .update({ full_name: fullName })
+              .eq('id', data.user.id)
+              .is('full_name', null);
+          }
         }
       }
 

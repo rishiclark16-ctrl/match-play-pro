@@ -190,19 +190,22 @@ export function useProfile() {
     }
 
     try {
-      const { error: updateError } = await supabase
+      const { data, error: updateError } = await supabase
         .from('profiles')
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id)
-        .select();
+        .select()
+        .single();
 
       if (updateError) throw updateError;
 
-      // Update local state
-      setProfile(prev => prev ? { ...prev, ...updates } : null);
+      // Sync local state from the row the DB returned, so server-side
+      // normalization (phone digits-only, email lowercased, name trimmed by the
+      // normalize_profile_fields trigger) is reflected without a refetch.
+      setProfile(prev => prev ? { ...prev, ...(data ?? updates) } : null);
       return true;
     } catch (err) {
       console.error('[useProfile] Update failed:', err);

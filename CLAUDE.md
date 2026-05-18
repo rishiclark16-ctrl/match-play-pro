@@ -253,7 +253,7 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Project ID:** `puqgbsxabcyxrbwwoznn`
 - **URL:** `https://puqgbsxabcyxrbwwoznn.supabase.co`
 - **Edge functions:** delete-account, subscription-webhook, sync-subscription, send-push, parse-house-game, golf-course-lookup, redeem-promo, sentry-webhook, speech-to-text, weekly-recap
-- **Migrations:** 20 files in `supabase/migrations/`
+- **Migrations:** 22 files in `supabase/migrations/`
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
@@ -365,6 +365,24 @@ Phase P2.12 (cleanup sweep + analytics) — 2026-05-18:
   - Layer 2 (alerts → `#match-alerts`, channel `C0B4BT8UR7F`): insights `SYo55j3o` + `Me67c7Jz` paired with alerts that fire when value < 1 on the trailing 7d / 24h windows. Internal destinations route firing events. **3rd alert (exception anomaly) blocked by 2-alert free-tier cap** — use Sentry → Slack instead for error spikes.
   - Layer 3 (weekly digest → `#match-weekly`, channel `C0B4D7AL8QN`): dashboard 1597463 ("MATCH Golf — Weekly Health") with 5 tiles (signups, paying customers, rounds completed, DAU, exceptions). **Scheduled subscription blocked by free-tier paywall** — dashboard is built and pinned-ready, user has to either upgrade PostHog or wire a Supabase cron → PostHog query → Slack webhook as a workaround.
 
+Phase P2.13 (friend search — every user has a searchable name) — 2026-05-18:
+- **Symptom:** paying user David Hooper (and 8 others) could not be found in the "by name" friend search. Root cause: Apple Sign-In delivers the user's name in the native credential, **not** in the identity-token JWT. `handle_new_user()` fires on the `auth.users` INSERT during `signInWithIdToken()` — before the name is available — so `profiles.full_name` was created `NULL`. The app then calls `supabase.auth.updateUser()` which writes the name into `auth.users` metadata, but nothing propagated it to `public.profiles`. `searchByName` runs `full_name ILIKE '%q%'`, which never matches `NULL`. 9 of 58 profiles (all Apple sign-ins) were affected.
+- **Migration `20260518100000_sync_user_name_to_profile`** (applied to prod): (1) backfilled all 9 null `profiles.full_name` from `auth.users.raw_user_meta_data->>'full_name'` (all 9 had a name stranded in metadata); (2) `handle_new_user()` now trims the name and normalises empty→NULL on INSERT; (3) new `sync_user_name_to_profile()` + `on_auth_user_updated_sync_name` trigger — `AFTER UPDATE ON auth.users` (guarded by `WHEN old.raw_user_meta_data IS DISTINCT FROM new.raw_user_meta_data`) copies the metadata name into `profiles.full_name` whenever the profile name is still empty. This auto-catches the post-sign-in `updateUser()` call. Only fills NULL/empty, so a user's manual profile edit is never clobbered. The new trigger function is `REVOKE`d from `anon/authenticated/public` (CVE hygiene; PG doesn't check EXECUTE on trigger functions so the trigger still fires).
+- **`src/hooks/useAuth.tsx`** — `signInWithAppleAuth` now writes the Apple name directly to `profiles` (`.update({ full_name }).eq('id', …).is('full_name', null)`) in addition to `updateUser()`, so the name is searchable immediately without waiting on the trigger.
+- **`src/pages/Onboarding.tsx`** — added a required "What's your name?" step as **step 1 of 6** (was 5 steps). Pre-filled from the existing profile; `validatePlayerName` enforced; Continue disabled + Skip hidden when empty. Guarantees users whose name Apple never returned (e.g. re-install) still get one. Step counter is now dynamic (`Step {n} of {STEPS.length}`).
+- Test baseline unchanged: **1204 pass + 3 page tests**. Build + lint clean.
+
+Phase P2.13b (profile contact-field normalization — search reliability) — 2026-05-18:
+- **Audit of the onboarding → profiles → friend-search pipeline.** Current data was clean (0 uppercase emails, 0 untrimmed names, all 5 stored phones digit-only) but the pipeline had **latent** bugs that would corrupt search the moment a user entered a formatted phone or mixed-case email:
+  - Phone was stored as typed. `searchByName`/`sendFriendRequestByPhone` strip formatting to digits for the query — so a phone stored `(555) 123-4567` would never match an `ILIKE %5551234567%`.
+  - `sendFriendRequestByEmail` uses exact match (`.eq`); a mixed-case stored email would miss a lowercased query.
+  - `searchByName`/`searchByCode` did not trim the input query — a search with stray spaces failed the `ILIKE`/`.eq`.
+- **Migration `20260518110000_normalize_profile_contact_fields`** (applied to prod): new `normalize_profile_fields()` + `normalize_profile_fields_trigger` (`BEFORE INSERT OR UPDATE ON public.profiles`) canonicalises every write regardless of caller — `full_name` trimmed, `email` lowercased+trimmed, `phone` reduced to digits only (empty→NULL). Existing rows backfilled. Verified live: writing `(515) 249-6053` / `GsKvThF467@PrivateRelay.AppleID.com` stored as `5152496053` / `gskvthf467@privaterelay.appleid.com`. Function `REVOKE`d from `anon/authenticated/public`.
+- **App-side** (single canonical form, matches the trigger): new `normalizePhone()` helper in `src/lib/validation.ts` (digits only). `useFriends.ts` — `searchByName`/`searchByCode` now trim the query; all phone normalization routed through `normalizePhone`. `Profile.tsx` — `canonicalPhone` uses `normalizePhone` so autosave change-detection settles (no infinite save loop now that the DB stores digits-only). `Onboarding.tsx` — phone normalized to digits before save. `useProfile.ts` — `updateProfile` now syncs local state from the DB-returned row (`.select().single()`) so server-side normalization is reflected without a refetch.
+- **RLS note:** the `profiles` SELECT policy `Authenticated users can view any profile for discovery` (`auth.uid() IS NOT NULL`) makes every profile searchable to any authenticated user — search is not RLS-gated. The narrower `Users can search profiles` policy is effectively superseded by it. Intentional for friend discovery; flagged here for awareness.
+- **Not done (product decision):** onboarding still does not collect a discovery email — Apple users keep their `@privaterelay.appleid.com` address until they set a real one in Profile. They remain findable by name, friend code, and phone.
+- Test baseline unchanged: **1204 pass + 3 page tests**. Build + lint clean.
+
 Phase P2.3 (Scorecard split) — multi-wave:
 - Extracted `sendRoundCompletionNotifications` (73 lines) → `src/lib/roundCompletionNotifier.ts`.
 - Extracted `fireScoreSideEffects` (47 lines) → `src/lib/scoreSideEffects.ts` (hole-in-one / eagle / score-entered-for-you push notifications).
@@ -435,7 +453,7 @@ Phase P2.2 + P2.2b (bundle profiling + on-demand QR) complete:
 ## V2 Feature Status
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Onboarding flow (photo/handicap/tees/course) | ✅ Done | `has_onboarded` col, `/onboarding` route, `OnboardingRedirect` in App.tsx |
+| Onboarding flow (name/photo/handicap/tees/course) | ✅ Done | `has_onboarded` col, `/onboarding` route, `OnboardingRedirect` in App.tsx; name step is required (P2.13) |
 | App tutorial overlay | ✅ Done | `AppTutorial` component, triggered via `location.state.showTutorial` |
 | Personal game formats | ✅ Done | `personal_game_formats` table, `usePersonalGameFormats`, `/my-formats/*` routes |
 | Push notifications — round invites | ✅ Done | `useCreateSupabaseRound` → `sendPushToProfiles` → `send-push` edge fn |

@@ -1,13 +1,14 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Cropper, { Area } from 'react-easy-crop';
-import { Camera, ChevronRight, Check, X, ZoomIn, Phone } from 'lucide-react';
+import { Camera, ChevronRight, Check, X, ZoomIn, Phone, User } from 'lucide-react';
 import { useProfile, ProfileUpdate } from '@/hooks/useProfile';
 import { HomeCourseSelector } from '@/components/profile/HomeCourseSelector';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { validatePlayerName, normalizePhone } from '@/lib/validation';
 
 async function getCroppedFile(imageSrc: string, cropArea: Area, fileName: string): Promise<File> {
   const image = new Image();
@@ -42,15 +43,16 @@ const TEE_OPTIONS = [
   { label: 'Red', color: 'bg-red-500' },
 ];
 
-const STEPS = ['photo', 'phone', 'handicap', 'tees', 'course'] as const;
+const STEPS = ['name', 'photo', 'phone', 'handicap', 'tees', 'course'] as const;
 type OnboardingStep = typeof STEPS[number];
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { updateProfile, uploadAvatar } = useProfile();
+  const { profile, updateProfile, uploadAvatar } = useProfile();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [currentStep, setCurrentStep] = useState(0);
+  const [name, setName] = useState('');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [handicap, setHandicap] = useState('');
   const [teePreference, setTeePreference] = useState('');
@@ -68,6 +70,16 @@ export default function Onboarding() {
 
   const step: OnboardingStep = STEPS[currentStep];
   const isLastStep = currentStep === STEPS.length - 1;
+
+  // Pre-fill the name from the existing profile (Apple/email signups already
+  // have one). Users whose name never came through can set it here.
+  const namePrefilled = useRef(false);
+  useEffect(() => {
+    if (!namePrefilled.current && profile?.full_name) {
+      setName(profile.full_name);
+      namePrefilled.current = true;
+    }
+  }, [profile]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -127,11 +139,14 @@ export default function Onboarding() {
     setSaving(true);
     try {
       const updates: ProfileUpdate = { has_onboarded: true };
+      const trimmedName = name.trim();
+      if (trimmedName) updates.full_name = trimmedName;
       if (handicap !== '') updates.handicap = Number(handicap);
       if (teePreference) updates.tee_preference = teePreference;
       if (homeCourseId) updates.home_course_id = homeCourseId;
       if (homeCourseName) updates.home_course_name = homeCourseName;
-      if (phone.trim()) updates.phone = phone.trim();
+      const phoneDigits = normalizePhone(phone);
+      if (phoneDigits) updates.phone = phoneDigits;
       const success = await updateProfile(updates);
       if (!success) {
         toast.error('Failed to save profile. Please try again.');
@@ -151,6 +166,14 @@ export default function Onboarding() {
 
   const handleContinue = () => {
     hapticLight();
+    if (step === 'name') {
+      const result = validatePlayerName(name.trim());
+      if (!result.success) {
+        toast.error(result.error || 'Please enter a valid name');
+        hapticError();
+        return;
+      }
+    }
     if (isLastStep) {
       finish();
     } else {
@@ -185,12 +208,14 @@ export default function Onboarding() {
               />
             ))}
           </div>
-          <button
-            onClick={handleSkip}
-            className="text-[13px] font-bold text-muted-foreground py-1 px-2"
-          >
-            {isLastStep ? 'Finish' : 'Skip'}
-          </button>
+          {step !== 'name' && (
+            <button
+              onClick={handleSkip}
+              className="text-[13px] font-bold text-muted-foreground py-1 px-2"
+            >
+              {isLastStep ? 'Finish' : 'Skip'}
+            </button>
+          )}
         </div>
       </header>
 
@@ -198,7 +223,50 @@ export default function Onboarding() {
       <main className="flex-1 overflow-y-auto px-6">
         <AnimatePresence mode="wait">
 
-          {/* ── Step 1: Photo ── */}
+          {/* ── Step 1: Name ── */}
+          {step === 'name' && (
+            <motion.div
+              key="name"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              transition={spring}
+              className="flex flex-col pt-4"
+            >
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
+                Step {currentStep + 1} of {STEPS.length}
+              </p>
+              <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
+                What's your name?
+              </h1>
+              <p className="text-[15px] text-muted-foreground leading-relaxed mb-10">
+                This is how friends find and recognize you. A first name is fine.
+              </p>
+
+              <div className="bg-white rounded-2xl border-2 border-foreground/10 focus-within:border-foreground px-5 py-4 transition-colors">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Name
+                </p>
+                <div className="flex items-center gap-3">
+                  <User className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                  <input
+                    type="text"
+                    aria-label="Your name"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="Your name"
+                    autoFocus
+                    autoComplete="name"
+                    maxLength={50}
+                    className="w-full text-[24px] font-black text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30"
+                  />
+                </div>
+              </div>
+              <p className="text-[12px] text-muted-foreground mt-2 ml-1">Friends search for you by name</p>
+            </motion.div>
+          )}
+
+          {/* ── Step 2: Photo ── */}
           {step === 'photo' && (
             <motion.div
               key="photo"
@@ -209,7 +277,7 @@ export default function Onboarding() {
               className="flex flex-col pt-4"
             >
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step 1 of 5
+                Step {currentStep + 1} of {STEPS.length}
               </p>
               <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
                 Add a profile photo
@@ -256,7 +324,7 @@ export default function Onboarding() {
             </motion.div>
           )}
 
-          {/* ── Step 2: Phone ── */}
+          {/* ── Step 3: Phone ── */}
           {step === 'phone' && (
             <motion.div
               key="phone"
@@ -267,7 +335,7 @@ export default function Onboarding() {
               className="flex flex-col pt-4"
             >
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step 2 of 5
+                Step {currentStep + 1} of {STEPS.length}
               </p>
               <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
                 What's your number?
@@ -298,7 +366,7 @@ export default function Onboarding() {
             </motion.div>
           )}
 
-          {/* ── Step 3: Handicap ── */}
+          {/* ── Step 4: Handicap ── */}
           {step === 'handicap' && (
             <motion.div
               key="handicap"
@@ -309,7 +377,7 @@ export default function Onboarding() {
               className="flex flex-col pt-4"
             >
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step 3 of 5
+                Step {currentStep + 1} of {STEPS.length}
               </p>
               <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
                 What's your handicap?
@@ -340,7 +408,7 @@ export default function Onboarding() {
             </motion.div>
           )}
 
-          {/* ── Step 4: Tee Preference ── */}
+          {/* ── Step 5: Tee Preference ── */}
           {step === 'tees' && (
             <motion.div
               key="tees"
@@ -351,7 +419,7 @@ export default function Onboarding() {
               className="flex flex-col pt-4"
             >
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step 4 of 5
+                Step {currentStep + 1} of {STEPS.length}
               </p>
               <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
                 Which tees do you play?
@@ -387,7 +455,7 @@ export default function Onboarding() {
             </motion.div>
           )}
 
-          {/* ── Step 5: Home Course ── */}
+          {/* ── Step 6: Home Course ── */}
           {step === 'course' && (
             <motion.div
               key="course"
@@ -398,7 +466,7 @@ export default function Onboarding() {
               className="flex flex-col pt-4"
             >
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step 5 of 5
+                Step {currentStep + 1} of {STEPS.length}
               </p>
               <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
                 Where do you play?
@@ -437,7 +505,7 @@ export default function Onboarding() {
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={handleContinue}
-            disabled={saving}
+            disabled={saving || (step === 'name' && !name.trim())}
             className="flex-1 bg-foreground text-background rounded-2xl h-[54px] font-bold text-[15px] flex items-center justify-center gap-2 disabled:opacity-40"
           >
             {saving ? (
