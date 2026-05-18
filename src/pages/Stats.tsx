@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPin,
@@ -12,6 +12,7 @@ import {
   BarChart3,
   Star,
   Award,
+  ChevronRight,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
@@ -28,6 +29,7 @@ const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
 export default function Stats() {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<GolfStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -80,16 +82,21 @@ export default function Stats() {
         <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">MATCH Golf</p>
         <h1 className="text-[22px] font-black tracking-[-0.04em] leading-tight text-foreground">Stats</h1>
       </div>
-      <motion.div
+      <motion.button
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
+        whileTap={{ scale: 0.95 }}
         transition={spring}
-        className="bg-muted rounded-xl px-3 py-1.5"
+        onClick={() => { hapticLight(); navigate('/rounds'); }}
+        aria-label="View all rounds"
+        className="bg-muted rounded-xl pl-3 pr-2 py-1.5 flex items-center gap-1 active:bg-muted/80"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         <span className="text-[12px] font-bold text-foreground tabular-nums">
           {stats?.roundsPlayed || 0} {stats?.roundsPlayed === 1 ? 'round' : 'rounds'}
         </span>
-      </motion.div>
+        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+      </motion.button>
     </div>
   );
 

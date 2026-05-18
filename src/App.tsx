@@ -32,6 +32,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Social = lazy(() => import("./pages/Social"));
 const Groups = lazy(() => import("./pages/Groups"));
 const Stats = lazy(() => import("./pages/Stats"));
+const RoundsList = lazy(() => import("./pages/RoundsList"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const HouseGameBuilder = lazy(() => import("./pages/HouseGameBuilder"));
 const HouseGameConfirm = lazy(() => import("./pages/HouseGameConfirm"));
@@ -246,6 +247,16 @@ function AppContent() {
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="default" />}>
                 <Stats />
+              </Suspense>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/rounds"
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <RoundsList />
               </Suspense>
             </AuthGuard>
           }
