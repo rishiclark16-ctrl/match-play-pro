@@ -1,0 +1,72 @@
+import { HouseGamePrimitive } from '@/types/houseGame';
+
+// NOTE: `group_sixes` (also category 'group') is intentionally kept in scoring.ts to
+// preserve original PRIMITIVES array ordering. See scoring.ts for the rationale.
+export const GROUP_PRIMITIVES: HouseGamePrimitive[] = [
+  {
+    id: 'group_min_players',
+    category: 'group',
+    label: 'Minimum players',
+    description: 'Minimum number of players required to run this game format.',
+    valueType: 'number',
+    valueConfig: { min: 2, max: 8, step: 1 },
+    defaultValue: 2,
+    implemented: false,
+  },
+  {
+    id: 'group_pickup_rule',
+    category: 'group',
+    label: 'Pickup rule',
+    description: 'Players may pick up (record max score) once they are out of contention on a hole.',
+    valueType: 'none',
+    defaultValue: null,
+    implemented: false,
+  },
+  {
+    id: 'group_sub_in',
+    category: 'group',
+    label: 'Sub-in handicap adjustment',
+    description: 'Adjust the handicap strokes for a substitute player entering mid-round.',
+    valueType: 'number',
+    valueConfig: { min: 0, max: 36, step: 1 },
+    defaultValue: 0,
+    implemented: false,
+  },
+  {
+    id: 'group_teams_fixed',
+    category: 'group',
+    label: 'Fixed teams',
+    description: 'Teams are set before the round and do not change.',
+    valueType: 'none',
+    defaultValue: null,
+    implemented: false,
+  },
+  {
+    id: 'group_teams_rotating',
+    category: 'group',
+    label: 'Rotating teams',
+    description: 'Team assignments rotate on a schedule (e.g., every six holes).',
+    valueType: 'none',
+    defaultValue: null,
+    implemented: false,
+  },
+  {
+    id: 'group_wolf_lone_multiplier',
+    category: 'group',
+    label: 'Wolf lone-wolf multiplier',
+    description: 'When the Wolf goes it alone, winnings/losses are multiplied by this factor.',
+    valueType: 'number',
+    valueConfig: { min: 1, max: 4, step: 1 },
+    defaultValue: 2,
+    implemented: false,
+  },
+  {
+    id: 'group_point_bank',
+    category: 'group',
+    label: 'Point bank',
+    description: 'Track a shared point bank that players contribute to and draw from over multiple rounds.',
+    valueType: 'none',
+    defaultValue: null,
+    implemented: false,
+  },
+];
