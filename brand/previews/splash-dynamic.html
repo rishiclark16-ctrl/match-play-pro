@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MATCH Golf — Dynamic Splash Concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Strict brand tokens */
+    --napkin:        #efeadb;
+    --napkin-deep:   #e6e0cc;
+    --napkin-fold:   #d8d2bf;
+    --ink:           #1a1a1a;
+    --ink-soft:      #0a0a0a;
+    --gold:          #f0ee3a;
+    --gold-deep:     #d4cd00;
+
+    /* Gallery only */
+    --paper:         #f5f5f0;
+    --text-muted:    #787878;
+    --border:        #dcdcd5;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink-soft); -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background:
+      radial-gradient(circle at 80% 0%, rgba(240,238,58,0.05), transparent 40%),
+      radial-gradient(circle at 0% 100%, rgba(26,26,26,0.04), transparent 30%),
+      var(--paper);
+  }
+
+  /* ── Editorial header ────────────────────────────────── */
+  header {
+    padding: 64px 32px 32px;
+    text-align: left;
+    max-width: 1320px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .eyebrow {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow .dot {
+    width: 7px; height: 7px; border-radius: 999px;
+    background: var(--gold);
+    box-shadow: 0 0 0 3px rgba(240,238,58,0.25);
+  }
+  header h1 {
+    margin: 0;
+    font-family: "Instrument Serif", "Times New Roman", serif;
+    font-weight: 400;
+    font-size: 64px;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  header h1 em {
+    font-style: italic;
+    font-family: "Instrument Serif", serif;
+    color: var(--ink);
+    position: relative;
+    padding: 0 2px;
+  }
+  header h1 em::after {
+    content: "";
+    position: absolute;
+    left: -2px; right: -2px; bottom: 4px; height: 10px;
+    background: var(--gold);
+    z-index: -1;
+    opacity: 0.85;
+    transform: skewX(-6deg);
+  }
+  header p.lede {
+    margin: 18px 0 0;
+    color: var(--text-muted);
+    font-size: 15px;
+    max-width: 640px;
+    line-height: 1.6;
+  }
+
+  /* ── Concept grid ────────────────────────────────────── */
+  .grid {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 56px 40px;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .meta {
+    width: 100%;
+    max-width: 320px;
+    text-align: left;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    position: relative;
+  }
+  .index {
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 28px;
+    height: 2px;
+    background: var(--ink);
+  }
+  .name-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .name {
+    font-family: "Instrument Serif", serif;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .num {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+  }
+  .desc {
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 8px 0 12px;
+  }
+  .ctrls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .replay {
+    appearance: none;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: white;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .replay:hover { background: #000; }
+  .ctrls .duration {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── iPhone shell ────────────────────────────────────── */
+  .phone {
+    position: relative;
+    width: 300px;
+    height: 630px;
+    background: #000;
+    border-radius: 48px;
+    padding: 8px;
+    box-shadow:
+      0 0 0 1.5px #1a1a1a,
+      0 30px 60px -24px rgba(0,0,0,0.4),
+      0 12px 24px -16px rgba(0,0,0,0.25);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 40px;
+    overflow: hidden;
+    background: var(--napkin);
+  }
+  .island {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 30px;
+    background: #000;
+    border-radius: 999px;
+    z-index: 20;
+  }
+
+  /* Shared napkin chrome */
+  .corner-fold {
+    position: absolute;
+    top: 0; left: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 60px 60px 0 0;
+    border-color: var(--napkin-deep) transparent transparent transparent;
+    z-index: 2;
+  }
+  .fold-cross {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .fold-cross::before,
+  .fold-cross::after {
+    content: "";
+    position: absolute;
+    background: var(--napkin-fold);
+    opacity: 0.5;
+  }
+  .fold-cross::before { left: 50%; top: 0; bottom: 0; width: 1.5px; transform: translateX(-50%); }
+  .fold-cross::after  { top: 50%; left: 0; right: 0; height: 1.5px; transform: translateY(-50%); }
+
+  .stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+  }
+
+  /* The cursive M (text fallback) — used by static layers */
+  .m-text {
+    font-family: 'Snell Roundhand', 'Brush Script MT', 'Caveat Brush', cursive;
+    font-weight: 700;
+    font-size: 240px;
+    line-height: 1;
+    color: var(--ink);
+    transform: rotate(-6deg);
+    text-shadow: 0 0 0.6px rgba(26,26,26,0.35);
+  }
+
+  /* SVG strokes for the cursive M (used in concept 5 for hand-drawn writing) */
+  .m-svg {
+    width: 220px;
+    height: 220px;
+    overflow: visible;
+    transform: rotate(-4deg);
+  }
+  .m-svg .ink {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 22;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Squiggle */
+  .squiggle {
+    width: 220px;
+    height: 32px;
+    margin-top: 8px;
+    overflow: visible;
+  }
+  .squiggle path {
+    fill: none;
+    stroke: var(--gold);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+
+  /* ═══════════════════════════════════════════════════════
+     CONCEPT 5 — INK PHYSICS (drawn strokes + chartreuse spray)
+     ═══════════════════════════════════════════════════════ */
+  .c5 .m-svg .ink { stroke-dasharray: var(--len, 800); stroke-dashoffset: var(--len, 800); }
+  .c5 .squiggle path { stroke-dasharray: 600; stroke-dashoffset: 600; }
+  .c5 .splatter circle, .c5 .splatter rect {
+    transform-origin: center;
+    transform: scale(0);
+    opacity: 0;
+  }
+  .c5.play .m-svg .stroke-1 { animation: c5-ink 600ms cubic-bezier(.65,.05,.36,1) 100ms forwards; }
+  .c5.play .m-svg .stroke-2 { animation: c5-ink 550ms cubic-bezier(.65,.05,.36,1) 700ms forwards; }
+  .c5.play .m-svg .stroke-3 { animation: c5-ink 580ms cubic-bezier(.65,.05,.36,1) 1200ms forwards; }
+  .c5.play .splatter circle:nth-child(1) { animation: c5-splat 700ms cubic-bezier(.2,1.6,.4,1) 1700ms forwards; }
+  .c5.play .splatter circle:nth-child(2) { animation: c5-splat 700ms cubic-bezier(.2,1.6,.4,1) 1740ms forwards; }
+  .c5.play .splatter circle:nth-child(3) { animation: c5-splat 700ms cubic-bezier(.2,1.6,.4,1) 1780ms forwards; }
+  .c5.play .splatter rect:nth-child(4) { animation: c5-splat 700ms cubic-bezier(.2,1.6,.4,1) 1820ms forwards; }
+  .c5.play .splatter rect:nth-child(5) { animation: c5-splat 700ms cubic-bezier(.2,1.6,.4,1) 1860ms forwards; }
+  .c5.play .squiggle path { animation: draw 700ms cubic-bezier(.5,0,.2,1) 1900ms forwards; }
+
+  @keyframes c5-ink {
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes c5-splat {
+    0%   { transform: scale(0); opacity: 1; }
+    60%  { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes draw {
+    to { stroke-dashoffset: 0; }
+  }
+
+
+  /* ═══════════════════════════════════════════════════════
+     CONCEPT 6 — WAGER TALLY (slot-machine $ stops, M settles)
+     ═══════════════════════════════════════════════════════ */
+  .c6 .stage { justify-content: center; }
+  .c6 .m-text { opacity: 0; filter: blur(8px); transform: rotate(-6deg) scale(0.94); }
+  .c6 .tally {
+    position: absolute;
+    bottom: 38%;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    opacity: 0;
+  }
+  .c6 .tally .amt {
+    display: inline-block;
+    min-width: 90px;
+    text-align: center;
+    background: var(--gold);
+    padding: 6px 14px;
+    border-radius: 8px;
+    transform: skewX(-4deg);
+  }
+  .c6 .tally .amt span { display: inline-block; transform: skewX(4deg); }
+  .c6 .squiggle path { stroke-dasharray: 600; stroke-dashoffset: 600; }
+  .c6.play .tally { animation: c6-tally-in 200ms ease-out 100ms forwards; }
+  .c6.play .m-text {
+    animation: c6-mark-settle 800ms cubic-bezier(.2,.7,.2,1) 1150ms forwards;
+  }
+  .c6.play .squiggle path { animation: draw 600ms cubic-bezier(.5,0,.2,1) 1600ms forwards; }
+  .c6.play .tally.fade { animation: c6-tally-fade 300ms ease-out 1050ms forwards; }
+
+  @keyframes c6-tally-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes c6-tally-fade {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to   { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  }
+  @keyframes c6-mark-settle {
+    0%   { opacity: 0; filter: blur(8px); transform: rotate(-6deg) scale(0.94) translateY(8px); }
+    60%  { opacity: 1; filter: blur(0); transform: rotate(-6deg) scale(1.02) translateY(-2px); }
+    100% { opacity: 1; filter: blur(0); transform: rotate(-6deg) scale(1) translateY(0); }
+  }
+
+
+  /* ═══════════════════════════════════════════════════════
+     CONCEPT 7 — CONFETTI MAGNETIZE (chartreuse dashes → squiggle)
+     ═══════════════════════════════════════════════════════ */
+  .c7 .m-text { opacity: 0; filter: blur(10px); transform: rotate(-6deg) scale(0.9); }
+  .c7 .confetti {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 220px;
+    height: 32px;
+    transform: translate(-50%, 60px);
+    pointer-events: none;
+  }
+  .c7 .confetti i {
+    position: absolute;
+    display: block;
+    width: 10px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--gold);
+    opacity: 0;
+    transform-origin: center;
+  }
+  .c7.play .m-text {
+    animation: c7-ink-drop 700ms cubic-bezier(.4,1.3,.5,1) 900ms forwards;
+  }
+  .c7.play .confetti i {
+    animation:
+      c7-scatter 700ms cubic-bezier(.4,0,.2,1) forwards,
+      c7-magnet 800ms cubic-bezier(.7,0,.3,1) 800ms forwards;
+  }
+  @keyframes c7-ink-drop {
+    0%   { opacity: 0; filter: blur(10px); transform: rotate(-6deg) scale(0.9) translateY(-8px); }
+    70%  { opacity: 1; filter: blur(0);    transform: rotate(-6deg) scale(1.03) translateY(0); }
+    100% { opacity: 1; filter: blur(0);    transform: rotate(-6deg) scale(1)    translateY(0); }
+  }
+  @keyframes c7-scatter {
+    0%   { opacity: 0; transform: translate(0,0) rotate(0); }
+    20%  { opacity: 1; }
+    100% { opacity: 1; transform: var(--scatter, translate(0,0) rotate(0)); }
+  }
+  @keyframes c7-magnet {
+    0%   { transform: var(--scatter); }
+    100% { transform: var(--final);   }
+  }
+
+
+  /* ═══════════════════════════════════════════════════════
+     CONCEPT 8 — CURSIVE CASCADE (parallax Ms snap to hero)
+     ═══════════════════════════════════════════════════════ */
+  .c8 .layers { position: absolute; inset: 0; overflow: hidden; }
+  .c8 .row {
+    position: absolute;
+    left: -40%;
+    width: 220%;
+    display: flex;
+    align-items: center;
+    gap: 60px;
+    white-space: nowrap;
+    font-family: 'Snell Roundhand', 'Brush Script MT', 'Caveat Brush', cursive;
+    font-weight: 700;
+    color: var(--ink);
+    will-change: transform;
+  }
+  .c8 .row-1 { top: 14%;  font-size: 56px;  opacity: 0.10; animation: c8-drift-l 14s linear infinite; }
+  .c8 .row-2 { top: 30%;  font-size: 110px; opacity: 0.16; animation: c8-drift-r 18s linear infinite; }
+  .c8 .row-3 { top: 56%;  font-size: 88px;  opacity: 0.13; animation: c8-drift-l 11s linear infinite; }
+  .c8 .row-4 { top: 76%;  font-size: 48px;  opacity: 0.09; animation: c8-drift-r 16s linear infinite; }
+  .c8 .row span { transform: rotate(-6deg); display: inline-block; }
+  @keyframes c8-drift-l { from { transform: translateX(0); } to { transform: translateX(-30%); } }
+  @keyframes c8-drift-r { from { transform: translateX(-30%); } to { transform: translateX(0); } }
+
+  /* hero M flash-in over the parallax */
+  .c8 .hero { z-index: 8; }
+  .c8 .hero .m-text {
+    opacity: 0;
+    transform: rotate(-6deg) scale(1.4);
+    filter: blur(12px);
+  }
+  .c8 .hero .squiggle path { stroke-dasharray: 600; stroke-dashoffset: 600; }
+  .c8 .ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 24px; height: 24px;
+    border: 3px solid var(--gold);
+    border-radius: 999px;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    z-index: 6;
+  }
+  .c8.play .hero .m-text { animation: c8-snap 700ms cubic-bezier(.2,1.4,.4,1) 600ms forwards; }
+  .c8.play .ring          { animation: c8-ring 800ms cubic-bezier(.2,.7,.2,1) 700ms forwards; }
+  .c8.play .hero .squiggle path { animation: draw 600ms cubic-bezier(.5,0,.2,1) 1200ms forwards; }
+  .c8.play .layers .row-1 { animation: c8-drift-l 14s linear infinite, c8-fade 600ms ease-out 1100ms forwards; }
+  .c8.play .layers .row-2 { animation: c8-drift-r 18s linear infinite, c8-fade 600ms ease-out 1100ms forwards; }
+  .c8.play .layers .row-3 { animation: c8-drift-l 11s linear infinite, c8-fade 600ms ease-out 1100ms forwards; }
+  .c8.play .layers .row-4 { animation: c8-drift-r 16s linear infinite, c8-fade 600ms ease-out 1100ms forwards; }
+  @keyframes c8-snap {
+    0%   { opacity: 0; transform: rotate(-6deg) scale(1.4); filter: blur(12px); }
+    100% { opacity: 1; transform: rotate(-6deg) scale(1);   filter: blur(0); }
+  }
+  @keyframes c8-ring {
+    0%   { transform: translate(-50%, -50%) scale(0);   opacity: 1; }
+    60%  { transform: translate(-50%, -50%) scale(18);  opacity: 0.6; }
+    100% { transform: translate(-50%, -50%) scale(22);  opacity: 0; }
+  }
+  @keyframes c8-fade {
+    to { opacity: 0; }
+  }
+
+  footer {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 0 32px 64px;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.6;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+  }
+  footer code {
+    font-family: "JetBrains Mono", monospace;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+  footer .stake {
+    font-family: "Instrument Serif", serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow"><span class="dot"></span> Splash · Round 2 · More <em style="font-style:italic">dynamic</em></p>
+  <h1>The bet was scribbled<br/>on a <em>napkin</em>.</h1>
+  <p class="lede">Four kinetic directions for the MATCH boot animation. Each one runs in ~1.2–1.8s, lands on a clean static logo, and auto-loops every 5 seconds. Tap any phone to replay.</p>
+</header>
+
+<div class="grid">
+
+  <!-- ── 5 — Ink Physics ─────────────────────────────── -->
+  <div class="card">
+    <div class="phone" data-concept="c5">
+      <div class="screen c5 play">
+        <div class="island"></div>
+        <div class="corner-fold"></div>
+        <div class="fold-cross"></div>
+        <div class="stage">
+          <svg class="m-svg" viewBox="0 0 240 200">
+            <!-- 3 strokes of a cursive M, drawn left to right -->
+            <!-- Stroke 1: entry loop + first ascending stem -->
+            <path class="ink stroke-1" style="--len: 280;" d="M 36 152 q -2 -10 12 -14 q 14 -2 22 14 l 18 -98"/>
+            <!-- Stroke 2: first peak descender + second peak -->
+            <path class="ink stroke-2" style="--len: 260;" d="M 88 56 q 8 -6 14 8 l 18 78 q 4 14 16 8 q 8 -6 12 -18 l 16 -78"/>
+            <!-- Stroke 3: second peak descender + exit flourish -->
+            <path class="ink stroke-3" style="--len: 280;" d="M 164 54 q 10 -8 16 6 l 20 84 q 6 18 22 12"/>
+            <!-- Splatter of chartreuse marks that appear at end -->
+            <g class="splatter" fill="#f0ee3a">
+              <circle cx="46"  cy="178" r="3"/>
+              <circle cx="118" cy="184" r="4"/>
+              <circle cx="200" cy="172" r="3"/>
+              <rect x="70" y="180" width="10" height="3" rx="1.5" transform="rotate(-8 75 181.5)"/>
+              <rect x="156" y="178" width="12" height="3" rx="1.5" transform="rotate(6 162 179.5)"/>
+            </g>
+          </svg>
+          <svg class="squiggle" viewBox="0 0 220 32">
+            <path d="M 8 22 Q 44 4 80 18 T 150 20 T 212 14"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="index"></div>
+      <div class="name-row">
+        <div class="name">Ink Physics</div>
+        <div class="num">05 / 08</div>
+      </div>
+      <div class="desc">Three SVG strokes draw the cursive M in sequence with the rhythm of a real pen — entry loop, first peak, second peak — then chartreuse marks splatter under it and the squiggle hand-draws. Most "watching someone sign the bet" of the four.</div>
+      <div class="ctrls">
+        <button class="replay" data-target="c5">Replay</button>
+        <span class="duration">2.6s</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 6 — Wager Tally ─────────────────────────────── -->
+  <div class="card">
+    <div class="phone" data-concept="c6">
+      <div class="screen c6 play">
+        <div class="island"></div>
+        <div class="corner-fold"></div>
+        <div class="fold-cross"></div>
+        <div class="stage">
+          <div class="m-text">M</div>
+          <svg class="squiggle" viewBox="0 0 220 32">
+            <path d="M 8 22 Q 44 4 80 18 T 150 20 T 212 14"/>
+          </svg>
+        </div>
+        <div class="tally"><span class="amt"><span data-tally>$5</span></span></div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="index"></div>
+      <div class="name-row">
+        <div class="name">Wager Tally</div>
+        <div class="num">06 / 08</div>
+      </div>
+      <div class="desc">A slot-machine of stake amounts cycles fast — $5, $20, $100, $250, $1K — then locks. The M settles into place from a blurred state and the chartreuse signature whips in below. Communicates "betting game" directly.</div>
+      <div class="ctrls">
+        <button class="replay" data-target="c6">Replay</button>
+        <span class="duration">2.2s</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 7 — Confetti Magnetize ──────────────────────── -->
+  <div class="card">
+    <div class="phone" data-concept="c7">
+      <div class="screen c7 play">
+        <div class="island"></div>
+        <div class="corner-fold"></div>
+        <div class="fold-cross"></div>
+        <div class="stage">
+          <div class="m-text">M</div>
+        </div>
+        <div class="confetti" id="confetti-c7"></div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="index"></div>
+      <div class="name-row">
+        <div class="name">Confetti Magnetize</div>
+        <div class="num">07 / 08</div>
+      </div>
+      <div class="desc">Two dozen chartreuse pen-dashes burst out from center, hang in space, then magnetize back into the precise shape of the squiggle. Meanwhile the M ink-drops into focus from a blur. Most kinetic and modern.</div>
+      <div class="ctrls">
+        <button class="replay" data-target="c7">Replay</button>
+        <span class="duration">1.8s</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 8 — Cursive Cascade ─────────────────────────── -->
+  <div class="card">
+    <div class="phone" data-concept="c8">
+      <div class="screen c8 play">
+        <div class="island"></div>
+        <div class="corner-fold"></div>
+        <div class="fold-cross"></div>
+        <div class="layers">
+          <div class="row row-1"><span>M M M M M M M M M M M M M M M</span></div>
+          <div class="row row-2"><span>M M M M M M M M M M</span></div>
+          <div class="row row-3"><span>M M M M M M M M M M M M</span></div>
+          <div class="row row-4"><span>M M M M M M M M M M M M M M M M</span></div>
+        </div>
+        <div class="ring"></div>
+        <div class="stage hero">
+          <div class="m-text">M</div>
+          <svg class="squiggle" viewBox="0 0 220 32">
+            <path d="M 8 22 Q 44 4 80 18 T 150 20 T 212 14"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="index"></div>
+      <div class="name-row">
+        <div class="name">Cursive Cascade</div>
+        <div class="num">08 / 08</div>
+      </div>
+      <div class="desc">A parallax field of cursive Ms drifts past in four depth layers like sketches on multiple napkins. At the lock moment, the cascade fades, a chartreuse ring pulses out from center, and the hero M snaps into focus with the squiggle.</div>
+      <div class="ctrls">
+        <button class="replay" data-target="c8">Replay</button>
+        <span class="duration">1.8s</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div>
+    Source: <code>brand/previews/splash-dynamic.html</code> ·
+    Concepts 5–8 (1–4 in <code>splash-concepts.html</code>)
+  </div>
+  <div class="stake">Built on the napkin. Settled before the back nine.</div>
+</footer>
+
+<script>
+  /* ── Replay logic ───────────────────────────────────── */
+  function replay(concept) {
+    const screen = document.querySelector('.phone[data-concept="' + concept + '"] .screen');
+    if (!screen) return;
+    screen.classList.remove('play');
+    void screen.offsetWidth;
+    screen.classList.add('play');
+    // hooks per concept
+    if (concept === 'c6') runTally();
+    if (concept === 'c7') seedConfetti();
+  }
+  document.querySelectorAll('.phone').forEach((phone) => {
+    phone.addEventListener('click', () => replay(phone.dataset.concept));
+  });
+  document.querySelectorAll('.replay').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      replay(btn.dataset.target);
+    });
+  });
+
+  /* ── Concept 6: dollar-amount tally ─────────────────── */
+  const TALLY_STOPS = ['$5','$10','$20','$50','$100','$250','$500','$1K'];
+  let tallyTimers = [];
+  function runTally() {
+    tallyTimers.forEach(clearTimeout); tallyTimers = [];
+    const node = document.querySelector('[data-tally]');
+    const tally = document.querySelector('.c6 .tally');
+    if (!node || !tally) return;
+    tally.classList.remove('fade');
+    // rapid cycle for ~900ms (50ms per stop), then settle on the last
+    const start = performance.now();
+    const total = 950;
+    function tick() {
+      const t = performance.now() - start;
+      if (t > total) { node.textContent = '$1K'; setTimeout(() => tally.classList.add('fade'), 50); return; }
+      // accelerate then ease at end: pick stops by an index that increments faster early
+      const i = Math.floor((t / total) * TALLY_STOPS.length * 2) % TALLY_STOPS.length;
+      node.textContent = TALLY_STOPS[i];
+      tallyTimers.push(setTimeout(tick, 55));
+    }
+    tick();
+  }
+
+  /* ── Concept 7: confetti magnetize ──────────────────── */
+  // Generate ~28 dashes that scatter outward and then converge along the squiggle path.
+  function squiggleSamples(count) {
+    // Sample points on Q/T cubic-quad of viewBox 220x32; transform to confetti container coords (220×32)
+    // Use a simple parametric approximation matching the squiggle path commands.
+    const pts = [];
+    for (let n = 0; n < count; n++) {
+      const t = n / (count - 1);
+      // x: 8..212 along the squiggle
+      const x = 8 + t * 204;
+      // y waveform approximating the path: smooth dips
+      const y =
+        18 +
+        Math.sin(t * Math.PI * 2.3) * 6 +
+        Math.sin(t * Math.PI * 5.1 + 0.4) * 2;
+      const rot = (Math.sin(t * 8) * 14).toFixed(1);
+      pts.push({ x, y, rot });
+    }
+    return pts;
+  }
+  function seedConfetti() {
+    const wrap = document.getElementById('confetti-c7');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const N = 28;
+    const finals = squiggleSamples(N);
+    for (let i = 0; i < N; i++) {
+      const el = document.createElement('i');
+      // Scatter target: random radius 50–160px, random angle
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 60 + Math.random() * 100;
+      const sx = Math.cos(angle) * radius;
+      const sy = Math.sin(angle) * radius - 10;
+      const sr = (Math.random() * 360 - 180).toFixed(0);
+      // Final target: position on the squiggle, relative to the 220x32 container origin (already centered at 50%/50%)
+      const fx = finals[i].x - 110;       // container is 220 wide; center at 110
+      const fy = finals[i].y - 16;        // 32 tall; center at 16
+      const fr = finals[i].rot;
+      el.style.setProperty('--scatter', `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px) rotate(${sr}deg)`);
+      el.style.setProperty('--final',   `translate(${fx.toFixed(1)}px, ${fy.toFixed(1)}px) rotate(${fr}deg)`);
+      el.style.animationDelay = (Math.random() * 80).toFixed(0) + 'ms, ' + (700 + i * 4) + 'ms';
+      wrap.appendChild(el);
+    }
+  }
+
+  /* ── Init + auto-loop ───────────────────────────────── */
+  seedConfetti();
+  runTally();
+
+  // staggered initial play so motion is visible across the gallery
+  setTimeout(() => runTally(), 100);
+  setTimeout(() => seedConfetti(), 100);
+
+  setInterval(() => {
+    ['c5','c6','c7','c8'].forEach(replay);
+  }, 5000);
+</script>
+
+</body>
+</html>

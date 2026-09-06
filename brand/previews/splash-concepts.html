@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MATCH Golf — Splash Screen Concepts (Napkin)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Napkin palette — pulled from brand/logo-master.svg + brand/01–04 */
+    --napkin:        #efeadb;
+    --napkin-deep:   #e6e0cc;   /* corner fold */
+    --napkin-fold:   #d8d2bf;   /* faint center crosses */
+    --ink:           #1a1a1a;   /* handwritten M */
+    --ink-soft:      #0a0a0a;
+    --gold:          #f0ee3a;   /* chartreuse squiggle */
+    --gold-deep:     #d4cd00;
+    --paper:         #f5f5f0;   /* the surrounding gallery bg */
+    --text-muted:    #787878;
+    --border:        #dcdcd5;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink-soft);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    padding: 48px 32px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    margin: 0;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    font-size: 34px;
+  }
+  header p {
+    margin: 8px 0 0;
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+  .grid {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .meta { text-align: center; }
+  .name {
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: -0.01em;
+  }
+  .desc {
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    line-height: 1.45;
+    max-width: 280px;
+  }
+  .replay {
+    margin-top: 8px;
+    appearance: none;
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .replay:hover { background: #f1f1ee; }
+
+  /* iPhone shell */
+  .phone {
+    position: relative;
+    width: 280px;
+    height: 588px;
+    background: #000;
+    border-radius: 44px;
+    padding: 8px;
+    box-shadow:
+      0 0 0 1px #1a1a1a,
+      0 22px 50px -20px rgba(0,0,0,0.35),
+      0 8px 20px -12px rgba(0,0,0,0.25);
+    cursor: pointer;
+  }
+  .screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 36px;
+    overflow: hidden;
+    background: var(--napkin);
+  }
+  .island {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 96px;
+    height: 28px;
+    background: #000;
+    border-radius: 999px;
+    z-index: 10;
+  }
+
+  /* Napkin layers — used by every concept */
+  .fold-cross {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .fold-cross::before,
+  .fold-cross::after {
+    content: "";
+    position: absolute;
+    background: var(--napkin-fold);
+    opacity: 0.55;
+  }
+  .fold-cross::before { /* vertical */
+    left: 50%; top: 0; bottom: 0; width: 1.5px; transform: translateX(-50%);
+  }
+  .fold-cross::after { /* horizontal */
+    top: 50%; left: 0; right: 0; height: 1.5px; transform: translateY(-50%);
+  }
+  .corner-fold {
+    position: absolute;
+    top: 0; left: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 56px 56px 0 0;
+    border-color: var(--napkin-deep) transparent transparent transparent;
+  }
+
+  /* The cursive M */
+  .logo-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .m {
+    font-family: 'Snell Roundhand', 'Brush Script MT', 'Caveat Brush', cursive;
+    font-weight: 700;
+    font-size: 230px;
+    line-height: 1;
+    color: var(--ink);
+    transform: rotate(-6deg);
+    /* Soft "ink bleed" to feel like marker on napkin */
+    text-shadow:
+      0 0 0.6px rgba(26,26,26,0.4),
+      0 0 1.2px rgba(26,26,26,0.2);
+    margin-bottom: -10px;
+  }
+  /* Chartreuse squiggle under the M */
+  .squiggle {
+    width: 200px;
+    height: 28px;
+    margin-top: 6px;
+    overflow: visible;
+  }
+  .squiggle path {
+    fill: none;
+    stroke: var(--gold);
+    stroke-width: 7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ── Concept 1 — Pure Hold ─────────────────────────────── */
+  .c1 .m,
+  .c1 .squiggle,
+  .c1 .corner-fold,
+  .c1 .fold-cross { opacity: 0; }
+  .c1.play .corner-fold { animation: fade 500ms ease-out 0ms forwards; }
+  .c1.play .fold-cross  { animation: fade-soft 700ms ease-out 100ms forwards; }
+  .c1.play .m           { animation: fade-soft-up 900ms cubic-bezier(.2,.7,.2,1) 200ms forwards; }
+  .c1.play .squiggle    { animation: fade 500ms ease-out 900ms forwards; }
+  @keyframes fade            { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fade-soft       { from { opacity: 0; } to { opacity: 0.55; } }
+  @keyframes fade-soft-up    {
+    from { opacity: 0; transform: rotate(-6deg) translateY(10px); }
+    to   { opacity: 1; transform: rotate(-6deg) translateY(0); }
+  }
+
+  /* ── Concept 2 — Squiggle Draws ────────────────────────── */
+  .c2 .m { opacity: 0; }
+  .c2 .squiggle path {
+    stroke-dasharray: 600;
+    stroke-dashoffset: 600;
+  }
+  .c2.play .m {
+    animation: c2-word 700ms cubic-bezier(.2,.7,.2,1) 200ms forwards;
+  }
+  .c2.play .squiggle path {
+    animation: c2-draw 900ms cubic-bezier(.5,0,.2,1) 800ms forwards;
+  }
+  @keyframes c2-word {
+    from { opacity: 0; transform: rotate(-6deg) translateY(8px); }
+    to   { opacity: 1; transform: rotate(-6deg) translateY(0); }
+  }
+  @keyframes c2-draw {
+    from { stroke-dashoffset: 600; }
+    to   { stroke-dashoffset: 0; }
+  }
+
+  /* ── Concept 3 — Marker Stroke (writes in L→R) ────────── */
+  .c3 .m {
+    -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 0%, transparent 0%);
+            mask-image: linear-gradient(90deg, #000 0%, #000 0%, transparent 0%);
+    -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
+  }
+  .c3 .squiggle path {
+    stroke-dasharray: 600;
+    stroke-dashoffset: 600;
+  }
+  .c3.play .m {
+    animation: c3-write 1100ms cubic-bezier(.6,0,.3,1) 200ms forwards;
+  }
+  .c3.play .squiggle path {
+    animation: c3-squiggle 600ms cubic-bezier(.5,0,.2,1) 1200ms forwards;
+  }
+  @keyframes c3-write {
+    0%   { -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 0%, transparent 2%);
+                   mask-image: linear-gradient(90deg, #000 0%, #000 0%, transparent 2%); }
+    100% { -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 100%, transparent 102%);
+                   mask-image: linear-gradient(90deg, #000 0%, #000 100%, transparent 102%); }
+  }
+  @keyframes c3-squiggle {
+    from { stroke-dashoffset: 600; }
+    to   { stroke-dashoffset: 0; }
+  }
+
+  /* ── Concept 4 — Napkin Settles ─────────────────────────── */
+  .c4 .logo-wrap {
+    opacity: 0;
+    transform: scale(0.88) rotate(-2deg);
+  }
+  .c4 .corner-fold {
+    opacity: 0;
+    transform: translate(-12px, -12px) rotate(-8deg);
+    transform-origin: top left;
+  }
+  .c4.play .corner-fold {
+    animation: c4-fold 700ms cubic-bezier(.3,1.2,.4,1) 100ms forwards;
+  }
+  .c4.play .logo-wrap {
+    animation: c4-settle 900ms cubic-bezier(.25,1.4,.4,1) 250ms forwards;
+  }
+  @keyframes c4-fold {
+    from { opacity: 0; transform: translate(-12px,-12px) rotate(-8deg); }
+    to   { opacity: 1; transform: translate(0,0) rotate(0deg); }
+  }
+  @keyframes c4-settle {
+    0%   { opacity: 0; transform: scale(0.88) rotate(-2deg); }
+    60%  { opacity: 1; transform: scale(1.04) rotate(0.5deg); }
+    100% { opacity: 1; transform: scale(1)    rotate(0deg); }
+  }
+
+  footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    padding-bottom: 48px;
+  }
+  footer code {
+    font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 6px;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>MATCH Golf — splash concepts (napkin)</h1>
+    <p>Four directions using the cursive-M logo, cream napkin, and chartreuse squiggle. Tap a phone to replay.</p>
+  </header>
+
+  <div class="grid">
+
+    <!-- C1 -->
+    <div class="card">
+      <div class="phone" data-concept="c1">
+        <div class="screen c1 play">
+          <div class="island"></div>
+          <div class="corner-fold"></div>
+          <div class="fold-cross"></div>
+          <div class="logo-wrap">
+            <div class="m">M</div>
+            <svg class="squiggle" viewBox="0 0 200 28">
+              <path d="M 6 18 Q 38 4 70 16 T 134 18 T 196 12" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="name">1 — Pure Hold</div>
+        <div class="desc">The napkin appears, the M settles in, the squiggle joins. Calm, exactly the icon at full size. Safest read.</div>
+        <button class="replay" data-target="c1">Replay</button>
+      </div>
+    </div>
+
+    <!-- C2 -->
+    <div class="card">
+      <div class="phone" data-concept="c2">
+        <div class="screen c2 play">
+          <div class="island"></div>
+          <div class="corner-fold"></div>
+          <div class="fold-cross"></div>
+          <div class="logo-wrap">
+            <div class="m">M</div>
+            <svg class="squiggle" viewBox="0 0 200 28">
+              <path d="M 6 18 Q 38 4 70 16 T 134 18 T 196 12" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="name">2 — Squiggle Draws</div>
+        <div class="desc">The M lands first, then the chartreuse squiggle hand-draws under it like someone signing a napkin bet. On-brand and clearly signature.</div>
+        <button class="replay" data-target="c2">Replay</button>
+      </div>
+    </div>
+
+    <!-- C3 -->
+    <div class="card">
+      <div class="phone" data-concept="c3">
+        <div class="screen c3 play">
+          <div class="island"></div>
+          <div class="corner-fold"></div>
+          <div class="fold-cross"></div>
+          <div class="logo-wrap">
+            <div class="m">M</div>
+            <svg class="squiggle" viewBox="0 0 200 28">
+              <path d="M 6 18 Q 38 4 70 16 T 134 18 T 196 12" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="name">3 — Marker Stroke</div>
+        <div class="desc">The M itself writes in left-to-right like a marker laying ink, then the squiggle scribbles under. Most theatrical — owns the "drawn on a napkin" idea.</div>
+        <button class="replay" data-target="c3">Replay</button>
+      </div>
+    </div>
+
+    <!-- C4 -->
+    <div class="card">
+      <div class="phone" data-concept="c4">
+        <div class="screen c4 play">
+          <div class="island"></div>
+          <div class="corner-fold"></div>
+          <div class="fold-cross"></div>
+          <div class="logo-wrap">
+            <div class="m">M</div>
+            <svg class="squiggle" viewBox="0 0 200 28">
+              <path d="M 6 18 Q 38 4 70 16 T 134 18 T 196 12" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="name">4 — Napkin Settles</div>
+        <div class="desc">The corner fold snaps into place, then the whole logo scales + settles with a tiny rotational bounce — like a napkin being laid down on the table.</div>
+        <button class="replay" data-target="c4">Replay</button>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    Source: <code>brand/previews/splash-concepts.html</code> · Cursive M (Snell Roundhand / Brush Script MT) · Napkin <code>#EFEADB</code> · Chartreuse <code>#F0EE3A</code> · Ink <code>#1A1A1A</code>
+  </footer>
+
+<script>
+  function replay(concept) {
+    const screen = document.querySelector('.phone[data-concept="' + concept + '"] .screen');
+    if (!screen) return;
+    screen.classList.remove('play');
+    void screen.offsetWidth;
+    screen.classList.add('play');
+  }
+  document.querySelectorAll('.phone').forEach((phone) => {
+    phone.addEventListener('click', () => replay(phone.dataset.concept));
+  });
+  document.querySelectorAll('.replay').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      replay(btn.dataset.target);
+    });
+  });
+  setInterval(() => {
+    ['c1','c2','c3','c4'].forEach(replay);
+  }, 4800);
+</script>
+</body>
+</html>

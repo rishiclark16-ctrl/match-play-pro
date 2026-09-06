@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MATCH Golf — Swing Splash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --napkin: #efeadb;
+    --napkin-deep: #e6e0cc;
+    --ink: #1a1a1a;
+    --gold: #f0ee3a;
+    --paper: #f5f5f0;
+    --text-muted: #787878;
+    --border: #dcdcd5;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  body { font-family: Inter, system-ui, sans-serif; }
+
+  header {
+    padding: 56px 32px 28px;
+    max-width: 1100px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--border);
+  }
+  .eyebrow {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .eyebrow .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--gold); box-shadow: 0 0 0 3px rgba(240,238,58,0.25); }
+  header h1 { margin: 0; font-family: "Instrument Serif", serif; font-weight: 400; font-size: 52px; line-height: 0.95; letter-spacing: -0.02em; }
+  header h1 em { font-style: italic; position: relative; padding: 0 2px; }
+  header h1 em::after {
+    content: ""; position: absolute; left: -2px; right: -2px; bottom: 4px; height: 9px;
+    background: var(--gold); z-index: -1; opacity: 0.85; transform: skewX(-6deg);
+  }
+  header p { margin: 14px 0 0; color: var(--text-muted); font-size: 14px; max-width: 540px; line-height: 1.6; }
+
+  .stage-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 56px;
+    flex-wrap: wrap;
+  }
+  .notes {
+    max-width: 320px;
+    color: var(--text-muted);
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .notes .lbl {
+    display: inline-block;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 1px solid var(--ink);
+    padding: 4px 8px; border-radius: 4px;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+  .notes h2 {
+    margin: 0 0 10px;
+    font-family: "Instrument Serif", serif;
+    font-weight: 400;
+    font-size: 36px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .notes h2 em { font-style: italic; position: relative; }
+  .notes h2 em::after { content:""; position:absolute; left:-2px; right:-2px; bottom:3px; height:7px; background: var(--gold); z-index:-1; opacity: 0.85; transform: skewX(-6deg); }
+  .notes p { margin: 12px 0; }
+  .notes .credit {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-top: 18px;
+  }
+  .notes .credit a { color: var(--text-muted); text-decoration: underline; text-underline-offset: 2px; }
+  .notes .replay {
+    appearance: none;
+    margin-top: 16px;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: white;
+    border-radius: 999px;
+    padding: 10px 18px;
+    font: inherit; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer;
+  }
+  .notes .duration { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--text-muted); letter-spacing: 0.08em; margin-left: 12px; }
+
+  /* iPhone */
+  .phone {
+    width: 340px;
+    height: 714px;
+    background: #000;
+    border-radius: 54px;
+    padding: 9px;
+    box-shadow:
+      0 0 0 1.5px #1a1a1a,
+      0 32px 60px -24px rgba(0,0,0,0.4),
+      0 12px 24px -16px rgba(0,0,0,0.25);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .screen {
+    position: relative;
+    width: 100%; height: 100%;
+    border-radius: 45px;
+    overflow: hidden;
+    background: var(--napkin);
+  }
+  .island {
+    position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 32px; background: #000; border-radius: 999px; z-index: 20;
+  }
+  .corner-fold {
+    position: absolute; top: 0; left: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 64px 64px 0 0;
+    border-color: var(--napkin-deep) transparent transparent transparent;
+    z-index: 1;
+  }
+
+  /* SVG stage — fills the screen */
+  .scene {
+    position: absolute;
+    inset: 60px 16px 90px 16px;   /* room for the island top and wordmark bottom */
+    z-index: 5;
+  }
+  .scene svg { width: 100%; height: 100%; display: block; }
+
+  /* Silhouette */
+  .silhouette {
+    fill: var(--ink);
+    opacity: 0;
+    transform-origin: 50% 80%;
+    transform: translateY(8px) scale(0.985);
+  }
+  .play .silhouette {
+    animation: fig-in 500ms cubic-bezier(.2,.7,.2,1) 100ms forwards;
+  }
+  @keyframes fig-in {
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Ball-flight arc — from impact area up to the ball at apex */
+  .arc {
+    fill: none;
+    stroke: var(--gold);
+    stroke-width: 22;
+    stroke-linecap: round;
+    stroke-dasharray: 1700;
+    stroke-dashoffset: 1700;
+  }
+  .play .arc {
+    animation: arc-draw 750ms cubic-bezier(.35,.05,.2,1) 550ms forwards;
+  }
+  @keyframes arc-draw { to { stroke-dashoffset: 0; } }
+
+  /* The ball at the apex — same coords as OpenClipart's original circle */
+  .ball {
+    fill: var(--gold);
+    opacity: 0;
+    transform-origin: 1117.5px 623.5px;
+    transform: scale(0);
+  }
+  .play .ball {
+    animation: ball-pop 380ms cubic-bezier(.2,1.6,.4,1) 1250ms forwards;
+  }
+  @keyframes ball-pop {
+    0%   { opacity: 0; transform: scale(0); }
+    60%  { opacity: 1; transform: scale(1.35); }
+    100% { opacity: 1; transform: scale(1.2); }   /* slightly larger than original 21.6r */
+  }
+
+  /* Impact spark — a quick chartreuse glint at the moment of contact */
+  .spark {
+    fill: var(--gold);
+    opacity: 0;
+    transform-origin: 520px 1380px;
+    transform: scale(0);
+  }
+  .play .spark {
+    animation: spark 380ms ease-out 500ms forwards;
+  }
+  @keyframes spark {
+    0%   { opacity: 0; transform: scale(0); }
+    30%  { opacity: 1; transform: scale(1.4); }
+    100% { opacity: 0; transform: scale(2); }
+  }
+
+  /* Caption + wordmark */
+  .wordmark {
+    position: absolute;
+    bottom: 38px;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    color: var(--ink);
+    opacity: 0;
+    z-index: 8;
+  }
+  .play .wordmark { animation: fade-up 500ms ease-out 1500ms forwards; }
+  .caption {
+    position: absolute;
+    bottom: 20px;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0;
+    z-index: 8;
+  }
+  .play .caption { animation: fade-up 500ms ease-out 1650ms forwards; }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  footer { max-width: 1100px; margin: 0 auto; padding: 24px 32px 64px; color: var(--text-muted); font-size: 12px; line-height: 1.6; border-top: 1px solid var(--border); }
+  footer code { font-family: "JetBrains Mono", monospace; background: white; border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow"><span class="dot"></span> Splash · Round 4 v3 · <em style="font-style:italic">He hits it.</em></p>
+  <h1>The follow-through<br/>+ the <em>ball flight.</em></h1>
+  <p>Sourced from a CC0/public-domain silhouette (OpenClipart). The figure lands first, an impact spark flashes, a chartreuse ball-flight arc draws upward and outward, then the ball pops at the apex.</p>
+</header>
+
+<div class="stage-wrap">
+
+  <div class="phone" id="phone">
+    <div class="screen play" id="screen">
+      <div class="island"></div>
+      <div class="corner-fold"></div>
+
+      <div class="scene">
+        <!--
+          ViewBox is the original OpenClipart art (1174.876 × 1658.241).
+          Order: arc (behind) → silhouette → spark → ball (in front).
+          Coords for arc start at ~(520, 1380): the implied impact point
+          near the golfer's leading foot. End at the OpenClipart ball position.
+        -->
+        <svg viewBox="0 0 1174.876 1658.241" preserveAspectRatio="xMidYMax meet">
+          <!-- Ball-flight trajectory: gently rising parabola from impact point up to ball apex -->
+          <path class="arc" d="M 520 1380 Q 1050 720, 1117.5 623.5" />
+
+          <!-- Golfer silhouette (OpenClipart, GDJ, public domain). Single path. -->
+          <path class="silhouette" d="M848.436,898.088c-0.224-2.579,0.224-5.279-0.774-7.729c-1.121-9.06-4.381-23.576-11.347-28.989c-3.783-2.94,1.106-27.513-4.838-34.203c-1.57-1.768-4.173-2.356-5.845-4.185c-6.013-6.58,3.638-8.668,3.733-14.195c0.158-9.133-5.307-17.341-6.216-26.471c-0.809-1.897-1.325-9.466-2.201-11.495c-0.215-2.287,0.138-4.694-0.808-6.844c-0.215-1.737-0.095-3.559-0.894-5.15c-2.555-28.714-15.463-57.687-27.905-83.321c-29.807-56.539-27.596-38.899-46.11-71.346c-0.043-0.413-0.129-1.229-0.163-1.642c-1.73-2.923-3.964-7.707-4.419-8.735c-0.637-1.154-16.885-25.732-16.885-25.732c-0.011-0.048-1.106-4.16-2.803-11.968c-17.276-31.097-13.782-16.324-24.829-32.705c0-6.533,0.068-3.488,0.989-7.72c4.977-8.888,3.762-8.318,5.752-13.008c0.138-1.295,0.164-2.428,1.719-6.912c0.48-7.589,3.029-13.731,3.68-18.777c1.081-1.985,2.032-3.392,2.553-6.895c0.524-0.868,1.057-1.737,1.599-2.588c0.026-0.43,0.069-1.272,0.095-1.694c5.945-9.78,26.693-113.308-0.774-180.683c-0.155-2.493-0.12-4.986-0.241-7.471c-1.014-1.375-0.997-3.181-0.034-4.574c0.188-4.4,0.147-8.251,3.577-9.302c-0.163-8.851,0.026-3.484-0.954-8.606c-2.478-4.348-3.307-9.479-4.032-11.306c-0.129-1.35-0.215-2.691-0.327-4.032c-1.057-1.848-0.696-4.024-0.585-6.027c0.825-1.333,0.714-2.932,0.894-4.419c0.464-1.023,6.305-11.506,6.62-12.062c1.957-9.003,0.543-7.25,0.972-12.922c-2.072-3.748-6.018-5.967-8.004-9.784c-4.9-8.896-14.072-13.32-23.101-16.972c-14.182-5.737-21.717-9.013-30.119-10.818c-13.269-2.851-27.862,3.736-30.949-4.562c-0.799-2.149-2.562-3.611-4.514-4.686c-1.487,0.009-2.975-0.009-4.445-0.034c-2.184,2.089-3.396,5.373-6.706,5.889c-2.01-1.189-11.137-0.932-17.264,0.241c-0.868,0.533-1.728,1.075-2.579,1.625c-1.969,0.026-3.929,0.017-5.872-0.103c0,0-35.316-8.623-35.318-8.623c-5.08-2.134-16.348-4.017-18.863-4.393c-2.528-1.221-5.511,0.017-7.996-1.298c-5.081-0.615-37.491-9.129-40.348-10.369c-0.817-0.086-1.633-0.172-2.433-0.258c-0.861-0.37-149.855-45.358-158.201-46.435c-5.974-2.467-129.023-35.599-133.26-36.1c-1.877-0.789-20.177-5.77-22.345-6.027c-2.808-1.219-65.164-18.247-85.975-22.265c-6.538-1.263-12.583,1.758-17.478,6.311C46.18,50.311,25.134,74.477,41.973,87.677c11.482,9,24.898,8.312,31.957-5.404c1.273-2.601,1.353-2.677,2.236-4.291c0.304-1.75,3.672-11.958,5.167-14.581c0.91-5.344,6.707-16.682,11.649-21.098c4.737,0.395,129.219,33.78,132.52,35.163c6.697,0.864,53.807,14.897,60.044,15.759c0,0,155.619,45.549,155.622,45.549c4.463,1.89,9.393,2.985,14.032,4.342c110.48,32.313,40.087,16.126,133.523,43.445c7.825,2.288,6.525,0.31,8.445,4.151c0.052,0.413,0.138,1.238,0.181,1.642c0.49,0.86,0.98,1.728,1.47,2.588c0.346,1.384,3.848,13.319,6.121,17.238c0.026,0.421,0.086,1.264,0.12,1.694c0.533,0.851,1.075,1.711,1.616,2.579c0.034,0.421,0.095,1.255,0.129,1.676c14.096,24.904,25.286,24.053,31.733,34.398c0.454,7.613-1.396,7.391,1.969,17.969c1.851,3.72-1.758,10.602-3.576,13.919c-0.103,0.799-0.198,1.608-0.284,2.416c-1.083,2.476-1.161,5.545,0.06,7.987c1.089,2.179,0.179,6.968,0.544,9.548c1.776,12.564,6.759,48.226,3.746,68.422c-1.324,2.201-0.181,4.952-1.462,7.162c-0.138,2.192-0.146,4.393-0.267,6.594c-1.032,1.84-0.696,4.006-0.885,6.027c0,0-4.39,25.372-7.445,32.954c-0.45,6.275-1.34,11.547-4.35,17.075c-0.043,0.413-0.129,1.238-0.172,1.651c-1.238,2.846-3.121,5.296-5.434,7.351c-2.923,0.129-6.035-0.576-8.778,0.671c-4.327,0.485-2.153,0.095-6.31,1.333c-0.026-3.637-0.12-7.273,0.095-10.91c0.525-1.05,2.071-12.162-1.1-26.747c-0.791-1.462-1.565-2.923-2.373-4.359c-0.043-0.413-0.138-1.229-0.18-1.642c-0.662-0.86-1.29-1.719-1.883-2.605c-4.935-9.268-12.862-16.559-17.736-25.852c-0.017-0.456-0.052-1.358-0.069-1.814c1.341-0.567,2.674-1.195,3.938-1.952c8.42-0.894,0.762,1.645,18.837-1.891c3.576-2.086,6.141-2.217,8.185-6.319c-0.017-2.029-0.017-4.041,0-6.053c-1.513-2.674-3.697-4.926-6.405-6.388c-1.805-0.06-3.74,0.181-5.348-0.808c-1.634-0.095-3.25-0.095-4.866,0c-2.442,1.496-5.528,0.06-8.013,1.427c-10.01,0.942-10.052,2.273-14.435,2.76c-5.06-3.457-17.1-17.131-31.931-24.821c-0.395-0.06-1.195-0.181-1.591-0.241c-5.013-2.156-4.225-1.37-10.24-1.694c-1.98-1.163-11.337-1.106-13.171,0c-11.809,1.209-11.594,0.147-38.015,10.674c-6.414,2.556-19.512,24.188-21.496,27.764c-0.044,0.414-0.121,1.239-0.164,1.652c-0.533,0.86-1.057,1.719-1.573,2.588c-0.982,5.129-2.051,5.343-2.82,15.338c-1.056,1.992-1.08,10.334,0,12.303c0.181,2.003-0.095,4.135,0.817,6.001c0.472,4.492,1.861,11.727,4.428,16.241c0.034,0.413,0.095,1.255,0.12,1.668c0.533,0.868,1.075,1.737,1.625,2.605c0.026,0.413,0.086,1.238,0.12,1.651c3.415,6.147,3.836,7.864,6.706,12.999c0.052,0.404,0.138,1.221,0.189,1.633c0.808,1.444,1.582,2.906,2.373,4.368c0.778,3.581,0.818,1.667,1.066,6.053c7.372,13.008,16.212,4.78,37.631,42.961c1.063,1.894,1.097,6.497,1.507,8.719c4.152,22.492-9.644,30.362-11.884,53.888c-0.96,2.037-1.839,11.179-3.121,14.916c-0.156,19.655-0.203,12.719,1.694,21.253c6.156,11.149,1.511,6.098,15.596,24.288c5.34,6.119,21.931,22.024,26.368,30.839c0.112,3.645-0.077,7.308,0.189,10.962c0.516,1.135,0.688,2.39,0.86,3.637c4.69,9.597,15.334,7.69,18.717,15.415c2.194,5.011,2.019,10.546,5.03,15.457c1.308,2.134,3.64,3.756,4.667,5.917c2.397,5.046-1.925,13.249-0.162,16.523c2.633,4.892,14.823,13.479,16.679,16.352c2.828,4.379,7.547,7.665,10.724,11.858c14.343,18.929,12.031,23.584,12.094,31.508c-0.43,4.582,4.015,7.755,3.766,12.354c0.731,1.754,0.825,3.723-0.112,5.434c-0.301,3.92-0.215,7.858-0.052,11.787c1.685,4.027,3.631,15.582,14.917,21.287c2.622,1.169,4.462,3.43,6.491,5.382c-0.017,1.444-0.043,2.897-0.069,4.359c-4.303,6.925-7.469,3.878-17.41,30.942c-6.835,19.651-8.15,33.702-8.15,33.702c-0.14,2.702-0.763,26.365,0.499,29.214c0,0.001,4.419,88.441,4.419,88.442c-3.516,4.694-7.273,9.328-9.646,14.745c-3.108,10.71-0.29,25.707-2.141,30.117c-0.301,4.264,0.232,8.606-0.662,12.836c-1.461,12.102-9.451,23.6-10.927,35.103c-10.033,28.801-26.368,54.869-36.96,83.446c-2.166,6.227,2.12,9.695-5.124,18.33c-9.917,10.658-17.646,24.176-23.729,37.167c-32.975,60.087-48.581,68.709-61.196,98.724c-3.516,7.609-4.118,16.507-9.638,23.153c-9.946,6.171-8.563,14.429-14.289,17.651c-3.946,1.393-8.279,0.318-12.294,1.47c-4.694,0.74-8.245,4.376-12.845,5.382c-3.68,0.937-7.574,0.447-11.211,1.599c-17.968,4.928-20.852,12.33-24.829,29.816c-9.128,39.693,3.63,36.015-8.649,60.964c-9.814,20.363-12.046,16.946-10.816,56.15c4.384,58.111,18.98,56.624,37.546,59.375c27.004,4.002,24.221-37.17,37.999-64.964c7.471-15.639,17.797-29.652,26.6-44.509c29.774,34.144,43.205,17.258,44.973,7.703c1.05-8.911,7.368-12.675,24.666-42.592c66.57-112.892,44.12-62.078,137.739-206.063c3.009-4.987,6.388-9.921,10.738-13.833c0.601,22.662-4.358,138.933-10.687,185.885c-9.175,98.847-9.948,91.313,0.834,131.807c5.795,0.396,11.383-1.436,17.109-1.9c-5.481,12.081-24.568,23.208-36.875,27.314c-12.194,3.973-34.153,20.936-12.776,30.651c37.238,16.923,87.599,4.783,108.32,4.353c13.015-0.27,11.803-8.483,12.299-12.731c0.919-7.877,9.447-52.859,3.126-71.296c-5.571-17.624,8.825-25.234,14.59-51.653c3.998-23.103,3.528-41.758,9.964-70.55l0.396-0.679c1.112-6.437,7.273-31.14,7.273-31.14l0.481-0.688c52.71-183.208,53.441-234.09,53.441-234.09c0.189-2.786,0.155-5.571,0.352-8.331c0.359-0.86,10.757-86.967,11.156-133.114C856.706,949.332,852.978,950.5,848.436,898.088z" />
+
+          <!-- Impact spark (chartreuse burst) at the moment of contact -->
+          <circle class="spark" cx="520" cy="1380" r="14" />
+
+          <!-- The ball at the apex — original OpenClipart coords, recolored chartreuse -->
+          <circle class="ball" cx="1117.505" cy="623.591" r="26" />
+        </svg>
+      </div>
+
+      <div class="wordmark">M · A · T · C · H</div>
+      <div class="caption">Hole 14 · 412 yds</div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <span class="lbl">Concept · 13 v3 / 13</span>
+    <h2>Now he <em>actually hits it.</em></h2>
+    <p><strong>The shot in 5 beats:</strong></p>
+    <p>
+      0.1s — silhouette settles in (he's finished his swing)<br/>
+      0.5s — chartreuse spark flashes at impact<br/>
+      0.55s — ball-flight arc strokes upward and out<br/>
+      1.25s — ball pops at the apex<br/>
+      1.5s — wordmark + caption fade in
+    </p>
+    <p style="color:var(--ink);"><strong>Reads as:</strong> "I just hit a great one."</p>
+    <div>
+      <button class="replay" id="replay">Replay</button>
+      <span class="duration">1.8s · loops every 5s</span>
+    </div>
+    <div class="credit">
+      Silhouette: <a href="https://openclipart.org/detail/307367/golfer-silhouette" target="_blank">OpenClipart — GDJ</a> · CC0 / Public Domain
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Source: <code>brand/previews/splash-swing.html</code> · Silhouette is a real public-domain SVG (one path), chartreuse arc + ball + spark layered on top with pure CSS animation. Original SVG also saved at <code>brand/previews/golfer-openclipart.svg</code>.
+</footer>
+
+<script>
+  function replay() {
+    const s = document.getElementById('screen');
+    s.classList.remove('play');
+    void s.offsetWidth;
+    s.classList.add('play');
+  }
+  document.getElementById('phone').addEventListener('click', replay);
+  document.getElementById('replay').addEventListener('click', (e) => { e.stopPropagation(); replay(); });
+  setInterval(replay, 5000);
+</script>
+
+</body>
+</html>
