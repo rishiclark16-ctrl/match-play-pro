@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MATCH Golf — App Splash Concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Strict brand tokens */
+    --napkin:        #efeadb;
+    --napkin-deep:   #e6e0cc;
+    --napkin-fold:   #d8d2bf;
+    --ink:           #1a1a1a;
+    --ink-soft:      #0a0a0a;
+    --gold:          #f0ee3a;
+    --gold-deep:     #d4cd00;
+
+    /* Golf score palette (from brand/02-colors.md) */
+    --eagle:         #1b7832;
+    --birdie:        #1b7832;
+    --par:           #eaeae4;
+    --bogey:         #f59e0b;
+    --double:        #ef4444;
+
+    /* Gallery only */
+    --paper:         #f5f5f0;
+    --text-muted:    #787878;
+    --border:        #dcdcd5;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink-soft); -webkit-font-smoothing: antialiased; }
+  body { font-family: Inter, system-ui, sans-serif; }
+
+  /* ── Editorial header ────────────────────────────────── */
+  header {
+    padding: 64px 32px 32px;
+    max-width: 1320px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--border);
+  }
+  .eyebrow {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--gold); box-shadow: 0 0 0 3px rgba(240,238,58,0.25); }
+  header h1 {
+    margin: 0;
+    font-family: "Instrument Serif", serif;
+    font-weight: 400;
+    font-size: 64px;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  header h1 em { font-style: italic; color: var(--ink); position: relative; padding: 0 2px; }
+  header h1 em::after {
+    content: "";
+    position: absolute;
+    left: -2px; right: -2px; bottom: 4px; height: 10px;
+    background: var(--gold);
+    z-index: -1;
+    opacity: 0.85;
+    transform: skewX(-6deg);
+  }
+  header p.lede {
+    margin: 18px 0 0;
+    color: var(--text-muted);
+    font-size: 15px;
+    max-width: 660px;
+    line-height: 1.6;
+  }
+
+  /* ── Grid + card ─────────────────────────────────────── */
+  .grid {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 56px 40px;
+  }
+  .card { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .meta {
+    width: 100%;
+    max-width: 320px;
+    text-align: left;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    position: relative;
+  }
+  .index { position: absolute; top: -1px; left: 0; width: 28px; height: 2px; background: var(--ink); }
+  .name-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+  .name { font-family: "Instrument Serif", serif; font-size: 24px; line-height: 1; letter-spacing: -0.01em; color: var(--ink); }
+  .num { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; }
+  .tag {
+    display: inline-block;
+    margin-top: 6px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    padding: 3px 7px;
+  }
+  .desc { color: var(--text-muted); font-size: 13px; line-height: 1.55; margin: 10px 0 12px; }
+  .ctrls { display: flex; align-items: center; gap: 10px; }
+  .replay {
+    appearance: none;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: white;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .replay:hover { background: #000; }
+  .duration { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+
+  /* ── iPhone shell ────────────────────────────────────── */
+  .phone {
+    position: relative;
+    width: 300px;
+    height: 630px;
+    background: #000;
+    border-radius: 48px;
+    padding: 8px;
+    box-shadow:
+      0 0 0 1.5px #1a1a1a,
+      0 30px 60px -24px rgba(0,0,0,0.4),
+      0 12px 24px -16px rgba(0,0,0,0.25);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 40px;
+    overflow: hidden;
+    background: var(--napkin);
+  }
+  .island { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 100px; height: 30px; background: #000; border-radius: 999px; z-index: 20; }
+
+
+  /* ═══════════════════════════════════════════════════════
+     09 — SCORECARD FILL
+     A front-nine card stagger-fills, score by score, total ticks up.
+     Tells the user: "we score everything precisely."
+     ═══════════════════════════════════════════════════════ */
+  .c9 .stage { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 70px 22px; }
+  .c9 .head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .c9 .head .live {
+    color: var(--ink);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .c9 .head .live::before {
+    content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--double);
+    animation: c9-pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes c9-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  .c9 .row-label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .c9 .scorecard {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+  .c9 .cell {
+    aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--ink);
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    position: relative;
+  }
+  .c9 .par-row .cell {
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+  .c9 .score-row .cell {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  .c9.play .score-row .cell {
+    animation: c9-cell-in 220ms cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  /* stagger via nth-child */
+  .c9.play .score-row .cell:nth-child(1) { animation-delay: 100ms; }
+  .c9.play .score-row .cell:nth-child(2) { animation-delay: 200ms; }
+  .c9.play .score-row .cell:nth-child(3) { animation-delay: 300ms; }
+  .c9.play .score-row .cell:nth-child(4) { animation-delay: 400ms; }
+  .c9.play .score-row .cell:nth-child(5) { animation-delay: 500ms; }
+  .c9.play .score-row .cell:nth-child(6) { animation-delay: 600ms; }
+  .c9.play .score-row .cell:nth-child(7) { animation-delay: 700ms; }
+  .c9.play .score-row .cell:nth-child(8) { animation-delay: 800ms; }
+  .c9.play .score-row .cell:nth-child(9) { animation-delay: 900ms; }
+  @keyframes c9-cell-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .c9 .cell.birdie { background: var(--birdie); color: white; border-color: var(--birdie); }
+  .c9 .cell.bogey  { background: var(--bogey);  color: white; border-color: var(--bogey); }
+  .c9 .cell.eagle  { background: var(--eagle);  color: white; border-color: var(--eagle); box-shadow: 0 0 0 2px var(--gold); }
+  .c9 .cell.par    { background: var(--par);    color: var(--ink); }
+
+  .c9 .total {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 16px;
+    background: var(--ink);
+    color: white;
+    border-radius: 10px;
+    margin-top: 12px;
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .c9.play .total { animation: c9-cell-in 360ms cubic-bezier(.2,.7,.2,1) 1100ms forwards; }
+  .c9 .total .lbl { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.6); }
+  .c9 .total .val { font-family: "Instrument Serif", serif; font-size: 32px; font-weight: 400; line-height: 1; }
+  .c9 .total .val em { font-style: italic; color: var(--gold); }
+
+
+  /* ═══════════════════════════════════════════════════════
+     10 — PRESSED
+     A stake displays ($20). A "PRESS" stamp slams in,
+     the screen shakes, the number doubles to $40 chartreuse.
+     ═══════════════════════════════════════════════════════ */
+  .c10 .stage { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 30px; }
+  .c10 .lbl {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .c10 .amt-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: baseline;
+    font-family: "Instrument Serif", serif;
+    font-weight: 400;
+    color: var(--ink);
+  }
+  .c10 .amt {
+    font-size: 120px;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    position: relative;
+    z-index: 2;
+  }
+  .c10 .amt .currency { font-size: 56px; vertical-align: top; position: relative; top: 18px; margin-right: 4px; font-style: italic; }
+  .c10 .highlight {
+    position: absolute;
+    left: 0; right: 0; bottom: 6px;
+    height: 30px;
+    background: var(--gold);
+    z-index: 1;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .c10 .stamp {
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-22deg) scale(2.5);
+    opacity: 0;
+    pointer-events: none;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 800;
+    font-size: 56px;
+    letter-spacing: 0.04em;
+    color: var(--double);
+    border: 6px solid var(--double);
+    border-radius: 8px;
+    padding: 8px 22px;
+    background: rgba(239,68,68,0.08);
+    z-index: 5;
+    mix-blend-mode: multiply;
+  }
+  .c10 .small {
+    margin-top: 14px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0;
+  }
+  /* Phases:
+     0.0  show $20 + "Nassau · 1 down"
+     0.7  stamp slams in (with screen shake)
+     1.0  stamp fades, amount doubles, chartreuse highlight slides under
+     1.7  small line "Auto-press · $40 in play" appears
+  */
+  .c10.play .stamp { animation: c10-slam 380ms cubic-bezier(.5,0,.1,1.4) 700ms forwards; }
+  .c10.play .screen-shake { animation: c10-shake 320ms cubic-bezier(.2,.5,.5,1) 980ms; }
+  .c10.play .highlight { animation: c10-strip 320ms cubic-bezier(.5,0,.2,1) 1000ms forwards; }
+  .c10.play .small { animation: c10-fade-up 380ms ease-out 1700ms forwards; }
+
+  @keyframes c10-slam {
+    0%   { opacity: 0; transform: translate(-50%, -120%) rotate(-22deg) scale(2.5); }
+    60%  { opacity: 1; transform: translate(-50%, -50%)  rotate(-12deg) scale(1.05); }
+    78%  { opacity: 1; transform: translate(-50%, -50%)  rotate(-8deg)  scale(1);    }
+    100% { opacity: 0.85; transform: translate(-50%, -50%) rotate(-8deg) scale(1);   }
+  }
+  @keyframes c10-shake {
+    0%, 100% { transform: translate(0,0); }
+    20%      { transform: translate(-3px, 2px); }
+    40%      { transform: translate(3px, -2px); }
+    60%      { transform: translate(-2px, 1px); }
+    80%      { transform: translate(2px, 1px); }
+  }
+  @keyframes c10-strip { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes c10-fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+
+  /* ═══════════════════════════════════════════════════════
+     11 — THE READ
+     Top-down green with break-line contours, a chartreuse
+     ball rolls along the read and drops into the cup.
+     Tells: "we play real golf."
+     ═══════════════════════════════════════════════════════ */
+  .c11 .stage { position: absolute; inset: 0; }
+  .c11 .green {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  .c11 .green path {
+    fill: none;
+    stroke: var(--napkin-fold);
+    stroke-width: 1.2;
+    opacity: 0;
+  }
+  .c11.play .green path { animation: c11-contour 700ms ease-out forwards; }
+  .c11.play .green path:nth-child(1) { animation-delay: 100ms; }
+  .c11.play .green path:nth-child(2) { animation-delay: 200ms; }
+  .c11.play .green path:nth-child(3) { animation-delay: 300ms; }
+  .c11.play .green path:nth-child(4) { animation-delay: 400ms; }
+  .c11.play .green path:nth-child(5) { animation-delay: 500ms; }
+  .c11.play .green path:nth-child(6) { animation-delay: 600ms; }
+  @keyframes c11-contour { to { opacity: 0.85; } }
+
+  .c11 .read-line {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+  }
+  .c11 .read-line path {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 2;
+    stroke-dasharray: 4 6;
+    stroke-linecap: round;
+    stroke-dashoffset: 800;
+  }
+  .c11.play .read-line path { animation: c11-readline 800ms ease-in-out 300ms forwards; }
+  @keyframes c11-readline {
+    from { stroke-dashoffset: 800; }
+    to   { stroke-dashoffset: 0; }
+  }
+
+  .c11 .ball {
+    position: absolute;
+    z-index: 5;
+    width: 16px; height: 16px;
+    border-radius: 999px;
+    background: var(--gold);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25), 0 0 0 0 rgba(240,238,58,0.0);
+    opacity: 0;
+    offset-path: path('M 150 80 C 100 200, 180 320, 130 440, 110 520, 150 555');
+    offset-distance: 0%;
+  }
+  .c11.play .ball { animation: c11-roll 1200ms cubic-bezier(.35,.15,.7,.95) 800ms forwards; }
+  @keyframes c11-roll {
+    0%   { opacity: 0; offset-distance: 0%;   transform: scale(1); }
+    8%   { opacity: 1; }
+    90%  { opacity: 1; offset-distance: 100%; transform: scale(0.95); }
+    100% { opacity: 0; offset-distance: 100%; transform: scale(0.3); }
+  }
+  .c11 .cup-wrap {
+    position: absolute;
+    left: 50%; bottom: 65px;
+    transform: translateX(-50%);
+    z-index: 4;
+  }
+  .c11 .cup {
+    width: 30px; height: 30px;
+    border-radius: 999px;
+    background: var(--ink);
+  }
+  .c11 .cup-ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 30px; height: 30px;
+    border-radius: 999px;
+    border: 2px solid var(--gold);
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+  .c11.play .cup-ring { animation: c11-ring 700ms cubic-bezier(.2,.7,.2,1) 1850ms forwards; }
+  @keyframes c11-ring {
+    0%   { opacity: 1; transform: translate(-50%, -50%) scale(1);   }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(5); }
+  }
+  .c11 .caption {
+    position: absolute;
+    bottom: 30px;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0;
+    z-index: 6;
+  }
+  .c11.play .caption { animation: c11-fade-up 380ms ease-out 2050ms forwards; }
+  @keyframes c11-fade-up { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+
+  /* ═══════════════════════════════════════════════════════
+     12 — LIVE LEADERBOARD
+     Player rows stream in like a sports ticker, scores tick,
+     "LIVE" indicator pulses. Tells: "real-time multiplayer."
+     ═══════════════════════════════════════════════════════ */
+  .c12 .stage { position: absolute; inset: 0; padding: 70px 18px 26px; display: flex; flex-direction: column; }
+  .c12 .head {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .c12 .live {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--double);
+  }
+  .c12 .live::before {
+    content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--double);
+    animation: c9-pulse 1.2s ease-in-out infinite;
+  }
+  .c12 .leaderboard { display: flex; flex-direction: column; gap: 8px; }
+  .c12 .player {
+    display: grid;
+    grid-template-columns: 22px 1fr 64px;
+    gap: 10px;
+    align-items: center;
+    padding: 12px 14px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  .c12 .player .pos { font-family: "JetBrains Mono", monospace; font-size: 11px; font-weight: 700; color: var(--text-muted); }
+  .c12 .player .nm  { font-weight: 700; font-size: 14px; color: var(--ink); }
+  .c12 .player .score {
+    text-align: right;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--ink);
+  }
+  .c12 .player .score.under { color: var(--birdie); }
+  .c12 .player .score.over  { color: var(--double); }
+  .c12 .player.lead { background: var(--ink); border-color: var(--ink); }
+  .c12 .player.lead .pos { color: var(--gold); }
+  .c12 .player.lead .nm  { color: white; }
+  .c12 .player.lead .score { color: var(--gold); }
+
+  .c12.play .player {
+    animation: c12-row-in 320ms cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  .c12.play .player:nth-child(1) { animation-delay: 200ms; }
+  .c12.play .player:nth-child(2) { animation-delay: 360ms; }
+  .c12.play .player:nth-child(3) { animation-delay: 520ms; }
+  .c12.play .player:nth-child(4) { animation-delay: 680ms; }
+  @keyframes c12-row-in {
+    from { opacity: 0; transform: translateX(8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .c12 .leader-flash {
+    position: absolute;
+    pointer-events: none;
+    top: 100px; left: 18px; right: 18px;
+    height: 50px;
+    border-radius: 10px;
+    background: var(--gold);
+    opacity: 0;
+    z-index: 1;
+    transform: scaleX(0.9);
+  }
+  .c12.play .leader-flash { animation: c12-leader-flash 600ms cubic-bezier(.5,0,.2,1) 1100ms forwards; }
+  @keyframes c12-leader-flash {
+    0%   { opacity: 0; transform: scaleX(0.9); }
+    35%  { opacity: 0.6; transform: scaleX(1.01); }
+    100% { opacity: 0; transform: scaleX(1); }
+  }
+  .c12 .footer-cap {
+    margin-top: auto;
+    text-align: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0;
+  }
+  .c12.play .footer-cap { animation: c11-fade-up 380ms ease-out 1500ms forwards; }
+
+
+  /* ── Footer ──────────────────────────────────────────── */
+  footer {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 24px 32px 64px;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.6;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--border);
+  }
+  footer code { font-family: "JetBrains Mono", monospace; background: white; border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px; font-size: 11px; }
+  footer .stake { font-family: "Instrument Serif", serif; font-style: italic; font-size: 14px; color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow"><span class="dot"></span> Splash · Round 3 · About the <em style="font-style:italic">app</em>, not the logo</p>
+  <h1>Show what <em>MATCH</em><br/>actually does.</h1>
+  <p class="lede">Four directions, each leaning on a different pillar of the product. No logo, no monogram, no cursive M — just the mechanic. Each runs ~1.5–2.4s, ends static, auto-loops every 5 seconds.</p>
+</header>
+
+<div class="grid">
+
+  <!-- ── 09 SCORECARD FILL ──────────────────────────────── -->
+  <div class="card">
+    <div class="phone" data-concept="c9">
+      <div class="screen c9 play">
+        <div class="island"></div>
+        <div class="stage">
+          <div class="head">
+            <span class="live">Live · Front 9</span>
+            <span>Sat · 9:42a</span>
+          </div>
+          <div class="row-label">Par</div>
+          <div class="scorecard par-row">
+            <div class="cell">4</div><div class="cell">5</div><div class="cell">3</div>
+            <div class="cell">4</div><div class="cell">4</div><div class="cell">5</div>
+            <div class="cell">3</div><div class="cell">4</div><div class="cell">4</div>
+          </div>
+          <div class="row-label">Score</div>
+          <div class="scorecard score-row">
+            <div class="cell par">4</div>
+            <div class="cell birdie">4</div>
+            <div class="cell par">3</div>
+            <div class="cell birdie">3</div>
+            <div class="cell par">4</div>
+            <div class="cell eagle">3</div>
+            <div class="cell bogey">4</div>
+            <div class="cell birdie">3</div>
+            <div class="cell par">4</div>
+          </div>
+          <div class="total">
+            <span class="lbl">Front 9</span>
+            <span class="val">32 <em>(−4)</em></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="index"></div>
+      <div class="name-row">
+        <div class="name">Scorecard Fill</div>
+        <div class="num">09 / 12</div>
+      </div>
+      <span class="tag">Data</span>
+      <div class="desc">A front-9 scorecard stagger-fills hole by hole, each cell color-coded — green for under, amber for over, with the eagle ringed in chartreuse. Total card lands at the bottom with <em>−4</em>. Reads as: "we score everything precisely."</div>
+      <div class="ctrls">
+        <button class="replay" data-target="c9">Replay</button>
+        <span class="duration">1.5s</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 10 PRESSED ─────────────────────────────────────── -->
+  <div class="card">
+    <div class="phone" data-concept="c10">
+      <div class="screen c10 play">
+        <div class="island"></div>
+        <div class="stage">
+          <div class="lbl">Nassau · 1 Down</div>
+          <div class="amt-wrap">
+            <div class="highlight"></div>
+            <div class="amt"><span class="currency">$</span><span id="c10-amt">20</span></div>
+          </div>
+          <div class="small">Auto-press · $40 in play</div>
+        </div>
+        <div class="stamp">PRESS</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="index"></div>
+      <div class="name-row">
+        <div class="name">Pressed</div>
+        <div class="num">10 / 12</div>
+      </div>
+      <span class="tag">Bet</span>
+      <div class="desc">A $20 Nassau is on the line. A red "PRESS" stamp slams in at an angle, the screen shakes, the amount doubles to $40 with a chartreuse highlight swiping under it. Reads as: "we make bets bigger, automatically."</div>
+      <div class="ctrls">
+        <button class="replay" data-target="c10">Replay</button>
+        <span class="duration">2.0s</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 11 THE READ ────────────────────────────────────── -->
+  <div class="card">
+    <div class="phone" data-concept="c11">
+      <div class="screen c11 play">
+        <div class="island"></div>
+        <div class="stage">
+          <svg class="green" viewBox="0 0 300 630" preserveAspectRatio="none">
+            <!-- Faint contour lines that fade in like topo break -->
+            <path d="M 0 180 Q 80 150, 160 180 T 320 200"/>
+            <path d="M 0 240 Q 80 200, 160 240 T 320 260"/>
+            <path d="M 0 300 Q 80 270, 160 300 T 320 320"/>
+            <path d="M 0 360 Q 80 330, 160 360 T 320 380"/>
+            <path d="M 0 420 Q 80 390, 160 420 T 320 440"/>
+            <path d="M 0 480 Q 80 460, 160 480 T 320 500"/>
+          </svg>
+          <svg class="read-line" viewBox="0 0 300 630" preserveAspectRatio="none">
+            <!-- Dashed read line for the trajectory the ball will follow -->
+            <path d="M 150 80 C 100 200, 180 320, 130 440, 110 520, 150 555"/>
+          </svg>
+          <div class="ball"></div>
+          <div class="cup-wrap">
+            <div class="cup"></div>
+            <div class="cup-ring"></div>
+          </div>
+          <div class="caption">Reading the line · Hole 14</div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="index"></div>
+      <div class="name-row">
+        <div class="name">The Read</div>
+        <div class="num">11 / 12</div>
+      </div>
+      <span class="tag">Golf</span>
+      <div class="desc">Top-down: faint contour lines flow in as the green's break, a dashed read line traces the curving path, then the chartreuse ball rolls along it and drops into the dark cup. A gold ring pulses outward on contact. Reads as: "we play real golf."</div>
+      <div class="ctrls">
+        <button class="replay" data-target="c11">Replay</button>
+        <span class="duration">2.4s</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 12 LIVE LEADERBOARD ───────────────────────────── -->
+  <div class="card">
+    <div class="phone" data-concept="c12">
+      <div class="screen c12 play">
+        <div class="island"></div>
+        <div class="stage">
+          <div class="head">
+            <span class="live">Live</span>
+            <span>Through 12</span>
+          </div>
+          <div class="leader-flash"></div>
+          <div class="leaderboard">
+            <div class="player lead">
+              <span class="pos">1</span>
+              <span class="nm">RISHI</span>
+              <span class="score">−3</span>
+            </div>
+            <div class="player">
+              <span class="pos">2</span>
+              <span class="nm">DAVID</span>
+              <span class="score under">−1</span>
+            </div>
+            <div class="player">
+              <span class="pos">3</span>
+              <span class="nm">LUC</span>
+              <span class="score">E</span>
+            </div>
+            <div class="player">
+              <span class="pos">4</span>
+              <span class="nm">ROB</span>
+              <span class="score over">+4</span>
+            </div>
+          </div>
+          <div class="footer-cap">Real-time · 4 players</div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="index"></div>
+      <div class="name-row">
+        <div class="name">Live Leaderboard</div>
+        <div class="num">12 / 12</div>
+      </div>
+      <span class="tag">Social</span>
+      <div class="desc">Four player rows stream in like a sports broadcast feed — the leader's row inverts to black with their score in chartreuse, a gold highlight pulses across it on lock. Reads as: "we keep score in real-time, with your group."</div>
+      <div class="ctrls">
+        <button class="replay" data-target="c12">Replay</button>
+        <span class="duration">2.0s</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div>
+    Source: <code>brand/previews/splash-app.html</code> ·
+    Concepts 09–12 (logo concepts in <code>splash-concepts.html</code> + <code>splash-dynamic.html</code>)
+  </div>
+  <div class="stake">Pick a pillar. The whole brand follows from it.</div>
+</footer>
+
+<script>
+  function replay(concept) {
+    const screen = document.querySelector('.phone[data-concept="' + concept + '"] .screen');
+    if (!screen) return;
+    screen.classList.remove('play');
+    void screen.offsetWidth;
+    screen.classList.add('play');
+    if (concept === 'c10') runPressed();
+  }
+  document.querySelectorAll('.phone').forEach((phone) => {
+    phone.addEventListener('click', () => replay(phone.dataset.concept));
+  });
+  document.querySelectorAll('.replay').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      replay(btn.dataset.target);
+    });
+  });
+
+  /* ── Concept 10: $20 → $40 swap, plus screen shake hook ─ */
+  let pressedTimers = [];
+  function runPressed() {
+    pressedTimers.forEach(clearTimeout); pressedTimers = [];
+    const amt = document.getElementById('c10-amt');
+    const screen = document.querySelector('.phone[data-concept="c10"] .screen');
+    if (!amt || !screen) return;
+    amt.textContent = '20';
+    // Shake the inner stage to give the slam impact
+    pressedTimers.push(setTimeout(() => {
+      screen.classList.add('screen-shake');
+    }, 980));
+    pressedTimers.push(setTimeout(() => {
+      // Quick counter from 20 → 40
+      let v = 20;
+      const id = setInterval(() => {
+        v += 2;
+        amt.textContent = v;
+        if (v >= 40) { clearInterval(id); }
+      }, 30);
+    }, 1000));
+    pressedTimers.push(setTimeout(() => {
+      screen.classList.remove('screen-shake');
+    }, 1400));
+  }
+  runPressed();
+
+  setInterval(() => {
+    ['c9','c10','c11','c12'].forEach(replay);
+  }, 5000);
+</script>
+
+</body>
+</html>

@@ -21,8 +21,11 @@ dist-ssr
 # Claude Code local settings
 .claude/
 
-# Apple Sign In private key
+# Signing keys / certs / provisioning (never commit)
 *.p8
+*.p12
+*.pem
+*.mobileprovision
 
 # Supabase temp files (contains connection strings)
 supabase/.temp/
@@ -53,3 +56,11 @@ AuthKey_*.p8
 .agents/
 .playwright-mcp/
 ios/App/.claude-flow/
+
+# Rendered marketing media — large, back up outside git
+out/
+content/
+remotion/public/
+public/audio/
+public/screens/
+screenshots/

@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -36,6 +37,9 @@ jobs:
       - name: Lint (src only)
         run: bunx eslint src --max-warnings 50
 
+      - name: Typecheck (ratchet — count must not exceed .typecheck-baseline)
+        run: bun run typecheck:ratchet
+
       - name: Unit tests (hooks/lib/engine/components)
         # Page tests are run separately because their module mocks leak
         # into the same worker process under bun's CI scheduler.
@@ -51,6 +55,9 @@ jobs:
 
   ios-sync-check:
     name: iOS Capacitor Sync + Pod Install
+    # macOS runners bill at 10x Linux against the 2,000 free minutes/month.
+    # Manual-trigger only: run it before an iOS release, not on every push.
+    if: github.event_name == 'workflow_dispatch'
     runs-on: macos-latest
     timeout-minutes: 25
 
