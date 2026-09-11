@@ -14,6 +14,8 @@
     "build:staging": "vite build --mode staging",
     "build:production": "vite build --mode production",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "typecheck:ratchet": "node scripts/typecheck-ratchet.mjs",
     "preview": "vite preview",
     "preview:staging": "vite preview --mode staging",
     "test": "vitest",
