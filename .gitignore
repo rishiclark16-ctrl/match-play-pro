@@ -21,8 +21,11 @@ dist-ssr
 # Claude Code local settings
 .claude/
 
-# Apple Sign In private key
+# Signing keys / certs / provisioning (never commit)
 *.p8
+*.p12
+*.pem
+*.mobileprovision
 
 # Supabase temp files (contains connection strings)
 supabase/.temp/
