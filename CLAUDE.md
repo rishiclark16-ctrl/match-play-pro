@@ -336,7 +336,7 @@ Open items (Phase P2+):
   - 1x leaked-password protection — Supabase dashboard toggle (Auth → Settings → Auth Providers → Email).
   - 1x extension `pg_net` in public schema — cosmetic, low risk.
   - 2x INFO: `promo_codes` + `push_rate_limits` have RLS enabled with no policies (intentional — deny-all by default; service role bypasses).
-- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224, under target), `Scorecard.tsx` 844 (was 1123), `NewRound.tsx` 892 (was 1100), `RoundComplete.tsx` 931 (was 976), `Stats.tsx` 520 (was 833, just over), `Profile.tsx` 709 (was 831), `Home.tsx` 509 (was 699, just 9 over).
+- File-size violators (>500 lines): ✅ `FormatStep.tsx` **365** (was 1224, under target), ✅ `NewRound.tsx` **494** (was 1100, under target), `Scorecard.tsx` 844 (was 1123), `RoundComplete.tsx` 931 (was 976), `Stats.tsx` 520 (was 833, just over), `Profile.tsx` 709 (was 831), `Home.tsx` 509 (was 699, just 9 over).
 - Component/page test coverage is bootstrapping — Scorecard + NewRound have early-return smoke tests; rest of pages still untested.
 - 19 remaining `useEffect` dep warnings (non-critical paths — review opportunistically).
 
@@ -380,6 +380,17 @@ Phase P2.6 (NewRound split) — multi-wave:
 - Extracted solo-round flow (~41 lines) → `src/lib/createSoloRound.ts`. Pure async helper returning a discriminated `{ ok, ...}` outcome. Page owns isCreating + toast presentation.
 - Extracted API course selection flow (~80 lines: 5 useStates + 3 handlers + finalize helper) → `src/hooks/useApiCourseSelection.ts`. Encapsulates the search → tee dialog → finalize sequence; page reads exposed state for prop wiring.
 - Result: `NewRound.tsx` 1100 → 892 lines (−19%).
+
+Phase P2.6b (NewRound split — second wave) complete:
+- Extracted mixed-tees state + handlers (~32 lines) → `src/hooks/useMixedTees.ts`. Owns `mixedTees`, `roundTeeSets`, `playerTeeIds` plus the "expand from API course" side-effect when toggled on, and the per-player tee assignment handler.
+- Extracted player-roster handlers (~75 lines) → `src/hooks/usePlayerRoster.ts`. CRUD + `handleAddFriend` + `handleSelectGroup`. The group-load flow takes a small `groupHooks` bag for `setSelectedGroupId` / `setHouseGameEnabled` since loading a group resets both.
+- Extracted `handleStartRound` (~90 lines) → `src/hooks/useStartRound.ts`. Owns its own `isCreating` flag (page combines it with the solo flow's `isCreatingSolo`). Builds games via `buildGamesFromToggles`, appends ghost player when active, suppresses redundant stroke play when a house game is active, then calls createRound + navigates / toasts on outcome.
+- Extracted step-progress header (~36 lines) → `src/components/golf/NewRoundStepHeader.tsx`. Generic over the step union; renders back button, "Step N of M" caption, title, and segmented progress bar.
+- Extracted format-step header cards (~88 lines) → `src/components/golf/NewRoundFormatHeader.tsx`. House-game card + ghost-player card. Ghost props grouped into a single `ghost` object so the parent passes a 4-prop surface.
+- Extracted bottom CTA bar (~57 lines) → `src/components/golf/NewRoundBottomCta.tsx`. Picks the right of the three buttons (Start Solo / Next / Start Round) based on step + mode + finality. Handlers + disabled flags grouped to keep the prop count under threshold.
+- Extracted mode-step cards (~52 lines) → `src/components/golf/NewRoundModeStep.tsx`. The "How do you want to play today?" buttons. Takes a single `onSelect(mode)` callback.
+- Compacted `<FormatStep>` prop wiring (paired props onto same line) and minor destructure compaction.
+- Result: `NewRound.tsx` 892 → **494 lines** (−45%, under the 500-line target). Test baseline holds at 1171 pass / 0 fail. Build + lint clean. Pre-existing tsc errors preserved (the dropped 4 mixed-tees TeeSet errors moved with the extraction).
 
 Phase P2.5 (FormatStep split) complete:
 - Extracted saved-formats picker UI (~150 lines) → `src/components/golf/SavedFormatsPicker.tsx`.

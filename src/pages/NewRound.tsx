@@ -1,33 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Loader2, Flag, Users, Gamepad2, Sparkles, ToggleLeft, ToggleRight, ChevronRight, Target } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Flag, Users, Gamepad2 } from 'lucide-react';
 import { TeeSelector } from '@/components/golf/TeeSelector';
 import { CourseStep } from '@/components/golf/CourseStep';
 import { PlayersStep } from '@/components/golf/PlayersStep';
 import { FormatStep } from '@/components/golf/FormatStep';
+import { NewRoundStepHeader } from '@/components/golf/NewRoundStepHeader';
+import { NewRoundFormatHeader } from '@/components/golf/NewRoundFormatHeader';
+import { NewRoundBottomCta } from '@/components/golf/NewRoundBottomCta';
+import { NewRoundModeStep } from '@/components/golf/NewRoundModeStep';
 import { useCourses } from '@/hooks/useCourses';
-import { useGolfCourseSearch, GolfCourseResult, GolfCourseDetails } from '@/hooks/useGolfCourseSearch';
+import { useGolfCourseSearch } from '@/hooks/useGolfCourseSearch';
 import { useCreateSupabaseRound } from '@/hooks/useCreateSupabaseRound';
 import { useProfile } from '@/hooks/useProfile';
-import { useFriends, Friend } from '@/hooks/useFriends';
-import { useGroups, GolfGroup } from '@/hooks/useGroups';
+import { useFriends } from '@/hooks/useFriends';
+import { useGroups } from '@/hooks/useGroups';
 import { useHouseGame } from '@/hooks/useHouseGame';
 import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { useGroupFormats } from '@/hooks/useGroupFormats';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Course, HoleInfo, Team, TeeSet, generateId } from '@/types/golf';
+import { Course, Team } from '@/types/golf';
 import { PersonalGameFormat } from '@/types/houseGame';
-import { buildConfig, summarizeScoringConfig } from '@/engine/HouseGameEngine';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { PaywallModal } from '@/components/subscription/PaywallModal';
 import { useFormatActiveSync } from '@/hooks/useFormatActiveSync';
-import { buildGamesFromToggles } from '@/lib/buildGamesFromToggles';
 import { createSoloRound } from '@/lib/createSoloRound';
 import { useApiCourseSelection } from '@/hooks/useApiCourseSelection';
+import { useMixedTees } from '@/hooks/useMixedTees';
+import { usePlayerRoster } from '@/hooks/usePlayerRoster';
+import { useStartRound } from '@/hooks/useStartRound';
 
 type Step = 'mode' | 'course' | 'players' | 'format';
 type RoundMode = 'solo' | 'multi';
@@ -54,7 +57,7 @@ export default function NewRound() {
   const { groups } = useGroups();
 
   // UI state
-  const [isCreating, setIsCreating] = useState(false);
+  const [isCreatingSolo, setIsCreatingSolo] = useState(false);
   const [step, setStep] = useState<Step>('mode');
   const [mode, setMode] = useState<RoundMode>('multi');
   const [showPaywall, setShowPaywall] = useState(false);
@@ -68,20 +71,11 @@ export default function NewRound() {
 
   // API course selection (search → tee dialog → finalize)
   const {
-    isLoadingApiCourse,
-    showTeeSelector,
-    setShowTeeSelector,
-    pendingCourseDetails,
-    courseApiDetails,
-    handleSelectApiCourse,
-    handleTeeSelect,
+    isLoadingApiCourse, showTeeSelector, setShowTeeSelector,
+    pendingCourseDetails, courseApiDetails, handleSelectApiCourse, handleTeeSelect,
   } = useApiCourseSelection({
-    getCourseDetails,
-    convertToHoleInfo,
-    getTeeInfo,
-    createCourse,
-    setSelectedCourse,
-    setHoleCount,
+    getCourseDetails, convertToHoleInfo, getTeeInfo,
+    createCourse, setSelectedCourse, setHoleCount,
   });
 
   // Players state
@@ -123,6 +117,7 @@ export default function NewRound() {
   const [sixesEnabled, setSixesEnabled] = useState(false);
   const [sixesStakes, setSixesStakes] = useState('1');
 
+
   // Group + house game
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [houseGameEnabled, setHouseGameEnabled] = useState(true);
@@ -147,9 +142,9 @@ export default function NewRound() {
     current: { strokePlay, matchPlay, skinsEnabled, nassauEnabled, stablefordEnabled, bestBallEnabled, wolfEnabled, vegasEnabled, ninesEnabled, defenderEnabled, sixesEnabled },
     setters: {
       strokePlay: setStrokePlay, matchPlay: setMatchPlay, skinsEnabled: setSkinsEnabled,
-      nassauEnabled: setNassauEnabled, stablefordEnabled: setStablefordEnabled,
-      bestBallEnabled: setBestBallEnabled, wolfEnabled: setWolfEnabled, vegasEnabled: setVegasEnabled,
-      ninesEnabled: setNinesEnabled, defenderEnabled: setDefenderEnabled, sixesEnabled: setSixesEnabled,
+      nassauEnabled: setNassauEnabled, stablefordEnabled: setStablefordEnabled, bestBallEnabled: setBestBallEnabled,
+      wolfEnabled: setWolfEnabled, vegasEnabled: setVegasEnabled, ninesEnabled: setNinesEnabled,
+      defenderEnabled: setDefenderEnabled, sixesEnabled: setSixesEnabled,
     },
   });
 
@@ -161,38 +156,9 @@ export default function NewRound() {
   const [ghostName, setGhostName] = useState('Ghost');
   const [ghostHandicap, setGhostHandicap] = useState<number | undefined>(undefined);
 
-  // Mixed tees
-  const [mixedTees, setMixedTees] = useState(false);
-  const [roundTeeSets, setRoundTeeSets] = useState<TeeSet[]>([
-    { id: 'blue', name: 'Blue', gender: 'mens', slope: 130, courseRating: 71.5, par: 72 },
-    { id: 'red', name: 'Red', gender: 'womens', slope: 113, courseRating: 68.2, par: 72 },
-  ]);
-  const [playerTeeIds, setPlayerTeeIds] = useState<Map<string, string>>(new Map());
-
-  // When mixed tees is toggled on with an API course, populate teeSets from course data
-  const handleMixedTeesChange = (v: boolean) => {
-    setMixedTees(v);
-    if (v && courseApiDetails) {
-      const maleTees: TeeSet[] = (courseApiDetails.tees?.male ?? []).map(t => ({
-        id: `male-${t.tee_name.toLowerCase().replace(/\s+/g, '-')}`,
-        name: t.tee_name,
-        gender: 'mens' as const,
-        slope: t.slope_rating,
-        courseRating: t.course_rating,
-        par: t.par_total,
-      }));
-      const femaleTees: TeeSet[] = (courseApiDetails.tees?.female ?? []).map(t => ({
-        id: `female-${t.tee_name.toLowerCase().replace(/\s+/g, '-')}`,
-        name: t.tee_name,
-        gender: 'womens' as const,
-        slope: t.slope_rating,
-        courseRating: t.course_rating,
-        par: t.par_total,
-      }));
-      const allTees = [...maleTees, ...femaleTees];
-      if (allTees.length > 0) setRoundTeeSets(allTees);
-    }
-  };
+  // Mixed tees state + handlers
+  const { mixedTees, roundTeeSets, setRoundTeeSets, playerTeeIds, handleMixedTeesChange, handleUpdatePlayerTee }
+    = useMixedTees({ courseApiDetails });
 
   // Auto-enable mixed tees when house game has the primitive active
   const mixedTeesPrimitiveActive = houseGame?.activePrimitives?.some(p => p.id === 'handicap_mixed_tees') ?? false;
@@ -269,89 +235,18 @@ export default function NewRound() {
     }
   };
 
-  // Player handlers
-  const addPlayer = () => {
-    if (players.length < 4) {
-      setPlayers([...players, { id: Date.now().toString(), name: '', handicap: undefined, manualStrokes: 0 }]);
-    }
-  };
-
-  const removePlayer = (id: string) => {
-    setPlayers(players.filter(p => p.id !== id));
-  };
-
-  const updatePlayer = (id: string, updates: Partial<PlayerData>) => {
-    setPlayers(players.map(p => (p.id === id ? { ...p, ...updates } : p)));
-  };
-
-  const handleAddFriend = (friend: Friend) => {
-    const emptySlotIndex = players.findIndex(p => !p.name.trim());
-    if (emptySlotIndex !== -1) {
-      const updated = [...players];
-      updated[emptySlotIndex] = {
-        ...updated[emptySlotIndex],
-        name: friend.fullName || '',
-        handicap: friend.handicap ?? undefined,
-        manualStrokes: 0,
-        profileId: friend.id,
-      };
-      setPlayers(updated);
-    } else if (players.length < 4) {
-      setPlayers([
-        ...players,
-        {
-          id: Date.now().toString(),
-          name: friend.fullName || '',
-          handicap: friend.handicap ?? undefined,
-          manualStrokes: 0,
-          profileId: friend.id,
-        },
-      ]);
-    }
-    setAddedFriendIds(prev => [...prev, friend.id]);
-  };
-
-  const handleSelectGroup = (group: GolfGroup) => {
-    setSelectedGroupId(group.id);
-    setHouseGameEnabled(true); // reset toggle whenever group changes
-    const newPlayers: PlayerData[] = group.members.slice(0, 4).map(member => ({
-      id: member.id,
-      name: member.name,
-      handicap: member.handicap ?? undefined,
-      manualStrokes: 0,
-      profileId: member.profileId || undefined,
-    }));
-
-    while (newPlayers.length < 2) {
-      newPlayers.push({
-        id: Date.now().toString() + newPlayers.length,
-        name: '',
-        handicap: undefined,
-        manualStrokes: 0,
-      });
-    }
-
-    setPlayers(newPlayers);
-    setAddedFriendIds(group.members.filter(m => m.profileId).map(m => m.profileId!));
-    toast.success(`Loaded ${group.name}`);
-  };
-
-  const handleUpdatePlayerTee = (playerId: string, teeSetId: string | undefined) => {
-    setPlayerTeeIds(prev => {
-      const next = new Map(prev);
-      if (teeSetId) {
-        next.set(playerId, teeSetId);
-      } else {
-        next.delete(playerId);
-      }
-      return next;
-    });
-  };
+  // Player roster: CRUD + add-friend + load-group.
+  const { addPlayer, removePlayer, updatePlayer, handleAddFriend, handleSelectGroup } = usePlayerRoster({
+    players,
+    setPlayers,
+    setAddedFriendIds,
+    groupHooks: { setSelectedGroupId, setHouseGameEnabled },
+  });
 
   // Solo round creator — single player, no games, minimal fields.
   const handleStartSoloRound = async () => {
-    if (!selectedCourse || isCreating) return;
-    setIsCreating(true);
+    if (!selectedCourse || isCreatingSolo) return;
+    setIsCreatingSolo(true);
     const outcome = await createSoloRound({ selectedCourse, holeCount, profile, createRound });
     if (outcome.ok) {
       toast.success('Solo round started — good luck!');
@@ -360,97 +255,27 @@ export default function NewRound() {
       toast.error(outcome.message);
       if (outcome.isAuthError) navigate('/auth');
     }
-    setIsCreating(false);
+    setIsCreatingSolo(false);
   };
 
-  // Start round handler
-  const handleStartRound = async () => {
-    if (!selectedCourse || isCreating) return;
-    setIsCreating(true);
-
-    try {
-      const holeInfo: HoleInfo[] = selectedCourse.holes.slice(0, holeCount);
-      const validPlayerList = players.filter(p => p.name.trim());
-
-      const { games, hasHouseGame } = buildGamesFromToggles({
-        validPlayerCount: validPlayerList.length,
-        validPlayers: validPlayerList.map(p => ({ id: p.id, name: p.name })),
-        matchPlay, matchPlayFormat, matchPlayTeamA, matchPlayTeamB, stakes,
-        skinsEnabled, skinsStakes, skinsCarryover,
-        nassauEnabled, nassauStakes, nassauAutoPress,
-        stablefordEnabled, stablefordModified,
-        bestBallEnabled, bestBallTeams,
-        wolfEnabled, wolfStakes, wolfCarryover,
-        vegasEnabled, vegasStakes, vegasCarryover,
-        ninesEnabled, ninesStakes,
-        defenderEnabled, defenderStakes,
-        sixesEnabled, sixesStakes,
-        houseGame, houseGameEnabled, selectedPersonalFormat,
-        generateId,
-      });
-
-      // Build player list, appending ghost if active
-      const roundPlayers = players
-        .filter(p => p.name.trim())
-        .map(p => ({
-          name: p.name.trim(),
-          handicap: p.handicap,
-          manualStrokes: p.manualStrokes ?? 0,
-          teamId: bestBallTeams.find(t => t.playerIds.includes(p.id))?.id,
-          profileId: p.profileId,
-          isGhost: false,
-          teeSetId: mixedTees ? (playerTeeIds.get(p.id)) : undefined,
-        }));
-
-      if (ghostPrimitiveActive && houseGameEnabled) {
-        roundPlayers.push({
-          name: ghostName.trim() || 'Ghost',
-          handicap: ghostHandicap,
-          manualStrokes: 0,
-          teamId: undefined,
-          profileId: undefined,
-          isGhost: true,
-        });
-      }
-
-      // When a house game format is active, disable stroke play so the scorecard
-      // shows the format's scoring (skins, nassau, etc.) instead of redundant stroke totals
-      const effectiveStrokePlay = hasHouseGame ? false : strokePlay;
-
-      const result = await createRound({
-        courseId: selectedCourse.id,
-        courseName: selectedCourse.name,
-        holes: holeCount,
-        holeInfo,
-        strokePlay: effectiveStrokePlay,
-        matchPlay,
-        stakes: stakes ? Number(stakes) : undefined,
-        slope: selectedCourse.slope,
-        rating: selectedCourse.rating,
-        handicapMode,
-        games,
-        teeSets: mixedTees ? roundTeeSets : undefined,
-        mixedTees,
-        players: roundPlayers,
-      });
-
-      if (result.round) {
-        toast.success(`Round created! Join code: ${result.round.joinCode}`);
-        navigate(`/round/${result.round.id}`);
-      } else if (result.error) {
-        toast.error(result.error.message);
-        if (result.error.isAuthError) {
-          navigate('/auth');
-        }
-      } else {
-        toast.error('Failed to create round. Please try again.');
-      }
-    } catch {
-      toast.error('Failed to create round. Please try again.');
-    } finally {
-      setIsCreating(false);
-    }
-  };
+  // Start (multi) round handler — `useStartRound` owns its own isCreating flag.
+  const { isCreating: isCreatingMulti, startRound } = useStartRound({ createRound });
+  const handleStartRound = () => startRound({
+    selectedCourse, holeCount, players, handicapMode,
+    strokePlay, matchPlay, matchPlayFormat, matchPlayTeamA, matchPlayTeamB, stakes,
+    skinsEnabled, skinsStakes, skinsCarryover,
+    nassauEnabled, nassauStakes, nassauAutoPress,
+    stablefordEnabled, stablefordModified, bestBallEnabled, bestBallTeams,
+    wolfEnabled, wolfStakes, wolfCarryover,
+    vegasEnabled, vegasStakes, vegasCarryover,
+    ninesEnabled, ninesStakes, defenderEnabled, defenderStakes,
+    sixesEnabled, sixesStakes,
+    mixedTees, roundTeeSets, playerTeeIds,
+    houseGame, houseGameEnabled, selectedPersonalFormat,
+    ghostPrimitiveActive, ghostName, ghostHandicap,
+  });
+  // Combined isCreating drives the bottom CTAs (solo + multi share the same button area)
+  const isCreating = isCreatingSolo || isCreatingMulti;
 
   const handleUseThisGame = async (format: PersonalGameFormat) => {
     if (!isPro) {
@@ -484,43 +309,14 @@ export default function NewRound() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       {/* Fixed Header */}
-      <header className="flex-shrink-0 relative z-10 px-6 pb-3 pt-safe-content border-b-2 border-foreground">
-        <div className="flex items-center gap-3">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() =>
-              currentStepIndex > 0 ? setStep(steps[currentStepIndex - 1]) : navigate('/')
-            }
-            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </motion.button>
-
-          <div className="flex-1">
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              Step {currentStepIndex + 1} of {steps.length}
-            </p>
-            <h1 className="text-[22px] font-black tracking-[-0.04em] leading-tight text-foreground">{stepConfig[step].title}</h1>
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="flex gap-[3px] mt-2">
-          {steps.map((s, i) => (
-            <motion.div
-              key={s}
-              className={cn(
-                'h-[3px] flex-1 rounded-full',
-                i < currentStepIndex ? 'bg-foreground' : i === currentStepIndex ? 'bg-foreground/35' : 'bg-border'
-              )}
-              initial={i < currentStepIndex ? { scaleX: 0 } : false}
-              animate={i < currentStepIndex ? { scaleX: 1 } : {}}
-              style={{ transformOrigin: 'left' }}
-              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            />
-          ))}
-        </div>
-      </header>
+      <NewRoundStepHeader
+        steps={steps}
+        step={step}
+        stepConfig={stepConfig}
+        onBack={() =>
+          currentStepIndex > 0 ? setStep(steps[currentStepIndex - 1]) : navigate('/')
+        }
+      />
 
       {/* Scrollable Content */}
       <main
@@ -529,58 +325,9 @@ export default function NewRound() {
       >
         <AnimatePresence mode="wait">
           {step === 'mode' && (
-            <motion.div
-              key="mode"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-              className="pt-4 space-y-3"
-            >
-              <p className="text-[13px] text-muted-foreground mb-1 px-1">
-                How do you want to play today?
-              </p>
-
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => { hapticLight(); setMode('multi'); setStep('course'); }}
-                className={cn(
-                  'w-full rounded-2xl border-2 px-4 py-5 flex items-center gap-4 text-left transition-colors',
-                  'bg-[#0A0A0A] border-[#0A0A0A]'
-                )}
-              >
-                <div className="w-11 h-11 rounded-xl bg-[#F0EE3A] flex items-center justify-center flex-shrink-0">
-                  <Users className="w-5 h-5 text-[#0A0A0A]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-bold text-white">With Others</p>
-                  <p className="text-[12px] text-white/60 leading-snug">
-                    Scoring, betting games, match play
-                  </p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-white/60 flex-shrink-0" />
-              </motion.button>
-
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => { hapticLight(); setMode('solo'); setStep('course'); }}
-                className={cn(
-                  'w-full rounded-2xl border-2 px-4 py-5 flex items-center gap-4 text-left transition-colors',
-                  'bg-white border-border/40'
-                )}
-              >
-                <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
-                  <Target className="w-5 h-5 text-foreground" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-bold text-foreground">Solo</p>
-                  <p className="text-[12px] text-muted-foreground leading-snug">
-                    Track just your stats — no bets, no teams
-                  </p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-              </motion.button>
-            </motion.div>
+            <NewRoundModeStep
+              onSelect={(m) => { setMode(m); setStep('course'); }}
+            />
           )}
           {step === 'course' && (
             <CourseStep
@@ -634,108 +381,26 @@ export default function NewRound() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             >
-              {/* House Game active card — only shows if this group has a saved House Game */}
-              {houseGame && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 mb-2"
-                >
-                  <div className={cn(
-                    'rounded-2xl border-2 px-4 py-3 flex items-center gap-3 transition-colors',
-                    houseGameEnabled
-                      ? 'bg-[#0A0A0A] border-[#0A0A0A]'
-                      : 'bg-white border-border/40'
-                  )}>
-                    <div className={cn(
-                      'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
-                      houseGameEnabled ? 'bg-[#F0EE3A]' : 'bg-muted'
-                    )}>
-                      <Sparkles className={cn('w-4 h-4', houseGameEnabled ? 'text-[#0A0A0A]' : 'text-muted-foreground')} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={cn('text-[13px] font-bold truncate', houseGameEnabled ? 'text-white' : 'text-foreground')}>
-                        {houseGame.name || 'House Game'}
-                      </p>
-                      {(() => {
-                        const cfg = buildConfig(houseGame.activePrimitives);
-                        const lines = summarizeScoringConfig(cfg, 2);
-                        return lines.length > 0 ? (
-                          <p className={cn('text-[11px] truncate', houseGameEnabled ? 'text-white/50' : 'text-muted-foreground')}>
-                            {lines.join(' · ')}
-                          </p>
-                        ) : null;
-                      })()}
-                    </div>
-                    <button
-                      onClick={() => setHouseGameEnabled(v => !v)}
-                      className="flex-shrink-0"
-                    >
-                      {houseGameEnabled
-                        ? <ToggleRight className="w-7 h-7 text-[#F0EE3A]" />
-                        : <ToggleLeft className="w-7 h-7 text-muted-foreground" />
-                      }
-                    </button>
-                  </div>
-                  {houseGameEnabled && (
-                    <p className="text-[11px] text-muted-foreground text-center mt-1.5">
-                      House Game is active for this round
-                    </p>
-                  )}
-                </motion.div>
-              )}
-
-              {/* Ghost Player card — shown when house game or personal format has the ghost primitive active */}
-              {ghostPrimitiveActive && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-3"
-                >
-                  <div className="bg-white rounded-2xl border-2 border-border/40 px-4 py-3">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-lg">👻</span>
-                      <p className="text-[13px] font-bold text-foreground">Ghost Player</p>
-                      <p className="text-[11px] text-muted-foreground">Scores net par every hole</p>
-                    </div>
-                    <div className="flex gap-3">
-                      <div className="flex-1">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-1">Name</p>
-                        <input
-                          type="text"
-                          value={ghostName}
-                          onChange={e => setGhostName(e.target.value)}
-                          placeholder="Ghost"
-                          className="w-full bg-muted rounded-xl px-3 py-2 text-[13px] font-bold text-foreground outline-none"
-                        />
-                      </div>
-                      <div className="w-28">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-1">Handicap</p>
-                        <input
-                          type="number"
-                          value={ghostHandicap ?? ''}
-                          onChange={e => setGhostHandicap(e.target.value ? Number(e.target.value) : undefined)}
-                          placeholder="0"
-                          min="0"
-                          max="54"
-                          className="w-full bg-muted rounded-xl px-3 py-2 text-[13px] font-bold text-foreground outline-none"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+              <NewRoundFormatHeader
+                houseGame={houseGame}
+                houseGameEnabled={houseGameEnabled}
+                onToggleHouseGame={() => setHouseGameEnabled(v => !v)}
+                ghost={{
+                  active: ghostPrimitiveActive,
+                  name: ghostName,
+                  handicap: ghostHandicap,
+                  onNameChange: setGhostName,
+                  onHandicapChange: setGhostHandicap,
+                }}
+              />
 
             <FormatStep
               players={players}
-              strokePlay={strokePlay}
-              matchPlay={matchPlay}
+              strokePlay={strokePlay} onStrokePlayChange={setStrokePlay}
+              matchPlay={matchPlay} onMatchPlayChange={setMatchPlay}
               matchPlayFormat={matchPlayFormat}
-              matchPlayTeamA={matchPlayTeamA}
-              matchPlayTeamB={matchPlayTeamB}
-              stakes={stakes}
-              onStrokePlayChange={setStrokePlay}
-              onMatchPlayChange={setMatchPlay}
+              matchPlayTeamA={matchPlayTeamA} matchPlayTeamB={matchPlayTeamB}
+              stakes={stakes} onStakesChange={setStakes}
               onMatchPlayFormatChange={(fmt) => {
                 setMatchPlayFormat(fmt);
                 if (fmt === 'fourball' && matchPlayTeamA.length === 0 && matchPlayTeamB.length === 0) {
@@ -745,49 +410,27 @@ export default function NewRound() {
                 }
               }}
               onMatchPlayTeamsChange={(a, b) => { setMatchPlayTeamA(a); setMatchPlayTeamB(b); }}
-              onStakesChange={setStakes}
-              skinsEnabled={skinsEnabled}
-              skinsStakes={skinsStakes}
-              skinsCarryover={skinsCarryover}
-              onSkinsEnabledChange={setSkinsEnabled}
-              onSkinsStakesChange={setSkinsStakes}
-              onSkinsCarryoverChange={setSkinsCarryover}
-              nassauEnabled={nassauEnabled}
-              nassauStakes={nassauStakes}
-              nassauAutoPress={nassauAutoPress}
-              onNassauEnabledChange={setNassauEnabled}
-              onNassauStakesChange={setNassauStakes}
-              onNassauAutoPressChange={setNassauAutoPress}
-              stablefordEnabled={stablefordEnabled}
-              stablefordModified={stablefordModified}
-              onStablefordEnabledChange={setStablefordEnabled}
-              onStablefordModifiedChange={setStablefordModified}
-              bestBallEnabled={bestBallEnabled}
-              onBestBallEnabledChange={setBestBallEnabled}
-              wolfEnabled={wolfEnabled}
-              wolfStakes={wolfStakes}
-              wolfCarryover={wolfCarryover}
-              onWolfEnabledChange={setWolfEnabled}
-              onWolfStakesChange={setWolfStakes}
-              onWolfCarryoverChange={setWolfCarryover}
-              vegasEnabled={vegasEnabled}
-              vegasStakes={vegasStakes}
-              vegasCarryover={vegasCarryover}
-              onVegasEnabledChange={setVegasEnabled}
-              onVegasStakesChange={setVegasStakes}
-              onVegasCarryoverChange={setVegasCarryover}
-              ninesEnabled={ninesEnabled}
-              ninesStakes={ninesStakes}
-              onNinesEnabledChange={setNinesEnabled}
-              onNinesStakesChange={setNinesStakes}
-              defenderEnabled={defenderEnabled}
-              defenderStakes={defenderStakes}
-              onDefenderEnabledChange={setDefenderEnabled}
-              onDefenderStakesChange={setDefenderStakes}
-              sixesEnabled={sixesEnabled}
-              sixesStakes={sixesStakes}
-              onSixesEnabledChange={setSixesEnabled}
-              onSixesStakesChange={setSixesStakes}
+              skinsEnabled={skinsEnabled} onSkinsEnabledChange={setSkinsEnabled}
+              skinsStakes={skinsStakes} onSkinsStakesChange={setSkinsStakes}
+              skinsCarryover={skinsCarryover} onSkinsCarryoverChange={setSkinsCarryover}
+              nassauEnabled={nassauEnabled} onNassauEnabledChange={setNassauEnabled}
+              nassauStakes={nassauStakes} onNassauStakesChange={setNassauStakes}
+              nassauAutoPress={nassauAutoPress} onNassauAutoPressChange={setNassauAutoPress}
+              stablefordEnabled={stablefordEnabled} onStablefordEnabledChange={setStablefordEnabled}
+              stablefordModified={stablefordModified} onStablefordModifiedChange={setStablefordModified}
+              bestBallEnabled={bestBallEnabled} onBestBallEnabledChange={setBestBallEnabled}
+              wolfEnabled={wolfEnabled} onWolfEnabledChange={setWolfEnabled}
+              wolfStakes={wolfStakes} onWolfStakesChange={setWolfStakes}
+              wolfCarryover={wolfCarryover} onWolfCarryoverChange={setWolfCarryover}
+              vegasEnabled={vegasEnabled} onVegasEnabledChange={setVegasEnabled}
+              vegasStakes={vegasStakes} onVegasStakesChange={setVegasStakes}
+              vegasCarryover={vegasCarryover} onVegasCarryoverChange={setVegasCarryover}
+              ninesEnabled={ninesEnabled} onNinesEnabledChange={setNinesEnabled}
+              ninesStakes={ninesStakes} onNinesStakesChange={setNinesStakes}
+              defenderEnabled={defenderEnabled} onDefenderEnabledChange={setDefenderEnabled}
+              defenderStakes={defenderStakes} onDefenderStakesChange={setDefenderStakes}
+              sixesEnabled={sixesEnabled} onSixesEnabledChange={setSixesEnabled}
+              sixesStakes={sixesStakes} onSixesStakesChange={setSixesStakes}
               personalFormats={personalFormats}
               selectedPersonalFormatId={selectedPersonalFormatId}
               onPersonalFormatSelect={setSelectedPersonalFormatId}
@@ -812,63 +455,22 @@ export default function NewRound() {
         </AnimatePresence>
       </main>
 
-      {/* Bottom CTA Area */}
-      {step !== 'mode' && (
-        <div
-          className="fixed bottom-0 left-0 right-0 z-20 border-t border-[rgba(0,0,0,0.06)] bg-background px-6 py-4"
-          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
-        >
-          {mode === 'solo' && step === 'course' ? (
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={handleStartSoloRound}
-              disabled={!canProceedCourse || isCreating}
-              animate={{ opacity: (!canProceedCourse || isCreating) ? 0.4 : 1 }}
-              transition={{ duration: 0.2 }}
-              className="w-full bg-foreground text-background rounded-2xl h-[52px] font-bold text-[15px] flex items-center justify-center gap-2"
-            >
-              {isCreating ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Starting Solo Round...
-                </>
-              ) : (
-                'Start Solo Round'
-              )}
-            </motion.button>
-          ) : !isFinalStep ? (
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setStep(steps[currentStepIndex + 1])}
-              disabled={step === 'course' ? !canProceedCourse : !canProceedPlayers}
-              animate={{ opacity: (step === 'course' ? !canProceedCourse : !canProceedPlayers) ? 0.4 : 1 }}
-              transition={{ duration: 0.2 }}
-              className="w-full bg-foreground text-background rounded-2xl h-[52px] font-bold text-[15px] flex items-center justify-center gap-2"
-            >
-              Next
-              <ArrowRight className="w-5 h-5" />
-            </motion.button>
-          ) : (
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={handleStartRound}
-              disabled={(!formatActive && !strokePlay && !matchPlay) || isCreating}
-              animate={{ opacity: ((!formatActive && !strokePlay && !matchPlay) || isCreating) ? 0.4 : 1 }}
-              transition={{ duration: 0.2 }}
-              className="w-full bg-foreground text-background rounded-2xl h-[52px] font-bold text-[15px] flex items-center justify-center gap-2"
-            >
-              {isCreating ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Creating Round...
-                </>
-              ) : (
-                'Start Round'
-              )}
-            </motion.button>
-          )}
-        </div>
-      )}
+      <NewRoundBottomCta
+        step={step}
+        mode={mode}
+        isCreating={isCreating}
+        isFinalStep={isFinalStep}
+        handlers={{
+          onStartSoloRound: handleStartSoloRound,
+          onStartRound: handleStartRound,
+          onNext: () => setStep(steps[currentStepIndex + 1]),
+        }}
+        disabled={{
+          next: step === 'course' ? !canProceedCourse : !canProceedPlayers,
+          startSolo: !canProceedCourse || isCreating,
+          startRound: (!formatActive && !strokePlay && !matchPlay) || isCreating,
+        }}
+      />
 
       {/* Tee Selector Modal */}
       <TeeSelector
