@@ -1,5 +1,9 @@
 # MATCH Golf — Claude Code Context
 
+> **Canonical documentation: Notion → MATCH — Documentation.** This file is a working log.
+> Known money-calculation defects **M1–M11** are listed in Notion **09.2**; read that page
+> before touching `src/lib/games` or settlement code.
+
 ## ⚠️ Documentation Discipline (read before starting any task)
 
 **Before** starting any task in this repo, the assistant MUST:
