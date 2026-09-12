@@ -22,12 +22,30 @@ export interface VegasResult {
   holesPlayed: number;
 }
 
-// Helper to get net score for a player on a hole
+// Helper to get net score for a player on a hole.
+//
+// The net score is FLOORED AT 1. Vegas pairs two scores as the digits of a
+// two-digit number, which assumes each score is a single positive digit. A
+// handicap allocation can hand out 2 strokes on a hole (playing handicap >= 19,
+// see handicapUtils.ts), so a gross 2 becomes a net 0 and a gross 1 a net -1.
+// combineScores(0, 4) then returns 4 — a ONE-digit team score — and
+// combineScores(-1, 4) returns -6. Against an opposing 44 those produce point
+// differences of 40 and 50, doubled by the eagle rule to 80 and 100: an $80-$100
+// swing on a $1/point game, from one hole.
+//
+// A golf score below 1 is not a real outcome (the best possible is a
+// hole-in-one), so a sub-1 net is an artifact of stroke allocation rather than
+// something that happened. Flooring keeps the digit pairing well-formed and
+// still registers as a net eagle for the flip and doubler rules.
+//
+// This was unreachable until M2 (MAT-10), because none of the three production
+// call sites passed a strokes map at all. Passing one made it live.
+// See also MAT-65.
 function getNetScore(score: Score, strokesPerHole?: StrokesPerHoleMap): number {
   if (!strokesPerHole) return score.strokes;
   const playerStrokes = strokesPerHole.get(score.playerId);
   const holeStrokes = playerStrokes?.get(score.holeNumber) || 0;
-  return score.strokes - holeStrokes;
+  return Math.max(1, score.strokes - holeStrokes);
 }
 
 /**
