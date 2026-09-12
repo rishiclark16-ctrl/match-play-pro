@@ -322,7 +322,9 @@ export function calculateHouseGame(
       const teamAIds = [players[0].id, players[1].id];
       for (const player of players) {
         const isTeamA = teamAIds.includes(player.id);
-        const earnings = isTeamA ? vegasResult.teamAEarnings : vegasResult.teamBEarnings;
+        const teamEarnings = isTeamA ? vegasResult.teamAEarnings : vegasResult.teamBEarnings;
+        // Half the TEAM figure per member — not the full figure. See M3 (MAT-11).
+        const earnings = teamEarnings / 2;
         playerEarnings[player.id] = (playerEarnings[player.id] ?? 0) + earnings;
       }
     }

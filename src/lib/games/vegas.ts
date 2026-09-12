@@ -17,8 +17,8 @@ export interface VegasResult {
   holeResults: VegasHoleResult[];
   teamATotal: number;    // net points for team A
   teamBTotal: number;    // net points for team B
-  teamAEarnings: number; // $ per player on team A
-  teamBEarnings: number; // $ per player on team B
+  teamAEarnings: number; // $ TOTAL for team A (split between its two members; see M3/MAT-11)
+  teamBEarnings: number; // $ TOTAL for team B (split between its two members; see M3/MAT-11)
   holesPlayed: number;
 }
 
