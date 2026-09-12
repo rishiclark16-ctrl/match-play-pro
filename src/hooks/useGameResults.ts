@@ -102,7 +102,7 @@ export function useGameResults({
     }
 
     if (vegasGame && players.length === 4) {
-      vegasResult = calculateVegas(scores, playersWithScores, round.holeInfo, vegasGame.stakes || 1, vegasGame.carryover ?? false);
+      vegasResult = calculateVegas(scores, playersWithScores, round.holeInfo, vegasGame.stakes || 1, holesPlayed, vegasGame.useNet ? strokesPerHole : undefined, vegasGame.carryover ?? false);
     }
 
     if (ninesGame && players.length === 3) {

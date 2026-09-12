@@ -115,8 +115,8 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
 
   const vegasResult = useMemo(() => {
     if (!vegasGame || players.length !== 4) return null;
-    return calculateVegas(scores, players, round.holeInfo, vegasGame.stakes, vegasGame.carryover ?? false);
-  }, [vegasGame, scores, players, round.holeInfo]);
+    return calculateVegas(scores, players, round.holeInfo, vegasGame.stakes, holesPlayed, vegasGame.useNet ? buildStrokesMap : undefined, vegasGame.carryover ?? false);
+  }, [vegasGame, scores, players, round.holeInfo, holesPlayed, buildStrokesMap]);
 
   const ninesResult = useMemo(() => {
     if (!ninesGame || players.length !== 3) return null;

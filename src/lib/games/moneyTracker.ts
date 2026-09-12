@@ -174,7 +174,7 @@ export function calculateLiveMoney(
 
       case 'vegas': {
         if (players.length === 4) {
-          const vegasResult = calculateVegas(relevantScores, players, holeInfo, game.stakes, game.carryover ?? false);
+          const vegasResult = calculateVegas(relevantScores, players, holeInfo, game.stakes, upToHole, game.useNet ? strokesMap : undefined, game.carryover ?? false);
           // Vegas is team-based: split earnings evenly between team members
           const teamAPlayers = [players[0], players[1]];
           const teamBPlayers = [players[2], players[3]];
