@@ -137,14 +137,19 @@ describe('calculateLiveMoney — standard game types', () => {
     expect(result.players.length).toBe(2);
   });
 
+  // M4 (MAT-12): match play is a FLAT stake on the match, not a stake per hole
+  // won. These three expectations previously encoded the per-hole model —
+  // Alice winning 3 holes at $5 asserted $15. That was the defect, asserted as
+  // correct, which is why a green suite never surfaced it. The margin describes
+  // how decisively the match was won, not how much is owed.
   it('tracks match play game', () => {
     const game: GameConfig = { id: 'g1', type: 'match', stakes: 5 };
     const result = calculateLiveMoney(players, scores3holes, [game], holeInfo, [], 3);
     const alice = result.players.find(p => p.playerId === 'p1')!;
     const breakdown = result.breakdown.get('p1')!;
-    // Alice wins all 3 holes at $5 each
-    expect(breakdown.match).toBe(15);
-    expect(alice.currentBalance).toBe(15);
+    // Alice leads the match; the stake is paid once, not per hole won
+    expect(breakdown.match).toBe(5);
+    expect(alice.currentBalance).toBe(5);
   });
 
   it('tracks multiple games simultaneously', () => {
@@ -156,7 +161,7 @@ describe('calculateLiveMoney — standard game types', () => {
     const alice = result.players.find(p => p.playerId === 'p1')!;
     const breakdown = result.breakdown.get('p1')!;
     expect(breakdown.skins).toBeGreaterThan(0);
-    expect(breakdown.match).toBe(30);
+    expect(breakdown.match).toBe(10);
     expect(alice.currentBalance).toBe(breakdown.skins + breakdown.match);
   });
 
@@ -174,6 +179,6 @@ describe('calculateLiveMoney — standard game types', () => {
     const result = calculateLiveMoney(players, scores3holes, games, holeInfo, [], 3);
     const breakdown = result.breakdown.get('p1')!;
     expect(breakdown.houseGame).toBe(150);
-    expect(breakdown.match).toBe(15);
+    expect(breakdown.match).toBe(5);
   });
 });

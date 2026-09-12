@@ -134,24 +134,31 @@ export function calculateLiveMoney(
             (holeInfo.length <= 9 ? 9 : 18) as 9 | 18
           );
 
-          // Each hole won earns stakes from the opponent
-          matchResult.holeResults.forEach(hr => {
-            if (hr.winnerId) {
-              const loserId = players.find(p => p.id !== hr.winnerId)?.id;
-              if (loserId) {
-                const winnerPb = breakdown.get(hr.winnerId);
-                const loserPb = breakdown.get(loserId);
-                if (winnerPb) {
-                  winnerPb.match += game.stakes;
-                  winnerPb.total += game.stakes;
-                }
-                if (loserPb) {
-                  loserPb.match -= game.stakes;
-                  loserPb.total -= game.stakes;
-                }
+          // M4 (MAT-12): match play is a FLAT stake on the match, not a stake
+          // per hole won. The margin ("4 and 3") describes how decisively the
+          // match was won, not how much is owed. This previously credited
+          // game.stakes for EVERY hole won, so a 4-and-3 win at $5 read $20
+          // here and $5 at settlement.
+          //
+          // While the match is still live there is no winner yet, so show the
+          // stake against the current leader: what would settle if the round
+          // ended now. All square pays nothing, which is a halved match.
+          const provisionalWinnerId = matchResult.winnerId ?? matchResult.leaderId;
+          if (provisionalWinnerId) {
+            const loserId = players.find(p => p.id !== provisionalWinnerId)?.id;
+            if (loserId) {
+              const winnerPb = breakdown.get(provisionalWinnerId);
+              const loserPb = breakdown.get(loserId);
+              if (winnerPb) {
+                winnerPb.match += game.stakes;
+                winnerPb.total += game.stakes;
+              }
+              if (loserPb) {
+                loserPb.match -= game.stakes;
+                loserPb.total -= game.stakes;
               }
             }
-          });
+          }
         }
         break;
       }

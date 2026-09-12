@@ -238,13 +238,19 @@ export function useRoundCompleteSettlements({
 
     const matchPlayWinnerId = matchPlayResult?.winnerId || null;
     const wolfGame = round.games?.find(g => g.type === 'wolf');
+    // M4 (MAT-12): standardise the match-play stake source on the game entry.
+    // useSettlementPreview.ts:97 already uses game.stakes; this hook used
+    // round.stakes, so the preview and the final settlement could disagree.
+    // Falls back to round.stakes rather than 0 so a missing game entry cannot
+    // silently zero a payout — that is the M1 failure mode.
+    const matchGame = round.games?.find(g => g.type === 'match');
 
     return calculateSettlement(
       rawPlayers,
       gameResults?.skinsResult,
       gameResults?.nassauResult,
       matchPlayWinnerId,
-      round.stakes,
+      matchGame?.stakes ?? round.stakes,
       wolfGame?.wolfResults,
       wolfGame?.stakes,
       propBets,
