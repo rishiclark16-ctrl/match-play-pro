@@ -170,15 +170,18 @@ export function calculateSettlement(
   if (vegasResult && players.length === 4) {
     const teamA = [players[0], players[1]];
     const teamB = [players[2], players[3]];
-    const perPlayerA = vegasResult.teamAEarnings / 2;
-    const perPlayerB = vegasResult.teamBEarnings / 2;
+    // teamXEarnings is the TEAM swing. Each player nets half of it, and that half
+    // is split again across the two opponents, so each of the four ledger cells
+    // carries a quarter of the team figure. See M3 (MAT-11).
+    const perPairA = Math.abs(vegasResult.teamAEarnings) / 4;
+    const perPairB = Math.abs(vegasResult.teamBEarnings) / 4;
 
     // If team A wins, team B members each owe team A members
     if (vegasResult.teamAEarnings > 0) {
       teamB.forEach(loser => {
         teamA.forEach(winner => {
           if (ledger[loser.id]?.[winner.id] !== undefined) {
-            ledger[loser.id][winner.id] += Math.abs(perPlayerB);
+            ledger[loser.id][winner.id] += perPairB;
           }
         });
       });
@@ -186,7 +189,7 @@ export function calculateSettlement(
       teamA.forEach(loser => {
         teamB.forEach(winner => {
           if (ledger[loser.id]?.[winner.id] !== undefined) {
-            ledger[loser.id][winner.id] += Math.abs(perPlayerA);
+            ledger[loser.id][winner.id] += perPairA;
           }
         });
       });

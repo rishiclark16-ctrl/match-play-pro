@@ -134,24 +134,31 @@ export function calculateLiveMoney(
             (holeInfo.length <= 9 ? 9 : 18) as 9 | 18
           );
 
-          // Each hole won earns stakes from the opponent
-          matchResult.holeResults.forEach(hr => {
-            if (hr.winnerId) {
-              const loserId = players.find(p => p.id !== hr.winnerId)?.id;
-              if (loserId) {
-                const winnerPb = breakdown.get(hr.winnerId);
-                const loserPb = breakdown.get(loserId);
-                if (winnerPb) {
-                  winnerPb.match += game.stakes;
-                  winnerPb.total += game.stakes;
-                }
-                if (loserPb) {
-                  loserPb.match -= game.stakes;
-                  loserPb.total -= game.stakes;
-                }
+          // M4 (MAT-12): match play is a FLAT stake on the match, not a stake
+          // per hole won. The margin ("4 and 3") describes how decisively the
+          // match was won, not how much is owed. This previously credited
+          // game.stakes for EVERY hole won, so a 4-and-3 win at $5 read $20
+          // here and $5 at settlement.
+          //
+          // While the match is still live there is no winner yet, so show the
+          // stake against the current leader: what would settle if the round
+          // ended now. All square pays nothing, which is a halved match.
+          const provisionalWinnerId = matchResult.winnerId ?? matchResult.leaderId;
+          if (provisionalWinnerId) {
+            const loserId = players.find(p => p.id !== provisionalWinnerId)?.id;
+            if (loserId) {
+              const winnerPb = breakdown.get(provisionalWinnerId);
+              const loserPb = breakdown.get(loserId);
+              if (winnerPb) {
+                winnerPb.match += game.stakes;
+                winnerPb.total += game.stakes;
+              }
+              if (loserPb) {
+                loserPb.match -= game.stakes;
+                loserPb.total -= game.stakes;
               }
             }
-          });
+          }
         }
         break;
       }
@@ -174,7 +181,7 @@ export function calculateLiveMoney(
 
       case 'vegas': {
         if (players.length === 4) {
-          const vegasResult = calculateVegas(relevantScores, players, holeInfo, game.stakes, game.carryover ?? false);
+          const vegasResult = calculateVegas(relevantScores, players, holeInfo, game.stakes, upToHole, game.useNet ? strokesMap : undefined, game.carryover ?? false);
           // Vegas is team-based: split earnings evenly between team members
           const teamAPlayers = [players[0], players[1]];
           const teamBPlayers = [players[2], players[3]];
@@ -194,7 +201,7 @@ export function calculateLiveMoney(
 
       case 'nines': {
         if (players.length === 3) {
-          const ninesResult = calculateNines(relevantScores, players, holeInfo, game.stakes, game.useNet ? strokesMap : undefined);
+          const ninesResult = calculateNines(relevantScores, players, upToHole, game.stakes, game.useNet ? strokesMap : undefined);
           ninesResult.standings.forEach(standing => {
             const pb = breakdown.get(standing.playerId);
             if (pb) { pb.nines += standing.earnings; pb.total += standing.earnings; }
@@ -205,7 +212,7 @@ export function calculateLiveMoney(
 
       case 'defender': {
         if (players.length === 3 || players.length === 4) {
-          const defenderResult = calculateDefender(relevantScores, players, holeInfo, game.stakes, game.useNet ? strokesMap : undefined);
+          const defenderResult = calculateDefender(relevantScores, players, upToHole, game.stakes, game.useNet ? strokesMap : undefined);
           defenderResult.standings.forEach(standing => {
             const pb = breakdown.get(standing.playerId);
             if (pb) { pb.defender += standing.earnings; pb.total += standing.earnings; }
@@ -216,7 +223,7 @@ export function calculateLiveMoney(
 
       case 'sixes': {
         if (players.length === 4) {
-          const sixesResult = calculateSixes(relevantScores, players, holeInfo, game.stakes, game.useNet ? strokesMap : undefined);
+          const sixesResult = calculateSixes(relevantScores, players, upToHole, game.stakes, game.useNet ? strokesMap : undefined);
           sixesResult.standings.forEach(standing => {
             const pb = breakdown.get(standing.playerId);
             if (pb) { pb.sixes += standing.earnings; pb.total += standing.earnings; }

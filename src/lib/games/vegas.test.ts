@@ -276,3 +276,46 @@ describe('calculateVegas', () => {
     });
   });
 });
+
+describe('net scores are floored at 1 (MAT-65)', () => {
+  const players = [
+    createPlayer('p1', 'Alice', 0),
+    createPlayer('p2', 'Bob', 1),
+    createPlayer('p3', 'Charlie', 2),
+    createPlayer('p4', 'Diana', 3),
+  ];
+  const holeInfo = makeHoleInfo(18);
+
+  it('a net 0 does not collapse the team score to a single digit', () => {
+    // Alice gets 2 strokes on hole 1 (playing handicap >= 19) and makes a 2.
+    // Unfloored that is net 0; combineScores(0, 4) returns 4 — a ONE-digit
+    // team score — against an opposing 44. That is a 40-point difference from
+    // a single hole, doubled to 80 by the eagle rule.
+    const strokesPerHole: StrokesPerHoleMap = new Map([['p1', new Map([[1, 2]])]]);
+    const scores = [
+      createScore('p1', 1, 2), createScore('p2', 1, 4),
+      createScore('p3', 1, 4), createScore('p4', 1, 4),
+    ];
+
+    const result = calculateVegas(scores, players, holeInfo, 1, 1, strokesPerHole);
+
+    // The invariant: a team score is always a well-formed two-digit number.
+    expect(result.holeResults[0].teamAScore).toBeGreaterThanOrEqual(10);
+    expect(result.holeResults[0].teamBScore).toBeGreaterThanOrEqual(10);
+  });
+
+  it('a negative net score cannot occur', () => {
+    // Gross 1 with 2 strokes is net -1 unfloored, and combineScores(-1, 4)
+    // returns -6 — a negative team score.
+    const strokesPerHole: StrokesPerHoleMap = new Map([['p1', new Map([[1, 2]])]]);
+    const scores = [
+      createScore('p1', 1, 1), createScore('p2', 1, 4),
+      createScore('p3', 1, 4), createScore('p4', 1, 4),
+    ];
+
+    const result = calculateVegas(scores, players, holeInfo, 1, 1, strokesPerHole);
+
+    expect(result.holeResults[0].teamAScore).toBeGreaterThan(0);
+    expect(result.holeResults[0].teamAScore).toBeGreaterThanOrEqual(10);
+  });
+});

@@ -102,22 +102,22 @@ export function useGameResults({
     }
 
     if (vegasGame && players.length === 4) {
-      vegasResult = calculateVegas(scores, playersWithScores, round.holeInfo, vegasGame.stakes || 1, vegasGame.carryover ?? false);
+      vegasResult = calculateVegas(scores, playersWithScores, round.holeInfo, vegasGame.stakes || 1, holesPlayed, vegasGame.useNet ? strokesPerHole : undefined, vegasGame.carryover ?? false);
     }
 
     if (ninesGame && players.length === 3) {
       const netMap = ninesGame.useNet ? strokesPerHole : undefined;
-      ninesResult = calculateNines(scores, playersWithScores, round.holeInfo, ninesGame.stakes || 1, netMap);
+      ninesResult = calculateNines(scores, playersWithScores, holesPlayed, ninesGame.stakes || 1, netMap);
     }
 
     if (defenderGame && (players.length === 3 || players.length === 4)) {
       const netMap = defenderGame.useNet ? strokesPerHole : undefined;
-      defenderResult = calculateDefender(scores, playersWithScores, round.holeInfo, defenderGame.stakes || 1, netMap);
+      defenderResult = calculateDefender(scores, playersWithScores, holesPlayed, defenderGame.stakes || 1, netMap);
     }
 
     if (sixesGame && players.length === 4) {
       const netMap = sixesGame.useNet ? strokesPerHole : undefined;
-      sixesResult = calculateSixes(scores, playersWithScores, round.holeInfo, sixesGame.stakes || 1, netMap);
+      sixesResult = calculateSixes(scores, playersWithScores, holesPlayed, sixesGame.stakes || 1, netMap);
     }
 
     // House game — uses its own all-in-one calculator
