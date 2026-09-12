@@ -121,20 +121,20 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
   const ninesResult = useMemo(() => {
     if (!ninesGame || players.length !== 3) return null;
     const useStrokesMap = ninesGame.useNet ? buildStrokesMap : undefined;
-    return calculateNines(scores, players, round.holeInfo, ninesGame.stakes, useStrokesMap);
-  }, [ninesGame, scores, players, round.holeInfo, buildStrokesMap]);
+    return calculateNines(scores, players, holesPlayed, ninesGame.stakes, useStrokesMap);
+  }, [ninesGame, scores, players, holesPlayed, buildStrokesMap]);
 
   const defenderResult = useMemo(() => {
     if (!defenderGame || (players.length !== 3 && players.length !== 4)) return null;
     const useStrokesMap = defenderGame.useNet ? buildStrokesMap : undefined;
-    return calculateDefender(scores, players, round.holeInfo, defenderGame.stakes, useStrokesMap);
-  }, [defenderGame, scores, players, round.holeInfo, buildStrokesMap]);
+    return calculateDefender(scores, players, holesPlayed, defenderGame.stakes, useStrokesMap);
+  }, [defenderGame, scores, players, holesPlayed, buildStrokesMap]);
 
   const sixesResult = useMemo(() => {
     if (!sixesGame || players.length !== 4) return null;
     const useStrokesMap = sixesGame.useNet ? buildStrokesMap : undefined;
-    return calculateSixes(scores, players, round.holeInfo, sixesGame.stakes, useStrokesMap);
-  }, [sixesGame, scores, players, round.holeInfo, buildStrokesMap]);
+    return calculateSixes(scores, players, holesPlayed, sixesGame.stakes, useStrokesMap);
+  }, [sixesGame, scores, players, holesPlayed, buildStrokesMap]);
 
   const matchPlayResult = useMemo(() => {
     if (!hasMatchPlay) return null;

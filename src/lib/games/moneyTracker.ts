@@ -194,7 +194,7 @@ export function calculateLiveMoney(
 
       case 'nines': {
         if (players.length === 3) {
-          const ninesResult = calculateNines(relevantScores, players, holeInfo, game.stakes, game.useNet ? strokesMap : undefined);
+          const ninesResult = calculateNines(relevantScores, players, upToHole, game.stakes, game.useNet ? strokesMap : undefined);
           ninesResult.standings.forEach(standing => {
             const pb = breakdown.get(standing.playerId);
             if (pb) { pb.nines += standing.earnings; pb.total += standing.earnings; }
@@ -205,7 +205,7 @@ export function calculateLiveMoney(
 
       case 'defender': {
         if (players.length === 3 || players.length === 4) {
-          const defenderResult = calculateDefender(relevantScores, players, holeInfo, game.stakes, game.useNet ? strokesMap : undefined);
+          const defenderResult = calculateDefender(relevantScores, players, upToHole, game.stakes, game.useNet ? strokesMap : undefined);
           defenderResult.standings.forEach(standing => {
             const pb = breakdown.get(standing.playerId);
             if (pb) { pb.defender += standing.earnings; pb.total += standing.earnings; }
@@ -216,7 +216,7 @@ export function calculateLiveMoney(
 
       case 'sixes': {
         if (players.length === 4) {
-          const sixesResult = calculateSixes(relevantScores, players, holeInfo, game.stakes, game.useNet ? strokesMap : undefined);
+          const sixesResult = calculateSixes(relevantScores, players, upToHole, game.stakes, game.useNet ? strokesMap : undefined);
           sixesResult.standings.forEach(standing => {
             const pb = breakdown.get(standing.playerId);
             if (pb) { pb.sixes += standing.earnings; pb.total += standing.earnings; }

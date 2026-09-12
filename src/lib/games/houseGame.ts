@@ -182,6 +182,10 @@ export function calculateHouseGame(
   players.forEach(p => { playerEarnings[p.id] = 0; });
 
   const scoredHoles = [...new Set(scores.map(s => s.holeNumber))].sort((a, b) => a - b);
+  // Upper bound for per-hole loops: the HIGHEST scored hole number, not the count.
+  // scoredHoles.length under-counts whenever scoring has a gap (e.g. a skipped hole),
+  // which silently drops the tail hole from every calculator below.
+  const lastScoredHole = scoredHoles.length > 0 ? Math.max(...scoredHoles) : 0;
 
   for (const holeNum of scoredHoles) {
     const hole = holeInfo.find(h => h.number === holeNum);
@@ -291,7 +295,7 @@ export function calculateHouseGame(
   let rabbitResult: RabbitResult | undefined;
   if (config.rabbit) {
     rabbitResult = calculateRabbit(
-      scores, players, scoredHoles.length, config.unitValue, totalHoles, strokesMap,
+      scores, players, lastScoredHole, config.unitValue, totalHoles, strokesMap,
     );
     for (const standing of rabbitResult.standings) {
       playerEarnings[standing.playerId] = (playerEarnings[standing.playerId] ?? 0) + standing.earnings;
@@ -312,7 +316,7 @@ export function calculateHouseGame(
   // ── Vegas ─────────────────────────────────────────────────────────────────
   let vegasResult: VegasResult | undefined;
   if (config.vegas && players.length >= 4) {
-    vegasResult = calculateVegas(scores, players, holeInfo, config.unitValue, scoredHoles.length, strokesMap);
+    vegasResult = calculateVegas(scores, players, holeInfo, config.unitValue, lastScoredHole, strokesMap);
     // Vegas earnings: team-based
     if (vegasResult.holeResults.length > 0) {
       const teamAIds = [players[0].id, players[1].id];
@@ -327,7 +331,7 @@ export function calculateHouseGame(
   // ── Nines (5-3-1) ────────────────────────────────────────────────────────
   let ninesResult: NinesResult | undefined;
   if (config.nines && players.length === 3) {
-    ninesResult = calculateNines(scores, players, holeInfo, config.unitValue, strokesMap);
+    ninesResult = calculateNines(scores, players, lastScoredHole, config.unitValue, strokesMap);
     for (const standing of ninesResult.standings) {
       playerEarnings[standing.playerId] = (playerEarnings[standing.playerId] ?? 0) + standing.earnings;
     }
@@ -336,7 +340,7 @@ export function calculateHouseGame(
   // ── Defender ─────────────────────────────────────────────────────────────
   let defenderResult: DefenderResult | undefined;
   if (config.defender && (players.length === 3 || players.length === 4)) {
-    defenderResult = calculateDefender(scores, players, holeInfo, config.unitValue, strokesMap);
+    defenderResult = calculateDefender(scores, players, lastScoredHole, config.unitValue, strokesMap);
     for (const standing of defenderResult.standings) {
       playerEarnings[standing.playerId] = (playerEarnings[standing.playerId] ?? 0) + standing.earnings;
     }
@@ -345,7 +349,7 @@ export function calculateHouseGame(
   // ── Sixes (Round Robin) ──────────────────────────────────────────────────
   let sixesResult: SixesResult | undefined;
   if (config.sixes && players.length === 4) {
-    sixesResult = calculateSixes(scores, players, holeInfo, config.unitValue, strokesMap);
+    sixesResult = calculateSixes(scores, players, lastScoredHole, config.unitValue, strokesMap);
     for (const standing of sixesResult.standings) {
       playerEarnings[standing.playerId] = (playerEarnings[standing.playerId] ?? 0) + standing.earnings;
     }
