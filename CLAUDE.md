@@ -257,7 +257,7 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1214 pass, 0 fail** (1214 tests across 55 files). All tests pass. Run with `bun test`. CI splits into two invocations:
+**1232 pass, 0 fail** (1232 tests across 58 files). All tests pass. Run with `bun test`. CI splits into two invocations:
 - `bun test src/hooks src/lib src/engine src/components` (1201 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
@@ -455,7 +455,23 @@ Phase P3.1 (v2.5 polish, in progress) — 2026-11-21:
 - New `src/lib/houseGame/suggestFormatName.ts` (7 tests): AI Game Builder confirm screen pre-fills a name built from the detected formats (e.g. `$5 Nassau + Presses`) instead of a truncated description.
 - `HouseGameConfirm.tsx` header now reads `N of M selected` (low-confidence rules start unchecked), so it no longer looks like it contradicts "Found M rules".
 - Local screenshot harness: `vite --host 127.0.0.1` (the `::` host in `vite.config.ts` fails in IPv4-only containers) plus a `.env.local` (gitignored) holding the Supabase URL and publishable key.
+- **Money defects M1–M11 (Notion 09.2) all fixed** — see Phase P3.2 below.
 - Remaining v2.5 work: paywall redesign, App Store review prompt, invite-friends link, Scorecard/Profile/RoundComplete splits, version bump to 2.5 (7).
+
+Phase P3.2 (money calculation defects, Notion "09.2 Money Calculation Defects") — 2026-11-21:
+- **M1** Nines/Defender/Sixes paid $0: 9 call sites passed `HoleInfo[]` as `holesPlayed`. Now `holeInfo.length` in `GamesSection.tsx`, `useGameResults.ts`, `moneyTracker.ts`, `games/houseGame.ts`.
+- **M2** Vegas scored ≤1 hole: carryover boolean was passed as `holesPlayed`. Net strokes + carryover flag now passed in the right positions.
+- **M3** Live tracker halved Vegas. `teamXEarnings` is $ per player; tracker no longer divides by 2.
+- **M4** Match play = **flat stake on the match** (product decision). Live tracker credits the current leader once; `useRoundCompleteState` uses the match game's own `stakes` (same source as the preview).
+- **M5** `useSettlementPreview` now calls `useGameResults` and passes Wolf/Vegas/Nines/Defender/Sixes/house game to `calculateSettlement`. Return type fixed to `NetSettlement[]`.
+- **M6** Wolf zero-sum: largest-remainder split of lone-wolf hunter shares; 3-player partnered (2-v-1) holes charge the lone hunter both winners' share.
+- **M7** Skins: players pay only for skins awarded; unresolved carryover/ties are **refunded** (product decision). Old C-4 tests asserted the leak and were updated.
+- **M8** New `src/lib/buildLedgerEntries.ts`: guest balances go to the **round host** (`rounds.created_by` → new `Round.createdBy`); refused with a named error if the host isn't playing.
+- **M9** New `isPenaltyPropBet()` in `types/betting.ts`; snake debits the recorded player in `settlement.ts` and `moneyTracker.ts`. `PropBetSheet` says "Who 3-putted?" / "X pays $N each".
+- **M10** `format_nines` added to `parse-house-game` VALID_IDS + prompt. `parserParity.test.ts` fails if any catalogue primitive is missing from either list. **Edge function must be redeployed for this to take effect.**
+- **M11** `useOfflineSync` upserts on `player_id,hole_number`; no false "synced" toast; failures → `logger.error` (Sentry).
+- **Typecheck ratchet:** `scripts/typecheck-ratchet.sh` runs in CI (baseline **204** `tsc` errors, was 220). Lower `TS_BASELINE` as errors are fixed; never raise it.
+- New regression tests call the calculators the way the app does (`moneyTracker.callsites.test.ts`) plus randomised zero-sum invariants for Wolf and Skins.
 
 ## V2 Feature Status
 | Feature | Status | Notes |
