@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { suggestFormatName } from '@/lib/houseGame/suggestFormatName';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Check, Sparkles, AlertTriangle, ArrowRight, Flag } from 'lucide-react';
@@ -42,13 +43,9 @@ export default function HouseGameConfirm() {
   const [savedFormatId, setSavedFormatId] = useState<string | null>(null);
 
   // Game name — auto-generated from description, user can edit
-  const [gameName, setGameName] = useState<string>(() => {
-    if (!description) return 'My Format';
-    const firstSentence = description.split(/[.!?]/)[0].trim();
-    return firstSentence.length > 0 && firstSentence.length <= 30
-      ? firstSentence
-      : description.slice(0, 28).trim() + (description.length > 28 ? '…' : '');
-  });
+  const [gameName, setGameName] = useState<string>(() =>
+    suggestFormatName(parsedPrimitives, description, isPersonal ? 'My Format' : 'House Game'),
+  );
 
   // Initialize checked set from parsed results.
   // high/medium confidence → auto-checked; low confidence → starts unchecked (user must opt in).
@@ -214,7 +211,7 @@ export default function HouseGameConfirm() {
           </motion.button>
           <div className="flex-1 min-w-0">
             <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              {isPersonal ? 'My Format' : 'House Game'} · {checkedIds.size} rule{checkedIds.size !== 1 ? 's' : ''}
+              {isPersonal ? 'My Format' : 'House Game'} · {checkedIds.size} of {parsedPrimitives.filter(p => !p.infeasible).length} selected
             </p>
             <h1 className="text-[22px] font-black tracking-[-0.04em] text-foreground leading-none">Confirm Rules</h1>
           </div>
