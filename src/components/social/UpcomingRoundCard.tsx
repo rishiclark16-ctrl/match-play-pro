@@ -81,7 +81,7 @@ export function UpcomingRoundCard({ round, onPress, currentUserId }: UpcomingRou
               'text-[11px] font-bold border px-2.5 py-1 rounded-lg',
               currentUserId && pid === currentUserId
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-foreground'
-                : 'bg-[#F8F8F6] border-border/60 text-foreground'
+                : 'bg-[#FAFAF7] border-border/60 text-foreground'
             );
 
             if (isClickable) {

@@ -263,8 +263,8 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
     sections.push(
       <div key="custom-rules">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-4 h-4 rounded-md bg-[#F0EE3A] flex items-center justify-center">
-            <Sparkles className="w-2.5 h-2.5 text-[#0A0A0A]" />
+          <div className="w-4 h-4 rounded-md bg-[#BEF264] flex items-center justify-center">
+            <Sparkles className="w-2.5 h-2.5 text-[#0F1F17]" />
           </div>
           <span className="text-[12px] font-bold text-foreground">Custom Rules</span>
           <span className="ml-auto text-[10px] font-bold text-muted-foreground">Settle manually</span>
@@ -275,7 +275,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
             const desc = rule.description ?? '';
             const val = rule.value;
             return (
-              <div key={rule.id} className="rounded-xl bg-[#F0EE3A]/10 border border-[#F0EE3A]/40 px-3 py-2">
+              <div key={rule.id} className="rounded-xl bg-[#BEF264]/10 border border-[#BEF264]/40 px-3 py-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <span className="text-[12px] font-bold text-foreground block">{label}</span>
@@ -303,7 +303,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
         <button onClick={() => setIsExpanded(!isExpanded)} className="w-full px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <LiveDot />
-            <span className="text-[13px] font-bold uppercase tracking-[0.08em] text-[#0A0A0A]">Games</span>
+            <span className="text-[13px] font-bold uppercase tracking-[0.08em] text-[#0F1F17]">Games</span>
             <span className="text-[11px] text-slate-400 font-medium">{sections.length} active</span>
           </div>
           {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}

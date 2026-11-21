@@ -24,7 +24,7 @@ export function GroupFormatAssignmentCard({
       <div className="bg-white rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)] border border-border/30">
         {groupFormatAssignment ? (
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#F0EE3A]/15 flex items-center justify-center flex-shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-[#BEF264]/15 flex items-center justify-center flex-shrink-0">
               <Sparkles className="w-4 h-4 text-foreground" />
             </div>
             <div className="flex-1 min-w-0">

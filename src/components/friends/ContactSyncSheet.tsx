@@ -95,13 +95,13 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <SheetContent side="bottom" className="h-[85vh] bg-[#F8F8F6] rounded-t-3xl border-0 p-0 [&>button]:hidden">
+      <SheetContent side="bottom" className="h-[85vh] bg-[#FAFAF7] rounded-t-3xl border-0 p-0 [&>button]:hidden">
         {/* Handle */}
         <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 mb-4">
-          <h2 className="text-[20px] font-black tracking-[-0.04em] text-[#0A0A0A]">Sync Contacts</h2>
+          <h2 className="text-[20px] font-black tracking-[-0.04em] text-[#0F1F17]">Sync Contacts</h2>
           <button
             onClick={onClose}
             className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground"
@@ -114,10 +114,10 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
           <div className="flex flex-col h-[calc(100%-80px)] overflow-y-auto">
             {/* Permission card */}
             <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-4 p-5 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-[#F0EE3A] flex items-center justify-center mx-auto mb-3 text-[#0A0A0A]">
+              <div className="w-14 h-14 rounded-2xl bg-[#BEF264] flex items-center justify-center mx-auto mb-3 text-[#0F1F17]">
                 <Users className="h-7 w-7" />
               </div>
-              <h3 className="font-black text-[18px] tracking-[-0.03em] text-[#0A0A0A]">Find Your Golf Buddies</h3>
+              <h3 className="font-black text-[18px] tracking-[-0.03em] text-[#0F1F17]">Find Your Golf Buddies</h3>
               <p className="text-[14px] text-muted-foreground mt-1 leading-relaxed">
                 We'll check your contacts to see who's already on the app.
               </p>
@@ -128,15 +128,15 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
               <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-3">How it works</p>
               <ul className="space-y-2.5">
                 <li className="flex gap-2 text-[13px] text-muted-foreground">
-                  <span className="shrink-0 font-bold text-[#0A0A0A]">1.</span>
+                  <span className="shrink-0 font-bold text-[#0F1F17]">1.</span>
                   <span>Your contacts' email addresses and phone numbers are sent to our server to find matches.</span>
                 </li>
                 <li className="flex gap-2 text-[13px] text-muted-foreground">
-                  <span className="shrink-0 font-bold text-[#0A0A0A]">2.</span>
-                  <span>We only check for existing MATCH Golf users — your contact data is <strong className="text-[#0A0A0A]">not stored</strong> on our servers.</span>
+                  <span className="shrink-0 font-bold text-[#0F1F17]">2.</span>
+                  <span>We only check for existing MATCH Golf users — your contact data is <strong className="text-[#0F1F17]">not stored</strong> on our servers.</span>
                 </li>
                 <li className="flex gap-2 text-[13px] text-muted-foreground">
-                  <span className="shrink-0 font-bold text-[#0A0A0A]">3.</span>
+                  <span className="shrink-0 font-bold text-[#0F1F17]">3.</span>
                   <span>You can then send friend requests or invite others to join.</span>
                 </li>
               </ul>
@@ -164,10 +164,10 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
         {!contacts && !loading && hasConsented && (
           <div className="flex flex-col items-center px-6">
             <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] w-full p-5 text-center mb-4">
-              <div className="w-14 h-14 rounded-2xl bg-[#F0EE3A] flex items-center justify-center mx-auto mb-3 text-[#0A0A0A]">
+              <div className="w-14 h-14 rounded-2xl bg-[#BEF264] flex items-center justify-center mx-auto mb-3 text-[#0F1F17]">
                 <Users className="h-7 w-7" />
               </div>
-              <h3 className="font-black text-[18px] tracking-[-0.03em] text-[#0A0A0A]">Ready to Sync</h3>
+              <h3 className="font-black text-[18px] tracking-[-0.03em] text-[#0F1F17]">Ready to Sync</h3>
               <p className="text-[14px] text-muted-foreground mt-1 leading-relaxed">
                 Tap below to check your contacts for friends on the app.
               </p>
@@ -186,7 +186,7 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
 
         {loading && (
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="animate-spin h-10 w-10 border-4 border-[#0A0A0A] border-t-transparent rounded-full mb-4" />
+            <div className="animate-spin h-10 w-10 border-4 border-[#0F1F17] border-t-transparent rounded-full mb-4" />
             <p className="text-[14px] text-muted-foreground">Syncing contacts...</p>
           </div>
         )}
@@ -197,7 +197,7 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
               <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-3">
                 <AlertCircle className="h-7 w-7 text-destructive" />
               </div>
-              <h3 className="font-black text-[18px] tracking-[-0.03em] text-[#0A0A0A]">Unable to Access Contacts</h3>
+              <h3 className="font-black text-[18px] tracking-[-0.03em] text-[#0F1F17]">Unable to Access Contacts</h3>
               <p className="text-[14px] text-muted-foreground mt-1 leading-relaxed">{error}</p>
             </div>
             <motion.button
@@ -216,11 +216,11 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
             {/* Summary */}
             <div className="flex gap-3 mb-4 px-6">
               <div className="flex-1 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-3 text-center">
-                <div className="text-2xl font-black tracking-[-0.04em] text-[#0A0A0A]">{contacts.matched.length}</div>
+                <div className="text-2xl font-black tracking-[-0.04em] text-[#0F1F17]">{contacts.matched.length}</div>
                 <div className="text-[11px] text-muted-foreground">On the app</div>
               </div>
               <div className="flex-1 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-3 text-center">
-                <div className="text-2xl font-black tracking-[-0.04em] text-[#0A0A0A]">{contacts.unmatched.length}</div>
+                <div className="text-2xl font-black tracking-[-0.04em] text-[#0F1F17]">{contacts.unmatched.length}</div>
                 <div className="text-[11px] text-muted-foreground">To invite</div>
               </div>
             </div>

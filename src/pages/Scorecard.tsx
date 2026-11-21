@@ -395,7 +395,7 @@ export default function Scorecard() {
   if (!round) return <ScorecardNotFound onGoHome={() => navigate('/')} />;
 
   return (
-    <div className="bg-[#F8F8F6] h-screen flex flex-col overflow-hidden relative">
+    <div className="bg-[#FAFAF7] h-screen flex flex-col overflow-hidden relative">
       <ScorecardBanners
         isSpectator={isSpectator}
         isScorekeeper={isScorekeeper}
@@ -441,9 +441,9 @@ export default function Scorecard() {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setShowHandicapSheet(true)}
-                className="absolute right-14 top-1/2 -translate-y-1/2 bg-[#F0EE3A] rounded-lg px-2 py-1 flex items-center gap-1"
+                className="absolute right-14 top-1/2 -translate-y-1/2 bg-[#BEF264] rounded-lg px-2 py-1 flex items-center gap-1"
               >
-                <span className="text-[10px] font-black text-[#0A0A0A] tracking-[0.05em]">HCP</span>
+                <span className="text-[10px] font-black text-[#0F1F17] tracking-[0.05em]">HCP</span>
               </motion.button>
             )}
           </div>

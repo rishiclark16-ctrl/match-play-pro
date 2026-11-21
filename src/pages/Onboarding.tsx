@@ -193,7 +193,7 @@ export default function Onboarding() {
   const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
 
   return (
-    <div className="h-screen flex flex-col bg-[#F8F8F6]">
+    <div className="h-screen flex flex-col bg-[#FAFAF7]">
       {/* Progress bar + skip all */}
       <header className="flex-shrink-0 px-6 pt-safe-content pb-4">
         <div className="flex items-center justify-between pt-4">
@@ -308,7 +308,7 @@ export default function Onboarding() {
                   </div>
                   {/* Edit badge when photo is set */}
                   {avatarPreview && (
-                    <div className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-foreground flex items-center justify-center border-2 border-[#F8F8F6]">
+                    <div className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-foreground flex items-center justify-center border-2 border-[#FAFAF7]">
                       <Camera className="w-4 h-4 text-background" />
                     </div>
                   )}
@@ -488,7 +488,7 @@ export default function Onboarding() {
       </main>
 
       {/* Bottom CTA */}
-      <div className="flex-shrink-0 px-6 pb-safe pt-4 border-t border-border/20 bg-[#F8F8F6]">
+      <div className="flex-shrink-0 px-6 pb-safe pt-4 border-t border-border/20 bg-[#FAFAF7]">
         <div className="flex gap-3 pb-2">
           {/* Back button */}
           {currentStep > 0 && (
@@ -545,13 +545,13 @@ export default function Onboarding() {
             <button
               onClick={handleCropSave}
               disabled={uploading}
-              className="flex items-center gap-1.5 text-[#F0EE3A] active:text-[#F0EE3A]/50 text-sm font-bold py-2 px-1 disabled:opacity-50"
+              className="flex items-center gap-1.5 text-[#BEF264] active:text-[#BEF264]/50 text-sm font-bold py-2 px-1 disabled:opacity-50"
             >
               {uploading ? (
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                  className="w-4 h-4 rounded-full border-2 border-[#F0EE3A] border-t-transparent"
+                  className="w-4 h-4 rounded-full border-2 border-[#BEF264] border-t-transparent"
                 />
               ) : (
                 <Check className="w-5 h-5" />

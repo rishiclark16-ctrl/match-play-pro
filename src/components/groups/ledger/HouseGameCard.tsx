@@ -29,7 +29,7 @@ export function HouseGameCard({ houseGame, isPro, onEdit, onCreate, onShowPaywal
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-4 h-4 text-[#F0EE3A] flex-shrink-0" style={{ filter: 'drop-shadow(0 0 4px #F0EE3A88)' }} />
+                <Sparkles className="w-4 h-4 text-[#BEF264] flex-shrink-0" style={{ filter: 'drop-shadow(0 0 4px #BEF26488)' }} />
                 <span className="text-[13px] font-black text-foreground truncate">{houseGame.name}</span>
               </div>
               {(() => {
@@ -71,15 +71,15 @@ export function HouseGameCard({ houseGame, isPro, onEdit, onCreate, onShowPaywal
           }}
           className="w-full bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 flex items-center gap-3 text-left"
         >
-          <div className="w-10 h-10 rounded-xl bg-[#F0EE3A] flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-5 h-5 text-[#0A0A0A]" />
+          <div className="w-10 h-10 rounded-xl bg-[#BEF264] flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-5 h-5 text-[#0F1F17]" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-bold text-foreground">Build Your House Game</p>
             <p className="text-[12px] text-muted-foreground">Describe your Saturday game in plain English</p>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
-            <span className="text-[9px] font-black bg-foreground text-[#F0EE3A] px-1.5 py-0.5 rounded-md">PRO</span>
+            <span className="text-[9px] font-black bg-foreground text-[#BEF264] px-1.5 py-0.5 rounded-md">PRO</span>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </div>
         </motion.button>

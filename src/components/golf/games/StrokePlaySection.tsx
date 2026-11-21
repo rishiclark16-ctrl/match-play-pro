@@ -27,13 +27,13 @@ export function StrokePlaySection({ players }: { players: PlayerWithScores[] }) 
               transition={SPRING}
               className={cn(
                 'flex items-center gap-3 px-3 py-2 rounded-xl',
-                isFirst ? 'bg-[#0A0A0A] text-white' : 'bg-slate-50',
+                isFirst ? 'bg-[#0F1F17] text-white' : 'bg-slate-50',
               )}
             >
               <span className={cn('text-[11px] font-bold w-4 text-center', isFirst ? 'text-white/50' : 'text-slate-400')}>
                 {index + 1}
               </span>
-              <span className={cn('text-sm font-semibold flex-1 truncate', isFirst ? 'text-white' : 'text-[#0A0A0A]')}>
+              <span className={cn('text-sm font-semibold flex-1 truncate', isFirst ? 'text-white' : 'text-[#0F1F17]')}>
                 {player.name}
               </span>
               <span className="text-[10px] text-slate-400 tabular-nums">
@@ -42,7 +42,7 @@ export function StrokePlaySection({ players }: { players: PlayerWithScores[] }) 
               <span
                 className={cn(
                   'text-sm font-black tabular-nums w-8 text-right',
-                  isFirst && 'text-[#F0EE3A]',
+                  isFirst && 'text-[#BEF264]',
                   !isFirst && rel < 0 && 'text-[#22C55E]',
                   !isFirst && rel > 0 && 'text-red-500',
                   !isFirst && rel === 0 && 'text-slate-600',

@@ -30,7 +30,7 @@ export function DashboardScorecard({ round, playersWithScores }: DashboardScorec
   const totalPar = frontPar + (is18 ? backPar : 0);
 
   const cellBase = 'min-w-[38px] h-[36px] flex items-center justify-center text-[12px] border-r border-b border-border/30';
-  const headerCell = cn(cellBase, 'bg-[#0A0A0A] text-white/70 font-bold text-[11px]');
+  const headerCell = cn(cellBase, 'bg-[#0F1F17] text-white/70 font-bold text-[11px]');
   const labelCell = 'min-w-[80px] h-[36px] flex items-center px-3 text-[12px] font-semibold border-r border-b border-border/30 bg-white sticky left-0 z-10';
   const subtotalCell = cn(cellBase, 'bg-muted/50 font-black text-[12px] min-w-[44px]');
 
@@ -59,7 +59,7 @@ export function DashboardScorecard({ round, playersWithScores }: DashboardScorec
             {/* ── Front 9 ── */}
             {/* Hole numbers */}
             <div className="flex">
-              <div className={cn(labelCell, 'bg-[#0A0A0A] text-white/50 font-bold text-[10px] uppercase tracking-wider')}>Hole</div>
+              <div className={cn(labelCell, 'bg-[#0F1F17] text-white/50 font-bold text-[10px] uppercase tracking-wider')}>Hole</div>
               {front9.map(h => (
                 <div key={h.number} className={headerCell}>{h.number}</div>
               ))}

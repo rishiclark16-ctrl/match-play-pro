@@ -226,7 +226,7 @@ export function PlayersStep({
                       className={cn(
                         'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold border transition-all',
                         selected
-                          ? 'bg-[#0A0A0A] border-[#0A0A0A] text-white'
+                          ? 'bg-[#0F1F17] border-[#0F1F17] text-white'
                           : 'bg-white border-border/60 text-foreground'
                       )}
                     >
@@ -255,7 +255,7 @@ export function PlayersStep({
             'border-2 border-dashed rounded-2xl py-4 w-full flex items-center justify-center gap-2 mb-2 text-sm font-semibold',
             canAdd
               ? 'border-border text-muted-foreground'
-              : 'border-[#F0EE3A]/40 text-[#A08800]'
+              : 'border-[#BEF264]/40 text-[#A08800]'
           )}
         >
           {canAdd ? (
@@ -279,7 +279,7 @@ export function PlayersStep({
           animate={{ opacity: 1, y: 0 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setShowPaywall(true)}
-          className="border-2 border-dashed border-[#F0EE3A]/40 rounded-2xl py-4 w-full flex items-center justify-center gap-2 mb-2 text-sm font-semibold text-[#A08800]"
+          className="border-2 border-dashed border-[#BEF264]/40 rounded-2xl py-4 w-full flex items-center justify-center gap-2 mb-2 text-sm font-semibold text-[#A08800]"
         >
           <Crown className="w-4 h-4" />
           <span>Upgrade to Pro for up to 8 players</span>

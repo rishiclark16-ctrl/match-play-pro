@@ -31,14 +31,14 @@ export function SubscriptionCard({
       className={cn(
         'relative flex flex-col items-center p-4 rounded-2xl border-2 transition-all text-center bg-white',
         selected
-          ? 'border-foreground shadow-[0_0_0_2px_#0A0A0A]'
+          ? 'border-foreground shadow-[0_0_0_2px_#0F1F17]'
           : 'border-border',
         disabled && 'opacity-50 cursor-not-allowed'
       )}
     >
       {/* Badge */}
       {badge && (
-        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-[#F0EE3A] text-[#0A0A0A] text-[10px] font-black rounded-full px-2 py-0.5 whitespace-nowrap">
+        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-[#BEF264] text-[#0F1F17] text-[10px] font-black rounded-full px-2 py-0.5 whitespace-nowrap">
           {badge}
         </span>
       )}

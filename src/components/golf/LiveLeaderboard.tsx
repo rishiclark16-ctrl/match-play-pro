@@ -207,8 +207,8 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
               </AvatarFallback>
             </Avatar>
             {isLeader && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#F0EE3A] flex items-center justify-center">
-                <Crown className="w-3 h-3 text-[#0A0A0A]" />
+              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#BEF264] flex items-center justify-center">
+                <Crown className="w-3 h-3 text-[#0F1F17]" />
               </div>
             )}
           </div>
@@ -326,8 +326,8 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
                   </AvatarFallback>
                 </Avatar>
                 {matchPlayStatus.leaderId === player1.id && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#F0EE3A] flex items-center justify-center">
-                    <Crown className="w-3 h-3 text-[#0A0A0A]" />
+                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#BEF264] flex items-center justify-center">
+                    <Crown className="w-3 h-3 text-[#0F1F17]" />
                   </div>
                 )}
               </div>
@@ -396,8 +396,8 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
                   </AvatarFallback>
                 </Avatar>
                 {matchPlayStatus.leaderId === player2.id && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#F0EE3A] flex items-center justify-center">
-                    <Crown className="w-3 h-3 text-[#0A0A0A]" />
+                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#BEF264] flex items-center justify-center">
+                    <Crown className="w-3 h-3 text-[#0F1F17]" />
                   </div>
                 )}
               </div>
@@ -468,8 +468,8 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
                   </AvatarFallback>
                 </Avatar>
               )}
-              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#F0EE3A] flex items-center justify-center">
-                <Crown className="w-3 h-3 text-[#0A0A0A]" />
+              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#BEF264] flex items-center justify-center">
+                <Crown className="w-3 h-3 text-[#0F1F17]" />
               </div>
             </div>
 

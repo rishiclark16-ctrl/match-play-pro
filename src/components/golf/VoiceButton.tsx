@@ -70,7 +70,7 @@ export function VoiceButton({
       {isListening && (
         <>
           <motion.div
-            className="absolute inset-0 rounded-2xl border-2 border-[#F0EE3A]"
+            className="absolute inset-0 rounded-2xl border-2 border-[#BEF264]"
             animate={{
               scale: [1, 1.3 + audioLevel * 0.5],
               opacity: [0.6 * (0.5 + audioLevel * 0.5), 0],
@@ -82,7 +82,7 @@ export function VoiceButton({
             }}
           />
           <motion.div
-            className="absolute inset-0 rounded-2xl border-2 border-[#F0EE3A]"
+            className="absolute inset-0 rounded-2xl border-2 border-[#BEF264]"
             animate={{
               scale: [1, 1.2 + audioLevel * 0.3],
               opacity: [0.5 * (0.5 + audioLevel * 0.5), 0],

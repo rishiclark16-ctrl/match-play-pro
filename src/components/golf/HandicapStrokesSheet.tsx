@@ -56,7 +56,7 @@ export function HandicapStrokesSheet({
     <Sheet open={open} onOpenChange={onClose}>
       <SheetContent
         side="bottom"
-        className="h-[88vh] bg-[#F8F8F6] rounded-t-3xl p-0 border-0 [&>button]:hidden"
+        className="h-[88vh] bg-[#FAFAF7] rounded-t-3xl p-0 border-0 [&>button]:hidden"
       >
         {/* Drag handle */}
         <div className="w-10 h-1 rounded-full bg-muted mx-auto mt-3 mb-4" />
@@ -122,8 +122,8 @@ export function HandicapStrokesSheet({
                             }
                           </p>
                         </div>
-                        <div className="bg-[#F0EE3A] rounded-lg px-2.5 py-1">
-                          <span className="text-[13px] font-black text-[#0A0A0A]">
+                        <div className="bg-[#BEF264] rounded-lg px-2.5 py-1">
+                          <span className="text-[13px] font-black text-[#0F1F17]">
                             +{playingHcp}
                           </span>
                         </div>
@@ -141,7 +141,7 @@ export function HandicapStrokesSheet({
                             return (
                               <div
                                 key={holeNum}
-                                className="flex flex-col items-center bg-[#0A0A0A] rounded-lg px-2.5 py-1.5 min-w-[36px]"
+                                className="flex flex-col items-center bg-[#0F1F17] rounded-lg px-2.5 py-1.5 min-w-[36px]"
                               >
                                 <span className="text-[13px] font-black text-white leading-none">
                                   {holeNum}
@@ -152,7 +152,7 @@ export function HandicapStrokesSheet({
                                   </span>
                                 )}
                                 {extraStrokes > 1 && (
-                                  <span className="text-[8px] font-black text-[#F0EE3A] leading-none">
+                                  <span className="text-[8px] font-black text-[#BEF264] leading-none">
                                     ×{extraStrokes}
                                   </span>
                                 )}
@@ -231,7 +231,7 @@ export function HandicapStrokesSheet({
                                   {Array.from({ length: Math.min(strokes, 2) }).map((_, i) => (
                                     <div
                                       key={i}
-                                      className="w-2 h-2 rounded-full bg-[#F0EE3A] border border-[#0A0A0A]/20"
+                                      className="w-2 h-2 rounded-full bg-[#BEF264] border border-[#0F1F17]/20"
                                     />
                                   ))}
                                   {strokes > 2 && (

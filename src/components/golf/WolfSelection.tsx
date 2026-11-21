@@ -81,13 +81,13 @@ export function WolfSelection({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="bottom" className="h-auto max-h-[85vh] bg-[#F8F8F6] rounded-t-3xl p-0 border-0">
+      <SheetContent side="bottom" className="h-auto max-h-[85vh] bg-[#FAFAF7] rounded-t-3xl p-0 border-0">
         {/* Handle */}
         <div className="w-10 h-1 bg-muted-foreground/25 rounded-full mx-auto mt-3 mb-2" />
 
         {/* Header */}
         <div className="px-5 pb-3 flex items-center gap-2">
-          <Crown className="w-5 h-5 text-[#F0EE3A]" />
+          <Crown className="w-5 h-5 text-[#BEF264]" />
           <span className="text-lg font-black tracking-[-0.03em] text-foreground">
             {wolf.name.split(' ')[0]} is the Wolf
           </span>
@@ -147,7 +147,7 @@ export function WolfSelection({
                   className={cn(
                     "bg-white rounded-2xl border-2 mx-5 mb-2 p-4 flex items-center gap-3 w-[calc(100%-2.5rem)] transition-all",
                     selectedPartner === hunter.id
-                      ? "border-foreground bg-muted/20 shadow-[0_0_0_1px_#0A0A0A]"
+                      ? "border-foreground bg-muted/20 shadow-[0_0_0_1px_#0F1F17]"
                       : "border-border"
                   )}
                 >

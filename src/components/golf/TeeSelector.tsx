@@ -95,7 +95,7 @@ export function TeeSelector({ isOpen, courseDetails, onSelectTee, onClose }: Tee
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#F8F8F6] rounded-t-3xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-2xl"
+            className="bg-[#FAFAF7] rounded-t-3xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-2xl"
           >
             {/* Handle */}
             <div className="w-10 h-1 bg-muted-foreground/25 rounded-full mx-auto mt-3 mb-1" />

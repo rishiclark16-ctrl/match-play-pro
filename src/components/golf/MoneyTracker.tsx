@@ -93,7 +93,7 @@ export function MoneyTracker({
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-      className="bg-[#0A0A0A] rounded-2xl overflow-hidden"
+      className="bg-[#0F1F17] rounded-2xl overflow-hidden"
     >
       {/* Header row */}
       <div className="px-4 pt-3 pb-2 flex items-center justify-between">
@@ -114,7 +114,7 @@ export function MoneyTracker({
               className={cn(
                 "flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold",
                 currentMoney.biggestSwing.amount > 0
-                  ? "bg-[#F0EE3A]/15 text-[#F0EE3A]"
+                  ? "bg-[#BEF264]/15 text-[#BEF264]"
                   : "bg-[#EF4444]/15 text-[#EF4444]"
               )}
             >
@@ -139,7 +139,7 @@ export function MoneyTracker({
 
           const balanceColor =
             player.currentBalance > 0
-              ? '#F0EE3A'
+              ? '#BEF264'
               : player.currentBalance < 0
               ? '#EF4444'
               : '#ffffff';
@@ -164,7 +164,7 @@ export function MoneyTracker({
               {/* Position circle */}
               <span className={cn(
                 "w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0",
-                isLeader ? "bg-[#F0EE3A] text-[#0A0A0A]" : "bg-white/10 text-white/40"
+                isLeader ? "bg-[#BEF264] text-[#0F1F17]" : "bg-white/10 text-white/40"
               )}>
                 {index + 1}
               </span>
@@ -185,7 +185,7 @@ export function MoneyTracker({
                       exit={{ scale: 0, opacity: 0 }}
                       className={cn(
                         "flex items-center gap-0.5 text-[11px] font-semibold",
-                        player.change > 0 ? "text-[#F0EE3A]/80" : "text-[#EF4444]/80"
+                        player.change > 0 ? "text-[#BEF264]/80" : "text-[#EF4444]/80"
                       )}
                     >
                       {player.change > 0 ? (
@@ -233,7 +233,7 @@ export function MoneyTracker({
         >
           <span className="text-white/70 font-bold">{leader.playerName.split(' ')[0]}</span>
           {' '}leads by{' '}
-          <span className="text-[#F0EE3A] font-bold">${leadMargin.toFixed(0)}</span>
+          <span className="text-[#BEF264] font-bold">${leadMargin.toFixed(0)}</span>
         </motion.p>
       )}
 

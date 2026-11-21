@@ -38,7 +38,7 @@ export function StablefordSection({
               transition={SPRING}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl',
-                isFirst ? 'bg-[#0A0A0A] text-white' : 'bg-slate-50',
+                isFirst ? 'bg-[#0F1F17] text-white' : 'bg-slate-50',
               )}
             >
               <span
@@ -50,7 +50,7 @@ export function StablefordSection({
                 {index + 1}
               </span>
               <div className="flex-1 min-w-0">
-                <p className={cn('text-sm font-semibold truncate', isFirst ? 'text-white' : 'text-[#0A0A0A]')}>
+                <p className={cn('text-sm font-semibold truncate', isFirst ? 'text-white' : 'text-[#0F1F17]')}>
                   {standing.playerName}
                 </p>
                 {!isFirst && gap > 0 && stablefordResult.holesScored > 0 && (
@@ -61,7 +61,7 @@ export function StablefordSection({
                 className={cn(
                   'text-base font-black tabular-nums',
                   getStablefordPointsColor(standing.totalPoints),
-                  isFirst && 'text-[#F0EE3A]',
+                  isFirst && 'text-[#BEF264]',
                 )}
               >
                 {standing.totalPoints}

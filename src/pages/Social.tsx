@@ -266,7 +266,7 @@ export default function Social() {
   );
 
   return (
-    <AppLayout header={headerContent} mainClassName="pb-nav bg-[#F8F8F6]">
+    <AppLayout header={headerContent} mainClassName="pb-nav bg-[#FAFAF7]">
       <AnimatePresence mode="wait">
         {activeTab === 'feed' && (
           <motion.div
@@ -455,7 +455,7 @@ export default function Social() {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-xl bg-foreground flex items-center justify-center flex-shrink-0">
-                    <QrCode className="w-4 h-4 text-[#F0EE3A]" />
+                    <QrCode className="w-4 h-4 text-[#BEF264]" />
                   </div>
                   <div className="text-left">
                     <p className="text-[12px] font-bold text-foreground leading-none">Your Friend Code</p>
@@ -505,7 +505,7 @@ export default function Social() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   onClick={() => setShowPaywall(true)}
-                  className="bg-[#F0EE3A]/10 border border-[#F0EE3A]/40 rounded-2xl mx-6 p-4 flex items-center gap-3 mb-3 w-[calc(100%-3rem)]"
+                  className="bg-[#BEF264]/10 border border-[#BEF264]/40 rounded-2xl mx-6 p-4 flex items-center gap-3 mb-3 w-[calc(100%-3rem)]"
                 >
                   <Crown className="w-4 h-4 text-[#A08800] flex-shrink-0" />
                   <span className="text-sm font-semibold text-foreground flex-1 text-left">Upgrade for unlimited friends</span>

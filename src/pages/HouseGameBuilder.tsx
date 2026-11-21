@@ -134,7 +134,7 @@ export default function HouseGameBuilder() {
   const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
 
   return (
-    <div className="h-screen flex flex-col bg-[#F5F5F0]">
+    <div className="h-screen flex flex-col bg-[#FAFAF7]">
       <PaywallModal
         open={showPaywall}
         onOpenChange={(open) => {
@@ -150,7 +150,7 @@ export default function HouseGameBuilder() {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="flex-shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground bg-[#F5F5F0]">
+      <header className="flex-shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground bg-[#FAFAF7]">
         <div className="flex items-center gap-3">
           <motion.button
             whileTap={{ scale: 0.9 }}
@@ -166,11 +166,11 @@ export default function HouseGameBuilder() {
             <h1 className="text-[22px] font-black tracking-[-0.04em] text-foreground leading-none">AI Game Builder</h1>
           </div>
           {isPro ? (
-            <div className="ml-auto bg-foreground text-[#F0EE3A] text-[9px] font-black tracking-[0.1em] px-2 py-1 rounded-lg">
+            <div className="ml-auto bg-foreground text-[#BEF264] text-[9px] font-black tracking-[0.1em] px-2 py-1 rounded-lg">
               PRO
             </div>
           ) : (
-            <div className="ml-auto bg-[#F0EE3A] text-[#0A0A0A] text-[9px] font-black tracking-[0.1em] px-2 py-1 rounded-lg">
+            <div className="ml-auto bg-[#BEF264] text-[#0F1F17] text-[9px] font-black tracking-[0.1em] px-2 py-1 rounded-lg">
               1 FREE
             </div>
           )}
@@ -184,7 +184,7 @@ export default function HouseGameBuilder() {
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 26 }}
-            className="flex items-center gap-2.5 bg-[#F0EE3A]/20 border border-[#F0EE3A]/50 rounded-xl px-4 py-3"
+            className="flex items-center gap-2.5 bg-[#BEF264]/20 border border-[#BEF264]/50 rounded-xl px-4 py-3"
           >
             <Sparkles className="w-4 h-4 text-foreground flex-shrink-0" />
             <p className="text-[12px] font-bold text-foreground leading-snug">
@@ -217,7 +217,7 @@ export default function HouseGameBuilder() {
               className={cn(
                 'w-full bg-white rounded-2xl shadow-[0_1px_4px_rgba(0,0,0,0.08)] p-4 pr-14 text-[14px] text-foreground placeholder:text-muted-foreground/50 leading-relaxed resize-none border-2 outline-none transition-all',
                 isListening
-                  ? 'border-[#F0EE3A] ring-2 ring-[#F0EE3A]/30'
+                  ? 'border-[#BEF264] ring-2 ring-[#BEF264]/30'
                   : parseError
                   ? 'border-red-300'
                   : 'border-transparent focus:border-foreground/20'
@@ -229,11 +229,11 @@ export default function HouseGameBuilder() {
                 onClick={handleVoice}
                 className={cn(
                   'absolute right-3 top-3 w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm',
-                  isListening ? 'bg-[#F0EE3A]' : 'bg-muted'
+                  isListening ? 'bg-[#BEF264]' : 'bg-muted'
                 )}
               >
                 {isListening
-                  ? <MicOff className="w-4 h-4 text-[#0A0A0A]" />
+                  ? <MicOff className="w-4 h-4 text-[#0F1F17]" />
                   : <Mic className="w-4 h-4 text-foreground" />
                 }
               </motion.button>
@@ -299,7 +299,7 @@ export default function HouseGameBuilder() {
                 onClick={() => { setDescription(ex.text); setParseError(null); hapticLight(); }}
                 className="text-left bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-3 py-3 border-2 border-transparent active:border-foreground/20 transition-colors"
               >
-                <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[#F0EE3A] bg-foreground px-1.5 py-0.5 rounded-md inline-block mb-1.5">
+                <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[#BEF264] bg-foreground px-1.5 py-0.5 rounded-md inline-block mb-1.5">
                   {ex.label}
                 </span>
                 <p className="text-[12px] text-muted-foreground leading-snug line-clamp-2">

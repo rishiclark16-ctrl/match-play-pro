@@ -65,7 +65,7 @@ export default function JoinRound() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-[#F8F8F6]">
+    <div className="h-screen flex flex-col bg-[#FAFAF7]">
       {/* Header */}
       <header className="flex-shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground">
         <div className="flex items-center gap-3">
@@ -94,7 +94,7 @@ export default function JoinRound() {
           {/* Icon + title */}
           <div className="text-center mb-8">
             <div className="w-16 h-16 rounded-2xl bg-foreground flex items-center justify-center mx-auto mb-4">
-              <Eye className="w-7 h-7 text-[#F0EE3A]" />
+              <Eye className="w-7 h-7 text-[#BEF264]" />
             </div>
             <h2 className="text-[20px] font-black tracking-[-0.04em] text-foreground mb-2">Watch a Round</h2>
             <p className="text-[14px] text-muted-foreground">

@@ -34,11 +34,11 @@ export function NewRoundModeStep({ onSelect }: NewRoundModeStepProps) {
         onClick={() => { hapticLight(); onSelect('multi'); }}
         className={cn(
           'w-full rounded-2xl border-2 px-4 py-5 flex items-center gap-4 text-left transition-colors',
-          'bg-[#0A0A0A] border-[#0A0A0A]'
+          'bg-[#0F1F17] border-[#0F1F17]'
         )}
       >
-        <div className="w-11 h-11 rounded-xl bg-[#F0EE3A] flex items-center justify-center flex-shrink-0">
-          <Users className="w-5 h-5 text-[#0A0A0A]" />
+        <div className="w-11 h-11 rounded-xl bg-[#BEF264] flex items-center justify-center flex-shrink-0">
+          <Users className="w-5 h-5 text-[#0F1F17]" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[15px] font-bold text-white">With Others</p>

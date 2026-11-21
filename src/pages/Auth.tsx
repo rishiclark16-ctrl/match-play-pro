@@ -33,7 +33,7 @@ function getPasswordStrength(password: string) {
   if (/[^A-Za-z0-9]/.test(password)) score++;
   if (score <= 1) return { score, label: 'Weak', color: '#EF4444' };
   if (score <= 2) return { score, label: 'Fair', color: '#F59E0B' };
-  if (score <= 3) return { score, label: 'Good', color: '#F0EE3A' };
+  if (score <= 3) return { score, label: 'Good', color: '#BEF264' };
   return { score, label: 'Strong', color: '#22C55E' };
 }
 
@@ -260,7 +260,7 @@ function FormSheet({
     >
       {/* Drag handle + close */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
-        <div className="w-10 h-[3px] rounded-full bg-[#F0EE3A]/25 mx-auto absolute left-1/2 -translate-x-1/2" />
+        <div className="w-10 h-[3px] rounded-full bg-[#BEF264]/25 mx-auto absolute left-1/2 -translate-x-1/2" />
         <div className="flex-1" />
         <motion.button
           whileTap={{ scale: 0.85 }}
@@ -402,7 +402,7 @@ function FormSheet({
             disabled={isSubmitting || isAppleLoading}
             className="relative w-full h-[54px] rounded-[18px] font-black text-[15px] flex items-center justify-center gap-2 mt-1 overflow-hidden disabled:opacity-40"
             style={{
-              background: 'linear-gradient(135deg, #F0EE3A 0%, #d4d120 100%)',
+              background: 'linear-gradient(135deg, #BEF264 0%, #d4d120 100%)',
               color: '#030703',
               boxShadow: '0 4px 32px rgba(240,238,58,0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
             }}
@@ -501,7 +501,7 @@ export default function Auth() {
         <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={spring}
           className="flex flex-col items-center gap-5">
           <img src="/app-icon.png" alt="MATCH" className="w-20 h-20 rounded-[28px]" />
-          <div className="w-6 h-6 rounded-full border-2 border-white/15 border-t-[#F0EE3A] animate-spin" />
+          <div className="w-6 h-6 rounded-full border-2 border-white/15 border-t-[#BEF264] animate-spin" />
         </motion.div>
       </div>
     );

@@ -33,8 +33,8 @@ export function InviteFriendsRow({ name, friendCode }: Props) {
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       <div className="flex items-center gap-3">
-        <div className="w-[34px] h-[34px] bg-[#F0EE3A] rounded-[9px] flex items-center justify-center flex-shrink-0">
-          <UserPlus className="w-[16px] h-[16px] text-[#0A0A0A]" />
+        <div className="w-[34px] h-[34px] bg-[#BEF264] rounded-[9px] flex items-center justify-center flex-shrink-0">
+          <UserPlus className="w-[16px] h-[16px] text-[#0F1F17]" />
         </div>
         <div className="text-left">
           <p className="text-[14px] font-semibold text-foreground tracking-[-0.01em]">Invite your group</p>

@@ -12,7 +12,7 @@ export function SeasonLeaderboard() {
 
   if (loading) {
     return (
-      <div className="bg-[#0A0A0A] rounded-2xl p-4">
+      <div className="bg-[#0F1F17] rounded-2xl p-4">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-4 h-4 rounded bg-white/10 animate-pulse" />
           <div className="h-2.5 w-28 bg-white/10 rounded animate-pulse" />
@@ -33,9 +33,9 @@ export function SeasonLeaderboard() {
 
   if (entries.length === 0) {
     return (
-      <div className="bg-[#0A0A0A] rounded-2xl p-5">
+      <div className="bg-[#0F1F17] rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-2">
-          <Trophy className="w-4 h-4 text-[#F0EE3A]" />
+          <Trophy className="w-4 h-4 text-[#BEF264]" />
           <span className="text-[11px] font-black uppercase tracking-[0.14em] text-white/50">
             {year} Season
           </span>
@@ -56,12 +56,12 @@ export function SeasonLeaderboard() {
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[#0A0A0A] rounded-2xl overflow-hidden"
+      className="bg-[#0F1F17] rounded-2xl overflow-hidden"
     >
       {/* Header */}
       <div className="px-4 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-[#F0EE3A] flex-shrink-0" />
+          <Trophy className="w-4 h-4 text-[#BEF264] flex-shrink-0" />
           <span className="text-[11px] font-black uppercase tracking-[0.14em] text-white/50">
             {year} Season
           </span>
@@ -100,12 +100,12 @@ export function SeasonLeaderboard() {
               >
                 <div className={cn(
                   'flex items-center gap-3 rounded-xl px-3 py-2.5',
-                  isFirst ? 'bg-[#F0EE3A]/10' : 'bg-transparent'
+                  isFirst ? 'bg-[#BEF264]/10' : 'bg-transparent'
                 )}>
                   {/* Rank */}
                   <span className={cn(
                     'text-[11px] font-black w-4 text-center flex-shrink-0',
-                    isFirst ? 'text-[#F0EE3A]' : 'text-white/25'
+                    isFirst ? 'text-[#BEF264]' : 'text-white/25'
                   )}>
                     {idx + 1}
                   </span>

@@ -176,13 +176,13 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] bg-[#F8F8F6] rounded-t-3xl border-0 p-0 [&>button]:hidden">
+      <SheetContent side="bottom" className="h-[90vh] bg-[#FAFAF7] rounded-t-3xl border-0 p-0 [&>button]:hidden">
         {/* Handle */}
         <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 mb-4">
-          <h2 className="text-[20px] font-black tracking-[-0.04em] text-[#0A0A0A]">
+          <h2 className="text-[20px] font-black tracking-[-0.04em] text-[#0F1F17]">
             {editingGroup ? 'Edit Group' : 'Create Group'}
           </h2>
           <button
@@ -364,7 +364,7 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
         </div>
 
         {/* Save Button */}
-        <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 pt-3 bg-[#F8F8F6]">
+        <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 pt-3 bg-[#FAFAF7]">
           <motion.button
             whileTap={{ scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}

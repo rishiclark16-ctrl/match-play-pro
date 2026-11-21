@@ -33,7 +33,7 @@ export function PropBetsSection({
               className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50"
             >
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-[#0A0A0A]">
+                <span className="text-sm font-medium text-[#0F1F17]">
                   {player.name?.split(' ')[0] ?? player.name}
                 </span>
                 <div className="flex gap-0.5">

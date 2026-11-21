@@ -71,8 +71,8 @@ export function HouseGameSection({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-[#F0EE3A] flex items-center justify-center">
-            <Sparkles className="w-3.5 h-3.5 text-[#0A0A0A]" />
+          <div className="w-6 h-6 rounded-lg bg-[#BEF264] flex items-center justify-center">
+            <Sparkles className="w-3.5 h-3.5 text-[#0F1F17]" />
           </div>
           <span className="text-[13px] font-bold text-foreground">House Game</span>
         </div>
@@ -125,7 +125,7 @@ export function HouseGameSection({
                   key={hr.holeNumber}
                   className={cn(
                     'flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-[9px] font-black',
-                    hr.holeNumber === currentHole && 'ring-1 ring-[#F0EE3A]',
+                    hr.holeNumber === currentHole && 'ring-1 ring-[#BEF264]',
                     playerEarning > 0 ? 'bg-[#22C55E]/15 text-[#22C55E]' :
                     playerEarning < 0 ? 'bg-[#EF4444]/15 text-[#EF4444]' :
                     'bg-muted/40 text-muted-foreground'
@@ -268,7 +268,7 @@ export function HouseGameSection({
                 }
               }
               return (
-                <span key={`${b}-${idx}`} className="text-[10px] font-bold bg-[#F0EE3A] text-[#0A0A0A] px-2 py-0.5 rounded-full">
+                <span key={`${b}-${idx}`} className="text-[10px] font-bold bg-[#BEF264] text-[#0F1F17] px-2 py-0.5 rounded-full">
                   {bonusLabel(b)}{dollarText}
                 </span>
               );

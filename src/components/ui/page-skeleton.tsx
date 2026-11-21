@@ -8,7 +8,7 @@ interface PageSkeletonProps {
 export function PageSkeleton({ className, variant = 'default' }: PageSkeletonProps) {
   if (variant === 'scorecard') {
     return (
-      <div className={cn("min-h-screen bg-[#F8F8F6]", className)}>
+      <div className={cn("min-h-screen bg-[#FAFAF7]", className)}>
         {/* Header skeleton */}
         <div className="h-[60px] border-b-2 border-foreground flex items-center px-6 gap-4">
           <div className="w-9 h-9 rounded-xl bg-muted/60 animate-pulse" />
@@ -32,7 +32,7 @@ export function PageSkeleton({ className, variant = 'default' }: PageSkeletonPro
 
   if (variant === 'list') {
     return (
-      <div className={cn("min-h-screen bg-[#F8F8F6]", className)}>
+      <div className={cn("min-h-screen bg-[#FAFAF7]", className)}>
         {/* Header skeleton */}
         <div className="h-[60px] border-b-2 border-foreground flex items-center px-6 gap-4">
           <div className="w-9 h-9 rounded-xl bg-muted/60 animate-pulse" />
@@ -56,7 +56,7 @@ export function PageSkeleton({ className, variant = 'default' }: PageSkeletonPro
 
   // Default variant
   return (
-    <div className={cn("min-h-screen bg-[#F8F8F6] p-6", className)}>
+    <div className={cn("min-h-screen bg-[#FAFAF7] p-6", className)}>
       {/* Header ghost */}
       <div className="h-[60px] border-b-2 border-foreground flex items-center gap-4 -mx-6 px-6 mb-6">
         <div className="w-9 h-9 rounded-xl bg-muted/60 animate-pulse" />

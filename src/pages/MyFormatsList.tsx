@@ -11,7 +11,7 @@ export default function MyFormatsList() {
   const { formats, loading, togglePublic } = usePersonalGameFormats();
 
   return (
-    <div className="h-screen flex flex-col bg-[#F8F8F6]">
+    <div className="h-screen flex flex-col bg-[#FAFAF7]">
       {/* Header */}
       <header className="flex-shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground">
         <div className="flex items-center gap-3">
@@ -51,7 +51,7 @@ export default function MyFormatsList() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center justify-center py-16 text-center"
           >
-            <div className="w-16 h-16 rounded-2xl bg-[#F0EE3A]/20 flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-[#BEF264]/20 flex items-center justify-center mb-4">
               <Sparkles className="w-8 h-8 text-foreground" />
             </div>
             <h2 className="text-[20px] font-black tracking-[-0.03em] mb-2">No formats yet</h2>
@@ -78,7 +78,7 @@ export default function MyFormatsList() {
                 className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] border border-border/30 p-4 mb-3"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#F0EE3A]/15 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-[#BEF264]/15 flex items-center justify-center flex-shrink-0">
                     <Sparkles className="w-5 h-5 text-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">

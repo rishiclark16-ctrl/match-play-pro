@@ -20,7 +20,7 @@ const generateConfetti = (count: number) => {
     delay: Math.random() * 0.3,
     duration: 1 + Math.random() * 1,
     rotation: Math.random() * 360,
-    color: ['bg-[#F0EE3A]', 'bg-[#22C55E]', 'bg-[#0A0A0A]'][Math.floor(Math.random() * 3)],
+    color: ['bg-[#BEF264]', 'bg-[#22C55E]', 'bg-[#0F1F17]'][Math.floor(Math.random() * 3)],
     size: 4 + Math.random() * 8,
   }));
 };
@@ -102,7 +102,7 @@ export function PropBetCelebration({
               stiffness: 300,
               damping: 20,
             }}
-            className="relative z-10 bg-white rounded-3xl border-2 border-[#F0EE3A] shadow-2xl p-6 mx-4 max-w-sm"
+            className="relative z-10 bg-white rounded-3xl border-2 border-[#BEF264] shadow-2xl p-6 mx-4 max-w-sm"
           >
             {/* Sparkle decorations */}
             <motion.div
@@ -116,7 +116,7 @@ export function PropBetCelebration({
               }}
               className="absolute -top-4 -right-4"
             >
-              <Sparkles className="w-8 h-8 text-[#F0EE3A]" />
+              <Sparkles className="w-8 h-8 text-[#BEF264]" />
             </motion.div>
             <motion.div
               animate={{
@@ -143,8 +143,8 @@ export function PropBetCelebration({
               }}
               className="flex justify-center mb-4"
             >
-              <div className="w-14 h-14 rounded-2xl bg-[#F0EE3A] flex items-center justify-center mx-auto mb-2">
-                <Trophy className="w-8 h-8 text-[#0A0A0A]" />
+              <div className="w-14 h-14 rounded-2xl bg-[#BEF264] flex items-center justify-center mx-auto mb-2">
+                <Trophy className="w-8 h-8 text-[#0F1F17]" />
               </div>
             </motion.div>
 
@@ -203,7 +203,7 @@ export function PropBetCelebration({
                 repeat: 2,
                 repeatType: 'loop',
               }}
-              className="absolute inset-0 border-4 border-[#F0EE3A] rounded-3xl pointer-events-none"
+              className="absolute inset-0 border-4 border-[#BEF264] rounded-3xl pointer-events-none"
             />
           </motion.div>
         </motion.div>

@@ -97,7 +97,7 @@ export function PrimitiveRow({
         'rounded-xl px-4 py-3 border transition-colors',
         checked
           ? isLow
-            ? 'bg-[#FFF9E6] border-[#F0EE3A]'
+            ? 'bg-[#FFF9E6] border-[#BEF264]'
             : 'bg-white border-foreground/20'
           : 'bg-white border-border/40'
       )}
@@ -173,7 +173,7 @@ export function CustomPrimitiveRow({
       className={cn(
         'rounded-xl px-4 py-3 border-2 transition-colors',
         checked
-          ? 'bg-[#F0EE3A]/10 border-[#F0EE3A]/60'
+          ? 'bg-[#BEF264]/10 border-[#BEF264]/60'
           : 'bg-white border-dashed border-border/50'
       )}
     >
@@ -192,7 +192,7 @@ export function CustomPrimitiveRow({
             <span className={cn('text-[13px] font-bold', checked ? 'text-foreground' : 'text-muted-foreground')}>
               {label}
             </span>
-            <span className="flex items-center gap-1 text-[10px] font-black text-[#0A0A0A] bg-[#F0EE3A] px-1.5 py-0.5 rounded-md">
+            <span className="flex items-center gap-1 text-[10px] font-black text-[#0F1F17] bg-[#BEF264] px-1.5 py-0.5 rounded-md">
               <Sparkles className="w-2.5 h-2.5" />
               AI Created
             </span>
@@ -262,7 +262,7 @@ export function CategorySection({
             transition={{ type: 'spring', stiffness: 400, damping: 35 }}
             className="overflow-hidden"
           >
-            <div className="px-3 pb-3 space-y-2 bg-[#F8F8F6]">
+            <div className="px-3 pb-3 space-y-2 bg-[#FAFAF7]">
               {primitives.map(p => (
                 <PrimitiveRow
                   key={p.id}

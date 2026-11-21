@@ -49,7 +49,7 @@ interface MethodConfig {
 const METHODS: MethodConfig[] = [
   { id: 'venmo', label: 'Venmo', emoji: '💸', color: '#3D95CE' },
   { id: 'cashapp', label: 'Cash App', emoji: '💵', color: '#00D64F' },
-  { id: 'cash', label: 'Mark as Cash Paid', emoji: '🤝', color: '#0A0A0A' },
+  { id: 'cash', label: 'Mark as Cash Paid', emoji: '🤝', color: '#0F1F17' },
 ];
 
 export function SettleUpSheet({
@@ -98,10 +98,10 @@ export function SettleUpSheet({
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <SheetContent
         side="bottom"
-        className="h-[85vh] rounded-t-3xl p-0 overflow-hidden flex flex-col bg-[#F8F8F6]"
+        className="h-[85vh] rounded-t-3xl p-0 overflow-hidden flex flex-col bg-[#FAFAF7]"
       >
         {/* Dark Hero */}
-        <div className="bg-[#0A0A0A] px-6 pt-6 pb-6 flex-shrink-0">
+        <div className="bg-[#0F1F17] px-6 pt-6 pb-6 flex-shrink-0">
           {/* Drag handle */}
           <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5" />
 

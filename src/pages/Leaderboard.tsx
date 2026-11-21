@@ -244,8 +244,8 @@ export default function Leaderboard() {
   const getPositionBadge = (rank: number) => {
     if (rank === 0) {
       return (
-        <div className="w-9 h-9 rounded-xl bg-[#F0EE3A] flex items-center justify-center">
-          <Trophy className="w-4 h-4 text-[#0A0A0A]" />
+        <div className="w-9 h-9 rounded-xl bg-[#BEF264] flex items-center justify-center">
+          <Trophy className="w-4 h-4 text-[#0F1F17]" />
         </div>
       );
     }
@@ -559,8 +559,8 @@ export default function Leaderboard() {
                   className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden mt-2 mb-2"
                 >
                   <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
-                    <div className="w-5 h-5 rounded-md bg-[#F0EE3A] flex items-center justify-center">
-                      <Sparkles className="w-3 h-3 text-[#0A0A0A]" />
+                    <div className="w-5 h-5 rounded-md bg-[#BEF264] flex items-center justify-center">
+                      <Sparkles className="w-3 h-3 text-[#0F1F17]" />
                     </div>
                     <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground">Custom Rules</p>
                     <span className="ml-auto text-[10px] font-bold text-muted-foreground">Settle manually</span>

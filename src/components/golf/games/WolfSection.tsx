@@ -34,8 +34,8 @@ export function WolfSection({
 
       {/* Current wolf */}
       {currentWolf && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0A0A0A] text-white">
-          <Crown className="w-4 h-4 text-[#F0EE3A] shrink-0" />
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0F1F17] text-white">
+          <Crown className="w-4 h-4 text-[#BEF264] shrink-0" />
           <div className="flex-1">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-white/50">
               Current Wolf · H{currentHole}
@@ -43,7 +43,7 @@ export function WolfSection({
             <p className="text-sm font-bold">{currentWolf.name}</p>
           </div>
           {wolfResult.carryover > 0 && (
-            <span className="text-[10px] font-bold px-2 py-0.5 bg-[#F0EE3A] text-[#0A0A0A] rounded-full">
+            <span className="text-[10px] font-bold px-2 py-0.5 bg-[#BEF264] text-[#0F1F17] rounded-full">
               {wolfResult.carryover} carry
             </span>
           )}
@@ -85,7 +85,7 @@ export function WolfSection({
                   {index + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[#0A0A0A] truncate">
+                  <p className="text-sm font-semibold text-[#0F1F17] truncate">
                     {standing.playerName?.split(' ')[0] ?? standing.playerName}
                     {standing.loneWolfWins > 0 && (
                       <span className="ml-1 text-[9px] font-bold text-amber-600">

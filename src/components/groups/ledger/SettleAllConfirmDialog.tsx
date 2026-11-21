@@ -46,7 +46,7 @@ export function SettleAllConfirmDialog({ open, settling, onCancel, onConfirm }: 
                 whileTap={{ scale: 0.97 }}
                 disabled={settling}
                 onClick={onConfirm}
-                className="flex-1 py-3.5 rounded-2xl bg-[#0A0A0A] text-sm font-black text-white disabled:opacity-50"
+                className="flex-1 py-3.5 rounded-2xl bg-[#0F1F17] text-sm font-black text-white disabled:opacity-50"
               >
                 {settling ? 'Settling...' : 'Settle All'}
               </motion.button>

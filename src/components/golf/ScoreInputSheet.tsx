@@ -68,7 +68,7 @@ function buildNamedScores(par: number): NamedScore[] {
       score: par - 1,
       diff: -1,
       bgClass: 'bg-[#4ADE80]',
-      textClass: 'text-[#0A0A0A]',
+      textClass: 'text-[#0F1F17]',
     });
   }
 
@@ -77,8 +77,8 @@ function buildNamedScores(par: number): NamedScore[] {
     label: 'PAR',
     score: par,
     diff: 0,
-    bgClass: 'bg-[#F0EE3A]',
-    textClass: 'text-[#0A0A0A]',
+    bgClass: 'bg-[#BEF264]',
+    textClass: 'text-[#0F1F17]',
   });
 
   // Bogey (par+1)
@@ -158,7 +158,7 @@ export function ScoreInputSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-            className="fixed inset-x-0 bottom-0 z-50 bg-[#F8F8F6] rounded-t-3xl"
+            className="fixed inset-x-0 bottom-0 z-50 bg-[#FAFAF7] rounded-t-3xl"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             {/* Drag Handle */}
@@ -228,7 +228,7 @@ export function ScoreInputSheet({
                     className={cn(
                       "w-full h-14 rounded-2xl flex items-center justify-between px-5 touch-manipulation",
                       item.bgClass,
-                      isSelected && "ring-2 ring-offset-2 ring-[#0A0A0A]"
+                      isSelected && "ring-2 ring-offset-2 ring-[#0F1F17]"
                     )}
                     style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
@@ -295,7 +295,7 @@ export function ScoreInputSheet({
                           className={cn(
                             "rounded-xl py-2.5 flex items-center justify-center touch-manipulation",
                             isSelected
-                              ? "bg-[#F0EE3A] text-[#0A0A0A] font-black"
+                              ? "bg-[#BEF264] text-[#0F1F17] font-black"
                               : "bg-muted text-foreground font-semibold"
                           )}
                           style={{ WebkitTapHighlightColor: 'transparent' }}

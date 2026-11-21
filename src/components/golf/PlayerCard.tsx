@@ -52,7 +52,7 @@ function getScoreNumColor(score: number | undefined, par: number, netScore: numb
   const s = useNet && netScore !== undefined ? netScore : score;
   const diff = s - par;
   if (diff <= -1) return 'text-[#15803D]';
-  if (diff === 0) return 'text-[#0A0A0A]';
+  if (diff === 0) return 'text-[#0F1F17]';
   if (diff === 1) return 'text-[#92400E]';
   return 'text-[#991B1B]';
 }
@@ -186,7 +186,7 @@ export function PlayerCard({
 
   const celebrationShadow = celebrated
     ? celebrationType === 'eagle'
-      ? 'shadow-[0_0_0_2px_#F0EE3A]'
+      ? 'shadow-[0_0_0_2px_#BEF264]'
       : 'shadow-[0_0_0_2px_#22C55E]'
     : '';
 
@@ -233,7 +233,7 @@ export function PlayerCard({
           : isLeading && player.holesPlayed > 0
           ? 'shadow-[0_0_0_2px_rgba(34,197,94,0.35),0_4px_16px_rgba(34,197,94,0.1)]'
           : '',
-        isLeading && player.holesPlayed > 0 && 'border-l-[3px] border-[#F0EE3A]',
+        isLeading && player.holesPlayed > 0 && 'border-l-[3px] border-[#BEF264]',
         voiceHighlight && 'ring-2 ring-[#22C55E]/40',
       )}
     >
@@ -285,7 +285,7 @@ export function PlayerCard({
               <>
                 <Avatar className="w-10 h-10 rounded-xl">
                   <AvatarImage src={player.avatarUrl} className="rounded-xl object-cover" />
-                  <AvatarFallback className="bg-[#0A0A0A] text-white text-sm font-bold rounded-xl">
+                  <AvatarFallback className="bg-[#0F1F17] text-white text-sm font-bold rounded-xl">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -295,7 +295,7 @@ export function PlayerCard({
                     {Array.from({ length: Math.min(holeStrokes, 2) }).map((_, i) => (
                       <div
                         key={i}
-                        className="w-2 h-2 rounded-full bg-[#F0EE3A] border border-white shadow-sm"
+                        className="w-2 h-2 rounded-full bg-[#BEF264] border border-white shadow-sm"
                       />
                     ))}
                     {holeStrokes > 2 && (
@@ -311,15 +311,15 @@ export function PlayerCard({
           <div className="min-w-0">
             {/* Name row */}
             <div className="flex items-center gap-1.5">
-              <h4 className="text-sm font-bold text-[#0A0A0A] truncate leading-tight">
+              <h4 className="text-sm font-bold text-[#0F1F17] truncate leading-tight">
                 {nameParts[0] || playerName}
               </h4>
               {isGhost ? (
-                <span className="shrink-0 bg-black/6 text-[#0A0A0A]/40 text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-tight">
+                <span className="shrink-0 bg-black/6 text-[#0F1F17]/40 text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-tight">
                   net par
                 </span>
               ) : hasHandicap && (
-                <span className="shrink-0 bg-black/6 text-[#0A0A0A]/50 text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-tight">
+                <span className="shrink-0 bg-black/6 text-[#0F1F17]/50 text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-tight">
                   {player.playingHandicap}
                 </span>
               )}
@@ -370,7 +370,7 @@ export function PlayerCard({
               style={{ WebkitTapHighlightColor: 'transparent' }}
               aria-label="Decrease score"
             >
-              <Minus className="w-4 h-4 text-[#0A0A0A]" strokeWidth={2.5} />
+              <Minus className="w-4 h-4 text-[#0F1F17]" strokeWidth={2.5} />
             </motion.button>
 
             {/* Score display — tappable to open sheet */}
@@ -453,7 +453,7 @@ export function PlayerCard({
               style={{ WebkitTapHighlightColor: 'transparent' }}
               aria-label="Increase score"
             >
-              <Plus className="w-4 h-4 text-[#0A0A0A]" strokeWidth={2.5} />
+              <Plus className="w-4 h-4 text-[#0F1F17]" strokeWidth={2.5} />
             </motion.button>
           </div>
         ) : (
@@ -479,7 +479,7 @@ export function PlayerCard({
                 {Array.from({ length: Math.min(holeStrokes, 2) }).map((_, i) => (
                   <div
                     key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-[#F0EE3A] shadow-sm"
+                    className="w-1.5 h-1.5 rounded-full bg-[#BEF264] shadow-sm"
                   />
                 ))}
               </div>

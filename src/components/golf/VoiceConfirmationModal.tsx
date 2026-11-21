@@ -95,7 +95,7 @@ export function VoiceConfirmationModal({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={springTransition}
-            className="fixed bottom-0 left-0 right-0 bg-[#F8F8F6] rounded-t-3xl z-50 shadow-2xl max-h-[85vh] flex flex-col"
+            className="fixed bottom-0 left-0 right-0 bg-[#FAFAF7] rounded-t-3xl z-50 shadow-2xl max-h-[85vh] flex flex-col"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             {/* Handle */}

@@ -85,7 +85,7 @@ export function AppTutorial({ onDone }: AppTutorialProps) {
             className="bg-white rounded-3xl p-6 mb-4 shadow-2xl"
           >
             {/* Emoji */}
-            <div className="w-14 h-14 rounded-2xl bg-[#F8F8F6] flex items-center justify-center text-[28px] mb-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#FAFAF7] flex items-center justify-center text-[28px] mb-4">
               {current.emoji}
             </div>
 

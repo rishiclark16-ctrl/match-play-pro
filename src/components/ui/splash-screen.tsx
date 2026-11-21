@@ -38,13 +38,13 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
                             transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.1 }}
                             className="text-[42px] font-black tracking-[-0.04em] leading-none text-white select-none"
                         >
-                            M<span className="text-[#F0EE3A]">A</span>TCH
+                            M<span className="text-[#BEF264]">A</span>TCH
                         </motion.div>
                         <motion.div
                             initial={{ scaleX: 0, opacity: 0 }}
                             animate={{ scaleX: 1, opacity: 1 }}
                             transition={{ duration: 0.6, ease: 'easeOut', delay: 0.5 }}
-                            className="w-10 h-[3px] rounded-full bg-[#F0EE3A] origin-center"
+                            className="w-10 h-[3px] rounded-full bg-[#BEF264] origin-center"
                         />
                     </div>
                 </motion.div>

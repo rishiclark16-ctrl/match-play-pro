@@ -89,7 +89,7 @@ export function NotificationSettings({
                 setPushPermission(granted ? 'granted' : 'denied');
                 if (granted) hapticSuccess();
               }}
-              className="text-[12px] font-black text-foreground bg-[#F0EE3A] px-3 py-1.5 rounded-xl"
+              className="text-[12px] font-black text-foreground bg-[#BEF264] px-3 py-1.5 rounded-xl"
             >
               Enable
             </button>

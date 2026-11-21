@@ -2,53 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-/* MATCH Golf App Design System v4.0
-   Direction B — Clean & Modern
-   Near-black primary, warm off-white backgrounds, chartreuse yellow accent
+/* MATCH Golf App Design System v5.0 — "Fairway Day"
+   Light, sun-readable. Warm white ground (#FAFAF7), forest green primary (#14532D),
+   lime highlight (--gold slot, #BEF264), green-black ink (#0F1F17), Sora type, 20px radius.
+   Spec + rationale: docs/design/fairway-day.md
    All colors MUST be HSL.
 */
 
 @layer base {
   :root {
     /* Core Backgrounds - Warm off-white */
-    --background: 60 5% 97%;
-    --foreground: 0 0% 4%;
+    --background: 60 23% 97%;
+    --foreground: 150 35% 9%;
 
     /* Always-dark surfaces (do not flip in dark mode) */
-    --ink: 0 0% 4%;
+    --ink: 150 35% 9%;
     --ink-foreground: 0 0% 100%;
 
     /* Card - Pure white */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 4%;
+    --card-foreground: 150 35% 9%;
     --card-elevated: 0 0% 100%;
 
     /* Primary - Near black (Direction B CTA color) */
-    --primary: 0 0% 6%;
+    --primary: 144 61% 20%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 60 5% 95%;
-    --primary-muted: 60 5% 92%;
+    --primary-light: 140 40% 94%;
+    --primary-muted: 140 30% 90%;
 
     /* Secondary */
-    --secondary: 60 5% 94%;
-    --secondary-foreground: 0 0% 6%;
+    --secondary: 80 15% 94%;
+    --secondary-foreground: 150 35% 9%;
 
     /* Muted */
-    --muted: 60 5% 93%;
-    --muted-foreground: 0 0% 47%;
+    --muted: 80 15% 94%;
+    --muted-foreground: 144 9% 39%;
 
     /* Accent */
-    --accent: 60 5% 95%;
-    --accent-foreground: 0 0% 6%;
+    --accent: 80 15% 95%;
+    --accent-foreground: 150 35% 9%;
 
     /* Destructive */
     --destructive: 0 85% 55%;
     --destructive-foreground: 0 0% 100%;
 
     /* Success - Bright green for live/active */
-    --success: 142 72% 29%;
+    --success: 144 61% 26%;
     --success-foreground: 0 0% 100%;
-    --success-muted: 142 50% 95%;
+    --success-muted: 82 80% 92%;
 
     /* Warning - Amber for bogey */
     --warning: 38 95% 48%;
@@ -61,33 +62,33 @@
     --danger-muted: 0 60% 96%;
 
     /* Score state backgrounds — for score pills/cards relative to par */
-    --score-eagle: 142 76% 92%;
-    --score-birdie: 142 76% 92%;
-    --score-par: 60 5% 97%;
+    --score-eagle: 82 85% 85%;
+    --score-birdie: 82 80% 92%;
+    --score-par: 80 15% 96%;
     --score-bogey: 48 96% 93%;
     --score-double: 0 86% 97%;
 
     /* Gold / Chartreuse yellow accent — use sparingly */
-    --gold: 59 86% 57%;
-    --gold-foreground: 0 0% 4%;
-    --gold-muted: 59 80% 94%;
+    --gold: 82 85% 67%;
+    --gold-foreground: 144 61% 20%;
+    --gold-muted: 82 80% 92%;
 
     /* Borders */
-    --border: 60 5% 88%;
-    --border-strong: 60 5% 76%;
-    --input: 60 5% 88%;
-    --ring: 0 0% 6%;
+    --border: 80 10% 90%;
+    --border-strong: 80 8% 78%;
+    --input: 80 10% 88%;
+    --ring: 144 61% 20%;
 
-    --radius: 0.75rem;
+    --radius: 1.25rem;
 
     /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 4%;
+    --popover-foreground: 150 35% 9%;
 
     /* Sidebar */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 0 0% 15%;
-    --sidebar-primary: 0 0% 6%;
+    --sidebar-primary: 144 61% 20%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 60 5% 94%;
     --sidebar-accent-foreground: 0 0% 6%;
@@ -189,7 +190,7 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Sora', 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;

@@ -35,14 +35,14 @@ export function WinnerCard({
       >
       <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
         {/* Top accent bar */}
-        <div className="h-1 bg-[#F0EE3A] w-full" />
+        <div className="h-1 bg-[#BEF264] w-full" />
 
         {/* Card body */}
         <div className="px-5 py-4">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <Trophy className="text-[#F0EE3A] w-6 h-6" />
+                <Trophy className="text-[#BEF264] w-6 h-6" />
                 <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#D4B800]">
                   {hasTie ? 'Tied' : 'Winner'}
                 </span>

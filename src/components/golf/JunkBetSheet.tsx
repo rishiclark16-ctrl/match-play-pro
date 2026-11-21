@@ -153,7 +153,7 @@ export function JunkBetSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={spring}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-[#F8F8F6] rounded-t-3xl pb-safe"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-[#FAFAF7] rounded-t-3xl pb-safe"
           >
             {/* Drag handle */}
             <div className="w-10 h-1 rounded-full bg-muted mx-auto mt-3 mb-4" />

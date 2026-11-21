@@ -66,7 +66,7 @@ export function CourseStep({
           )}
 
           {selectedCourse && (
-            <div className="bg-white rounded-2xl shadow-[0_0_0_2px_#0A0A0A,0_2px_8px_rgba(0,0,0,0.08)] p-4 mb-4 mt-4">
+            <div className="bg-white rounded-2xl shadow-[0_0_0_2px_#0F1F17,0_2px_8px_rgba(0,0,0,0.08)] p-4 mb-4 mt-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <Check className="w-5 h-5 text-[#22C55E] flex-shrink-0" />

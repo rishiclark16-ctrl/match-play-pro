@@ -189,7 +189,7 @@ export default function HouseGameEdit() {
 
   if (loading) {
     return (
-      <div className="h-screen flex flex-col bg-[#F8F8F6]">
+      <div className="h-screen flex flex-col bg-[#FAFAF7]">
         <header className="flex-shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-muted" />
@@ -208,7 +208,7 @@ export default function HouseGameEdit() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#F8F8F6]">
+    <div className="h-screen flex flex-col bg-[#FAFAF7]">
       {/* Header */}
       <header className="flex-shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground">
         <div className="flex items-center gap-3">
@@ -240,7 +240,7 @@ export default function HouseGameEdit() {
         <motion.div
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mx-6 mt-4 bg-[#0A0A0A] rounded-2xl px-4 py-3"
+          className="mx-6 mt-4 bg-[#0F1F17] rounded-2xl px-4 py-3"
         >
           <p className="text-white/50 text-[11px] font-bold uppercase tracking-[0.08em]">Current</p>
           <p className="text-white text-[13px] font-bold mt-0.5 line-clamp-2">
@@ -334,7 +334,7 @@ export default function HouseGameEdit() {
       </main>
 
       {/* CTA */}
-      <div className="absolute bottom-0 left-0 right-0 px-6 pb-safe pt-4 bg-[#F8F8F6] border-t border-border/30">
+      <div className="absolute bottom-0 left-0 right-0 px-6 pb-safe pt-4 bg-[#FAFAF7] border-t border-border/30">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[12px] text-muted-foreground">
             {checkedIds.size} rule{checkedIds.size !== 1 ? 's' : ''} active

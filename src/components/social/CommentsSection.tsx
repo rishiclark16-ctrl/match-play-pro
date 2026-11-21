@@ -109,7 +109,7 @@ export function CommentsSection({ roundId }: CommentsSectionProps) {
           disabled={!draft.trim() || submitting}
           className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center disabled:opacity-40 flex-shrink-0"
         >
-          <Send className="w-4 h-4 text-[#F0EE3A]" />
+          <Send className="w-4 h-4 text-[#BEF264]" />
         </motion.button>
       </div>
     </div>

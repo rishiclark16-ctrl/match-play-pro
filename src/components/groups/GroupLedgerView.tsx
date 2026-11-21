@@ -161,7 +161,7 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-[#F8F8F6] relative">
+    <div className="h-full flex flex-col overflow-hidden bg-[#FAFAF7] relative">
       {/* Header */}
       <header className="flex-shrink-0 px-4 pb-3 pt-safe-content border-b border-black/10">
         <div className="flex items-center gap-3">
@@ -193,13 +193,13 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={ledgerSpringTransition}
-          className="mt-4 bg-[#0A0A0A] rounded-3xl p-5 text-white"
+          className="mt-4 bg-[#0F1F17] rounded-3xl p-5 text-white"
         >
           {/* Avatar Stack */}
           <div className="flex items-center gap-3 mb-4">
             <div className="flex -space-x-3">
               {group.members.slice(0, 5).map((member) => (
-                <Avatar key={member.id} className="h-10 w-10 rounded-xl border-2 border-[#0A0A0A]">
+                <Avatar key={member.id} className="h-10 w-10 rounded-xl border-2 border-[#0F1F17]">
                   <AvatarImage src={member.avatarUrl || undefined} />
                   <AvatarFallback className="bg-white/20 text-white text-xs rounded-xl font-bold">
                     {member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
@@ -207,7 +207,7 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
                 </Avatar>
               ))}
               {group.members.length > 5 && (
-                <div className="h-10 w-10 rounded-xl border-2 border-[#0A0A0A] bg-white/20 flex items-center justify-center text-white text-xs font-bold">
+                <div className="h-10 w-10 rounded-xl border-2 border-[#0F1F17] bg-white/20 flex items-center justify-center text-white text-xs font-bold">
                   +{group.members.length - 5}
                 </div>
               )}
@@ -310,7 +310,7 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               transition={ledgerSpringTransition}
-              className="mt-4 bg-[#0A0A0A] rounded-2xl p-4 flex items-center justify-between"
+              className="mt-4 bg-[#0F1F17] rounded-2xl p-4 flex items-center justify-between"
             >
               <div>
                 <p className="text-white font-bold text-sm">Settle Up All</p>

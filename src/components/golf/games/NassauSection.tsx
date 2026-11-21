@@ -95,7 +95,7 @@ export function NassauSection({
               <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">
                 {label}
               </p>
-              <p className="text-[13px] font-bold text-[#0A0A0A] leading-tight">
+              <p className="text-[13px] font-bold text-[#0F1F17] leading-tight">
                 {isAllSquare ? 'AS' : leaderName}
               </p>
               {!isAllSquare && (

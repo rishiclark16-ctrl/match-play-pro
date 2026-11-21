@@ -83,7 +83,7 @@ export default function RoundComplete() {
         particleCount: 120,
         spread: 80,
         origin: { y: 0.3 },
-        colors: ['#F0EE3A', '#ffffff', '#22C55E', '#0A0A0A'],
+        colors: ['#BEF264', '#ffffff', '#22C55E', '#0F1F17'],
         disableForReducedMotion: true,
       });
     }, 400);
@@ -352,10 +352,10 @@ export default function RoundComplete() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.32 }}
-            className="mx-4 mb-3 bg-[#F0EE3A] rounded-2xl px-4 py-2.5 flex items-center gap-3"
+            className="mx-4 mb-3 bg-[#BEF264] rounded-2xl px-4 py-2.5 flex items-center gap-3"
           >
-            <Shuffle className="w-4 h-4 text-[#0A0A0A] flex-shrink-0" />
-            <p className="text-[#0A0A0A] text-[12px] font-bold">Net-out applied — all debts combined into minimum payments</p>
+            <Shuffle className="w-4 h-4 text-[#0F1F17] flex-shrink-0" />
+            <p className="text-[#0F1F17] text-[12px] font-bold">Net-out applied — all debts combined into minimum payments</p>
           </motion.div>
         )}
 
@@ -409,8 +409,8 @@ export default function RoundComplete() {
           >
             <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
-                <div className="w-5 h-5 rounded-md bg-[#F0EE3A] flex items-center justify-center">
-                  <Coins className="w-3 h-3 text-[#0A0A0A]" />
+                <div className="w-5 h-5 rounded-md bg-[#BEF264] flex items-center justify-center">
+                  <Coins className="w-3 h-3 text-[#0F1F17]" />
                 </div>
                 <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-foreground">House Game</span>
               </div>
@@ -446,8 +446,8 @@ export default function RoundComplete() {
             >
               <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
-                  <div className="w-5 h-5 rounded-md bg-[#F0EE3A] flex items-center justify-center">
-                    <Sparkles className="w-3 h-3 text-[#0A0A0A]" />
+                  <div className="w-5 h-5 rounded-md bg-[#BEF264] flex items-center justify-center">
+                    <Sparkles className="w-3 h-3 text-[#0F1F17]" />
                   </div>
                   <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-foreground">Custom Rules</span>
                   <span className="ml-auto text-[10px] font-bold text-muted-foreground">Settle manually</span>
@@ -485,8 +485,8 @@ export default function RoundComplete() {
           >
             <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
-                <div className="w-5 h-5 rounded-md bg-[#F0EE3A] flex items-center justify-center">
-                  <Zap className="w-3 h-3 text-[#0A0A0A]" />
+                <div className="w-5 h-5 rounded-md bg-[#BEF264] flex items-center justify-center">
+                  <Zap className="w-3 h-3 text-[#0F1F17]" />
                 </div>
                 <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-foreground">Junk Bets</span>
                 <span className="ml-auto text-[11px] font-bold text-muted-foreground">{wonJunkBets.length} logged</span>

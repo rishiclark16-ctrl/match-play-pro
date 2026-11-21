@@ -60,7 +60,7 @@ export default function Support() {
   ];
 
   return (
-    <div className="h-screen flex flex-col bg-[#F8F8F6]">
+    <div className="h-screen flex flex-col bg-[#FAFAF7]">
       {/* Header */}
       <header className="shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground">
         <div className="flex items-center gap-3">

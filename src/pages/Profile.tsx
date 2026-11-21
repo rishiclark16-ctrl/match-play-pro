@@ -206,7 +206,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F8F8F6] flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-foreground" />
       </div>
     );
@@ -223,10 +223,10 @@ export default function Profile() {
   return (
     <AppLayout
       header={null}
-      mainClassName="bg-[#F8F8F6] pb-10"
+      mainClassName="bg-[#FAFAF7] pb-10"
     >
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <div className="bg-[#0A0A0A] rounded-b-[32px] px-6 pb-7 pt-safe-content">
+      <div className="bg-[#0F1F17] rounded-b-[32px] px-6 pb-7 pt-safe-content">
         {/* Nav row */}
         <div className="flex items-center justify-between mb-6">
           <motion.button
@@ -267,7 +267,7 @@ export default function Profile() {
         <div className="flex gap-2 flex-wrap mb-5">
           {profile?.handicap != null && (
             <div className="flex items-center gap-1.5 bg-white/10 rounded-xl px-3 py-1.5">
-              <Flag className="w-3 h-3 text-[#F0EE3A]" />
+              <Flag className="w-3 h-3 text-[#BEF264]" />
               <span className="text-[12px] font-bold text-white">HCP {profile.handicap}</span>
             </div>
           )}
@@ -276,19 +276,19 @@ export default function Profile() {
             onClick={() => { hapticLight(); navigate('/social?tab=friends'); }}
             className="flex items-center gap-1.5 bg-white/10 rounded-xl px-3 py-1.5"
           >
-            <Users className="w-3 h-3 text-[#F0EE3A]" />
+            <Users className="w-3 h-3 text-[#BEF264]" />
             <span className="text-[12px] font-bold text-white">{friends.length} Friend{friends.length !== 1 ? 's' : ''}</span>
           </motion.button>
           {homeCourseName && (
             <div className="flex items-center gap-1.5 bg-white/10 rounded-xl px-3 py-1.5 max-w-[180px]">
-              <Home className="w-3 h-3 text-[#F0EE3A] flex-shrink-0" />
+              <Home className="w-3 h-3 text-[#BEF264] flex-shrink-0" />
               <span className="text-[12px] font-bold text-white truncate">{homeCourseName}</span>
             </div>
           )}
           {isPro && (
-            <div className="flex items-center gap-1.5 bg-[#F0EE3A] rounded-xl px-3 py-1.5">
-              <Crown className="w-3 h-3 text-[#0A0A0A]" />
-              <span className="text-[12px] font-black text-[#0A0A0A]">Pro</span>
+            <div className="flex items-center gap-1.5 bg-[#BEF264] rounded-xl px-3 py-1.5">
+              <Crown className="w-3 h-3 text-[#0F1F17]" />
+              <span className="text-[12px] font-black text-[#0F1F17]">Pro</span>
             </div>
           )}
         </div>
@@ -309,7 +309,7 @@ export default function Profile() {
             <AnimatePresence mode="wait">
               {copied ? (
                 <motion.span key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                  <Check className="w-4 h-4 text-[#F0EE3A]" />
+                  <Check className="w-4 h-4 text-[#BEF264]" />
                 </motion.span>
               ) : (
                 <motion.span key="copy" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
@@ -328,17 +328,17 @@ export default function Profile() {
         {isPro ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.04 }}
-            className="bg-[#0A0A0A] rounded-2xl p-5 mb-5"
+            className="bg-[#0F1F17] rounded-2xl p-5 mb-5"
           >
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/30 mb-1">Current Plan</p>
-                <p className="text-[22px] font-black tracking-[-0.04em] text-[#F0EE3A] leading-none">
+                <p className="text-[22px] font-black tracking-[-0.04em] text-[#BEF264] leading-none">
                   Pro {isPromo ? 'Lifetime' : isAnnual ? 'Annual' : 'Monthly'}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-[#F0EE3A] flex items-center justify-center">
-                <Crown className="w-6 h-6 text-[#0A0A0A]" />
+              <div className="w-12 h-12 rounded-2xl bg-[#BEF264] flex items-center justify-center">
+                <Crown className="w-6 h-6 text-[#0F1F17]" />
               </div>
             </div>
             <div className="border-t border-white/10 pt-3 flex items-center justify-between">
@@ -361,7 +361,7 @@ export default function Profile() {
         ) : (
           <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.04 }}
-            className="bg-[#0A0A0A] rounded-2xl p-5 mb-5"
+            className="bg-[#0F1F17] rounded-2xl p-5 mb-5"
           >
             <div className="flex items-start justify-between gap-4 mb-4">
               <div>
@@ -371,7 +371,7 @@ export default function Profile() {
               <motion.button
                 whileTap={{ scale: 0.96 }}
                 onClick={() => { hapticLight(); setShowPaywall(true); }}
-                className="bg-[#F0EE3A] text-[#0A0A0A] font-black rounded-xl px-4 py-2.5 text-[13px] flex-shrink-0"
+                className="bg-[#BEF264] text-[#0F1F17] font-black rounded-xl px-4 py-2.5 text-[13px] flex-shrink-0"
               >
                 Upgrade to Pro
               </motion.button>
@@ -379,7 +379,7 @@ export default function Profile() {
             <div className="grid grid-cols-2 gap-y-1.5 gap-x-3">
               {['Nassau & Wolf games', 'Full stats & records', 'Unlimited friends', 'Settlement tracking', 'House Game AI builder', 'All prop bets'].map(f => (
                 <div key={f} className="flex items-center gap-1.5">
-                  <span className="text-[#F0EE3A] text-[11px] font-black">✓</span>
+                  <span className="text-[#BEF264] text-[11px] font-black">✓</span>
                   <span className="text-[11px] text-white/40">{f}</span>
                 </div>
               ))}

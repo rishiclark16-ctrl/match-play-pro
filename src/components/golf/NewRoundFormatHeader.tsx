@@ -47,13 +47,13 @@ export function NewRoundFormatHeader({
         >
           <div className={cn(
             'rounded-2xl border-2 px-4 py-3 flex items-center gap-3 transition-colors',
-            houseGameEnabled ? 'bg-[#0A0A0A] border-[#0A0A0A]' : 'bg-white border-border/40'
+            houseGameEnabled ? 'bg-[#0F1F17] border-[#0F1F17]' : 'bg-white border-border/40'
           )}>
             <div className={cn(
               'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
-              houseGameEnabled ? 'bg-[#F0EE3A]' : 'bg-muted'
+              houseGameEnabled ? 'bg-[#BEF264]' : 'bg-muted'
             )}>
-              <Sparkles className={cn('w-4 h-4', houseGameEnabled ? 'text-[#0A0A0A]' : 'text-muted-foreground')} />
+              <Sparkles className={cn('w-4 h-4', houseGameEnabled ? 'text-[#0F1F17]' : 'text-muted-foreground')} />
             </div>
             <div className="flex-1 min-w-0">
               <p className={cn('text-[13px] font-bold truncate', houseGameEnabled ? 'text-white' : 'text-foreground')}>
@@ -71,7 +71,7 @@ export function NewRoundFormatHeader({
             </div>
             <button onClick={onToggleHouseGame} className="flex-shrink-0">
               {houseGameEnabled
-                ? <ToggleRight className="w-7 h-7 text-[#F0EE3A]" />
+                ? <ToggleRight className="w-7 h-7 text-[#BEF264]" />
                 : <ToggleLeft className="w-7 h-7 text-muted-foreground" />}
             </button>
           </div>

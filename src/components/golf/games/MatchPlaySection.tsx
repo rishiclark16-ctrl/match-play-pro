@@ -54,7 +54,7 @@ export function MatchPlaySection({
     ? 'bg-amber-50 border-amber-200'
     : isAllSquare
     ? 'bg-slate-50 border-slate-200'
-    : 'bg-[#0A0A0A]/5 border-[#0A0A0A]/10';
+    : 'bg-[#0F1F17]/5 border-[#0F1F17]/10';
 
   // Build running match score per hole for the table
   const runningScores: { holeNum: number; teamANet: number | null; teamBNet: number | null; winnerId: string | null; runningText: string }[] = [];
@@ -105,8 +105,8 @@ export function MatchPlaySection({
             'text-xl font-black tracking-tight leading-tight',
             isOver && 'text-[#22C55E]',
             isDormie && 'text-amber-700',
-            isAllSquare && 'text-[#0A0A0A]',
-            !isOver && !isDormie && !isAllSquare && !notStarted && 'text-[#0A0A0A]',
+            isAllSquare && 'text-[#0F1F17]',
+            !isOver && !isDormie && !isAllSquare && !notStarted && 'text-[#0F1F17]',
             notStarted && 'text-slate-400',
           )}
         >
@@ -139,7 +139,7 @@ export function MatchPlaySection({
                 <div className="flex items-center gap-2">
                   {isWinner && <Trophy className="w-3.5 h-3.5 text-[#22C55E]" />}
                   <div>
-                    <span className={cn('text-sm', isLeader && !isOver && 'font-bold text-[#0A0A0A]', (!isLeader || isOver) && 'font-medium text-slate-600')}>
+                    <span className={cn('text-sm', isLeader && !isOver && 'font-bold text-[#0F1F17]', (!isLeader || isOver) && 'font-medium text-slate-600')}>
                       {team.name}
                     </span>
                     <p className="text-[10px] text-slate-400">{getTeamPlayerNames(team.id)}</p>
@@ -175,11 +175,11 @@ export function MatchPlaySection({
               >
                 <div className="flex items-center gap-2">
                   {isWinner && <Trophy className="w-3 h-3 text-[#22C55E]" />}
-                  <span className={cn('text-sm', isLeader && !isOver && 'font-bold text-[#0A0A0A]', (!isLeader || isOver) && 'font-medium text-slate-600')}>
+                  <span className={cn('text-sm', isLeader && !isOver && 'font-bold text-[#0F1F17]', (!isLeader || isOver) && 'font-medium text-slate-600')}>
                     {player.name}
                   </span>
                   {strokesReceived > 0 && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#F0EE3A]/60 text-[#5A5700]">
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#BEF264]/60 text-[#5A5700]">
                       +{strokesReceived}
                     </span>
                   )}

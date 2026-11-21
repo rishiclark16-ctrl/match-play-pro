@@ -8,7 +8,7 @@ const MATCH_M_PATH = 'M16 58 L16 22 L40 46 L64 22 L64 58';
  */
 export function ScorecardLoading() {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+    <div className="min-h-screen bg-[#0F1F17] flex items-center justify-center">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -25,7 +25,7 @@ export function ScorecardLoading() {
         >
           <motion.path
             d={MATCH_M_PATH}
-            stroke="#F0EE3A"
+            stroke="#BEF264"
             strokeWidth="6"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -58,7 +58,7 @@ interface ScorecardNotFoundProps {
  */
 export function ScorecardNotFound({ onGoHome }: ScorecardNotFoundProps) {
   return (
-    <div className="min-h-screen bg-[#F8F8F6] flex items-center justify-center px-6">
+    <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center px-6">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}

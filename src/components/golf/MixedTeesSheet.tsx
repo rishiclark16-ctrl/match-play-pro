@@ -65,7 +65,7 @@ export function MixedTeesSheet({ isOpen, onClose, teeSets, onUpdateTeeSets }: Mi
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-            className="fixed inset-x-0 bottom-0 z-50 bg-[#F8F8F6] rounded-t-3xl max-h-[80vh] flex flex-col"
+            className="fixed inset-x-0 bottom-0 z-50 bg-[#FAFAF7] rounded-t-3xl max-h-[80vh] flex flex-col"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <div className="w-10 h-1 bg-muted-foreground/25 rounded-full mx-auto mt-3 mb-4 flex-shrink-0" />

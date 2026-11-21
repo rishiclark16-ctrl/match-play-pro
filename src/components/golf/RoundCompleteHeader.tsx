@@ -21,16 +21,16 @@ export function RoundCompleteHeader({ round }: RoundCompleteHeaderProps) {
             scale: { type: 'spring', stiffness: 300, delay: 0.1 },
             y: { repeat: Infinity, duration: 3, ease: 'easeInOut' },
           }}
-          className="w-16 h-16 rounded-2xl bg-[#F0EE3A] flex items-center justify-center mx-auto mb-3"
+          className="w-16 h-16 rounded-2xl bg-[#BEF264] flex items-center justify-center mx-auto mb-3"
         >
-          <Trophy className="w-8 h-8 text-[#0A0A0A]" />
+          <Trophy className="w-8 h-8 text-[#0F1F17]" />
         </motion.div>
 
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.15 }}
-          className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#F0EE3A] mb-1"
+          className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#BEF264] mb-1"
         >
           Round Complete
         </motion.p>

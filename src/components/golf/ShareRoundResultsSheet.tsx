@@ -200,7 +200,7 @@ export function ShareRoundResultsSheet({
     {
       label: 'Share',
       icon: <Share2 className="w-5 h-5 text-white" />,
-      iconBg: 'bg-[#0A0A0A]',
+      iconBg: 'bg-[#0F1F17]',
       onClick: handleNativeShare,
     },
     {
@@ -236,7 +236,7 @@ export function ShareRoundResultsSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="fixed bottom-0 left-0 right-0 bg-[#F8F8F6] rounded-t-3xl z-50 shadow-2xl max-h-[90vh] flex flex-col"
+            className="fixed bottom-0 left-0 right-0 bg-[#FAFAF7] rounded-t-3xl z-50 shadow-2xl max-h-[90vh] flex flex-col"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             {/* Handle */}
@@ -244,7 +244,7 @@ export function ShareRoundResultsSheet({
 
             {/* Header */}
             <div className="flex items-center justify-between px-6 pb-4 shrink-0">
-              <h3 className="text-[20px] font-black tracking-[-0.04em] text-[#0A0A0A]">
+              <h3 className="text-[20px] font-black tracking-[-0.04em] text-[#0F1F17]">
                 Share Results
               </h3>
               <motion.button
@@ -261,7 +261,7 @@ export function ShareRoundResultsSheet({
               {/* Share preview card */}
               <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-4 overflow-hidden">
                 {/* Top accent stripe */}
-                <div className="h-1 bg-[#F0EE3A]" />
+                <div className="h-1 bg-[#BEF264]" />
                 <div className="p-5">
                   <p className="text-[9px] font-black uppercase tracking-[0.18em] text-muted-foreground">
                     MATCH Golf
@@ -280,7 +280,7 @@ export function ShareRoundResultsSheet({
                       )}
                     </p>
                   )}
-                  <div className="mt-3 p-3 rounded-xl bg-[#F8F8F6] text-[12px] font-mono whitespace-pre-wrap max-h-28 overflow-y-auto text-muted-foreground">
+                  <div className="mt-3 p-3 rounded-xl bg-[#FAFAF7] text-[12px] font-mono whitespace-pre-wrap max-h-28 overflow-y-auto text-muted-foreground">
                     {shortSummary}
                   </div>
                 </div>

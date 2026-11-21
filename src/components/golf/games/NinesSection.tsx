@@ -36,7 +36,7 @@ export function NinesSection({
               {index + 1}
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#0A0A0A] truncate">
+              <p className="text-sm font-semibold text-[#0F1F17] truncate">
                 {standing.playerName.split(' ')[0]}
               </p>
               <p className="text-[10px] text-slate-400">

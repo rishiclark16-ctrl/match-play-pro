@@ -73,7 +73,7 @@ export function FinishOptionsOverlay({
                         className="px-4 py-2 flex items-center gap-2 border-t border-border/50"
                       >
                         <span className="text-sm font-semibold text-foreground">{s.fromPlayerName.split(' ')[0]}</span>
-                        <ArrowRight className="text-[#F0EE3A] w-3 h-3" />
+                        <ArrowRight className="text-[#BEF264] w-3 h-3" />
                         <span className="text-sm font-semibold text-foreground flex-1">{s.toPlayerName.split(' ')[0]}</span>
                         <span className="text-sm font-black text-foreground tabular-nums">
                           ${s.amount.toFixed(0)}
@@ -90,7 +90,7 @@ export function FinishOptionsOverlay({
             <motion.button
               whileTap={{ scale: 0.98 }}
               onClick={onFinishRound}
-              className="w-full bg-[#F0EE3A] text-[#0A0A0A] rounded-2xl h-[52px] font-black text-[15px] flex items-center justify-center gap-2"
+              className="w-full bg-[#BEF264] text-[#0F1F17] rounded-2xl h-[52px] font-black text-[15px] flex items-center justify-center gap-2"
             >
               <Trophy className="w-5 h-5" />
               Finish Round

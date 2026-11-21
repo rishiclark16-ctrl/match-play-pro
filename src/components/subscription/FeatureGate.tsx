@@ -126,7 +126,7 @@ interface UpgradePromptProps {
 export function UpgradePrompt({ featureName, description, onUpgrade }: UpgradePromptProps) {
   return (
     <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 flex items-center gap-3">
-      <div className="w-9 h-9 rounded-xl bg-[#F0EE3A] flex items-center justify-center text-[#0A0A0A] flex-shrink-0">
+      <div className="w-9 h-9 rounded-xl bg-[#BEF264] flex items-center justify-center text-[#0F1F17] flex-shrink-0">
         <Crown className="w-4 h-4" />
       </div>
       <div className="flex-1 min-w-0">

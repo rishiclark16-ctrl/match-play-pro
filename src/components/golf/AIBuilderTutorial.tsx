@@ -7,7 +7,7 @@ const STORAGE_KEY = 'ai_builder_tutorial_seen_v1';
 const STEPS = [
   {
     icon: Type,
-    iconColor: '#F0EE3A',
+    iconColor: '#BEF264',
     title: 'Describe your game',
     subtitle: 'In plain English',
     body: 'Type (or say) exactly how you play — bets, rules, handicap adjustments, anything. No forms. No dropdowns.',
@@ -15,7 +15,7 @@ const STEPS = [
   },
   {
     icon: Sparkles,
-    iconColor: '#F0EE3A',
+    iconColor: '#BEF264',
     title: 'AI reads the rules',
     subtitle: 'In seconds',
     body: 'The AI breaks your description into individual scoring rules — Nassau, skins, presses, birdies — and lets you toggle each one.',
@@ -23,7 +23,7 @@ const STEPS = [
   },
   {
     icon: BookMarked,
-    iconColor: '#F0EE3A',
+    iconColor: '#BEF264',
     title: 'Save it, use anytime',
     subtitle: 'Your format, forever',
     body: 'Your saved format appears in the Format step every time you start a new round. One tap to load your whole game.',
@@ -80,7 +80,7 @@ function ParseAnimation() {
             transition={{ type: 'spring', stiffness: 400, damping: 28 }}
             className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.06)]"
           >
-            <span className="w-2 h-2 rounded-full bg-[#F0EE3A] flex-shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-[#BEF264] flex-shrink-0" />
             <span className="text-[13px] font-medium text-foreground">{rule}</span>
             <motion.span
               initial={{ scale: 0 }}
@@ -103,11 +103,11 @@ function SaveAnimation() {
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.1 }}
-      className="bg-[#0A0A0A] rounded-2xl p-4"
+      className="bg-[#0F1F17] rounded-2xl p-4"
     >
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[#F0EE3A]/15 flex items-center justify-center flex-shrink-0">
-          <Sparkles className="w-5 h-5 text-[#F0EE3A]" />
+        <div className="w-10 h-10 rounded-xl bg-[#BEF264]/15 flex items-center justify-center flex-shrink-0">
+          <Sparkles className="w-5 h-5 text-[#BEF264]" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-black text-white text-[15px] leading-tight">Saturday Nassau</p>
@@ -117,9 +117,9 @@ function SaveAnimation() {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.4, type: 'spring', stiffness: 500 }}
-          className="w-6 h-6 rounded-full bg-[#F0EE3A] flex items-center justify-center flex-shrink-0"
+          className="w-6 h-6 rounded-full bg-[#BEF264] flex items-center justify-center flex-shrink-0"
         >
-          <span className="text-[10px] font-black text-[#0A0A0A]">✓</span>
+          <span className="text-[10px] font-black text-[#0F1F17]">✓</span>
         </motion.div>
       </div>
       <div className="mt-3 pt-3 border-t border-white/10">
@@ -163,7 +163,7 @@ export function AIBuilderTutorial({ onDismiss }: Props) {
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        className="relative w-full bg-[#F8F8F6] rounded-t-3xl px-6 pt-6"
+        className="relative w-full bg-[#FAFAF7] rounded-t-3xl px-6 pt-6"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 80px)' }}
         onClick={e => e.stopPropagation()}
       >
@@ -172,7 +172,7 @@ export function AIBuilderTutorial({ onDismiss }: Props) {
           {STEPS.map((_, i) => (
             <motion.div
               key={i}
-              animate={{ width: i === step ? 20 : 6, backgroundColor: i === step ? '#0A0A0A' : '#D1D5DB' }}
+              animate={{ width: i === step ? 20 : 6, backgroundColor: i === step ? '#0F1F17' : '#D1D5DB' }}
               transition={{ type: 'spring', stiffness: 400, damping: 28 }}
               className="h-1.5 rounded-full"
             />
@@ -215,7 +215,7 @@ export function AIBuilderTutorial({ onDismiss }: Props) {
         >
           {isLast ? (
             <>
-              <Sparkles className="w-5 h-5 text-[#F0EE3A]" />
+              <Sparkles className="w-5 h-5 text-[#BEF264]" />
               <span>Let's Build It</span>
             </>
           ) : (

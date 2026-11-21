@@ -43,7 +43,7 @@ export function CountUp({
  * Animated circular progress ring filling to value/max once in view.
  */
 export function RingProgress({
-  value, max, size = 120, strokeWidth = 10, color = '#F0EE3A',
+  value, max, size = 120, strokeWidth = 10, color = '#BEF264',
 }: {
   value: number;
   max: number;

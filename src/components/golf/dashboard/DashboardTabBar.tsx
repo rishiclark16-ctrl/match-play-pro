@@ -25,7 +25,7 @@ export function DashboardTabBar({ tabs, activeIndex, onChange }: DashboardTabBar
   return (
     <div
       ref={scrollRef}
-      className="flex gap-1 px-4 py-2 overflow-x-auto scrollbar-hide bg-[#F8F8F6] border-b border-border/30"
+      className="flex gap-1 px-4 py-2 overflow-x-auto scrollbar-hide bg-[#FAFAF7] border-b border-border/30"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
       {tabs.map((tab, i) => (

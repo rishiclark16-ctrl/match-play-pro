@@ -56,7 +56,7 @@ export function RoundChatSheet({ round, onClose }: RoundChatSheetProps) {
     <Sheet open={!!round} onOpenChange={(open) => { if (!open) onClose(); }}>
       <SheetContent
         side="bottom"
-        className="[&>button]:hidden rounded-t-3xl p-0 max-h-[92vh] flex flex-col bg-[#F8F8F6]"
+        className="[&>button]:hidden rounded-t-3xl p-0 max-h-[92vh] flex flex-col bg-[#FAFAF7]"
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-0 flex-shrink-0">
@@ -64,7 +64,7 @@ export function RoundChatSheet({ round, onClose }: RoundChatSheetProps) {
         </div>
 
         {/* Dark hero header */}
-        <div className="bg-[#0A0A0A] mx-4 mt-3 rounded-2xl p-5 relative overflow-hidden flex-shrink-0">
+        <div className="bg-[#0F1F17] mx-4 mt-3 rounded-2xl p-5 relative overflow-hidden flex-shrink-0">
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={onClose}
@@ -177,7 +177,7 @@ export function RoundChatSheet({ round, onClose }: RoundChatSheetProps) {
               disabled={!draft.trim() || submitting}
               className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center disabled:opacity-40 flex-shrink-0"
             >
-              <Send className="w-4 h-4 text-[#F0EE3A]" />
+              <Send className="w-4 h-4 text-[#BEF264]" />
             </motion.button>
           </div>
         </div>

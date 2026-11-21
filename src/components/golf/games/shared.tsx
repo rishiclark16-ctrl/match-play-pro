@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 // ─── Design tokens ──────────────────────────────────────────────────────────
 export const SPRING = { type: 'spring' as const, stiffness: 300, damping: 28 };
-export const ACCENT = '#F0EE3A';
+export const ACCENT = '#BEF264';
 
 // ─── Shared types ───────────────────────────────────────────────────────────
 
@@ -48,7 +48,7 @@ export function GameCard({ children, className }: { children: React.ReactNode; c
 
 export function NetBadge() {
   return (
-    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#0A0A0A]/10 text-[#0A0A0A] uppercase tracking-wide">
+    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#0F1F17]/10 text-[#0F1F17] uppercase tracking-wide">
       Net
     </span>
   );

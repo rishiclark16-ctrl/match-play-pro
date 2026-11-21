@@ -58,7 +58,7 @@ export function HomeRoundCard({
       className={cn(
         'rounded-2xl p-[18px] cursor-pointer relative overflow-hidden',
         isActive
-          ? 'bg-[#0A0A0A] shadow-[0_4px_24px_rgba(0,0,0,0.35)]'
+          ? 'bg-[#0F1F17] shadow-[0_4px_24px_rgba(0,0,0,0.35)]'
           : 'bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]'
       )}
     >
@@ -72,10 +72,10 @@ export function HomeRoundCard({
         </h3>
         <div className="flex items-center gap-2 shrink-0">
           {isActive ? (
-            <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#F0EE3A]">
+            <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#BEF264]">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F0EE3A] opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F0EE3A]" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#BEF264] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#BEF264]" />
               </span>
               LIVE
             </span>
@@ -161,7 +161,7 @@ export function HomeRoundCard({
         <div className="flex items-center gap-2 mt-1">
           <div className="flex-1 h-[4px] bg-white/10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#F0EE3A] rounded-full transition-all duration-500"
+              className="h-full bg-[#BEF264] rounded-full transition-all duration-500"
               style={{ width: `${Math.min(progress * 100, 100)}%` }}
             />
           </div>

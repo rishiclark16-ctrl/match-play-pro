@@ -101,14 +101,14 @@ export function ManageScorekeepersSheet({
 
       <SheetContent
         side="bottom"
-        className="bg-[#F8F8F6] rounded-t-3xl p-0 border-0 shadow-none focus:outline-none [&>button]:hidden"
+        className="bg-[#FAFAF7] rounded-t-3xl p-0 border-0 shadow-none focus:outline-none [&>button]:hidden"
       >
         {/* Handle */}
         <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pb-4">
-          <h2 className="text-[20px] font-black tracking-[-0.04em] text-[#0A0A0A]">
+          <h2 className="text-[20px] font-black tracking-[-0.04em] text-[#0F1F17]">
             Manage Scorekeepers
           </h2>
           <motion.button
@@ -159,7 +159,7 @@ export function ManageScorekeepersSheet({
                         <span className="font-semibold text-foreground">{player.name}</span>
                         <div className="mt-0.5">
                           {isScorekeeper ? (
-                            <span className="bg-[#F0EE3A] text-[#0A0A0A] rounded-full px-2.5 py-0.5 text-[11px] font-bold">
+                            <span className="bg-[#BEF264] text-[#0F1F17] rounded-full px-2.5 py-0.5 text-[11px] font-bold">
                               Scorekeeper
                             </span>
                           ) : (

@@ -36,9 +36,9 @@ export function SkinsSection({
       </div>
 
       {/* Current pot highlight */}
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#F0EE3A]/20 border border-[#F0EE3A]/60">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#BEF264]/20 border border-[#BEF264]/60">
         <DollarSign className="w-4 h-4 text-[#9A9500] shrink-0" />
-        <span className="text-sm font-bold text-[#0A0A0A]">
+        <span className="text-sm font-bold text-[#0F1F17]">
           Current Pot: ${currentPot}
         </span>
         {skinsResult.carryover > 0 && (
@@ -61,12 +61,12 @@ export function SkinsSection({
                 className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50"
               >
                 <div className="flex items-center gap-2">
-                  {isLeader && <Trophy className="w-3 h-3 text-[#F0EE3A] fill-[#F0EE3A]" />}
-                  <span className="text-sm font-medium text-[#0A0A0A]">
+                  {isLeader && <Trophy className="w-3 h-3 text-[#BEF264] fill-[#BEF264]" />}
+                  <span className="text-sm font-medium text-[#0F1F17]">
                     {standing.playerName.split(' ')[0]}
                   </span>
                   {standing.skins > 0 && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#0A0A0A] text-white">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#0F1F17] text-white">
                       {standing.skins} skin{standing.skins !== 1 ? 's' : ''}
                     </span>
                   )}

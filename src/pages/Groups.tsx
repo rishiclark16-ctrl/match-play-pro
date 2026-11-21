@@ -66,7 +66,7 @@ export default function Groups() {
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-[#F8F8F6] relative">
+    <div className="h-screen flex flex-col overflow-hidden bg-[#FAFAF7] relative">
       {/* Group Ledger Overlay */}
       <AnimatePresence>
         {selectedGroup && (
@@ -75,7 +75,7 @@ export default function Groups() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="absolute inset-0 z-10 bg-[#F8F8F6]"
+            className="absolute inset-0 z-10 bg-[#FAFAF7]"
           >
             <GroupLedgerView group={selectedGroup} onBack={() => setSelectedGroup(null)} />
           </motion.div>

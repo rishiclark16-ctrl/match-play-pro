@@ -75,7 +75,7 @@ export function BettingBreakdownSheet({
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetContent
         side="bottom"
-        className="h-[85vh] bg-[#F8F8F6] rounded-t-3xl p-0 border-0 [&>button]:hidden"
+        className="h-[85vh] bg-[#FAFAF7] rounded-t-3xl p-0 border-0 [&>button]:hidden"
       >
         {/* Drag handle */}
         <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
@@ -250,7 +250,7 @@ export function BettingBreakdownSheet({
                         className={cn(
                           "px-4 py-2.5 flex items-center justify-between cursor-pointer transition-all",
                           player.playerId === activePlayerId
-                            ? "bg-[#F0EE3A]/20"
+                            ? "bg-[#BEF264]/20"
                             : ""
                         )}
                       >

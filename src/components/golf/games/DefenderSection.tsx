@@ -43,8 +43,8 @@ export function DefenderSection({
 
       {/* Current defender */}
       {currentDefender && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0A0A0A] text-white">
-          <Shield className="w-4 h-4 text-[#F0EE3A] shrink-0" />
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0F1F17] text-white">
+          <Shield className="w-4 h-4 text-[#BEF264] shrink-0" />
           <div className="flex-1">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-white/50">
               Defending · H{currentHole}
@@ -75,7 +75,7 @@ export function DefenderSection({
               {index + 1}
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#0A0A0A] truncate">
+              <p className="text-sm font-semibold text-[#0F1F17] truncate">
                 {standing.playerName.split(' ')[0]}
               </p>
               <p className="text-[10px] text-slate-400">

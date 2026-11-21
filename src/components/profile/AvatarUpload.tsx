@@ -225,7 +225,7 @@ export function AvatarUpload({
             <p className="text-white font-bold text-sm">Move and Scale</p>
             <button
               onClick={handleCropSave}
-              className="flex items-center gap-1.5 text-[#F0EE3A] active:text-[#F0EE3A]/50 text-sm font-bold py-2 px-1"
+              className="flex items-center gap-1.5 text-[#BEF264] active:text-[#BEF264]/50 text-sm font-bold py-2 px-1"
             >
               <Check className="w-5 h-5" />
               Choose

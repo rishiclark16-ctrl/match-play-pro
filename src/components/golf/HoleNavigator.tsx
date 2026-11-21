@@ -126,7 +126,7 @@ export const HoleNavigator = forwardRef<HTMLDivElement, HoleNavigatorProps>(func
               {/* Par & Yardage & Handicap */}
               <div className="text-center">
                 <div className="inline-flex items-center justify-center">
-                  <span className="bg-[#F0EE3A] text-[#0A0A0A] text-[13px] font-bold px-3 py-1 rounded-full">
+                  <span className="bg-[#BEF264] text-[#0F1F17] text-[13px] font-bold px-3 py-1 rounded-full">
                     PAR {holeInfo.par}
                   </span>
                 </div>

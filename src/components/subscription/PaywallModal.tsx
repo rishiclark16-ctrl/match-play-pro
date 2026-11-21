@@ -122,7 +122,7 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] bg-[#F8F8F6] rounded-t-3xl p-0 overflow-hidden [&>button]:hidden">
+      <SheetContent side="bottom" className="h-[90vh] bg-[#FAFAF7] rounded-t-3xl p-0 overflow-hidden [&>button]:hidden">
         <div className="h-full flex flex-col overflow-y-auto">
           {/* Sheet handle */}
           <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
@@ -137,8 +137,8 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
               <X className="w-4 h-4" />
             </button>
             {/* Crown icon */}
-            <div className="w-12 h-12 rounded-2xl bg-[#F0EE3A] flex items-center justify-center mx-auto">
-              <Crown className="text-[#0A0A0A] w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-[#BEF264] flex items-center justify-center mx-auto">
+              <Crown className="text-[#0F1F17] w-6 h-6" />
             </div>
             {/* MATCH Pro label */}
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4B800]">
@@ -169,7 +169,7 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
                     className="flex items-center gap-3 py-2.5"
                   >
                     <div className="w-8 h-8 rounded-xl bg-foreground flex items-center justify-center flex-shrink-0">
-                      <feat.icon className="w-4 h-4 text-[#F0EE3A]" />
+                      <feat.icon className="w-4 h-4 text-[#BEF264]" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[14px] font-semibold text-foreground leading-snug">{feat.label}</p>
@@ -184,7 +184,7 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-[#F8F8F6] border-t border-border/40 px-6 pt-4 pb-safe space-y-3">
+          <div className="sticky bottom-0 bg-[#FAFAF7] border-t border-border/40 px-6 pt-4 pb-safe space-y-3">
             {/* Plan picker — price stays visible next to the purchase button */}
             <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Choose a plan">
               {([
@@ -202,7 +202,7 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
                   }
                 >
                   {plan.badge && (
-                    <span className="absolute -top-2.5 right-2 bg-[#F0EE3A] text-[#0A0A0A] text-[10px] font-black rounded-full px-2 py-0.5">
+                    <span className="absolute -top-2.5 right-2 bg-[#BEF264] text-[#0F1F17] text-[10px] font-black rounded-full px-2 py-0.5">
                       {plan.badge}
                     </span>
                   )}
@@ -217,7 +217,7 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
               whileTap={{ scale: 0.97 }}
               onClick={handlePurchase}
               disabled={purchasing || loading}
-              className="w-full bg-[#F0EE3A] text-[#0A0A0A] rounded-2xl h-[52px] font-black text-[16px] flex items-center justify-center disabled:opacity-60"
+              className="w-full bg-[#BEF264] text-[#0F1F17] rounded-2xl h-[52px] font-black text-[16px] flex items-center justify-center disabled:opacity-60"
             >
               {purchasing ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

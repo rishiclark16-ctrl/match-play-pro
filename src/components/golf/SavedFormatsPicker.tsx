@@ -70,16 +70,16 @@ export function SavedFormatsPicker({
             className={cn(
               'w-full rounded-2xl p-4 border-2 cursor-pointer transition-all',
               selectedPersonalFormatId === groupAssignedFormat.id
-                ? 'bg-[#0A0A0A] border-[#0A0A0A]'
+                ? 'bg-[#0F1F17] border-[#0F1F17]'
                 : 'bg-white border-border/40'
             )}
           >
             <div className="flex items-start gap-3">
               <div className={cn(
                 'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
-                selectedPersonalFormatId === groupAssignedFormat.id ? 'bg-[#F0EE3A]/20' : 'bg-muted'
+                selectedPersonalFormatId === groupAssignedFormat.id ? 'bg-[#BEF264]/20' : 'bg-muted'
               )}>
-                <Sparkles className={cn('w-4 h-4', selectedPersonalFormatId === groupAssignedFormat.id ? 'text-[#F0EE3A]' : 'text-muted-foreground')} />
+                <Sparkles className={cn('w-4 h-4', selectedPersonalFormatId === groupAssignedFormat.id ? 'text-[#BEF264]' : 'text-muted-foreground')} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className={cn('font-black text-[14px] leading-tight', selectedPersonalFormatId === groupAssignedFormat.id ? 'text-white' : 'text-foreground')}>
@@ -118,14 +118,14 @@ export function SavedFormatsPicker({
                 transition={springTransition}
                 className={cn(
                   'rounded-2xl border-2 px-4 py-3 flex items-center gap-3 transition-colors mb-2',
-                  isSelected ? 'bg-[#0A0A0A] border-[#0A0A0A]' : 'bg-white border-border/40'
+                  isSelected ? 'bg-[#0F1F17] border-[#0F1F17]' : 'bg-white border-border/40'
                 )}
               >
                 <div className={cn(
                   'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
-                  isSelected ? 'bg-[#F0EE3A]' : 'bg-muted'
+                  isSelected ? 'bg-[#BEF264]' : 'bg-muted'
                 )}>
-                  <Sparkles className={cn('w-4 h-4', isSelected ? 'text-[#0A0A0A]' : 'text-muted-foreground')} />
+                  <Sparkles className={cn('w-4 h-4', isSelected ? 'text-[#0F1F17]' : 'text-muted-foreground')} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className={cn('text-[13px] font-bold truncate', isSelected ? 'text-white' : 'text-foreground')}>
@@ -142,7 +142,7 @@ export function SavedFormatsPicker({
                   className="flex-shrink-0"
                 >
                   {isSelected
-                    ? <ToggleRight className="w-7 h-7 text-[#F0EE3A]" />
+                    ? <ToggleRight className="w-7 h-7 text-[#BEF264]" />
                     : <ToggleLeft className="w-7 h-7 text-muted-foreground" />
                   }
                 </button>
@@ -175,11 +175,11 @@ export function SavedFormatsPicker({
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-[#0A0A0A] rounded-2xl p-4 mb-3 mt-4"
+            className="bg-[#0F1F17] rounded-2xl p-4 mb-3 mt-4"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#F0EE3A]/20 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-4 h-4 text-[#F0EE3A]" />
+              <div className="w-9 h-9 rounded-xl bg-[#BEF264]/20 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-4 h-4 text-[#BEF264]" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-black text-white truncate">

@@ -64,11 +64,11 @@ export function FeedItem({ item, onPress, currentUserId }: FeedItemProps) {
       onClick={onPress}
       className={cn(
         'w-full text-left bg-white rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.07),0_0_0_1px_rgba(0,0,0,0.03)]',
-        userPlayed && 'border-l-[3px] border-l-[#F0EE3A]'
+        userPlayed && 'border-l-[3px] border-l-[#BEF264]'
       )}
     >
       {/* Top accent line */}
-      <div className={cn('h-[3px]', userPlayed ? 'bg-[#F0EE3A]' : 'bg-[#F0EE3A]/60')} />
+      <div className={cn('h-[3px]', userPlayed ? 'bg-[#BEF264]' : 'bg-[#BEF264]/60')} />
 
       <div className="p-4">
         {/* Course name */}
@@ -114,7 +114,7 @@ export function FeedItem({ item, onPress, currentUserId }: FeedItemProps) {
 
         {/* Scores leaderboard */}
         {item.playerScores.length > 0 && (
-          <div className="bg-[#F8F8F6] rounded-xl p-2.5 mb-3">
+          <div className="bg-[#FAFAF7] rounded-xl p-2.5 mb-3">
             {item.playerScores.slice(0, 4).map((ps, i) => {
               const isCurrentUser = currentUserId && ps.profileId === currentUserId;
               const isLeader = i === 0;
@@ -181,8 +181,8 @@ export function FeedItem({ item, onPress, currentUserId }: FeedItemProps) {
               const chipClass = cn(
                 'text-[11px] font-bold border px-2.5 py-1 rounded-lg',
                 currentUserId && pid === currentUserId
-                  ? 'bg-[#F0EE3A]/10 border-[#F0EE3A]/40 text-foreground'
-                  : 'bg-[#F8F8F6] border-border/60 text-foreground'
+                  ? 'bg-[#BEF264]/10 border-[#BEF264]/40 text-foreground'
+                  : 'bg-[#FAFAF7] border-border/60 text-foreground'
               );
 
               if (isClickable) {

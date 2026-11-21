@@ -78,7 +78,7 @@ export function SoloRoundSummary({ round, player }: Props) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-          className="mx-0 mb-4 bg-[#0A0A0A] rounded-2xl p-5 text-white"
+          className="mx-0 mb-4 bg-[#0F1F17] rounded-2xl p-5 text-white"
         >
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/50 mb-1">Final Score</p>
           <div className="flex items-baseline gap-3">

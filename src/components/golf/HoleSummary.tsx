@@ -240,7 +240,7 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
                     {playerName}
                     <span className="flex items-center gap-0.5">
                       {Array.from({ length: Math.min(strokes, 3) }).map((_, i) => (
-                        <span key={i} className="w-2 h-2 rounded-full bg-[#F0EE3A] inline-block" />
+                        <span key={i} className="w-2 h-2 rounded-full bg-[#BEF264] inline-block" />
                       ))}
                       {strokes > 3 && <span className="font-bold">+{strokes - 3}</span>}
                     </span>
@@ -254,7 +254,7 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
           {skinsContext && (
             <div className={cn(
               "flex items-center gap-2 text-sm px-3 py-2",
-              skinsContext.carryovers > 0 ? "bg-[#FFFBEB] border-l-4 border-[#F0EE3A] rounded-r-xl" : "bg-muted/30 rounded-xl"
+              skinsContext.carryovers > 0 ? "bg-[#FFFBEB] border-l-4 border-[#BEF264] rounded-r-xl" : "bg-muted/30 rounded-xl"
             )}>
               <Coins className={cn(
                 "w-4 h-4",
@@ -335,8 +335,8 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
           {wolfContext && (
             <div className={cn(
               "flex items-center justify-between text-sm px-3 py-2",
-              wolfContext.isBlindWolf ? "bg-[#FFFBEB] border-l-4 border-[#F0EE3A] rounded-r-xl" :
-              wolfContext.isLoneWolf ? "bg-[#FFFBEB] border-l-4 border-[#F0EE3A] rounded-r-xl" :
+              wolfContext.isBlindWolf ? "bg-[#FFFBEB] border-l-4 border-[#BEF264] rounded-r-xl" :
+              wolfContext.isLoneWolf ? "bg-[#FFFBEB] border-l-4 border-[#BEF264] rounded-r-xl" :
               "bg-muted/30 rounded-xl"
             )}>
               <div className="flex items-center gap-2">
@@ -364,7 +364,7 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
           {houseContext && (
             <div className="space-y-1.5">
               {houseContext.potMessage && (
-                <div className="flex items-center gap-2 text-sm px-3 py-2 bg-[#FFFBEB] border-l-4 border-[#F0EE3A] rounded-r-xl">
+                <div className="flex items-center gap-2 text-sm px-3 py-2 bg-[#FFFBEB] border-l-4 border-[#BEF264] rounded-r-xl">
                   <Coins className="w-4 h-4 text-amber-600" />
                   <span className="font-medium">
                     <span className="font-black text-foreground">{houseContext.potMessage}</span>
@@ -374,7 +374,7 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
               {houseContext.bonuses.length > 0 && (
                 <div className="flex flex-wrap gap-1 px-1">
                   {houseContext.bonuses.map((b, i) => (
-                    <span key={`${b}-${i}`} className="text-[10px] font-bold bg-[#F0EE3A] text-[#0A0A0A] px-2 py-0.5 rounded-full">
+                    <span key={`${b}-${i}`} className="text-[10px] font-bold bg-[#BEF264] text-[#0F1F17] px-2 py-0.5 rounded-full">
                       {b === 'bonus_par5_double' ? '2× Par 5' :
                        b === 'bonus_birdie_unit' ? 'Birdie Bonus' :
                        b === 'bonus_eagle_unit' ? 'Eagle Bonus' :

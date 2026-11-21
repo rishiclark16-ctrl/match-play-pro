@@ -58,7 +58,7 @@ export function BottomNav() {
               >
                 <motion.div
                   whileTap={{ scale: 0.9 }}
-                  className="w-14 h-14 rounded-full bg-[#F0EE3A] flex items-center justify-center shadow-[0_4px_16px_rgba(240,238,58,0.4)]"
+                  className="w-14 h-14 rounded-full bg-[#BEF264] flex items-center justify-center shadow-[0_4px_16px_rgba(240,238,58,0.4)]"
                 >
                   <item.icon
                     className="w-[22px] h-[22px] text-foreground"
@@ -93,7 +93,7 @@ export function BottomNav() {
                 </span>
               </div>
               {active && (
-                <span className="w-1 h-1 rounded-full bg-[#F0EE3A] mt-0.5" />
+                <span className="w-1 h-1 rounded-full bg-[#BEF264] mt-0.5" />
               )}
             </Link>
           );

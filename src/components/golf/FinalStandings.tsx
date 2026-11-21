@@ -13,8 +13,8 @@ interface FinalStandingsProps {
 function getRankBadge(rank: number) {
   if (rank === 0) {
     return (
-      <div className="w-9 h-9 rounded-xl bg-[#F0EE3A] flex items-center justify-center shrink-0">
-        <Trophy className="text-[#0A0A0A] w-4 h-4" />
+      <div className="w-9 h-9 rounded-xl bg-[#BEF264] flex items-center justify-center shrink-0">
+        <Trophy className="text-[#0F1F17] w-4 h-4" />
       </div>
     );
   }

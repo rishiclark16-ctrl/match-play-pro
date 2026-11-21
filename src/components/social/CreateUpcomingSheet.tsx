@@ -184,7 +184,7 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
     <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <SheetContent
         side="bottom"
-        className="[&>button]:hidden rounded-t-3xl p-0 max-h-[90vh] overflow-y-auto bg-[#F8F8F6]"
+        className="[&>button]:hidden rounded-t-3xl p-0 max-h-[90vh] overflow-y-auto bg-[#FAFAF7]"
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1">
@@ -192,7 +192,7 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
         </div>
 
         {/* Dark hero header */}
-        <div className="bg-[#0A0A0A] mx-4 mt-2 rounded-2xl p-5 relative overflow-hidden">
+        <div className="bg-[#0F1F17] mx-4 mt-2 rounded-2xl p-5 relative overflow-hidden">
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={onClose}

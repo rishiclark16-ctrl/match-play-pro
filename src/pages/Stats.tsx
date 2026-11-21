@@ -58,7 +58,7 @@ export default function Stats() {
 
   if (loading) {
     return (
-      <div className="h-screen bg-[#F8F8F6] flex items-center justify-center">
+      <div className="h-screen bg-[#FAFAF7] flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
@@ -136,7 +136,7 @@ export default function Stats() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...spring, delay: 0.05 }}
-              className="bg-[#0A0A0A] overflow-hidden px-6 pt-6 pb-7 -mx-6 rounded-b-3xl"
+              className="bg-[#0F1F17] overflow-hidden px-6 pt-6 pb-7 -mx-6 rounded-b-3xl"
             >
               <div className="flex items-center gap-6">
                 {/* Ring */}
@@ -161,7 +161,7 @@ export default function Stats() {
                     <div className="flex items-baseline gap-1.5">
                       <CountUp
                         value={stats?.holesWon ?? 0}
-                        className="text-[32px] font-black text-[#F0EE3A] leading-none"
+                        className="text-[32px] font-black text-[#BEF264] leading-none"
                       />
                       <span className="text-[14px] font-bold text-white/40">
                         / {stats?.holesPlayed ?? 0}
@@ -185,7 +185,7 @@ export default function Stats() {
                           className="text-[22px] font-black text-white leading-none"
                         />
                         {(stats?.longestWinStreak ?? 0) >= 3 && (
-                          <Zap className="w-4 h-4 text-[#F0EE3A]" />
+                          <Zap className="w-4 h-4 text-[#BEF264]" />
                         )}
                       </div>
                     </div>
@@ -230,7 +230,7 @@ export default function Stats() {
                 {[
                   { label: 'Eagle', count: dist.eagles, color: '#15803D', bg: '#DCFCE7', icon: '🦅' },
                   { label: 'Birdie', count: dist.birdies, color: '#22C55E', bg: '#F0FFF4', icon: '🐦' },
-                  { label: 'Par', count: dist.pars, color: '#0A0A0A', bg: '#F3F4F6', icon: '◎' },
+                  { label: 'Par', count: dist.pars, color: '#0F1F17', bg: '#F3F4F6', icon: '◎' },
                   { label: 'Bogey', count: dist.bogeys, color: '#D97706', bg: '#FFFBEB', icon: '+1' },
                   { label: 'Double+', count: dist.doubles, color: '#DC2626', bg: '#FEF2F2', icon: '+2' },
                 ].map((row, i) => (
@@ -369,7 +369,7 @@ export default function Stats() {
                 </p>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-foreground flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-5 h-5 text-[#F0EE3A]" />
+                    <MapPin className="w-5 h-5 text-[#BEF264]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-black text-[17px] tracking-[-0.02em] truncate text-foreground">
@@ -394,26 +394,26 @@ export default function Stats() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ ...spring, delay: 0.25 }}
-                className="bg-[#F0EE3A] rounded-2xl p-5"
+                className="bg-[#BEF264] rounded-2xl p-5"
               >
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#0A0A0A]/60 mb-3">
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#0F1F17]/60 mb-3">
                   Lucky Hole
                 </p>
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-[#0A0A0A] flex items-center justify-center flex-shrink-0">
-                    <span className="text-[22px] font-black text-[#F0EE3A]">{stats.hotHole.hole}</span>
+                  <div className="w-14 h-14 rounded-2xl bg-[#0F1F17] flex items-center justify-center flex-shrink-0">
+                    <span className="text-[22px] font-black text-[#BEF264]">{stats.hotHole.hole}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-black text-[17px] tracking-[-0.02em] text-[#0A0A0A]">
+                    <p className="font-black text-[17px] tracking-[-0.02em] text-[#0F1F17]">
                       Hole {stats.hotHole.hole}
                     </p>
-                    <p className="text-[12px] text-[#0A0A0A]/60 truncate">{stats.hotHole.course}</p>
+                    <p className="text-[12px] text-[#0F1F17]/60 truncate">{stats.hotHole.course}</p>
                   </div>
                   <div className="text-right flex-shrink-0 flex items-center gap-1.5">
-                    <Star className="w-4 h-4 text-[#0A0A0A]" />
+                    <Star className="w-4 h-4 text-[#0F1F17]" />
                     <CountUp
                       value={stats.hotHole.wins}
-                      className="text-[22px] font-black text-[#0A0A0A] leading-none"
+                      className="text-[22px] font-black text-[#0F1F17] leading-none"
                     />
                   </div>
                 </div>
@@ -488,27 +488,27 @@ export default function Stats() {
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {stats?.bestRound != null && (
-                    <div className="bg-[#0A0A0A] rounded-2xl p-3 flex flex-col gap-1">
+                    <div className="bg-[#0F1F17] rounded-2xl p-3 flex flex-col gap-1">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 leading-tight">Best Round</p>
-                      <p className="text-[28px] font-black text-[#F0EE3A] leading-none tabular-nums">
+                      <p className="text-[28px] font-black text-[#BEF264] leading-none tabular-nums">
                         {stats.bestRound.score > 0 ? '+' : ''}{stats.bestRound.score}
                       </p>
                       <p className="text-[12px] text-white/70 truncate leading-tight">{stats.bestRound.courseName}</p>
                     </div>
                   )}
                   {stats?.bestPayout != null && (
-                    <div className="bg-[#0A0A0A] rounded-2xl p-3 flex flex-col gap-1">
+                    <div className="bg-[#0F1F17] rounded-2xl p-3 flex flex-col gap-1">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 leading-tight">Best Payout</p>
-                      <p className="text-[28px] font-black text-[#F0EE3A] leading-none tabular-nums">
+                      <p className="text-[28px] font-black text-[#BEF264] leading-none tabular-nums">
                         ${stats.bestPayout.amount}
                       </p>
                       <p className="text-[12px] text-white/70 truncate leading-tight">{stats.bestPayout.courseName}</p>
                     </div>
                   )}
                   {stats?.mostSkins != null && (
-                    <div className="bg-[#0A0A0A] rounded-2xl p-3 flex flex-col gap-1">
+                    <div className="bg-[#0F1F17] rounded-2xl p-3 flex flex-col gap-1">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 leading-tight">Most Skins</p>
-                      <p className="text-[28px] font-black text-[#F0EE3A] leading-none tabular-nums">
+                      <p className="text-[28px] font-black text-[#BEF264] leading-none tabular-nums">
                         {stats.mostSkins.count}
                       </p>
                       <p className="text-[12px] text-white/70 truncate leading-tight">{stats.mostSkins.courseName}</p>

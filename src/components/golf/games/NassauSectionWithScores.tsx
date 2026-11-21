@@ -79,7 +79,7 @@ export function NassauSectionWithScores({
               <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
                 {label}
               </p>
-              <p className="text-[12px] font-bold text-[#0A0A0A] leading-tight truncate">
+              <p className="text-[12px] font-bold text-[#0F1F17] leading-tight truncate">
                 {isAllSquare ? 'AS' : leaderName}
               </p>
               {!isAllSquare && (

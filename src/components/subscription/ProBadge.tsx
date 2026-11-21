@@ -21,9 +21,9 @@ export function ProBadge({ className, size = 'sm', variant = 'default' }: ProBad
   };
 
   const variantClasses = {
-    default: 'bg-[#F0EE3A] text-[#0A0A0A]',
-    subtle: 'bg-[#F0EE3A]/20 text-[#0A0A0A] border border-[#F0EE3A]/40',
-    outline: 'bg-transparent text-[#0A0A0A] border border-[#F0EE3A]/60',
+    default: 'bg-[#BEF264] text-[#0F1F17]',
+    subtle: 'bg-[#BEF264]/20 text-[#0F1F17] border border-[#BEF264]/40',
+    outline: 'bg-transparent text-[#0F1F17] border border-[#BEF264]/60',
   };
 
   return (

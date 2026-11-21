@@ -198,7 +198,7 @@ export default function HouseGameConfirm() {
   const defaultName = isPersonal ? 'My Format' : 'House Game';
 
   return (
-    <div className="h-screen flex flex-col bg-[#F8F8F6] relative">
+    <div className="h-screen flex flex-col bg-[#FAFAF7] relative">
       {/* Header */}
       <header className="flex-shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground">
         <div className="flex items-center gap-3">
@@ -307,9 +307,9 @@ export default function HouseGameConfirm() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...spring, delay: 0.05 }}
         >
-          <div className="bg-[#0A0A0A] rounded-2xl p-4">
+          <div className="bg-[#0F1F17] rounded-2xl p-4">
             <div className="flex items-start gap-3">
-              <Sparkles className="w-5 h-5 text-[#F0EE3A] flex-shrink-0 mt-0.5" />
+              <Sparkles className="w-5 h-5 text-[#BEF264] flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <p className="text-white font-bold text-[13px] leading-snug">
                   Found {aiFoundPrimitives.length + customPrimitives.length} rule{(aiFoundPrimitives.length + customPrimitives.length) !== 1 ? 's' : ''} in your description
@@ -410,7 +410,7 @@ export default function HouseGameConfirm() {
               <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
                 AI-Created Rules
               </p>
-              <span className="text-[9px] font-black text-[#0A0A0A] bg-[#F0EE3A] px-1.5 py-0.5 rounded-md">
+              <span className="text-[9px] font-black text-[#0F1F17] bg-[#BEF264] px-1.5 py-0.5 rounded-md">
                 NEW
               </span>
             </div>
@@ -525,14 +525,14 @@ export default function HouseGameConfirm() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-[#0A0A0A]/60 backdrop-blur-sm flex items-end z-50"
+            className="absolute inset-0 bg-[#0F1F17]/60 backdrop-blur-sm flex items-end z-50"
           >
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-              className="w-full bg-[#0A0A0A] rounded-t-[32px] px-6 pt-6 pb-[40px]"
+              className="w-full bg-[#0F1F17] rounded-t-[32px] px-6 pt-6 pb-[40px]"
             >
               {/* Drag handle */}
               <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-7" />
@@ -544,15 +544,15 @@ export default function HouseGameConfirm() {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 }}
-                    className="w-20 h-20 rounded-full bg-[#F0EE3A] flex items-center justify-center"
+                    className="w-20 h-20 rounded-full bg-[#BEF264] flex items-center justify-center"
                   >
-                    <Check className="w-9 h-9 text-[#0A0A0A] stroke-[3]" />
+                    <Check className="w-9 h-9 text-[#0F1F17] stroke-[3]" />
                   </motion.div>
                   <motion.div
                     initial={{ scale: 0.6, opacity: 0.6 }}
                     animate={{ scale: 1.5, opacity: 0 }}
                     transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
-                    className="absolute inset-0 rounded-full border-2 border-[#F0EE3A]"
+                    className="absolute inset-0 rounded-full border-2 border-[#BEF264]"
                   />
                 </div>
               </div>
@@ -564,7 +564,7 @@ export default function HouseGameConfirm() {
                 transition={{ delay: 0.18 }}
                 className="text-center mb-1"
               >
-                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#F0EE3A] mb-1">
+                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#BEF264] mb-1">
                   {isPersonal ? 'Format Created' : 'House Game Set'}
                 </p>
                 <h2 className="text-[28px] font-black tracking-[-0.04em] text-white leading-none">
@@ -604,7 +604,7 @@ export default function HouseGameConfirm() {
                       navigate('/new-round', { replace: true });
                     }
                   }}
-                  className="w-full h-[58px] bg-[#F0EE3A] rounded-2xl flex items-center justify-center gap-3 font-black text-[16px] text-[#0A0A0A] tracking-[-0.02em]"
+                  className="w-full h-[58px] bg-[#BEF264] rounded-2xl flex items-center justify-center gap-3 font-black text-[16px] text-[#0F1F17] tracking-[-0.02em]"
                 >
                   <Flag className="w-5 h-5" />
                   <span>Start a Round Now</span>

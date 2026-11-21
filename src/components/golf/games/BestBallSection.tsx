@@ -52,7 +52,7 @@ export function BestBallSection({
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate mb-1">
                 {standing.teamName}
               </p>
-              <p className="text-2xl font-black text-[#0A0A0A] tabular-nums">
+              <p className="text-2xl font-black text-[#0F1F17] tabular-nums">
                 {standing.totalScore}
               </p>
               <p
@@ -97,7 +97,7 @@ export function BestBallSection({
                   )}
                 >
                   <span className="text-[8px] text-slate-400 font-bold">H{hw.holeNumber}</span>
-                  <span className="text-[9px] font-bold text-[#0A0A0A] truncate max-w-[36px]">
+                  <span className="text-[9px] font-bold text-[#0F1F17] truncate max-w-[36px]">
                     {isPush ? 'Push' : winner?.teamName?.split(' ')[0] ?? '?'}
                   </span>
                 </div>

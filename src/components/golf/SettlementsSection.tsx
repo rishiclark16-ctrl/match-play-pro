@@ -96,7 +96,7 @@ export function SettlementsSection({
               >
                 {s.fromPlayerName.split(' ')[0]}
               </span>
-              <ArrowRight className="w-4 h-4 text-[#F0EE3A] flex-shrink-0" />
+              <ArrowRight className="w-4 h-4 text-[#BEF264] flex-shrink-0" />
               <span
                 className={cn(
                   'font-semibold text-foreground',

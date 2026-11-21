@@ -117,7 +117,7 @@ export function ScorecardBottomBar({
     <div
       className={cn(
         'fixed bottom-0 left-0 right-0 z-40 transition-all duration-300',
-        'bg-[#F8F8F6] border-t border-border/30',
+        'bg-[#FAFAF7] border-t border-border/30',
         showFinishOptions && 'opacity-0 pointer-events-none'
       )}
       style={{
@@ -137,13 +137,13 @@ export function ScorecardBottomBar({
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={() => { hapticLight(); setShowJunk(true); }}
-              className="w-full bg-[#F0EE3A] rounded-2xl px-4 py-2.5 flex items-center justify-between"
+              className="w-full bg-[#BEF264] rounded-2xl px-4 py-2.5 flex items-center justify-between"
             >
               <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-[#0A0A0A]" />
-                <span className="text-[13px] font-black text-[#0A0A0A]">Any junk on hole {currentHole}?</span>
+                <Zap className="w-4 h-4 text-[#0F1F17]" />
+                <span className="text-[13px] font-black text-[#0F1F17]">Any junk on hole {currentHole}?</span>
               </div>
-              <span className="text-[12px] font-bold text-[#0A0A0A]/60">Log it →</span>
+              <span className="text-[12px] font-bold text-[#0F1F17]/60">Log it →</span>
             </motion.button>
           </motion.div>
         )}
@@ -283,7 +283,7 @@ export function ScorecardBottomBar({
                 className={cn(
                   'w-full h-12 font-black rounded-2xl flex items-center justify-center gap-2 touch-manipulation relative overflow-hidden',
                   canFinish
-                    ? 'bg-[#F0EE3A] text-[#0A0A0A]'
+                    ? 'bg-[#BEF264] text-[#0F1F17]'
                     : 'border-2 border-foreground bg-transparent text-foreground'
                 )}
                 style={{ WebkitTapHighlightColor: 'transparent' }}

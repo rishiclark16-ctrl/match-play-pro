@@ -35,7 +35,7 @@ export function GroupFormatPickerSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-            className="fixed inset-x-0 bottom-0 z-50 bg-[#F8F8F6] rounded-t-3xl"
+            className="fixed inset-x-0 bottom-0 z-50 bg-[#FAFAF7] rounded-t-3xl"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <div className="w-10 h-1 bg-muted-foreground/25 rounded-full mx-auto mt-3 mb-4" />
@@ -71,15 +71,15 @@ export function GroupFormatPickerSheet({
                       className={cn(
                         'w-full rounded-2xl p-4 flex items-center gap-3 border-2 text-left transition-all',
                         isSelected
-                          ? 'bg-[#0A0A0A] border-[#0A0A0A]'
+                          ? 'bg-[#0F1F17] border-[#0F1F17]'
                           : 'bg-white border-border/40'
                       )}
                     >
                       <div className={cn(
                         'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
-                        isSelected ? 'bg-[#F0EE3A]/20' : 'bg-muted'
+                        isSelected ? 'bg-[#BEF264]/20' : 'bg-muted'
                       )}>
-                        <Sparkles className={cn('w-4 h-4', isSelected ? 'text-[#F0EE3A]' : 'text-muted-foreground')} />
+                        <Sparkles className={cn('w-4 h-4', isSelected ? 'text-[#BEF264]' : 'text-muted-foreground')} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={cn('font-black text-[14px]', isSelected ? 'text-white' : 'text-foreground')}>
@@ -89,7 +89,7 @@ export function GroupFormatPickerSheet({
                           {fmt.description}
                         </p>
                       </div>
-                      {isSelected && <Check className="w-4 h-4 text-[#F0EE3A] flex-shrink-0" />}
+                      {isSelected && <Check className="w-4 h-4 text-[#BEF264] flex-shrink-0" />}
                     </motion.button>
                   );
                 })
