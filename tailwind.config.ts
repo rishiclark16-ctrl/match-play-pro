@@ -63,6 +63,8 @@ export default {
           foreground: "hsl(var(--gold-foreground))",
           muted: "hsl(var(--gold-muted))",
         },
+        loss: "hsl(var(--loss))",
+        "on-forest-muted": "hsl(var(--on-forest-muted))",
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
