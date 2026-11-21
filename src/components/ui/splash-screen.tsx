@@ -27,7 +27,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         <AnimatePresence>
             {show && (
                 <motion.div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-foreground"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-primary"
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                 >
@@ -36,15 +36,15 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.1 }}
-                            className="text-[42px] font-black tracking-[-0.04em] leading-none text-white select-none"
+                            className="text-[52px] font-extrabold tracking-[-0.04em] leading-none text-white select-none"
                         >
-                            M<span className="text-[#BEF264]">A</span>TCH
+                            M<span className="text-gold">A</span>TCH
                         </motion.div>
                         <motion.div
                             initial={{ scaleX: 0, opacity: 0 }}
                             animate={{ scaleX: 1, opacity: 1 }}
                             transition={{ duration: 0.6, ease: 'easeOut', delay: 0.5 }}
-                            className="w-10 h-[3px] rounded-full bg-[#BEF264] origin-center"
+                            className="w-12 h-1 rounded-full bg-gold origin-center"
                         />
                     </div>
                 </motion.div>
