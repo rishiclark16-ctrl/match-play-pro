@@ -13,6 +13,8 @@
 3. End the response with the literal line:
    `claude md and documentation updated`
 
+Do **not** update the Notion "MATCH — Documentation" site; the user has opted out (the workspace is at its free block limit). `CLAUDE.md` is the record.
+
 If a task does not require any doc change, still print the confirmation line so it's clear the doc check happened.
 
 ---
