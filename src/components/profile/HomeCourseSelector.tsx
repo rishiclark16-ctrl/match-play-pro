@@ -52,9 +52,9 @@ export function HomeCourseSelector({
       <SheetTrigger asChild>
         <button
           type="button"
-          className="flex items-center gap-1.5 text-right"
+          className="flex items-center gap-1.5 text-right min-h-[44px]"
         >
-          <span className={cn('text-sm font-medium truncate max-w-[120px]', courseName ? 'text-foreground' : 'text-muted-foreground')}>
+          <span className={cn('text-[14px] font-semibold truncate max-w-[150px]', courseName ? 'text-foreground' : 'text-muted-foreground')}>
             {courseName ?? 'None'}
           </span>
           {courseName ? (
@@ -64,7 +64,7 @@ export function HomeCourseSelector({
                 e.stopPropagation();
                 onClear();
               }}
-              className="p-0.5 rounded-full hover:bg-muted transition-colors"
+              className="p-1.5 rounded-full bg-muted hover:bg-border transition-colors"
             >
               <X className="w-3.5 h-3.5 text-muted-foreground" />
             </span>
@@ -74,7 +74,7 @@ export function HomeCourseSelector({
         </button>
       </SheetTrigger>
 
-      <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl">
+      <SheetContent side="bottom" className="h-[80vh] rounded-t-[28px] px-5">
         <SheetHeader className="pb-4">
           <SheetTitle>Select Home Course</SheetTitle>
         </SheetHeader>
@@ -86,7 +86,7 @@ export function HomeCourseSelector({
               placeholder="Search golf courses..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-10 py-6"
+              className="pl-11 h-14"
               autoFocus
             />
             {isSearching && (
@@ -105,14 +105,14 @@ export function HomeCourseSelector({
                 type="button"
                 onClick={() => handleSelect(course)}
                 className={cn(
-                  'w-full flex items-start gap-3 p-4 rounded-xl',
-                  'bg-muted/50 hover:bg-muted transition-colors',
+                  'w-full flex items-start gap-3 p-4 rounded-[20px]',
+                  'bg-card border border-border hover:border-primary/40 active:bg-muted transition-colors',
                   'text-left'
                 )}
               >
                 <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-foreground">{course.course_name}</p>
+                  <p className="text-[16px] font-semibold text-foreground">{course.course_name}</p>
                   {course.club_name && (
                     <p className="text-sm text-muted-foreground">{course.club_name}</p>
                   )}
@@ -125,7 +125,7 @@ export function HomeCourseSelector({
                   )}
                 </div>
                 {course.distanceMi != null && (
-                  <span className="text-[11px] font-semibold text-muted-foreground bg-background px-1.5 py-0.5 rounded-md flex-shrink-0 mt-0.5">
+                  <span className="text-[11px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5">
                     {course.distanceMi < 1 ? '<1' : Math.round(course.distanceMi)} mi
                   </span>
                 )}

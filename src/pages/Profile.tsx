@@ -1,12 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, LogOut, Users, Copy, Check, User, Flag, Home, AtSign, Phone, Mic, Crown, ExternalLink, Trash2, AlertTriangle, Bell, ChevronRight, Settings, Sparkles, Globe } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Loader2, Trash2, ChevronRight, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Switch } from '@/components/ui/switch';
-import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { HomeCourseSelector } from '@/components/profile/HomeCourseSelector';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useAuth } from '@/hooks/useAuth';
@@ -23,16 +19,12 @@ import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { validatePlayerName, validateHandicap, sanitizeString, normalizePhone } from '@/lib/validation';
-import { RowLabel, Row, SectionLabel, Card } from '@/components/profile/ProfileRowPrimitives';
+import { RowLabel, Row, RowText, SectionLabel, Card } from '@/components/profile/ProfileRowPrimitives';
+import { ProfileHeader } from '@/components/profile/ProfileHeader';
+import { ProfilePlanCard } from '@/components/profile/ProfilePlanCard';
+import { TeePreferencePicker } from '@/components/profile/TeePreferencePicker';
+import { DeleteAccountDialog } from '@/components/profile/DeleteAccountDialog';
 import { NotificationSettings } from '@/components/profile/NotificationSettings';
-
-const TEE_OPTIONS = [
-  { value: 'back',  label: 'Black', color: 'bg-gray-900 text-white' },
-  { value: 'blue',  label: 'Blue',  color: 'bg-blue-600 text-white' },
-  { value: 'white', label: 'White', color: 'bg-white text-foreground border border-gray-200' },
-  { value: 'gold',  label: 'Gold',  color: 'bg-yellow-500 text-foreground' },
-  { value: 'red',   label: 'Red',   color: 'bg-red-600 text-white' },
-];
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -206,8 +198,8 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-foreground" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     );
   }
@@ -219,202 +211,63 @@ export default function Profile() {
     : null;
 
   const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
+  const section = (delay: number) => ({ initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { ...spring, delay } });
+  const fieldInput = 'bg-transparent border-0 text-right text-foreground focus:ring-0 p-0 outline-none placeholder:text-muted-foreground/50';
 
   return (
-    <AppLayout
-      header={null}
-      mainClassName="bg-[#FAFAF7] pb-10"
-    >
-      {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <div className="bg-[#0F1F17] rounded-b-[32px] px-6 pb-7 pt-safe-content">
-        {/* Nav row */}
-        <div className="flex items-center justify-between mb-6">
-          <motion.button
-            whileTap={{ scale: 0.88 }}
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center"
-          >
-            <ArrowLeft className="w-5 h-5 text-white" />
-          </motion.button>
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/30">Profile</p>
-          <motion.button
-            whileTap={{ scale: 0.88 }}
-            onClick={handleSignOut}
-            disabled={isSigningOut}
-            className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center"
-          >
-            {isSigningOut ? <Loader2 className="w-4 h-4 animate-spin text-white/60" /> : <LogOut className="w-4 h-4 text-white/60" />}
-          </motion.button>
-        </div>
+    <AppLayout header={null} mainClassName="bg-background pb-10">
+      <ProfileHeader
+        fullName={profile?.full_name || null}
+        email={user?.email}
+        avatarUrl={profile?.avatar_url || null}
+        onAvatarUpload={handleAvatarUpload}
+        handicap={profile?.handicap}
+        friendsCount={friends.length}
+        homeCourseName={homeCourseName}
+        isPro={isPro}
+        friendCode={profile?.friend_code}
+        copied={copied}
+        isSigningOut={isSigningOut}
+        onBack={() => navigate(-1)}
+        onSignOut={handleSignOut}
+        onCopyFriendCode={handleCopyFriendCode}
+        onOpenFriends={() => { hapticLight(); navigate('/social?tab=friends'); }}
+      />
 
-        {/* Avatar + identity */}
-        <div className="flex items-center gap-4 mb-5">
-          <AvatarUpload
-            avatarUrl={profile?.avatar_url || null}
-            fullName={profile?.full_name || null}
-            onUpload={handleAvatarUpload}
-            size="lg"
-          />
-          <div className="flex-1 min-w-0">
-            <h1 className="text-[26px] font-black tracking-[-0.04em] text-white leading-tight truncate">
-              {profile?.full_name || 'Add your name'}
-            </h1>
-            <p className="text-[12px] text-white/40 truncate mt-0.5">{user?.email}</p>
-          </div>
-        </div>
-
-        {/* Stat chips */}
-        <div className="flex gap-2 flex-wrap mb-5">
-          {profile?.handicap != null && (
-            <div className="flex items-center gap-1.5 bg-white/10 rounded-xl px-3 py-1.5">
-              <Flag className="w-3 h-3 text-[#BEF264]" />
-              <span className="text-[12px] font-bold text-white">HCP {profile.handicap}</span>
-            </div>
-          )}
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => { hapticLight(); navigate('/social?tab=friends'); }}
-            className="flex items-center gap-1.5 bg-white/10 rounded-xl px-3 py-1.5"
-          >
-            <Users className="w-3 h-3 text-[#BEF264]" />
-            <span className="text-[12px] font-bold text-white">{friends.length} Friend{friends.length !== 1 ? 's' : ''}</span>
-          </motion.button>
-          {homeCourseName && (
-            <div className="flex items-center gap-1.5 bg-white/10 rounded-xl px-3 py-1.5 max-w-[180px]">
-              <Home className="w-3 h-3 text-[#BEF264] flex-shrink-0" />
-              <span className="text-[12px] font-bold text-white truncate">{homeCourseName}</span>
-            </div>
-          )}
-          {isPro && (
-            <div className="flex items-center gap-1.5 bg-[#BEF264] rounded-xl px-3 py-1.5">
-              <Crown className="w-3 h-3 text-[#0F1F17]" />
-              <span className="text-[12px] font-black text-[#0F1F17]">Pro</span>
-            </div>
-          )}
-        </div>
-
-        {/* Friend Code */}
-        <div className="flex items-center gap-2">
-          <div className="flex-1 bg-white/[0.07] rounded-2xl px-4 py-3 flex items-center justify-between">
-            <span className="text-[11px] font-medium text-white/30 uppercase tracking-[0.1em]">Friend Code</span>
-            <span className="font-mono font-black text-white tracking-[0.18em] text-[15px]">
-              {profile?.friend_code || '------'}
-            </span>
-          </div>
-          <motion.button
-            whileTap={{ scale: 0.88 }}
-            onClick={handleCopyFriendCode}
-            className="w-12 h-12 bg-white/[0.07] rounded-2xl flex items-center justify-center flex-shrink-0"
-          >
-            <AnimatePresence mode="wait">
-              {copied ? (
-                <motion.span key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                  <Check className="w-4 h-4 text-[#BEF264]" />
-                </motion.span>
-              ) : (
-                <motion.span key="copy" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                  <Copy className="w-4 h-4 text-white/50" />
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.button>
-        </div>
-      </div>
-
-      {/* ── CONTENT ──────────────────────────────────────────────────── */}
-      <div className="px-6 mt-6">
-
+      <div className="px-5 mt-3.5 space-y-3.5">
         {/* ── SUBSCRIPTION ─────────────────────────────────────────── */}
-        {isPro ? (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.04 }}
-            className="bg-[#0F1F17] rounded-2xl p-5 mb-5"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/30 mb-1">Current Plan</p>
-                <p className="text-[22px] font-black tracking-[-0.04em] text-[#BEF264] leading-none">
-                  Pro {isPromo ? 'Lifetime' : isAnnual ? 'Annual' : 'Monthly'}
-                </p>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-[#BEF264] flex items-center justify-center">
-                <Crown className="w-6 h-6 text-[#0F1F17]" />
-              </div>
-            </div>
-            <div className="border-t border-white/10 pt-3 flex items-center justify-between">
-              {expiresAt && <span className="text-[12px] text-white/30">Renews {expiresAt}</span>}
-              <div className="flex gap-3 ml-auto">
-                <button onClick={handleManageSubscription} className="text-[12px] font-bold text-white/50">
-                  Manage
-                </button>
-                <button
-                  onClick={handleRestorePurchases}
-                  disabled={isRestoring}
-                  className="text-[12px] font-bold text-white/50 flex items-center gap-1"
-                >
-                  {isRestoring && <Loader2 className="w-3 h-3 animate-spin" />}
-                  Restore
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.04 }}
-            className="bg-[#0F1F17] rounded-2xl p-5 mb-5"
-          >
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/30 mb-1">Current Plan</p>
-                <p className="text-[22px] font-black tracking-[-0.04em] text-white leading-none">Free</p>
-              </div>
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                onClick={() => { hapticLight(); setShowPaywall(true); }}
-                className="bg-[#BEF264] text-[#0F1F17] font-black rounded-xl px-4 py-2.5 text-[13px] flex-shrink-0"
-              >
-                Upgrade to Pro
-              </motion.button>
-            </div>
-            <div className="grid grid-cols-2 gap-y-1.5 gap-x-3">
-              {['Nassau & Wolf games', 'Full stats & records', 'Unlimited friends', 'Settlement tracking', 'House Game AI builder', 'All prop bets'].map(f => (
-                <div key={f} className="flex items-center gap-1.5">
-                  <span className="text-[#BEF264] text-[11px] font-black">✓</span>
-                  <span className="text-[11px] text-white/40">{f}</span>
-                </div>
-              ))}
-            </div>
-            <div className="border-t border-white/10 pt-3 mt-4">
-              <button
-                onClick={handleRestorePurchases}
-                disabled={isRestoring}
-                className="text-[12px] font-bold text-white/30 flex items-center gap-1"
-              >
-                {isRestoring && <Loader2 className="w-3 h-3 animate-spin" />}
-                Restore Purchases
-              </button>
-            </div>
-          </motion.div>
-        )}
+        <motion.div {...section(0.04)}>
+          <ProfilePlanCard
+            isPro={isPro}
+            planName={`Pro ${isPromo ? 'Lifetime' : isAnnual ? 'Annual' : 'Monthly'}`}
+            renewsOn={expiresAt}
+            isRestoring={isRestoring}
+            onUpgrade={() => { hapticLight(); setShowPaywall(true); }}
+            onManage={handleManageSubscription}
+            onRestore={handleRestorePurchases}
+          />
+        </motion.div>
 
         {/* ── GOLF INFO ─────────────────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.08 }}>
+        <motion.div {...section(0.08)}>
           <SectionLabel>Golf</SectionLabel>
-          <Card className="mb-5">
+          <Card>
             <Row>
-              <RowLabel>Handicap Index</RowLabel>
+              <RowLabel>Handicap index</RowLabel>
               <input
                 type="number"
                 step="0.1"
+                inputMode="decimal"
+                aria-label="Handicap index"
                 placeholder="e.g. 12.4"
                 value={handicap}
                 onChange={(e) => setHandicap(e.target.value)}
-                className="bg-transparent border-0 text-[14px] text-right text-foreground font-bold focus:ring-0 p-0 w-20 outline-none placeholder:text-muted-foreground/40"
+                className={cn(fieldInput, 'text-[17px] font-extrabold w-24 tabular-nums')}
               />
             </Row>
             <Row>
-              <RowLabel>Home Course</RowLabel>
-              <div className="flex-shrink-0 max-w-[180px]">
+              <RowLabel>Home course</RowLabel>
+              <div className="flex-shrink-0 max-w-[190px]">
                 <HomeCourseSelector
                   courseId={homeCourseId}
                   courseName={homeCourseName}
@@ -423,191 +276,164 @@ export default function Profile() {
                 />
               </div>
             </Row>
-            <Row last>
-              <RowLabel>Preferred Tees</RowLabel>
-              <div className="flex gap-1.5 flex-wrap justify-end">
-                {TEE_OPTIONS.map((tee) => (
-                  <button
-                    key={tee.value}
-                    type="button"
-                    onClick={() => { hapticLight(); setTeePreference(teePreference === tee.value ? null : tee.value); }}
-                    className={cn(
-                      'h-7 px-2.5 rounded-full text-[11px] font-black transition-all',
-                      tee.color,
-                      teePreference === tee.value ? 'ring-2 ring-foreground ring-offset-1 opacity-100' : 'opacity-40'
-                    )}
-                  >
-                    {tee.label}
-                  </button>
-                ))}
+            <div className="px-4 pt-3 pb-4">
+              <RowLabel>Preferred tees</RowLabel>
+              <div className="mt-2.5">
+                <TeePreferencePicker value={teePreference} onChange={setTeePreference} />
               </div>
-            </Row>
+            </div>
           </Card>
         </motion.div>
 
         {/* ── MY GAME FORMATS ──────────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.09 }}>
-          <SectionLabel>My Game Formats</SectionLabel>
-          <Card className="mb-5">
+        <motion.div {...section(0.09)}>
+          <SectionLabel>My game formats</SectionLabel>
+          <Card>
             {myFormats.length === 0 ? (
               <Row last onClick={() => navigate('/my-formats/new')}>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-muted-foreground" />
+                <div className="flex items-center gap-3">
+                  <span className="w-9 h-9 rounded-[12px] bg-gold flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-gold-foreground" />
+                  </span>
                   <RowLabel>Build your first AI game</RowLabel>
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
               </Row>
             ) : (
               <>
-                {myFormats.slice(0, 3).map((fmt, i) => (
-                  <Row
-                    key={fmt.id}
-                    last={i === Math.min(myFormats.length, 3) - 1}
-                    onClick={() => navigate(`/my-formats/${fmt.id}/edit`)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                      <RowLabel>{fmt.name}</RowLabel>
+                {myFormats.slice(0, 3).map((fmt) => (
+                  <Row key={fmt.id} onClick={() => navigate(`/my-formats/${fmt.id}/edit`)}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="w-9 h-9 rounded-[12px] bg-muted flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="w-4 h-4 text-primary" />
+                      </span>
+                      <RowLabel className="truncate">{fmt.name}</RowLabel>
                       {fmt.isPublic && (
-                        <span className="text-[10px] font-bold text-[#22C55E] bg-[#22C55E]/10 px-1.5 py-0.5 rounded-md">PUBLIC</span>
+                        <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full flex-shrink-0">Public</span>
                       )}
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                   </Row>
                 ))}
-                {myFormats.length > 3 && (
-                  <Row last onClick={() => navigate('/my-formats/new')}>
-                    <RowLabel className="text-muted-foreground">+{myFormats.length - 3} more formats</RowLabel>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </Row>
-                )}
-                {myFormats.length <= 3 && (
-                  <Row last onClick={() => navigate('/my-formats/new')}>
-                    <RowLabel className="text-muted-foreground">Build new format</RowLabel>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </Row>
-                )}
+                <Row last onClick={() => navigate('/my-formats/new')}>
+                  <RowLabel className="text-primary">
+                    {myFormats.length > 3 ? `+${myFormats.length - 3} more formats` : 'Build new format'}
+                  </RowLabel>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                </Row>
               </>
             )}
           </Card>
         </motion.div>
 
         {/* ── ACCOUNT ──────────────────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.1 }}>
+        <motion.div {...section(0.1)}>
           <SectionLabel>Account</SectionLabel>
-          <Card className="mb-5">
+          <Card>
             <Row>
-              <RowLabel>Full Name</RowLabel>
+              <RowLabel>Full name</RowLabel>
               <input
                 type="text"
+                aria-label="Full name"
                 placeholder="Your name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="bg-transparent border-0 text-[14px] text-right text-foreground font-bold focus:ring-0 p-0 w-40 outline-none placeholder:text-muted-foreground/40"
+                className={cn(fieldInput, 'text-[15px] font-semibold w-44')}
               />
             </Row>
             <Row last>
-              <RowLabel>Login Email</RowLabel>
-              <span className="text-[13px] font-mono text-muted-foreground truncate max-w-[180px]">{user?.email}</span>
+              <RowLabel>Login email</RowLabel>
+              <span className="text-[14px] text-muted-foreground truncate max-w-[190px]">{user?.email}</span>
             </Row>
           </Card>
         </motion.div>
 
         {/* ── FIND FRIENDS ─────────────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.12 }}>
-          <SectionLabel>Find Friends</SectionLabel>
-          <Card className="mb-5">
+        <motion.div {...section(0.12)}>
+          <SectionLabel>Find friends</SectionLabel>
+          <Card>
             <Row>
-              <RowLabel>Discoverable Email</RowLabel>
+              <RowLabel>Email</RowLabel>
               <input
                 type="email"
+                aria-label="Discoverable email"
                 placeholder="you@email.com"
                 value={discoveryEmail}
                 onChange={(e) => setDiscoveryEmail(e.target.value)}
-                className="bg-transparent border-0 text-[13px] text-right text-foreground font-medium focus:ring-0 p-0 w-44 outline-none placeholder:text-muted-foreground/40"
+                className={cn(fieldInput, 'text-[14px] font-medium w-44')}
               />
             </Row>
             <Row last>
-              <RowLabel>Discoverable Phone</RowLabel>
+              <RowLabel>Phone</RowLabel>
               <input
                 type="tel"
+                aria-label="Discoverable phone"
                 placeholder="(555) 123-4567"
                 value={discoveryPhone}
                 onChange={(e) => setDiscoveryPhone(e.target.value)}
-                className="bg-transparent border-0 text-[13px] text-right text-foreground font-medium focus:ring-0 p-0 w-36 outline-none placeholder:text-muted-foreground/40"
+                className={cn(fieldInput, 'text-[14px] font-medium w-36 tabular-nums')}
               />
             </Row>
           </Card>
         </motion.div>
 
         {/* ── SCORING SETTINGS ────────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.14 }}>
+        <motion.div {...section(0.14)}>
           <SectionLabel>Scoring</SectionLabel>
-          <Card className="mb-5">
-            <Row>
-              <div className="flex-1">
-                <p className="text-[14px] font-medium text-foreground">Net Scoring</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Handicap-adjusted winners</p>
-              </div>
+          <Card>
+            <Row last>
+              <RowText
+                title="Net scoring"
+                caption={settings.useNetScoring
+                  ? 'Winners decided by net scores (strokes minus handicap)'
+                  : 'Winners decided by gross scores. Handicaps ignored.'}
+              />
               <Switch
                 checked={settings.useNetScoring}
+                aria-label="Net scoring"
                 onCheckedChange={(checked) => {
                   hapticLight();
                   updateSettings({ useNetScoring: checked });
                   toast.success(checked ? 'Net scoring enabled' : 'Gross scoring enabled');
                 }}
-                className="data-[state=checked]:bg-foreground"
               />
-            </Row>
-            <Row last>
-              <p className="text-[11px] text-muted-foreground leading-relaxed flex-1">
-                {settings.useNetScoring
-                  ? 'Winners determined by net scores (strokes minus handicap).'
-                  : 'Winners determined by gross scores. Handicaps ignored for calculations.'}
-              </p>
             </Row>
           </Card>
         </motion.div>
 
         {/* ── VOICE CONTROL ────────────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.16 }}>
+        <motion.div {...section(0.16)}>
           <SectionLabel>Voice</SectionLabel>
-          <Card className="mb-5">
+          <Card>
             <Row>
-              <div className="flex-1">
-                <p className="text-[14px] font-medium text-foreground">Continuous Listening</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Keep listening after saving scores</p>
-              </div>
+              <RowText title="Continuous listening" caption="Keep listening after saving scores" />
               <Switch
                 checked={settings.continuousVoice}
+                aria-label="Continuous listening"
                 onCheckedChange={(checked) => {
                   hapticLight();
                   updateSettings({ continuousVoice: checked });
                   toast.success(checked ? 'Continuous mode on' : 'Continuous mode off');
                 }}
-                className="data-[state=checked]:bg-foreground"
               />
             </Row>
             <Row>
-              <div className="flex-1">
-                <p className="text-[14px] font-medium text-foreground">Always Confirm</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Review all scores before saving</p>
-              </div>
+              <RowText title="Always confirm" caption="Review all scores before saving" />
               <Switch
                 checked={settings.alwaysConfirmVoice}
+                aria-label="Always confirm"
                 onCheckedChange={(checked) => {
                   hapticLight();
                   updateSettings({ alwaysConfirmVoice: checked });
                   toast.success(checked ? 'Confirmation required' : 'High confidence saves auto');
                 }}
-                className="data-[state=checked]:bg-foreground"
               />
             </Row>
-            <Row last>
-              <p className="text-[11px] text-muted-foreground leading-relaxed flex-1">
-                Say "Mike 5, John par" · "next hole" · "go to hole 7" · "finish round"
+            <div className="px-4 py-3 bg-muted/50">
+              <p className="text-[12px] text-muted-foreground leading-relaxed">
+                Try <span className="font-semibold text-foreground">"Mike 5, John par"</span> · "next hole" · "go to hole 7" · "finish round"
               </p>
-            </Row>
+            </div>
           </Card>
         </motion.div>
 
@@ -620,89 +446,45 @@ export default function Profile() {
         />
 
         {/* ── LINKS ────────────────────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }}>
-          <Card className="mb-5">
-            <Row>
-              <RowLabel>Help &amp; Support</RowLabel>
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => { hapticLight(); navigate('/support'); }}
-                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center"
-              >
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </motion.button>
+        <motion.div {...section(0.2)}>
+          <SectionLabel>Help</SectionLabel>
+          <Card>
+            <Row onClick={() => { hapticLight(); navigate('/support'); }}>
+              <RowLabel>Help &amp; support</RowLabel>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </Row>
-            <Row last>
-              <div className="flex gap-5">
-                <a href="/privacy-policy" className="text-[13px] text-muted-foreground font-medium hover:text-foreground transition-colors">Privacy</a>
-                <a href="/terms-of-service" className="text-[13px] text-muted-foreground font-medium hover:text-foreground transition-colors">Terms</a>
-              </div>
+            <Row onClick={() => navigate('/privacy-policy')}>
+              <RowLabel>Privacy policy</RowLabel>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </Row>
+            <Row last onClick={() => navigate('/terms-of-service')}>
+              <RowLabel>Terms of service</RowLabel>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </Row>
           </Card>
         </motion.div>
 
         {/* ── DANGER ZONE ──────────────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.22 }}>
-          <SectionLabel>Danger Zone</SectionLabel>
+        <motion.div {...section(0.22)} className="pb-6">
           <motion.button
             whileTap={{ scale: 0.98 }}
             onClick={() => { hapticLight(); setShowDeleteConfirm(true); setDeleteConfirmText(''); }}
-            className="w-full border border-[#EF4444]/30 bg-[#FEF2F2] text-[#EF4444] rounded-2xl py-4 font-bold text-[14px] flex items-center justify-center gap-2 mb-8"
+            className="w-full h-14 bg-card border border-border text-loss rounded-[20px] font-semibold text-[15px] flex items-center justify-center gap-2"
           >
             <Trash2 className="w-4 h-4" />
-            Delete Account
+            Delete account
           </motion.button>
         </motion.div>
-
       </div>
 
-      {/* ── DELETE CONFIRM DIALOG ─────────────────────────────────── */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-6">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.94, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={spring}
-            className="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm space-y-4"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-[#FEF2F2] flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-5 h-5 text-[#EF4444]" />
-              </div>
-              <div>
-                <h3 className="font-black text-[18px] tracking-[-0.03em]">Delete Account?</h3>
-                <p className="text-[12px] text-muted-foreground">This cannot be undone</p>
-              </div>
-            </div>
-            <p className="text-[13px] text-muted-foreground leading-relaxed">
-              Permanently deletes your account, rounds, scores, friends, and all data. Active subscriptions must be cancelled separately through the App Store.
-            </p>
-            <div className="space-y-1.5">
-              <Label className="text-[12px] text-muted-foreground">
-                Type <span className="font-mono font-bold text-foreground">DELETE</span> to confirm
-              </Label>
-              <Input
-                value={deleteConfirmText}
-                onChange={(e) => setDeleteConfirmText(e.target.value)}
-                placeholder="DELETE"
-                className="rounded-xl font-mono text-center"
-                autoFocus
-              />
-            </div>
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} disabled={isDeletingAccount} className="flex-1 rounded-2xl h-12">
-                Cancel
-              </Button>
-              <Button
-                onClick={handleDeleteAccount}
-                disabled={deleteConfirmText !== 'DELETE' || isDeletingAccount}
-                className="flex-1 bg-[#EF4444] hover:bg-[#DC2626] text-white rounded-2xl h-12 font-bold"
-              >
-                {isDeletingAccount ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete Forever'}
-              </Button>
-            </div>
-          </motion.div>
-        </div>
+        <DeleteAccountDialog
+          confirmText={deleteConfirmText}
+          onConfirmTextChange={setDeleteConfirmText}
+          isDeleting={isDeletingAccount}
+          onCancel={() => setShowDeleteConfirm(false)}
+          onDelete={handleDeleteAccount}
+        />
       )}
 
       <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} feature="Pro" />
