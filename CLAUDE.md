@@ -482,6 +482,14 @@ Phase P3.2 (money calculation defects, Notion "09.2 Money Calculation Defects") 
 - **Typecheck ratchet:** `scripts/typecheck-ratchet.sh` runs in CI (baseline **204** `tsc` errors, was 220). Lower `TS_BASELINE` as errors are fixed; never raise it.
 - New regression tests call the calculators the way the app does (`moneyTracker.callsites.test.ts`) plus randomised zero-sum invariants for Wolf and Skins.
 
+Phase P3.3 (design system v5 "Fairway Day") — 2026-11-21, in progress:
+- User picked direction 08 "Fairway Day" from 10 light-mode directions (design canvas artifact "MATCH Design Directions"). Rationale: golfers use the app in full sun, so light mode with dark accents, big numerals, 44px+ targets.
+- **Spec: `docs/design/fairway-day.md`** (source of truth for app AND marketing site). Forest `#14532D` primary, lime `#BEF264` highlight (in the `--gold` token slot), ink `#0F1F17`, ground `#FAFAF7`, Sora font, 20px radius. Money: won = Forest, owed = `#B42318`.
+- Foundation commit `e5064d3`: tokens in `src/index.css`, Sora in `index.html` + `tailwind.config.ts`, brand hex literals swapped 1:1 in 105 files (#F0EE3A→#BEF264, #0A0A0A→#0F1F17, #F8F8F6/#F5F5F0→#FAFAF7; arbitrary hex kept so `/opacity` modifiers work).
+- `scripts/design-screens.cjs`: Playwright harness with a mocked Supabase backend + realistic in-progress round (`BASE` env for port; run vite with `--host 127.0.0.1`; needs `.env.local`).
+- 5 agents redesign by area (scoring, round setup + AI builder, results + stats, home + social, shell + account + ui primitives) in separate worktrees; lead merges.
+- The website session (matchgolf.info redesign) was sent the full spec.
+
 ## V2 Feature Status
 | Feature | Status | Notes |
 |---------|--------|-------|
