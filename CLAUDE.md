@@ -257,7 +257,7 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1204 pass, 0 fail** (1204 tests across 52 files). All tests pass. Run with `bun test`. CI splits into two invocations:
+**1214 pass, 0 fail** (1214 tests across 55 files). All tests pass. Run with `bun test`. CI splits into two invocations:
 - `bun test src/hooks src/lib src/engine src/components` (1201 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
@@ -449,6 +449,13 @@ Phase P2.2 + P2.2b (bundle profiling + on-demand QR) complete:
 - **GitHub secret `VITE_SUPABASE_PUBLISHABLE_KEY`** still needs to be added to the repo's Actions secrets so CI builds succeed. (Repo Settings → Secrets and variables → Actions → New repository secret.) The publishable key is the same anon key used in `.env`.
 
 ---
+
+Phase P3.1 (v2.5 polish, in progress) — 2026-11-21:
+- `index.html` CSP `connect-src` now allows `https://us-assets.i.posthog.com` — PostHog's remote config fetch was being blocked on every page load.
+- New `src/lib/houseGame/suggestFormatName.ts` (7 tests): AI Game Builder confirm screen pre-fills a name built from the detected formats (e.g. `$5 Nassau + Presses`) instead of a truncated description.
+- `HouseGameConfirm.tsx` header now reads `N of M selected` (low-confidence rules start unchecked), so it no longer looks like it contradicts "Found M rules".
+- Local screenshot harness: `vite --host 127.0.0.1` (the `::` host in `vite.config.ts` fails in IPv4-only containers) plus a `.env.local` (gitignored) holding the Supabase URL and publishable key.
+- Remaining v2.5 work: paywall redesign, App Store review prompt, invite-friends link, Scorecard/Profile/RoundComplete splits, version bump to 2.5 (7).
 
 ## V2 Feature Status
 | Feature | Status | Notes |
