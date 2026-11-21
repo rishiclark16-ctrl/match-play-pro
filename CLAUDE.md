@@ -257,7 +257,7 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1232 pass, 0 fail** (1232 tests across 58 files). All tests pass. Run with `bun test`. CI splits into two invocations:
+**1244 pass, 0 fail** (1244 tests across 61 files). All tests pass. Run with `bun test`. CI splits into two invocations:
 - `bun test src/hooks src/lib src/engine src/components` (1201 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
@@ -456,7 +456,14 @@ Phase P3.1 (v2.5 polish, in progress) — 2026-11-21:
 - `HouseGameConfirm.tsx` header now reads `N of M selected` (low-confidence rules start unchecked), so it no longer looks like it contradicts "Found M rules".
 - Local screenshot harness: `vite --host 127.0.0.1` (the `::` host in `vite.config.ts` fails in IPv4-only containers) plus a `.env.local` (gitignored) holding the Supabase URL and publishable key.
 - **Money defects M1–M11 (Notion 09.2) all fixed** — see Phase P3.2 below.
-- Remaining v2.5 work: paywall redesign, App Store review prompt, invite-friends link, Scorecard/Profile/RoundComplete splits, version bump to 2.5 (7).
+- **Paywall** (`PaywallModal.tsx` + new `paywallCopy.ts`, 5 tests): plan cards with price now sit in the sticky footer beside the CTA (price/features were previously hidden behind the footer, an App Review 3.1.2 risk). Feature list leads with the AI Game Builder and is test-checked against `TIER_LIMITS`. Savings computed and rounded down (47%, was a hardcoded 48%). Headline adapts to the triggering feature.
+- **App Store review prompt**: `@capacitor-community/in-app-review@6.0.0`; policy in `src/lib/reviewPrompt.ts` (3+ completed rounds on this device, finished up money, not solo, 120-day cooldown); `useReviewPrompt` on RoundComplete. Mocked in `src/test/setup.ts`. **Requires `npx cap sync ios` + `pod install` on the Mac before archiving.**
+- **Invite your group** row on Home (`components/home/InviteFriendsRow.tsx`, `lib/inviteFriends.ts`): shares App Store link (`id6758272932`) + friend code; PostHog event `invite_shared`.
+- **Version bumped to 2.5 (7)** in `project.pbxproj`.
+- **Domain inconsistency (open):** universal-link docs in `useDeepLinks.ts` say `matchgolf.app`, iOS entitlement allows only `matchgolf.dev`, legal links use `matchgolf.info`. Invites therefore use the App Store link, not an https deep link. Pick one canonical domain before relying on universal links.
+- **Supabase outage found 2026-11-21:** project `Fairways` was paused (INACTIVE), so the live app's backend was down. Restored after pausing `Loudcall US` (user's choice) to stay within the free plan's 2-active-project limit. Free projects re-pause after ~1 week idle; upgrading the org to Pro prevents this.
+- **`parse-house-game` deployed (v23)** with `format_nines` (M10). Deployed from the *live* source plus that one line, NOT the repo file: the repo version differs from prod (CORS allowlist, required Bearer header) and that drift was not deployed. Verified live: a Nines description returns `format_nines`. A prompt hint explaining Nines scoring is in the repo but not yet deployed.
+- Remaining: Scorecard/Profile/RoundComplete file splits; reconcile repo vs prod `parse-house-game`.
 
 Phase P3.2 (money calculation defects, Notion "09.2 Money Calculation Defects") — 2026-11-21:
 - **M1** Nines/Defender/Sixes paid $0: 9 call sites passed `HoleInfo[]` as `holesPlayed`. Now `holeInfo.length` in `GamesSection.tsx`, `useGameResults.ts`, `moneyTracker.ts`, `games/houseGame.ts`.
