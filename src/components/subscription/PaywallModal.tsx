@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Crown, Users, Zap, Trophy, BarChart3, Loader2 } from 'lucide-react';
+import { X, Crown, Loader2 } from 'lucide-react';
+import { PRO_FEATURES, paywallHeadline, annualSavingsPercent } from './paywallCopy';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useSubscription } from '@/hooks/useSubscription';
 import {
@@ -20,15 +21,6 @@ interface PaywallModalProps {
 }
 
 type PlanType = 'monthly' | 'annual';
-
-// Feature comparison data
-const PRO_FEATURES = [
-  { icon: Users, label: 'Up to 8 players per round', free: '4 max' },
-  { icon: Users, label: 'Unlimited friends', free: '4 max' },
-  { icon: Zap, label: 'Nassau, Wolf, Best Ball, Stableford', free: 'Stroke & Match only' },
-  { icon: Trophy, label: 'All prop bets & side games', free: 'CTP & Longest Drive' },
-  { icon: BarChart3, label: 'Full stats & settlement tracking', free: 'Basic stats' },
-];
 
 export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps) {
   const { refreshSubscription } = useSubscription();
@@ -54,6 +46,8 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
   const annualMonthlyEquivalent = offerings?.annual
     ? `$${(offerings.annual.price / 12).toFixed(2)}`
     : '$2.08';
+  const savingsPct = annualSavingsPercent(offerings?.monthly?.price ?? 3.99, offerings?.annual?.price ?? 24.99);
+  const headline = paywallHeadline(feature);
 
   const handlePurchase = async () => {
     if (!Capacitor.isNativePlatform()) {
@@ -134,100 +128,32 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
           <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
 
           {/* Header */}
-          <div className="px-6 pb-4 flex flex-col items-center gap-3">
-            <div className="flex items-center justify-between w-full">
-              <div className="flex-1" />
-              <button
-                onClick={() => onOpenChange(false)}
-                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+          <div className="relative px-6 pb-2 flex flex-col items-center gap-2">
+            <button
+              onClick={() => onOpenChange(false)}
+              aria-label="Close"
+              className="absolute right-5 top-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center"
+            >
+              <X className="w-4 h-4" />
+            </button>
             {/* Crown icon */}
-            <div className="w-14 h-14 rounded-2xl bg-[#F0EE3A] flex items-center justify-center mx-auto">
-              <Crown className="text-[#0A0A0A] w-7 h-7" />
+            <div className="w-12 h-12 rounded-2xl bg-[#F0EE3A] flex items-center justify-center mx-auto">
+              <Crown className="text-[#0A0A0A] w-6 h-6" />
             </div>
             {/* MATCH Pro label */}
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4B800]">
               MATCH Pro
             </p>
             <h2 className="text-[24px] font-black tracking-[-0.04em] text-foreground text-center">
-              Unlock the full experience
+              {headline.title}
             </h2>
             <p className="text-[14px] text-muted-foreground text-center">
-              Play more games, track more stats, and bring more players to every round.
+              {headline.subtitle}
             </p>
           </div>
 
           {/* Content */}
           <div className="flex-1 px-6 py-4 space-y-6">
-            {/* Feature context */}
-            {feature && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-xl bg-[#F0EE3A]/20 border border-[#F0EE3A]/40"
-              >
-                <p className="text-sm text-center">
-                  <span className="font-black text-[#0A0A0A]">{feature}</span> is a Pro feature
-                </p>
-              </motion.div>
-            )}
-
-            {/* Plan toggle */}
-            <div className="bg-muted rounded-xl p-1 flex mx-0">
-              <button
-                onClick={() => setSelectedPlan('monthly')}
-                className={
-                  selectedPlan === 'monthly'
-                    ? 'bg-white rounded-lg shadow-sm flex-1 py-2 font-bold text-foreground text-center'
-                    : 'flex-1 py-2 text-muted-foreground text-center'
-                }
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setSelectedPlan('annual')}
-                className={
-                  selectedPlan === 'annual'
-                    ? 'bg-white rounded-lg shadow-sm flex-1 py-2 font-bold text-foreground text-center flex items-center justify-center gap-1.5'
-                    : 'flex-1 py-2 text-muted-foreground text-center flex items-center justify-center gap-1.5'
-                }
-              >
-                Annual
-                <span className="bg-[#F0EE3A] text-[#0A0A0A] text-[10px] font-black rounded-full px-2 py-0.5">
-                  Best value
-                </span>
-              </button>
-            </div>
-
-            {/* Price display */}
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex items-baseline gap-1">
-                <span className="text-[40px] font-black tracking-[-0.04em]">
-                  {selectedPlan === 'annual' ? annualPrice : monthlyPrice}
-                </span>
-                <span className="text-[14px] text-muted-foreground">
-                  /{selectedPlan === 'annual' ? 'year' : 'month'}
-                </span>
-              </div>
-              <AnimatePresence mode="wait">
-                {selectedPlan === 'annual' && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="flex items-center gap-2"
-                  >
-                    <span className="bg-[#F0FFF4] text-[#22C55E] text-[11px] font-bold rounded-full px-2.5 py-0.5">
-                      Save 48% · {annualMonthlyEquivalent}/mo
-                    </span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
             {/* Feature list */}
             <div className="space-y-1">
               <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-3">
@@ -242,11 +168,11 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
                     transition={{ delay: index * 0.05 }}
                     className="flex items-center gap-3 py-2.5"
                   >
-                    <div className="w-5 h-5 rounded-full bg-[#F0FFF4] border border-[#BBF7D0] flex items-center justify-center flex-shrink-0">
-                      <Check className="w-3 h-3 text-[#22C55E]" />
+                    <div className="w-8 h-8 rounded-xl bg-foreground flex items-center justify-center flex-shrink-0">
+                      <feat.icon className="w-4 h-4 text-[#F0EE3A]" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] text-foreground">{feat.label}</p>
+                      <p className="text-[14px] font-semibold text-foreground leading-snug">{feat.label}</p>
                       <p className="text-[12px] text-muted-foreground">
                         Free: {feat.free}
                       </p>
@@ -258,7 +184,35 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-[#F8F8F6] px-6 py-4 pb-safe space-y-3">
+          <div className="sticky bottom-0 bg-[#F8F8F6] border-t border-border/40 px-6 pt-4 pb-safe space-y-3">
+            {/* Plan picker — price stays visible next to the purchase button */}
+            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Choose a plan">
+              {([
+                { id: 'annual' as const, label: 'Yearly', price: annualPrice, sub: `${annualMonthlyEquivalent}/mo`, badge: savingsPct > 0 ? `Save ${savingsPct}%` : null },
+                { id: 'monthly' as const, label: 'Monthly', price: monthlyPrice, sub: 'per month', badge: null },
+              ]).map(plan => (
+                <button
+                  key={plan.id}
+                  role="radio"
+                  aria-checked={selectedPlan === plan.id}
+                  onClick={() => setSelectedPlan(plan.id)}
+                  className={
+                    'relative rounded-2xl border-2 px-3 py-3 text-left transition-colors ' +
+                    (selectedPlan === plan.id ? 'border-foreground bg-white' : 'border-transparent bg-muted')
+                  }
+                >
+                  {plan.badge && (
+                    <span className="absolute -top-2.5 right-2 bg-[#F0EE3A] text-[#0A0A0A] text-[10px] font-black rounded-full px-2 py-0.5">
+                      {plan.badge}
+                    </span>
+                  )}
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">{plan.label}</p>
+                  <p className="text-[20px] font-black tracking-[-0.03em] text-foreground leading-tight">{plan.price}</p>
+                  <p className="text-[11px] text-muted-foreground">{plan.sub}</p>
+                </button>
+              ))}
+            </div>
+
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={handlePurchase}
@@ -269,7 +223,7 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  Continue with {selectedPlan === 'annual' ? 'Annual' : 'Monthly'}
+                  Continue with {selectedPlan === 'annual' ? 'Yearly' : 'Monthly'}
                 </>
               )}
             </motion.button>
