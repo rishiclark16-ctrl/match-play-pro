@@ -15,6 +15,7 @@ import { useRoundsQuery } from '@/hooks/useRoundsQuery';
 import { useJoinRound } from '@/hooks/useJoinRound';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { InviteFriendsRow } from '@/components/home/InviteFriendsRow';
 import { useDeleteRound } from '@/hooks/useDeleteRound';
 import { useSpectatorRounds } from '@/hooks/useSpectatorRounds';
 import { useFriendActivity, FriendLiveRound } from '@/hooks/useFriendActivity';
@@ -231,6 +232,7 @@ export default function Home() {
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </motion.button>
+              <InviteFriendsRow name={profile?.full_name} friendCode={profile?.friend_code} />
             </motion.div>
 
             {/* Friends Playing Now */}
