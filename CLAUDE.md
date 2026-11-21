@@ -490,6 +490,11 @@ Phase P3.3 (design system v5 "Fairway Day") — 2026-11-21, in progress:
 - 5 agents redesign by area (scoring, round setup + AI builder, results + stats, home + social, shell + account + ui primitives) in separate worktrees; lead merges.
 - The website session (matchgolf.info redesign) was sent the full spec.
 
+Phase P3.4 (TestFlight CI) — 2026-11-21:
+- New `.github/workflows/testflight.yml` (macos-15): on push to `main` (docs/md changes ignored) and manual dispatch → JS deps → unit tests gate → `bun run build` → `npx cap sync ios` → `pod install` → `bundle exec fastlane ci_beta`. Concurrency group `testflight` prevents parallel uploads. Skips with a warning until signing secrets exist. IPA + dSYMs kept 14 days as an artifact.
+- New `ci_beta` lane in `ios/App/fastlane/Fastfile`: `setup_ci` temp keychain, App Store Connect **API key** auth (no Apple ID/2FA), imports the Apple Distribution .p12, `get_provisioning_profile`, switches the App target to manual signing for Release **only on the runner** (committed project stays Automatic), build number = max(latest TestFlight build for this version, project build) + 1, `upload_to_testflight`. `TEAM_ID = YPMSN56J9D`.
+- **Secrets the user must add once** (guide: `docs/testflight-ci.md`): `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8_BASE64`, `IOS_DIST_CERT_P12_BASE64`, `IOS_DIST_CERT_PASSWORD` (+ existing `VITE_SUPABASE_PUBLISHABLE_KEY`). Not yet run end-to-end: needs those secrets.
+
 ## V2 Feature Status
 | Feature | Status | Notes |
 |---------|--------|-------|
