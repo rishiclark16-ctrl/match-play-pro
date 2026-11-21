@@ -141,6 +141,15 @@ describe('calculateSettlement', () => {
   });
 
   describe('prop bets settlements', () => {
+    it('snake: the 3-putter pays everyone, not the other way round (M9)', () => {
+      const propBets: PropBet[] = [
+        { id: 's', roundId: 'r1', type: 'snake', holeNumber: 7, stakes: 5, winnerId: 'p1', createdAt: new Date() },
+      ];
+      const settlements = calculateSettlement(players, undefined, undefined, undefined, undefined, undefined, undefined, propBets);
+      expect(getTotalWinnings('p1', settlements)).toBe(-15);
+      expect(getTotalWinnings('p2', settlements)).toBe(5);
+    });
+
     it('should settle prop bets correctly', () => {
       const propBets: PropBet[] = [
         {

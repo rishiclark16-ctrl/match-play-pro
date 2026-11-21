@@ -77,3 +77,14 @@ describe('live money — production call shape', () => {
     expect(sum(b.map(x => x.vegas))).toBe(0);
   });
 });
+
+describe('live money — snake (M9)', () => {
+  it('debits the player recorded on a snake', () => {
+    const ps = mkPlayers(3);
+    const res = calculateLiveMoney(ps, mkScores(ps, 1), [], holeInfo, [], 1, undefined, [
+      { id: 's', roundId: 'r1', type: 'snake', holeNumber: 1, stakes: 2, winnerId: 'p1', createdAt: new Date() },
+    ]);
+    expect(res.breakdown.get('p1')!.propBets).toBe(-4);
+    expect(res.breakdown.get('p2')!.propBets).toBe(2);
+  });
+});

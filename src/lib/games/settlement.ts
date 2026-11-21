@@ -7,7 +7,7 @@ import { NinesResult } from './nines';
 import { DefenderResult } from './defender';
 import { SixesResult } from './sixes';
 import { HouseGameResult } from './houseGame';
-import { PropBet } from '@/types/betting';
+import { PropBet, isPenaltyPropBet } from '@/types/betting';
 
 export interface NetSettlement {
   fromPlayerId: string;
@@ -125,12 +125,15 @@ export function calculateSettlement(
     settledBets.forEach(bet => {
       if (!bet.winnerId) return;
 
-      // Each non-winner pays the winner the bet stakes
+      // Each non-winner pays the winner the bet stakes. For a penalty bet (snake)
+      // the recorded player is the one who pays everyone else (Notion 09.2 M9).
+      const penalty = isPenaltyPropBet(bet.type);
       players.forEach(player => {
         if (player.id !== bet.winnerId) {
-          // player owes winner the stakes
-          if (ledger[player.id]?.[bet.winnerId!] !== undefined) {
-            ledger[player.id][bet.winnerId!] += bet.stakes;
+          const from = penalty ? bet.winnerId! : player.id;
+          const to = penalty ? player.id : bet.winnerId!;
+          if (ledger[from]?.[to] !== undefined) {
+            ledger[from][to] += bet.stakes;
           } else {
             console.warn('[Settlement] Prop bet player not in ledger, skipping:', player.id, '->', bet.winnerId);
           }

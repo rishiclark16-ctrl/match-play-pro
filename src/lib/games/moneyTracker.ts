@@ -10,7 +10,7 @@ import { calculateSixes } from './sixes';
 import { calculateHouseGame } from './houseGame';
 import { buildScoringConfig } from '@/lib/houseGame/engine';
 import { getStrokesPerHole } from '@/lib/handicapUtils';
-import { PlayerMoney, PropBet } from '@/types/betting';
+import { PlayerMoney, PropBet, isPenaltyPropBet } from '@/types/betting';
 
 interface MoneyBreakdown {
   skins: number;
@@ -258,9 +258,11 @@ export function calculateLiveMoney(
     relevantPropBets.forEach(bet => {
       if (!bet.winnerId) return;
       
-      // Winner gets stakes from each other player
-      const winnings = bet.stakes * (playerCount - 1);
-      const lossPer = bet.stakes;
+      // Winner gets stakes from each other player. For a penalty bet (snake) the
+      // recorded player pays everyone instead, so flip the sign (Notion 09.2 M9).
+      const sign = isPenaltyPropBet(bet.type) ? -1 : 1;
+      const winnings = sign * bet.stakes * (playerCount - 1);
+      const lossPer = sign * bet.stakes;
       
       // Add winnings to winner
       const winnerBreakdown = breakdown.get(bet.winnerId);

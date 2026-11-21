@@ -460,7 +460,7 @@ describe('per-player contribution (C-4)', () => {
     createPlayer('p4', 'Diana'),
   ];
 
-  it('player with 9 scores contributes 9 * stakesPerSkin, not 18 * stakesPerSkin', () => {
+  it('all-tie round refunds everyone, including a player who only scored 9', () => {
     const stakesPerSkin = 5;
     // Player A (p1) has all 18 holes scored
     // Player B (p2) only has 9 holes scored
@@ -482,14 +482,10 @@ describe('per-player contribution (C-4)', () => {
     const p2Standing = result.standings.find(s => s.playerId === 'p2')!;
     const p1Standing = result.standings.find(s => s.playerId === 'p1')!;
 
-    // p2 only scored 9 holes so contribution = 9 * 5 = 45
-    // p1 scored all 18 holes so contribution = 18 * 5 = 90
-    // Since nobody wins any skins (all ties), earnings = 0 - contribution
-    const p2ExpectedContribution = 9 * stakesPerSkin;
-    const p1ExpectedContribution = 18 * stakesPerSkin;
-
-    expect(p2Standing.earnings).toBe(-p2ExpectedContribution);
-    expect(p1Standing.earnings).toBe(-p1ExpectedContribution);
+    // Every hole ties, so no skin is ever awarded. Unwon skins are refunded (Notion 09.2 M7):
+    // nobody pays into a pot nobody receives, regardless of how many holes they scored.
+    expect(p2Standing.earnings).toBe(0);
+    expect(p1Standing.earnings).toBe(0);
   });
 
   it('all players with identical hole counts have equal contributions', () => {
@@ -507,9 +503,9 @@ describe('per-player contribution (C-4)', () => {
     const result = calculateSkins(scores, players, holesEach, stakesPerSkin);
 
     const contributions = result.standings.map(s => s.earnings);
-    const expectedContribution = -(holesEach * stakesPerSkin);
+    // All ties → no skins awarded → everything refunded (M7)
+    const expectedContribution = 0;
 
-    // All players have same hole count so all earnings should be equal
     contributions.forEach(c => {
       expect(c).toBe(expectedContribution);
     });
@@ -627,5 +623,33 @@ describe('getSkinsHoleContext carryover consistency (M-7 regression)', () => {
 
     expect(context.carryovers).toBe(directCarryover);
     expect(context.carryovers).toBe(0);
+  });
+});
+
+describe('zero-sum invariant (Notion 09.2 M7)', () => {
+  const players: Player[] = [createPlayer('p1', 'A'), createPlayer('p2', 'B'), createPlayer('p3', 'C')];
+
+  it('unresolved carryover at round end is refunded, not leaked', () => {
+    const scores: Score[] = [];
+    // p1 wins hole 1; holes 2-9 all tie → 8 skins carried and never won (9-hole round)
+    for (let h = 1; h <= 9; h++) {
+      players.forEach(p => scores.push(createScore(p.id, h, h === 1 && p.id === 'p1' ? 3 : 4)));
+    }
+    const r = calculateSkins(scores, players, 9, 5, true);
+    expect(r.carryover).toBeGreaterThan(0);
+    const sum = r.standings.reduce((a, s) => a + s.earnings, 0);
+    expect(sum).toBe(0);
+    expect(r.standings.find(s => s.playerId === 'p1')!.earnings).toBe(10); // 1 skin × $5 from each of 2 others
+  });
+
+  it('sums to zero over randomised rounds', () => {
+    let seed = 7;
+    const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let t = 0; t < 200; t++) {
+      const scores: Score[] = [];
+      for (let h = 1; h <= 18; h++) players.forEach(p => scores.push(createScore(p.id, h, 3 + Math.floor(rand() * 3))));
+      const r = calculateSkins(scores, players, 18, 2, rand() > 0.5);
+      expect(Math.round(r.standings.reduce((a, s) => a + s.earnings, 0) * 100)).toBe(0);
+    }
   });
 });

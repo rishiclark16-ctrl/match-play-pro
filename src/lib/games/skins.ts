@@ -112,16 +112,20 @@ export function calculateSkins(
     .filter(hole => scores.filter(s => s.holeNumber === hole).length >= players.length).length;
   const totalPot = fullyPlayedHoles * potPerSkin;
 
-  // Calculate earnings (net winnings/losses)
-  // Each player contributes stakesPerSkin only for the holes they actually scored
+  // Calculate earnings (net winnings/losses).
+  // Each player pays in only for skins that were actually awarded. A skin that ties
+  // and is never won (unresolved carryover at round end, or a tie with carryover off)
+  // is refunded rather than collected from the table and paid to nobody (Notion 09.2 M7).
+  // Skins are only decided on holes every player scored, so every player contributes
+  // to every awarded skin and the standings sum to exactly zero.
+  const skinsAwarded = Object.values(playerSkins).reduce((sum, n) => sum + n, 0);
   const standings: SkinsStanding[] = players.map(p => {
-    const holesScored = scores.filter(s => s.playerId === p.id).length;
-    const playerContribution = holesScored * stakesPerSkin;
+    const playerContribution = skinsAwarded * stakesPerSkin;
     return {
       playerId: p.id,
       playerName: p.name,
       skins: playerSkins[p.id],
-      earnings: (playerSkins[p.id] * potPerSkin) - playerContribution
+      earnings: Math.round(((playerSkins[p.id] * potPerSkin) - playerContribution) * 100) / 100
     };
   }).sort((a, b) => b.skins - a.skins);
   
