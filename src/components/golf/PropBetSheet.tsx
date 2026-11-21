@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { PlayerWithScores, HoleInfo } from '@/types/golf';
-import { PropBet, PROP_BET_TEMPLATES, getPropBetLabel, getPropBetIcon } from '@/types/betting';
+import { PropBet, PROP_BET_TEMPLATES, getPropBetLabel, getPropBetIcon, isPenaltyPropBet } from '@/types/betting';
 import { PropBetCelebration } from './PropBetCelebration';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -121,8 +121,10 @@ export function PropBetSheet({
       // Don't call onPropBetUpdated - realtime subscription handles it
       hapticSuccess();
 
-      // Trigger celebration animation
-      if (winner && bet) {
+      // Penalty bets (snake) record who PAYS — no celebration for that.
+      if (winner && bet && isPenaltyPropBet(bet.type)) {
+        toast(`🐍 ${winner.name.split(' ')[0]} has the snake — pays $${bet.stakes} to each player`);
+      } else if (winner && bet) {
         setCelebrationData({
           winnerName: winner.name,
           betType: bet.type,
@@ -225,7 +227,14 @@ export function PropBetSheet({
 
                   {/* Winner Selection */}
                   <div className="px-4 py-3">
-                    {bet.winnerId ? (
+                    {bet.winnerId && isPenaltyPropBet(bet.type) ? (
+                      <div className="flex items-center gap-2">
+                        <span aria-hidden>🐍</span>
+                        <span className="text-sm text-red-600 font-bold">
+                          {players.find(p => p.id === bet.winnerId)?.name} pays ${bet.stakes} each
+                        </span>
+                      </div>
+                    ) : bet.winnerId ? (
                       <div className="flex items-center gap-2">
                         <Trophy className="w-4 h-4 text-[#22C55E]" />
                         <span className="text-sm text-[#22C55E] font-bold">
@@ -235,7 +244,7 @@ export function PropBetSheet({
                     ) : (
                       <div className="space-y-2">
                         <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-                          Select winner:
+                          {isPenaltyPropBet(bet.type) ? 'Who 3-putted?' : 'Select winner:'}
                         </span>
                         <div className="flex flex-wrap gap-2">
                           {players.map(player => (

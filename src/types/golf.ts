@@ -124,6 +124,7 @@ export interface Round {
   matchPlay: boolean;
   stakes?: number;
   status: 'active' | 'complete';
+  createdBy?: string | null;   // profile id of the round's host (rounds.created_by)
   createdAt: Date;
   joinCode: string;
   holeInfo: HoleInfo[];
