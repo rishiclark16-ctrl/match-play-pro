@@ -67,6 +67,9 @@ mock.module('@capacitor-community/keep-awake', () => ({
     isSupported: () => Promise.resolve({ isSupported: false }),
   },
 }));
+mock.module('@capacitor-community/in-app-review', () => ({
+  InAppReview: { requestReview: () => Promise.resolve() },
+}));
 mock.module('@capacitor-community/apple-sign-in', () => ({
   SignInWithApple: { authorize: () => Promise.resolve({ response: {} }) },
 }));

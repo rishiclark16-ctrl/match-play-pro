@@ -104,6 +104,7 @@ Do NOT mark as infeasible: money bets based on score outcomes (bogey totals, las
 - When user says "net out" or "settle at the end" or "settle up at the end" → include settlement_net_out (value: null).
 - When user says "full handicap" or just "handicaps" or "using handicaps" → include handicap_full (value: null).
 - When user says "back 9 skins" or "skins on the back" → use format_skins_back9_only, NOT format_skins.
+- "Nines", "5-3-1" or "9 points" → format_nines. Nines is a 3-player game where 9 points are split on EVERY hole (best score 5, middle 3, worst 1). It is NOT about the front or back nine. Do not create a custom primitive to explain how Nines scores.
 - Only include rules clearly described or strongly implied. Never invent rules not mentioned.
 - Use "low" confidence only for genuinely ambiguous interpretations.
 

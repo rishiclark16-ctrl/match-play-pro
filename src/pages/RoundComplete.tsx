@@ -20,6 +20,7 @@ import { isCustomPrimitive } from '@/types/houseGame';
 import { getPropBetLabel, getPropBetIcon } from '@/types/betting';
 import { useGroups } from '@/hooks/useGroups';
 import { useAuth } from '@/hooks/useAuth';
+import { useReviewPrompt } from '@/hooks/useReviewPrompt';
 import { useScorekeeper } from '@/hooks/useScorekeeper';
 import { useRoundLedgerSync } from '@/hooks/useRoundLedgerSync';
 import { ShareRoundResultsSheet } from '@/components/golf/ShareRoundResultsSheet';
@@ -178,6 +179,9 @@ export default function RoundComplete() {
     rawPlayers,
     ghostPlayerIds,
   });
+
+  // App Store review prompt — only for a returning player who just won money
+  useReviewPrompt({ round, rawPlayers, settlements: nonGhostSettlements, userId: user?.id });
 
   // The `houseGameEntry` is needed below for the custom-rules manual-settlement
   // reminder section (which inspects activePrimitives for `isCustomPrimitive`).
