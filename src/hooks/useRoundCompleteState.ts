@@ -238,13 +238,15 @@ export function useRoundCompleteSettlements({
 
     const matchPlayWinnerId = matchPlayResult?.winnerId || null;
     const wolfGame = round.games?.find(g => g.type === 'wolf');
+    // Same stake source as the live preview (useSettlementPreview): the match game's own stake.
+    const matchGameStakes = round.games?.find(g => g.type === 'match')?.stakes ?? round.stakes;
 
     return calculateSettlement(
       rawPlayers,
       gameResults?.skinsResult,
       gameResults?.nassauResult,
       matchPlayWinnerId,
-      round.stakes,
+      matchGameStakes,
       wolfGame?.wolfResults,
       wolfGame?.stakes,
       propBets,

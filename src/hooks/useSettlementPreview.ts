@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
-import { Round, Score, PlayerWithScores, Settlement } from '@/types/golf';
+import { Round, Score, PlayerWithScores } from '@/types/golf';
 import { PropBet } from '@/types/betting';
-import { calculateSettlement } from '@/lib/games/settlement';
+import { calculateSettlement, NetSettlement } from '@/lib/games/settlement';
 import { calculateSkins } from '@/lib/games/skins';
 import { calculateNassau } from '@/lib/games/nassau';
 import { calculateMatchPlay } from '@/lib/games/matchPlay';
+import { useGameResults } from '@/hooks/useGameResults';
 
 interface UseSettlementPreviewOptions {
   round: Round | null;
@@ -22,7 +23,17 @@ export function useSettlementPreview({
   playersWithScores,
   scores,
   propBets,
-}: UseSettlementPreviewOptions): Settlement[] {
+}: UseSettlementPreviewOptions): NetSettlement[] {
+  // Same all-games calculator RoundComplete uses, so the in-round preview and the
+  // final settlement can't disagree (Notion 09.2 M5).
+  const gameResults = useGameResults({
+    round,
+    players: playersWithScores,
+    scores,
+    presses: round?.presses || [],
+    playersWithScores,
+  });
+
   return useMemo(() => {
     if (!round || playersWithScores.length < 2) return [];
 
@@ -99,15 +110,22 @@ export function useSettlementPreview({
       }
     }
 
+    const wolfGame = round.games?.find(g => g.type === 'wolf');
+
     return calculateSettlement(
       playersWithScores,
       skinsResult,
       nassauResult,
       matchPlayWinnerId,
       matchPlayStakes,
-      undefined, // wolfResults - not needed for preview
-      0, // wolfStakes
-      propBets
+      wolfGame?.wolfResults,
+      wolfGame?.stakes,
+      propBets,
+      gameResults?.houseGameResult,
+      gameResults?.vegasResult,
+      gameResults?.ninesResult,
+      gameResults?.defenderResult,
+      gameResults?.sixesResult,
     );
-  }, [round, playersWithScores, scores, propBets]);
+  }, [round, playersWithScores, scores, propBets, gameResults]);
 }
