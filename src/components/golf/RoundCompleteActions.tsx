@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Share2, Plus, Home, Loader2, Image, Send, ClipboardList } from 'lucide-react';
+import { Share2, Plus, Loader2, Image, Send, ClipboardList } from 'lucide-react';
 import { hapticLight } from '@/lib/haptics';
 
 interface RoundCompleteActionsProps {
@@ -12,6 +12,9 @@ interface RoundCompleteActionsProps {
   onShowShareSheet: () => void;
 }
 
+const secondary =
+  'flex-1 h-12 rounded-[14px] bg-muted text-foreground text-[14px] font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50';
+
 export function RoundCompleteActions({
   roundId,
   isSharing,
@@ -22,117 +25,85 @@ export function RoundCompleteActions({
 }: RoundCompleteActionsProps) {
   const navigate = useNavigate();
 
-  const buttonVariants = {
-    initial: { opacity: 0, y: 8 },
-    animate: { opacity: 1, y: 0 },
+  const goNewRound = () => {
+    hapticLight();
+    navigate('/new-round');
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 border-t border-[rgba(0,0,0,0.06)] bg-background/95 backdrop-blur-md px-5 pt-3 pb-safe z-50 pointer-events-auto">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 28 }}
+      className="fixed bottom-0 left-0 right-0 border-t border-border bg-background px-5 pt-3 pb-safe z-50 pointer-events-auto"
+    >
       <div className="space-y-2 pb-2">
-        {/* View Scorecard Button (primary CTA) */}
-        {roundId && (
+        {/* Lime send button + Ink primary CTA */}
+        <div className="flex gap-2">
           <motion.button
-            variants={buttonVariants}
-            initial="initial"
-            animate="animate"
-            transition={{ delay: 0.04 }}
-            onClick={() => {
-              hapticLight();
-              navigate(`/round/${roundId}/dashboard`);
-            }}
-            className="w-full bg-foreground text-background rounded-2xl h-[48px] font-bold text-[15px] flex items-center justify-center gap-2"
-          >
-            <ClipboardList className="w-5 h-5" />
-            View Scorecard
-          </motion.button>
-        )}
-
-        {/* Share row — Send + Image + Text side by side */}
-        <div className="flex gap-1.5">
-          <motion.button
-            variants={buttonVariants}
-            initial="initial"
-            animate="animate"
-            transition={{ delay: 0.08 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => {
               hapticLight();
               onShowShareSheet();
             }}
-            className="flex-1 border border-foreground rounded-xl h-10 font-semibold text-[12px] text-foreground flex items-center justify-center gap-1.5"
+            aria-label="Send results"
+            className="w-[60px] h-[60px] rounded-[20px] bg-[#BEF264] flex items-center justify-center shrink-0"
           >
-            <Send className="w-3.5 h-3.5" />
-            Send
+            <Send className="w-6 h-6 text-[#14532D]" strokeWidth={2.4} />
           </motion.button>
 
-          <motion.button
-            variants={buttonVariants}
-            initial="initial"
-            animate="animate"
-            transition={{ delay: 0.1 }}
-            onClick={onShareImage}
-            disabled={isSharing}
-            className="flex-1 bg-white border border-border rounded-xl h-10 font-medium text-[12px] flex items-center justify-center gap-1.5"
-          >
+          {roundId ? (
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                hapticLight();
+                navigate(`/round/${roundId}/dashboard`);
+              }}
+              className="flex-1 h-[60px] rounded-[20px] bg-[#0F1F17] text-white text-[16px] font-semibold flex items-center justify-center gap-2"
+            >
+              <ClipboardList className="w-5 h-5" />
+              View scorecard
+            </motion.button>
+          ) : (
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={goNewRound}
+              className="flex-1 h-[60px] rounded-[20px] bg-[#0F1F17] text-white text-[16px] font-semibold flex items-center justify-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              New round
+            </motion.button>
+          )}
+        </div>
+
+        {/* Secondary actions */}
+        <div className="flex gap-2">
+          <motion.button whileTap={{ scale: 0.97 }} onClick={onShareImage} disabled={isSharing} className={secondary}>
             {isSharing && shareMode === 'image' ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Image className="w-3.5 h-3.5" />
+              <Image className="w-4 h-4" />
             )}
             Image
           </motion.button>
 
-          <motion.button
-            variants={buttonVariants}
-            initial="initial"
-            animate="animate"
-            transition={{ delay: 0.12 }}
-            onClick={onShareText}
-            disabled={isSharing}
-            className="flex-1 bg-white border border-border rounded-xl h-10 font-medium text-[12px] flex items-center justify-center gap-1.5"
-          >
+          <motion.button whileTap={{ scale: 0.97 }} onClick={onShareText} disabled={isSharing} className={secondary}>
             {isSharing && shareMode === 'text' ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Share2 className="w-3.5 h-3.5" />
+              <Share2 className="w-4 h-4" />
             )}
             Text
           </motion.button>
-        </div>
 
-        {/* New Round + Home row */}
-        <div className="flex gap-1.5">
-          <motion.button
-            variants={buttonVariants}
-            initial="initial"
-            animate="animate"
-            transition={{ delay: 0.16 }}
-            onClick={() => {
-              hapticLight();
-              navigate('/new-round');
-            }}
-            className="flex-1 border border-border rounded-xl h-10 font-semibold text-[13px] text-foreground flex items-center justify-center gap-1.5"
-          >
-            <Plus className="w-4 h-4" />
-            New Round
-          </motion.button>
-
-          <motion.button
-            variants={buttonVariants}
-            initial="initial"
-            animate="animate"
-            transition={{ delay: 0.18 }}
-            onClick={() => {
-              hapticLight();
-              navigate('/');
-            }}
-            className="flex-1 text-muted-foreground rounded-xl h-10 font-medium text-[13px] flex items-center justify-center gap-1.5"
-          >
-            <Home className="w-4 h-4" />
-            Home
-          </motion.button>
+          {roundId && (
+            <motion.button whileTap={{ scale: 0.97 }} onClick={goNewRound} className={secondary}>
+              <Plus className="w-4 h-4" />
+              New round
+            </motion.button>
+          )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

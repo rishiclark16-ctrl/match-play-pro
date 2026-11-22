@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, MoreVertical, Flag, Share2, RotateCcw, Users, Settings } from 'lucide-react';
+import { X, MoreVertical, Flag, Share2, RotateCcw, Users, Settings, BarChart3 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ManageScorekeepersSheet } from '@/components/golf/ManageScorekeepersSheet';
 import { GameSettingsSheet } from '@/components/golf/GameSettingsSheet';
@@ -23,7 +24,15 @@ interface ScorecardHeaderProps {
   onUpdateGames: (games: GameConfig[]) => Promise<void>;
   /** Solo round — hide Share / Scorekeepers / Game Settings / join code. */
   isSolo?: boolean;
+  /** Holes fully scored, shown in the caption ("7 of 18 done"). */
+  completedHoles?: number;
+  onNavigateToLeaderboard?: () => void;
+  /** Side-bets trigger (PropBetSheet), rendered as a header icon button. */
+  sideBets?: ReactNode;
 }
+
+const iconButton =
+  'w-11 h-11 rounded-[14px] bg-white border border-[#E7E9E3] text-[#0F1F17] flex items-center justify-center shrink-0 touch-manipulation active:bg-[#F0F2EC]';
 
 export function ScorecardHeader({
   round,
@@ -39,6 +48,9 @@ export function ScorecardHeader({
   onRemoveScorekeeper,
   onUpdateGames,
   isSolo = false,
+  completedHoles,
+  onNavigateToLeaderboard,
+  sideBets,
 }: ScorecardHeaderProps) {
   const [showScorekeepersSheet, setShowScorekeepersSheet] = useState(false);
   const [showGameSettingsSheet, setShowGameSettingsSheet] = useState(false);
@@ -46,13 +58,13 @@ export function ScorecardHeader({
   return (
     <>
       <header
-        className="flex-shrink-0 z-30 bg-background border-b-2 border-foreground pt-safe-content"
+        className="flex-shrink-0 z-30 bg-[#FAFAF7] pt-safe-content"
         style={{
           WebkitTransform: 'translateZ(0)',
           transform: 'translateZ(0)',
         }}
       >
-        <div className="pb-3 px-4 flex items-center justify-between gap-3">
+        <div className="pb-2 px-3.5 flex items-center gap-2">
           <motion.button
             whileTap={{ scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
@@ -60,83 +72,101 @@ export function ScorecardHeader({
               hapticLight();
               onShowExitDialog();
             }}
-            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0 touch-manipulation"
+            className={iconButton}
             style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-label="Exit round"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </motion.button>
 
-          <div className="text-center flex-1 min-w-0">
-            <h1 className="text-base font-black tracking-[-0.04em] text-foreground truncate">{round.courseName}</h1>
-            <p className="text-[11px] font-mono tracking-[0.15em] text-muted-foreground">
-              {isSolo ? 'SOLO' : round.joinCode}
+          <div className="flex-1 min-w-0 pl-1">
+            <h1 className="text-[17px] font-bold tracking-[-0.02em] text-[#0F1F17] truncate leading-tight">{round.courseName}</h1>
+            <p className="text-[12px] font-medium text-[#5A6B61] truncate tabular-nums leading-tight mt-0.5">
+              {isSolo ? 'Solo round' : `Code ${round.joinCode}`}
+              {completedHoles !== undefined && ` · ${completedHoles}/${round.holes}`}
             </p>
           </div>
+
+          {/* Live leaderboard — not for solo rounds */}
+          {!isSolo && onNavigateToLeaderboard && (
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              onClick={onNavigateToLeaderboard}
+              className={iconButton}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+              aria-label="View leaderboard"
+            >
+              <BarChart3 className="w-5 h-5" />
+            </motion.button>
+          )}
+
+          {/* Side bets (CTP, greenie, sandie…) */}
+          {sideBets}
 
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-                className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0 touch-manipulation"
+                className={iconButton}
                 style={{ WebkitTapHighlightColor: 'transparent' }}
                 aria-label="More options"
               >
-                <MoreVertical className="w-4 h-4" />
+                <MoreVertical className="w-5 h-5" />
               </motion.button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
               sideOffset={8}
-              className="w-52 z-50 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.12)] border-0 p-1"
+              className="w-56 z-50 bg-white rounded-[20px] shadow-[0_8px_28px_rgba(15,31,23,0.12)] border border-[#E7E9E3] p-1.5"
             >
               {!isSolo && (
                 <DropdownMenuItem
                   onClick={onShowShareModal}
-                  className="rounded-xl text-sm font-medium py-2.5 px-3 hover:bg-muted focus:bg-muted"
+                  className="rounded-[14px] text-[15px] font-medium min-h-[44px] px-3 hover:bg-muted focus:bg-muted"
                 >
                   <Share2 className="w-4 h-4 mr-2" />
-                  Share Round
+                  Share round
                 </DropdownMenuItem>
               )}
 
               {!isSolo && canEditScores && (
                 <DropdownMenuItem
                   onClick={() => setShowGameSettingsSheet(true)}
-                  className="rounded-xl text-sm font-medium py-2.5 px-3 hover:bg-muted focus:bg-muted"
+                  className="rounded-[14px] text-[15px] font-medium min-h-[44px] px-3 hover:bg-muted focus:bg-muted"
                 >
                   <Settings className="w-4 h-4 mr-2" />
-                  Game Settings
+                  Game settings
                 </DropdownMenuItem>
               )}
 
               {!isSolo && isCreator && !isSpectator && (
                 <DropdownMenuItem
                   onClick={() => setShowScorekeepersSheet(true)}
-                  className="rounded-xl text-sm font-medium py-2.5 px-3 hover:bg-muted focus:bg-muted"
+                  className="rounded-[14px] text-[15px] font-medium min-h-[44px] px-3 hover:bg-muted focus:bg-muted"
                 >
                   <Users className="w-4 h-4 mr-2" />
-                  Manage Scorekeepers
+                  Manage scorekeepers
                 </DropdownMenuItem>
               )}
 
               <DropdownMenuItem
                 onClick={() => toast.info('Reset feature coming soon')}
-                className="rounded-xl text-sm font-medium py-2.5 px-3 hover:bg-muted focus:bg-muted"
+                className="rounded-[14px] text-[15px] font-medium min-h-[44px] px-3 hover:bg-muted focus:bg-muted"
               >
                 <RotateCcw className="w-4 h-4 mr-2" />
-                Reset This Hole
+                Reset this hole
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
                 onClick={onShowEndDialog}
-                className="rounded-xl text-sm font-medium py-2.5 px-3 text-destructive hover:bg-destructive/10 focus:bg-destructive/10 focus:text-destructive"
+                className="rounded-[14px] text-[15px] font-medium min-h-[44px] px-3 text-destructive hover:bg-destructive/10 focus:bg-destructive/10 focus:text-destructive"
               >
                 <Flag className="w-4 h-4 mr-2" />
-                End Round Early
+                End round early
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -87,7 +87,7 @@ export function WolfSelection({
 
         {/* Header */}
         <div className="px-5 pb-3 flex items-center gap-2">
-          <Crown className="w-5 h-5 text-[#BEF264]" />
+          <Crown className="w-5 h-5 text-[#14532D]" />
           <span className="text-lg font-black tracking-[-0.03em] text-foreground">
             {wolf.name.split(' ')[0]} is the Wolf
           </span>
@@ -96,7 +96,7 @@ export function WolfSelection({
         <div className="pb-6">
           {/* Pot Info Card */}
           <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-5 mb-4 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+            <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
               Hole {currentHole} Stakes
             </p>
             <p className="text-2xl font-black text-foreground tabular-nums">${potValue}</p>
@@ -134,7 +134,7 @@ export function WolfSelection({
           {!blindWolfAvailable && (
             <>
               {/* "Choose a Partner" section label */}
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-5 mb-2">
+              <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground px-5 mb-2">
                 Choose a Partner
               </p>
 
@@ -175,7 +175,7 @@ export function WolfSelection({
                         exit={{ scale: 0 }}
                         transition={springTransition}
                       >
-                        <Check className="w-5 h-5 text-[#22C55E]" />
+                        <Check className="w-5 h-5 text-[#14532D]" />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -189,17 +189,17 @@ export function WolfSelection({
                 className={cn(
                   "rounded-2xl mx-5 mb-2 p-4 flex items-center gap-3 w-[calc(100%-2.5rem)] border-2 transition-all",
                   confirmingLoneWolf
-                    ? "bg-[#FFFBEB] border-[#F59E0B] shadow-[0_0_0_1px_#F59E0B]"
-                    : "bg-[#FFFBEB] border-[#FDE68A]"
+                    ? "bg-[#ECFCCB] border-[#F59E0B] shadow-[0_0_0_1px_#F59E0B]"
+                    : "bg-[#ECFCCB] border-[#FDE68A]"
                 )}
               >
-                <Dog className="text-[#D97706] w-5 h-5" />
+                <Dog className="text-[#14532D] w-5 h-5" />
                 <div className="text-left flex-1">
-                  <p className="font-bold text-[#92400E]">Go Lone Wolf</p>
+                  <p className="font-bold text-[#14532D]">Go Lone Wolf</p>
                   <p className="text-xs text-muted-foreground">1 vs 3 - Triple points!</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-black text-[#D97706]">${loneWolfValue}</p>
+                  <p className="font-black text-[#14532D]">${loneWolfValue}</p>
                   <p className="text-xs text-muted-foreground">Win/Lose</p>
                 </div>
               </motion.button>

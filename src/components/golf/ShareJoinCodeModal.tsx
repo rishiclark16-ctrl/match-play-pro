@@ -151,7 +151,7 @@ export function ShareJoinCodeModal({ isOpen, onClose, joinCode, courseName, roun
                   className="absolute top-2 right-2 w-7 h-7 bg-white rounded-lg flex items-center justify-center shadow-sm"
                 >
                   {copied ? (
-                    <Check className="w-4 h-4 text-[#22C55E]" />
+                    <Check className="w-4 h-4 text-[#14532D]" />
                   ) : (
                     <Copy className="w-4 h-4 text-muted-foreground" />
                   )}

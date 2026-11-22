@@ -13,7 +13,7 @@ function ScoringBreakdown({ ps }: { ps: RoundPlayerStats }) {
     { label: 'Birdies', count: ps.birdies, color: 'bg-emerald-400' },
     { label: 'Pars', count: ps.pars, color: 'bg-gray-300' },
     { label: 'Bogeys', count: ps.bogeys, color: 'bg-red-300' },
-    { label: 'Double+', count: ps.doubles + ps.worse, color: 'bg-red-500' },
+    { label: 'Double+', count: ps.doubles + ps.worse, color: 'bg-[#B42318]' },
   ];
   const total = cats.reduce((s, c) => s + c.count, 0) || 1;
 
@@ -43,7 +43,7 @@ function ScoringBreakdown({ ps }: { ps: RoundPlayerStats }) {
 function StatBadge({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="bg-muted/20 rounded-xl px-3 py-2 text-center">
-      <div className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">{label}</div>
+      <div className="text-[12px] text-muted-foreground/70">{label}</div>
       <div className="text-[16px] font-black leading-tight mt-0.5">{value}</div>
       {sub && <div className="text-[9px] text-muted-foreground mt-0.5">{sub}</div>}
     </div>
@@ -53,7 +53,7 @@ function StatBadge({ label, value, sub }: { label: string; value: string; sub?: 
 export function DashboardStats({ stats, totalPar }: DashboardStatsProps) {
   return (
     <div className="px-4 pb-6 space-y-4">
-      <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground mb-3">
+      <h3 className="text-[12px] font-bold tracking-[0.1em] text-muted-foreground mb-3">
         Stats & Analytics
       </h3>
 
@@ -72,7 +72,7 @@ export function DashboardStats({ stats, totalPar }: DashboardStatsProps) {
               <span className="text-[13px] font-bold">{ps.playerName}</span>
               <span className={cn(
                 'ml-auto text-[13px] font-bold',
-                relPar < 0 ? 'text-emerald-600' : relPar > 0 ? 'text-red-500' : 'text-muted-foreground'
+                relPar < 0 ? 'text-[#14532D]' : relPar > 0 ? 'text-[#B42318]' : 'text-muted-foreground'
               )}>
                 {total} ({relParStr})
               </span>

@@ -15,11 +15,11 @@ export function StablefordSection({
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-0">
         <LiveDot />
-        <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-          Stableford {stablefordResult.modified && '· Modified'}
+        <span className="text-[15px] font-semibold text-[#0F1F17]">
+          Stableford {stablefordResult.modified && '· modified'}
         </span>
         {stablefordGame.useNet && <NetBadge />}
-        <span className="ml-auto text-[10px] text-slate-400">
+        <span className="ml-auto text-[12px] text-[#5A6B61]">
           {stablefordResult.holesScored} holes
         </span>
       </div>
@@ -37,14 +37,14 @@ export function StablefordSection({
               layout
               transition={SPRING}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl',
-                isFirst ? 'bg-[#0F1F17] text-white' : 'bg-slate-50',
+                'flex items-center gap-3 px-3 py-2.5 rounded-[14px]',
+                isFirst ? 'bg-[#14532D] text-white' : 'bg-[#FAFAF7]',
               )}
             >
               <span
                 className={cn(
                   'text-[11px] font-bold w-4 text-center',
-                  isFirst ? 'text-white/60' : 'text-slate-400',
+                  isFirst ? 'text-white/60' : 'text-[#5A6B61]',
                 )}
               >
                 {index + 1}
@@ -54,18 +54,18 @@ export function StablefordSection({
                   {standing.playerName}
                 </p>
                 {!isFirst && gap > 0 && stablefordResult.holesScored > 0 && (
-                  <p className="text-[10px] text-slate-400">-{gap} pts back</p>
+                  <p className="text-[12px] text-[#5A6B61]">-{gap} pts back</p>
                 )}
               </div>
               <span
                 className={cn(
-                  'text-base font-black tabular-nums',
+                  'text-base font-extrabold tabular-nums',
                   getStablefordPointsColor(standing.totalPoints),
                   isFirst && 'text-[#BEF264]',
                 )}
               >
                 {standing.totalPoints}
-                <span className={cn('text-[10px] font-semibold ml-0.5', isFirst ? 'text-white/60' : 'text-slate-400')}>
+                <span className={cn('text-[12px] font-semibold ml-0.5', isFirst ? 'text-white/60' : 'text-[#5A6B61]')}>
                   pts
                 </span>
               </span>

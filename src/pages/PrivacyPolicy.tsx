@@ -1,29 +1,8 @@
-import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { LegalPageLayout } from '@/components/layout/LegalPageLayout';
 
 export default function PrivacyPolicy() {
-  const navigate = useNavigate();
-
   return (
-    <div className="h-screen flex flex-col bg-background pb-safe">
-      <header className="shrink-0 bg-background border-b border-border px-4 py-3 pt-safe-content">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="shrink-0"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-lg font-bold">Privacy Policy</h1>
-        </div>
-      </header>
-
-      <main className="flex-1 overflow-y-auto px-4 py-6 pb-16">
-        <div className="max-w-3xl mx-auto">
-          <p className="text-sm text-muted-foreground mb-6">Last updated: January 15, 2026</p>
+    <LegalPageLayout title="Privacy Policy" updated="January 15, 2026">
 
           <section className="space-y-6">
             <div>
@@ -143,8 +122,6 @@ export default function PrivacyPolicy() {
               </p>
             </div>
           </section>
-        </div>
-      </main>
-    </div>
+    </LegalPageLayout>
   );
 }

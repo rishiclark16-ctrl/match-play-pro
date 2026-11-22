@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertCircle, Mic, Check, ChevronRight } from 'lucide-react';
 import { ParsedScore, ParseResult } from '@/lib/voiceParser';
-import { getScoreColor, getScoreLabel, PlayerWithScores } from '@/types/golf';
-import { cn } from '@/lib/utils';
+import { getScoreLabel, PlayerWithScores } from '@/types/golf';
+import { ScoreMark } from '@/components/golf/scorecard/ScoreMark';
 import { ScoreInputSheet } from './ScoreInputSheet';
 import { feedbackVoiceSuccess } from '@/lib/voiceFeedback';
 
@@ -19,13 +19,6 @@ interface VoiceConfirmationModalProps {
 }
 
 const springTransition = { type: 'spring', stiffness: 300, damping: 28 };
-
-function getScoreBorderClass(score: number, par: number): string {
-  const diff = score - par;
-  if (diff <= -1) return 'border-l-4 border-l-[#22C55E]';
-  if (diff === 0) return 'border-l-4 border-l-border';
-  return 'border-l-4 border-l-[#EF4444]';
-}
 
 export function VoiceConfirmationModal({
   isOpen,
@@ -95,11 +88,11 @@ export function VoiceConfirmationModal({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={springTransition}
-            className="fixed bottom-0 left-0 right-0 bg-[#FAFAF7] rounded-t-3xl z-50 shadow-2xl max-h-[85vh] flex flex-col"
+            className="fixed bottom-0 left-0 right-0 bg-[#FAFAF7] rounded-t-[28px] z-50 shadow-2xl max-h-[85vh] flex flex-col"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             {/* Handle */}
-            <div className="w-10 h-1 bg-muted-foreground/25 rounded-full mx-auto mt-3" />
+            <div className="w-10 h-1 bg-[#B4BDB7] rounded-full mx-auto mt-3" />
 
             {hasParsedScores ? (
               // Success state - show parsed scores
@@ -107,7 +100,7 @@ export function VoiceConfirmationModal({
                 {/* Header */}
                 <div className="px-5 pt-3 pb-2 flex items-center justify-between shrink-0">
                   <div>
-                    <h3 className="text-lg font-black tracking-[-0.03em]">Confirm Scores</h3>
+                    <h3 className="text-[22px] font-extrabold tracking-[-0.02em] text-[#0F1F17]">Confirm scores</h3>
                     <p className="text-sm text-muted-foreground px-5" style={{ paddingLeft: 0 }}>
                       Hole {holeNumber} &bull; Par {par}
                     </p>
@@ -115,7 +108,7 @@ export function VoiceConfirmationModal({
                   <motion.button
                     whileTap={{ scale: 0.9 }}
                     onClick={handleClose}
-                    className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center"
+                    className="w-11 h-11 rounded-[14px] bg-white border border-[#E7E9E3] flex items-center justify-center shrink-0"
                   >
                     <X className="w-4 h-4" />
                   </motion.button>
@@ -131,64 +124,56 @@ export function VoiceConfirmationModal({
                   {currentScores.map((parsedScore) => {
                     const score = parsedScore.score;
                     const label = getScoreLabel(score, par);
-                    const colorClass = getScoreColor(score, par);
-                    const borderClass = getScoreBorderClass(score, par);
 
                     return (
                       <motion.button
                         key={parsedScore.playerId}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setEditingPlayerId(parsedScore.playerId)}
-                        className={cn(
-                          "bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-5 mb-2 px-4 py-3 flex items-center justify-between w-[calc(100%-2.5rem)]",
-                          borderClass
-                        )}
+                        aria-label={`${parsedScore.playerName}: ${score}, ${label}. Tap to change`}
+                        className="bg-white rounded-[20px] border border-[#E7E9E3] mx-3.5 mb-2 pl-4 pr-3 min-h-[64px] flex items-center gap-3 w-[calc(100%-1.75rem)]"
                       >
-                        <span className="font-bold text-sm text-foreground">{parsedScore.playerName}</span>
-                        <div className="flex items-center gap-2">
-                          <span className={cn("font-black text-foreground tabular-nums", colorClass)}>
-                            {score}
-                          </span>
-                          <span className={cn("text-sm text-muted-foreground")}>
-                            {label}
-                          </span>
-                          <ChevronRight className="text-muted-foreground w-4 h-4" />
-                        </div>
+                        <span className="flex-1 min-w-0 text-left">
+                          <span className="block text-base font-semibold text-[#0F1F17] truncate">{parsedScore.playerName}</span>
+                          <span className="block text-[12px] font-medium text-[#5A6B61]">{label}</span>
+                        </span>
+                        <ScoreMark strokes={score} par={par} />
+                        <ChevronRight className="text-[#B4BDB7] w-5 h-5" />
                       </motion.button>
                     );
                   })}
 
                   {/* Missing players warning */}
                   {missingPlayers.length > 0 && (
-                    <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-xl mx-5 mb-3 p-3">
-                      <p className="text-sm text-[#92400E] font-medium">
+                    <div className="bg-white border border-[#E7E9E3] rounded-[20px] mx-3.5 mb-3 p-4">
+                      <p className="text-[15px] text-[#0F1F17] font-semibold">
                         Didn't catch: {missingPlayers.map(p => p.name).join(', ')}
                       </p>
-                      <p className="text-xs text-[#92400E]/80 mt-1">
+                      <p className="text-[13px] text-[#5A6B61] mt-1">
                         You can add their scores manually after confirming
                       </p>
                     </div>
                   )}
 
                   {/* Transcript */}
-                  <p className="mt-2 text-xs text-muted-foreground text-center px-5">
+                  <p className="mt-2 text-[13px] text-[#5A6B61] text-center px-5">
                     Heard: "{parseResult?.rawTranscript}"
                   </p>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="px-5 pb-4 pt-2 shrink-0 border-t border-border/50">
+                <div className="px-3.5 pb-4 pt-3 shrink-0 border-t border-[#E7E9E3]">
                   <motion.button
                     whileTap={{ scale: 0.98 }}
                     onClick={handleConfirm}
-                    className="bg-foreground text-background rounded-2xl w-full mb-3 py-4 font-bold text-[15px] flex items-center justify-center gap-2"
+                    className="bg-[#0F1F17] text-white rounded-[20px] w-full mb-2 h-[60px] font-bold text-[17px] flex items-center justify-center gap-2"
                   >
                     <Check className="w-5 h-5" />
                     Confirm
                   </motion.button>
                   <button
                     onClick={handleClose}
-                    className="w-full text-muted-foreground text-sm font-medium text-center py-1"
+                    className="w-full text-[#5A6B61] text-[15px] font-semibold text-center min-h-[44px]"
                   >
                     Cancel
                   </button>
@@ -201,7 +186,7 @@ export function VoiceConfirmationModal({
                   <AlertCircle className="w-6 h-6 text-muted-foreground" />
                 </div>
 
-                <h3 className="font-black text-lg tracking-[-0.02em] text-center mb-2">
+                <h3 className="font-extrabold text-[22px] tracking-[-0.02em] text-[#0F1F17] text-center mb-2">
                   Couldn't catch that
                 </h3>
 
@@ -209,7 +194,7 @@ export function VoiceConfirmationModal({
                   Try saying something like:
                 </p>
 
-                <div className="bg-muted/50 rounded-xl p-3 mx-5 mb-4">
+                <div className="bg-white border border-[#E7E9E3] rounded-[20px] p-4 mx-5 mb-4">
                   <p className="text-sm font-medium text-foreground">
                     "{players.slice(0, 2).map(p => `${p.name.split(' ')[0]} 5`).join(', ')}"
                   </p>
@@ -227,14 +212,14 @@ export function VoiceConfirmationModal({
                 <motion.button
                   whileTap={{ scale: 0.98 }}
                   onClick={onRetry}
-                  className="bg-foreground text-background rounded-2xl w-full mb-3 py-4 font-bold text-[15px] flex items-center justify-center gap-2"
+                  className="bg-[#0F1F17] text-white rounded-[20px] w-full mb-2 h-[60px] font-bold text-[17px] flex items-center justify-center gap-2"
                 >
                   <Mic className="w-5 h-5" />
                   Try Again
                 </motion.button>
                 <button
                   onClick={handleClose}
-                  className="w-full text-muted-foreground text-sm font-medium text-center py-1"
+                  className="w-full text-[#5A6B61] text-[15px] font-semibold text-center min-h-[44px]"
                 >
                   Cancel
                 </button>

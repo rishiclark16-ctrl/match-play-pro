@@ -90,16 +90,17 @@ export function MoneyTracker({
 
   return (
     <motion.div
+      data-testid="money-tracker"
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-      className="bg-[#0F1F17] rounded-2xl overflow-hidden"
+      className="bg-white rounded-[20px] border border-[#E7E9E3] overflow-hidden"
     >
       {/* Header row */}
-      <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+      <div className="px-4 pt-3.5 pb-1 flex items-center justify-between min-h-[40px]">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-black uppercase tracking-[0.12em] text-white/60">
-            Live Money
+          <span className="text-[12px] font-semibold text-[#5A6B61]">
+            Live money
           </span>
         </div>
 
@@ -112,10 +113,10 @@ export function MoneyTracker({
               animate={{ scale: 1, rotate: 0 }}
               exit={{ scale: 0, opacity: 0 }}
               className={cn(
-                "flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold",
+                "flex items-center gap-1 px-2 py-1 rounded-full text-[12px] font-semibold",
                 currentMoney.biggestSwing.amount > 0
-                  ? "bg-[#BEF264]/15 text-[#BEF264]"
-                  : "bg-[#EF4444]/15 text-[#EF4444]"
+                  ? "bg-[#ECFCCB] text-[#14532D]"
+                  : "bg-[#FEF3F2] text-[#B42318]"
               )}
             >
               {currentMoney.biggestSwing.amount > 0 ? (
@@ -132,17 +133,17 @@ export function MoneyTracker({
       </div>
 
       {/* Player Money Grid */}
-      <div className="space-y-0 pb-1">
+      <div className="pb-1">
         {currentMoney.players.map((player, index) => {
           const isLeader = index === 0 && player.currentBalance > 0;
           const isLast = index === currentMoney.players.length - 1 && player.currentBalance < 0;
 
           const balanceColor =
             player.currentBalance > 0
-              ? '#BEF264'
+              ? '#14532D'
               : player.currentBalance < 0
-              ? '#EF4444'
-              : '#ffffff';
+              ? '#B42318'
+              : '#0F1F17';
 
           return (
             <motion.button
@@ -154,23 +155,21 @@ export function MoneyTracker({
               whileTap={{ scale: 0.98 }}
               onClick={() => handlePlayerClick(player.playerId)}
               className={cn(
-                "w-full px-3 py-2.5 flex items-center gap-3 mx-1 mb-1 rounded-xl cursor-pointer touch-manipulation",
-                isLeader && "bg-white/[0.06]",
-                isLast && "bg-white/[0.03]",
-                !isLeader && !isLast && "bg-white/[0.03]"
+                "w-full px-4 min-h-[52px] py-2 flex items-center gap-3 cursor-pointer touch-manipulation active:bg-[#F0F2EC]",
+                index > 0 && "border-t border-[#E7E9E3]",
               )}
-              style={{ WebkitTapHighlightColor: 'transparent', width: 'calc(100% - 8px)' }}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               {/* Position circle */}
               <span className={cn(
-                "w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0",
-                isLeader ? "bg-[#BEF264] text-[#0F1F17]" : "bg-white/10 text-white/40"
+                "w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold shrink-0 tabular-nums",
+                isLeader ? "bg-[#14532D] text-white" : "bg-[#F0F2EC] text-[#5A6B61]"
               )}>
                 {index + 1}
               </span>
 
               {/* Player name */}
-              <span className="text-sm font-semibold text-white/80 flex-1 truncate text-left">
+              <span className="text-[15px] font-semibold text-[#0F1F17] flex-1 truncate text-left">
                 {player.playerName.split(' ')[0]}
               </span>
 
@@ -184,8 +183,8 @@ export function MoneyTracker({
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0, opacity: 0 }}
                       className={cn(
-                        "flex items-center gap-0.5 text-[11px] font-semibold",
-                        player.change > 0 ? "text-[#BEF264]/80" : "text-[#EF4444]/80"
+                        "flex items-center gap-0.5 text-[12px] font-semibold tabular-nums",
+                        player.change > 0 ? "text-[#14532D]" : "text-[#B42318]"
                       )}
                     >
                       {player.change > 0 ? (
@@ -203,11 +202,11 @@ export function MoneyTracker({
                   key={player.currentBalance}
                   initial={{ scale: 1.15 }}
                   animate={{ scale: 1 }}
-                  className="text-2xl font-black tabular-nums min-w-[72px] text-right"
+                  className="text-[20px] font-extrabold tabular-nums min-w-[64px] text-right"
                   style={{ color: balanceColor }}
                 >
                   {player.currentBalance === 0 ? (
-                    <span className="text-white">E</span>
+                    <span className="text-[15px] font-semibold text-[#5A6B61]">Even</span>
                   ) : (
                     <NumberFlow
                       value={Math.abs(player.currentBalance)}
@@ -217,7 +216,7 @@ export function MoneyTracker({
                 </motion.span>
 
                 {/* Tap indicator */}
-                <ChevronRight className="w-4 h-4 text-white/20" />
+                <ChevronRight className="w-4 h-4 text-[#B4BDB7]" />
               </div>
             </motion.button>
           );
@@ -229,17 +228,17 @@ export function MoneyTracker({
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="px-4 pb-3 text-[11px] font-semibold text-white/40"
+          className="px-4 pb-3 pt-1 text-[12px] font-medium text-[#5A6B61] border-t border-[#E7E9E3]"
         >
-          <span className="text-white/70 font-bold">{leader.playerName.split(' ')[0]}</span>
+          <span className="text-[#0F1F17] font-semibold">{leader.playerName.split(' ')[0]}</span>
           {' '}leads by{' '}
-          <span className="text-[#BEF264] font-bold">${leadMargin.toFixed(0)}</span>
+          <span className="text-[#14532D] font-bold">${leadMargin.toFixed(0)}</span>
         </motion.p>
       )}
 
       {/* No money message */}
       {!hasAnyMoney && (
-        <p className="px-4 py-3 text-sm text-white/30 text-center">
+        <p className="px-4 py-3 text-[13px] font-medium text-[#5A6B61] text-center border-t border-[#E7E9E3]">
           All even so far
         </p>
       )}

@@ -1,6 +1,5 @@
-import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Target, TrendingUp, Users, Coins, Crown, Dog } from 'lucide-react';
+import { useMemo } from 'react';
+import { ChevronRight } from 'lucide-react';
 import { Round, Player, Score, PlayerWithScores, HoleInfo, WolfHoleResult } from '@/types/golf';
 import { getSkinsHoleContext, StrokesPerHoleMap } from '@/lib/games/skins';
 import { getNassauHoleContext } from '@/lib/games/nassau';
@@ -17,10 +16,16 @@ interface HoleSummaryProps {
   scores: Score[];
   currentHole: number;
   currentHoleInfo: HoleInfo;
+  /** Opens the stroke-allocation sheet; makes the strokes tile tappable. */
+  onShowStrokes?: () => void;
 }
 
-export function HoleSummary({ round, players, scores, currentHole, currentHoleInfo }: HoleSummaryProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+/**
+ * Bet tiles for the current hole, rendered inside the Forest hole hero card.
+ * Derivations are unchanged from the old "Hole summary" card; only the
+ * presentation moved into the hero.
+ */
+export function HoleSummary({ round, players, scores, currentHole, currentHoleInfo, onShowStrokes }: HoleSummaryProps) {
 
   const skinsGame = round.games?.find(g => g.type === 'skins');
   const nassauGame = round.games?.find(g => g.type === 'nassau');
@@ -122,18 +127,15 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
       const holeResult = houseResult.holeResults.find(r => r.holeNumber === currentHole);
       const bonuses = holeResult?.activeBonuses ?? [];
 
-      // Show skins pot context from house skins sub-result
-      let potMessage: string | null = null;
+      // Skins pot from the house skins sub-result
+      let pot: { value: number; carryovers: number } | null = null;
       if (houseResult.skinsResult) {
         const carryovers = houseResult.skinsResult.carryover;
         const potPerSkin = houseResult.skinsResult.potPerSkin;
-        const potValue = potPerSkin * (1 + carryovers);
-        potMessage = carryovers > 0
-          ? `$${potValue} on the line (${carryovers} carryover${carryovers > 1 ? 's' : ''})`
-          : `$${potPerSkin} on the line`;
+        pot = { value: potPerSkin * (1 + carryovers), carryovers };
       }
 
-      return { bonuses, potMessage };
+      return { bonuses, pot };
     } catch { return null; }
   }, [houseGameEntry, scores, players, round.holeInfo, currentHole, round.holes, round.slope]);
 
@@ -195,220 +197,139 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
     }).filter(Boolean);
   }, [players, scores, currentHole, currentHoleInfo.par]);
 
-  const hasContent = strokeAllocations.length > 0 || skinsContext || nassauContext || bestBallContext || wolfContext || houseContext;
+  const hasHandicaps = players.some(p => p.strokesPerHole && Array.from(p.strokesPerHole.values()).some(v => v > 0));
 
-  if (!hasContent) return null;
+  // ── Build the tile list. Exactly one tile (the hottest number) is lime. ──
+  const tiles: BetTile[] = [];
+  if (skinsContext) {
+    tiles.push({
+      key: 'skins',
+      label: skinsContext.carryovers > 0 ? `Skins · ${skinsContext.carryovers} carried` : 'Skins pot',
+      value: `$${skinsContext.potValue}`,
+      hot: true,
+    });
+  }
+  if (houseContext?.pot) {
+    tiles.push({
+      key: 'house-pot',
+      label: houseContext.pot.carryovers > 0 ? `Pot · ${houseContext.pot.carryovers} carried` : 'Pot',
+      value: `$${houseContext.pot.value}`,
+      hot: true,
+    });
+  }
+  if (wolfContext) {
+    tiles.push({
+      key: 'wolf',
+      label: wolfContext.isBlindWolf ? 'Blind wolf' : wolfContext.isLoneWolf ? 'Lone wolf' : 'Wolf',
+      value: `$${wolfContext.potValue}${wolfContext.carryovers > 0 ? ` +${wolfContext.carryovers}` : ''}`,
+      sub: wolfContext.message,
+      hot: true,
+    });
+  }
+  if (nassauContext) {
+    tiles.push({ key: 'nassau', label: nassauContext.segment, value: tidyStatus(nassauContext.status), sub: nassauContext.message });
+  }
+  if (bestBallContext) {
+    tiles.push({ key: 'bestball', label: 'Best ball', value: tidyStatus(bestBallContext.status), sub: bestBallContext.message });
+  }
+  if (strokeAllocations.length > 0 || (hasHandicaps && onShowStrokes)) {
+    tiles.push({
+      key: 'strokes',
+      label: strokeAllocations.some(a => a.strokes > 1) ? 'Get shots' : 'Gets a shot',
+      value: strokeAllocations.length === 0
+        ? 'Nobody'
+        : strokeAllocations.length <= 2
+        ? strokeAllocations.map(a => (a.strokes > 1 ? `${a.playerName} ×${a.strokes}` : a.playerName)).join(', ')
+        : `${strokeAllocations.length} players`,
+      sub: strokeAllocations.length > 2
+        ? strokeAllocations.map(a => (a.strokes > 1 ? `${a.playerName} ×${a.strokes}` : a.playerName)).join(', ')
+        : undefined,
+      onPress: hasHandicaps ? onShowStrokes : undefined,
+    });
+  }
+  if (houseContext && houseContext.bonuses.length > 0) {
+    tiles.push({ key: 'bonus', label: 'Bonus hole', value: houseContext.bonuses.map(bonusLabel).join(', ') });
+  }
+  for (const need of playerNeeds) {
+    if (!need) continue;
+    tiles.push({ key: `need-${need.playerId}`, label: need.playerName, value: need.message });
+  }
+
+  if (tiles.length === 0) return null;
+
+  // Only the first "hot" tile gets the lime treatment.
+  const hotKey = tiles.find(t => t.hot)?.key ?? null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden"
+    <div
+      className={cn(
+        'grid gap-2',
+        tiles.length === 1 && 'grid-cols-1',
+        tiles.length === 2 && 'grid-cols-2',
+        tiles.length >= 3 && 'grid-flow-col auto-cols-[minmax(108px,1fr)] overflow-x-auto scrollbar-hide -mx-5 px-5',
+      )}
+      aria-label={`Hole ${currentHole} bets`}
     >
-      {/* Header */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full bg-muted/30 px-4 py-3 flex items-center justify-between cursor-pointer"
-      >
-        <div className="flex items-center">
-          <Target className="w-4 h-4 text-muted-foreground mr-2" />
-          <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-            Hole {currentHole} Summary
-          </span>
-        </div>
-        <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 28 }}>
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-        </motion.div>
-      </button>
-
-      <motion.div
-        animate={{ height: isExpanded ? 'auto' : 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-        style={{ overflow: 'hidden' }}
-      >
-        <div className="px-4 pb-4 space-y-2 pt-2">
-          {/* Stroke Allocations */}
-          {strokeAllocations.length > 0 && (
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Strokes:</span>
-              <div className="flex flex-wrap gap-2">
-                {strokeAllocations.map(({ playerId, playerName, strokes }) => (
-                  <span
-                    key={playerId}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/30 text-foreground text-xs font-medium"
-                  >
-                    {playerName}
-                    <span className="flex items-center gap-0.5">
-                      {Array.from({ length: Math.min(strokes, 3) }).map((_, i) => (
-                        <span key={i} className="w-2 h-2 rounded-full bg-[#BEF264] inline-block" />
-                      ))}
-                      {strokes > 3 && <span className="font-bold">+{strokes - 3}</span>}
-                    </span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Skins Context */}
-          {skinsContext && (
-            <div className={cn(
-              "flex items-center gap-2 text-sm px-3 py-2",
-              skinsContext.carryovers > 0 ? "bg-[#FFFBEB] border-l-4 border-[#BEF264] rounded-r-xl" : "bg-muted/30 rounded-xl"
-            )}>
-              <Coins className={cn(
-                "w-4 h-4",
-                skinsContext.carryovers > 0 ? "text-amber-600" : "text-muted-foreground"
-              )} />
-              <span className={cn(
-                "font-medium",
-                skinsContext.carryovers > 0 && "text-amber-700"
-              )}>
-                <span className="font-black text-foreground">${skinsContext.potValue}</span> on the line
-                {skinsContext.carryovers > 0 && ` (${skinsContext.carryovers} carryover${skinsContext.carryovers > 1 ? 's' : ''})`}
+      {tiles.map(tile => {
+        const isHot = tile.key === hotKey;
+        const body = (
+          <>
+            <span className={cn('flex items-center gap-1 text-[12px] font-semibold leading-tight', isHot ? 'text-[#14532D]/80' : 'text-[#CFE3D6]')}>
+              <span className="truncate">{tile.label}</span>
+              {tile.onPress && <ChevronRight className="w-3 h-3 shrink-0" strokeWidth={2.5} />}
+            </span>
+            <span className="mt-0.5 text-[18px] font-extrabold leading-tight tracking-[-0.01em] truncate">{tile.value}</span>
+            {tile.sub && (
+              <span className={cn('mt-0.5 text-[11px] font-medium leading-tight truncate', isHot ? 'text-[#14532D]/80' : 'text-[#CFE3D6]')}>
+                {tile.sub}
               </span>
-            </div>
-          )}
-
-          {/* Nassau Context */}
-          {nassauContext && (
-            <div className={cn(
-              "flex items-center justify-between text-sm px-3 py-2",
-              nassauContext.urgency === 'critical' ? "bg-[#FEF2F2] border-l-4 border-[#EF4444] rounded-r-xl" :
-              nassauContext.urgency === 'opportunity' ? "bg-[#F0FFF4] border-l-4 border-[#22C55E] rounded-r-xl" :
-              "bg-muted/30 rounded-xl"
-            )}>
-              <div className="flex items-center gap-2">
-                <TrendingUp className={cn(
-                  "w-4 h-4",
-                  nassauContext.urgency === 'critical' ? "text-[#EF4444]" :
-                  nassauContext.urgency === 'opportunity' ? "text-[#22C55E]" :
-                  "text-muted-foreground"
-                )} />
-                <span className="font-medium">{nassauContext.segment}:</span>
-                <span>{nassauContext.status}</span>
-              </div>
-              {nassauContext.message && (
-                <span className={cn(
-                  "text-xs px-2 py-0.5 rounded-full font-medium",
-                  nassauContext.urgency === 'critical' ? "bg-[#FEF2F2] text-[#EF4444]" :
-                  nassauContext.urgency === 'opportunity' ? "bg-[#F0FFF4] text-[#22C55E]" :
-                  "bg-muted text-muted-foreground"
-                )}>
-                  {nassauContext.message}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Best Ball Context */}
-          {bestBallContext && (
-            <div className={cn(
-              "flex items-center justify-between text-sm px-3 py-2",
-              bestBallContext.urgency === 'critical' ? "bg-[#FEF2F2] border-l-4 border-[#EF4444] rounded-r-xl" :
-              bestBallContext.urgency === 'opportunity' ? "bg-[#F0FFF4] border-l-4 border-[#22C55E] rounded-r-xl" :
-              "bg-muted/30 rounded-xl"
-            )}>
-              <div className="flex items-center gap-2">
-                <Users className={cn(
-                  "w-4 h-4",
-                  bestBallContext.urgency === 'critical' ? "text-[#EF4444]" :
-                  bestBallContext.urgency === 'opportunity' ? "text-[#22C55E]" :
-                  "text-muted-foreground"
-                )} />
-                <span className="font-medium">{bestBallContext.status}</span>
-              </div>
-              {bestBallContext.message && (
-                <span className={cn(
-                  "text-xs px-2 py-0.5 rounded-full font-medium",
-                  bestBallContext.urgency === 'critical' ? "bg-[#FEF2F2] text-[#EF4444]" :
-                  bestBallContext.urgency === 'opportunity' ? "bg-[#F0FFF4] text-[#22C55E]" :
-                  "bg-muted text-muted-foreground"
-                )}>
-                  {bestBallContext.message}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Wolf Context */}
-          {wolfContext && (
-            <div className={cn(
-              "flex items-center justify-between text-sm px-3 py-2",
-              wolfContext.isBlindWolf ? "bg-[#FFFBEB] border-l-4 border-[#BEF264] rounded-r-xl" :
-              wolfContext.isLoneWolf ? "bg-[#FFFBEB] border-l-4 border-[#BEF264] rounded-r-xl" :
-              "bg-muted/30 rounded-xl"
-            )}>
-              <div className="flex items-center gap-2">
-                {wolfContext.isLoneWolf || wolfContext.isBlindWolf ? (
-                  <Dog className="w-4 h-4 text-amber-600" />
-                ) : (
-                  <Crown className="w-4 h-4 text-muted-foreground" />
-                )}
-                <span className="font-medium">{wolfContext.message}</span>
-              </div>
-              <div className="text-right">
-                <span className="font-black text-foreground">
-                  ${wolfContext.potValue}
-                </span>
-                {wolfContext.carryovers > 0 && (
-                  <span className="text-xs text-amber-600 ml-1">
-                    (+{wolfContext.carryovers})
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* House Game Context */}
-          {houseContext && (
-            <div className="space-y-1.5">
-              {houseContext.potMessage && (
-                <div className="flex items-center gap-2 text-sm px-3 py-2 bg-[#FFFBEB] border-l-4 border-[#BEF264] rounded-r-xl">
-                  <Coins className="w-4 h-4 text-amber-600" />
-                  <span className="font-medium">
-                    <span className="font-black text-foreground">{houseContext.potMessage}</span>
-                  </span>
-                </div>
-              )}
-              {houseContext.bonuses.length > 0 && (
-                <div className="flex flex-wrap gap-1 px-1">
-                  {houseContext.bonuses.map((b, i) => (
-                    <span key={`${b}-${i}`} className="text-[10px] font-bold bg-[#BEF264] text-[#0F1F17] px-2 py-0.5 rounded-full">
-                      {b === 'bonus_par5_double' ? '2× Par 5' :
-                       b === 'bonus_birdie_unit' ? 'Birdie Bonus' :
-                       b === 'bonus_eagle_unit' ? 'Eagle Bonus' :
-                       b === 'bonus_last_hole_double' ? '2× Last Hole' :
-                       b === 'bonus_greenie' ? 'Greenie' :
-                       b.replace(/^bonus_/, '').replace(/_/g, ' ')}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {playerNeeds.length > 0 && (
-            <div className="pt-1 border-t border-border/30 space-y-1">
-              {playerNeeds.map((need) => need && (
-                <div
-                  key={need.playerId}
-                  className="flex items-center justify-between text-xs"
-                >
-                  <span className="text-muted-foreground">{need.playerName}:</span>
-                  <span className={cn(
-                    "font-medium",
-                    need.urgency === 'opportunity' && "text-[#22C55E]",
-                    need.urgency === 'critical' && "text-[#EF4444]"
-                  )}>
-                    {need.message}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </motion.div>
-    </motion.div>
+            )}
+          </>
+        );
+        const tileClass = cn(
+          'min-w-0 rounded-[14px] px-3 py-2.5 text-left min-h-[56px] flex flex-col justify-center',
+          isHot ? 'bg-[#BEF264] text-[#14532D]' : 'bg-white/10 text-white',
+        );
+        return tile.onPress ? (
+          <button
+            key={tile.key}
+            type="button"
+            onClick={tile.onPress}
+            aria-label={`${tile.label}: ${tile.value}. Show stroke allocation`}
+            className={cn(tileClass, 'touch-manipulation active:bg-white/20')}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+          >
+            {body}
+          </button>
+        ) : (
+          <div key={tile.key} className={tileClass}>{body}</div>
+        );
+      })}
+    </div>
   );
+}
+
+interface BetTile {
+  key: string;
+  label: string;
+  value: string;
+  sub?: string;
+  hot?: boolean;
+  onPress?: () => void;
+}
+
+/** "Mike 2 UP" -> "Mike 2 up" (sentence case for display only). */
+function tidyStatus(status: string): string {
+  return status.replace(/\bUP\b/g, 'up').replace(/\bDN\b/g, 'down').replace(/^All Square$/i, 'All square');
+}
+
+function bonusLabel(b: string): string {
+  switch (b) {
+    case 'bonus_par5_double': return '2× par 5';
+    case 'bonus_birdie_unit': return 'Birdie bonus';
+    case 'bonus_eagle_unit': return 'Eagle bonus';
+    case 'bonus_last_hole_double': return '2× last hole';
+    case 'bonus_greenie': return 'Greenie';
+    default: return b.replace(/^bonus_/, '').replace(/_/g, ' ');
+  }
 }

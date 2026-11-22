@@ -25,7 +25,7 @@ export function DashboardSkinsCard({ result }: DashboardSkinsCardProps) {
           <div key={s.playerId} className="flex items-center px-4 py-2.5">
             <span className={cn(
               'text-[12px] font-bold w-5',
-              i === 0 && s.skins > 0 ? 'text-amber-600' : 'text-muted-foreground'
+              i === 0 && s.skins > 0 ? 'text-[#14532D]' : 'text-muted-foreground'
             )}>
               {i + 1}
             </span>
@@ -33,7 +33,7 @@ export function DashboardSkinsCard({ result }: DashboardSkinsCardProps) {
             <span className="text-[12px] text-muted-foreground mr-3">{s.skins} skin{s.skins !== 1 ? 's' : ''}</span>
             <span className={cn(
               'text-[13px] font-bold min-w-[48px] text-right',
-              s.earnings > 0 ? 'text-emerald-600' : s.earnings < 0 ? 'text-red-500' : 'text-muted-foreground'
+              s.earnings > 0 ? 'text-[#14532D]' : s.earnings < 0 ? 'text-[#B42318]' : 'text-muted-foreground'
             )}>
               {s.earnings > 0 ? '+' : ''}{s.earnings !== 0 ? `$${Math.abs(s.earnings).toFixed(0)}` : '-'}
             </span>
@@ -50,7 +50,7 @@ export function DashboardSkinsCard({ result }: DashboardSkinsCardProps) {
               className={cn(
                 'w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold',
                 r.winnerId
-                  ? 'bg-amber-100 text-amber-700'
+                  ? 'bg-[#ECFCCB] text-[#14532D]'
                   : 'bg-muted/30 text-muted-foreground/50'
               )}
             >

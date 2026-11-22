@@ -81,7 +81,7 @@ export default function WatchParty() {
       <div className="h-dvh flex flex-col items-center justify-center bg-white px-6 text-center">
         <span className="text-4xl mb-3">🚫</span>
         <p className="text-[15px] font-semibold text-gray-800 mb-1">Can't join this Watch Party</p>
-        <p className="text-[13px] text-gray-500 mb-6">
+        <p className="text-[13px] text-[#5A6B61] mb-6">
           {partyError || 'You need to be friends with a player to watch.'}
         </p>
         <button
@@ -114,7 +114,7 @@ export default function WatchParty() {
         {!isRoundComplete ? (
           <button
             onClick={handleLeave}
-            className="p-1.5 -mr-1.5 text-gray-400"
+            className="p-1.5 -mr-1.5 text-[#5A6B61]"
             aria-label="Leave watch party"
           >
             <X className="w-5 h-5" />
