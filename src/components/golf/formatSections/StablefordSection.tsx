@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Lock, BarChart3 } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
@@ -9,6 +9,10 @@ import {
   iconBoxClass,
   iconClass,
   springTransition,
+  gameDetailPanel,
+  optionRow,
+  optionCheckbox,
+  ruleNote,
 } from '../formatStepStyles';
 import { ProLabel } from './ProLabel';
 
@@ -38,20 +42,19 @@ export function StablefordSection({
       className={cn(
         gameCardBase,
         stablefordEnabled && allowed && gameCardSelected,
-        !allowed && 'opacity-60'
+        !allowed && 'opacity-70'
       )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {!allowed && <Lock className="w-4 h-4 text-muted-foreground" />}
           <div className={iconBoxClass(stablefordEnabled && allowed, !allowed)}>
             <BarChart3 className={iconClass(stablefordEnabled && allowed, !allowed)} />
           </div>
           <div>
-            <p className="font-bold text-sm text-foreground flex items-center gap-2">
+            <p className="font-semibold text-[16px] text-foreground flex items-center gap-2">
               Stableford{!allowed && <ProLabel />}
             </p>
-            <p className="text-[12px] text-muted-foreground mt-0.5">Points-based scoring</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">Points-based scoring</p>
           </div>
         </div>
         <Switch
@@ -67,16 +70,16 @@ export function StablefordSection({
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           transition={springTransition}
-          className="pt-3 mt-3 border-t border-border/50 space-y-3"
+          className={gameDetailPanel}
           onClick={e => e.stopPropagation()}
         >
-          <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg font-mono">
+          <div className={ruleNote}>
             Eagle: 4 • Birdie: 3 • Par: 2 • Bogey: 1 • 2+: 0
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className={optionRow}>
             <Checkbox
               id="modifiedStableford" checked={stablefordModified}
-              className="w-4 h-4 rounded border-border"
+              className={optionCheckbox}
               onCheckedChange={checked => onStablefordModifiedChange(checked === true)}
             />
             <label htmlFor="modifiedStableford">Modified (aggressive with negatives)</label>

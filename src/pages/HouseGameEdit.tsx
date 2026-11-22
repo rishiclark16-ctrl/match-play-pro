@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, Trash2, Globe, Lock } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Check, Trash2, Globe, Lock, Sparkles } from 'lucide-react';
 import { useHouseGame } from '@/hooks/useHouseGame';
 import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,6 +12,10 @@ import { Switch } from '@/components/ui/switch';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { HeroCard, HeroTile, SetupHeader } from '@/components/golf/setupUi';
+import { NoticeCard } from '@/components/golf/HouseGameConfirmParts';
+import { fdPrimaryCta } from '@/components/golf/setupStyles';
+import { cn } from '@/lib/utils';
 
 // ── Main edit page ────────────────────────────────────────────────────────────
 export default function HouseGameEdit() {
@@ -186,21 +190,17 @@ export default function HouseGameEdit() {
 
   const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
   const currentSource = isPersonal ? personalFormat : houseGame;
+  const back = () => navigate(-1);
 
   if (loading) {
     return (
-      <div className="h-screen flex flex-col bg-[#FAFAF7]">
-        <header className="flex-shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-muted" />
-            <div className="h-6 w-40 bg-muted rounded-lg" />
-          </div>
-        </header>
+      <div className="h-screen flex flex-col bg-background">
+        <SetupHeader onBack={back} caption={isPersonal ? 'My Format' : 'House Game'} title="Edit Rules" />
         <div className="flex-1 flex items-center justify-center">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-            className="w-6 h-6 rounded-full border-2 border-foreground border-t-transparent"
+            className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent"
           />
         </div>
       </div>
@@ -208,87 +208,74 @@ export default function HouseGameEdit() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#FAFAF7]">
-      {/* Header */}
-      <header className="flex-shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground">
-        <div className="flex items-center gap-3">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
-          >
-            <ArrowLeft className="w-4 h-4 text-foreground" />
-          </motion.button>
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              {isPersonal ? 'My Format' : 'House Game'}
-            </p>
-            <h1 className="text-[22px] font-black tracking-[-0.04em] text-foreground leading-none">Edit Rules</h1>
-          </div>
+    <div className="h-screen flex flex-col bg-background">
+      <SetupHeader
+        onBack={back}
+        caption={isPersonal ? 'My Format' : 'House Game'}
+        title="Edit Rules"
+        right={
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={handleDelete}
             disabled={deleting}
-            className="ml-auto w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center disabled:opacity-40"
+            aria-label={isPersonal ? 'Delete format' : 'Delete house game'}
+            className="w-11 h-11 rounded-[14px] bg-[#FEF3F2] flex items-center justify-center disabled:opacity-40 flex-shrink-0"
           >
-            <Trash2 className="w-4 h-4 text-red-500" />
+            <Trash2 className="w-5 h-5 text-destructive" />
           </motion.button>
-        </div>
-      </header>
+        }
+      />
 
-      {currentSource && (
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mx-6 mt-4 bg-[#0F1F17] rounded-2xl px-4 py-3"
+      <main className="flex-1 overflow-y-auto px-5 pt-2 pb-nav flex flex-col gap-3.5">
+        <HeroCard
+          eyebrow={<span className="inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-gold" /> {isPersonal ? 'Your format' : 'Group house game'}</span>}
+          title={gameName || (isPersonal ? 'My Format' : 'House Game')}
+          body={currentSource?.description || undefined}
         >
-          <p className="text-white/50 text-[11px] font-bold uppercase tracking-[0.08em]">Current</p>
-          <p className="text-white text-[13px] font-bold mt-0.5 line-clamp-2">
-            {currentSource.description || currentSource.name}
-          </p>
-        </motion.div>
-      )}
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            <HeroTile hot value={checkedIds.size} label={checkedIds.size === 1 ? 'Rule on' : 'Rules on'} />
+            {isPersonal && personalFormat
+              ? <HeroTile value={personalFormat.isPublic ? 'Public' : 'Private'} label="Visibility" />
+              : <HeroTile value={CATEGORY_ORDER.filter(c => PRIMITIVES_BY_CATEGORY[c]?.some(p => checkedIds.has(p.id))).length} label="Categories" />}
+          </div>
+        </HeroCard>
 
-      {hasActiveRound && (
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mx-6 mt-3 bg-[#FFF3CD] border border-[#F0BB3A] rounded-2xl px-4 py-3"
-        >
-          <p className="text-[#7D4E0F] font-bold text-[13px]">Round in progress</p>
-          <p className="text-[#7D4E0F]/70 text-[12px] mt-0.5 leading-snug">
-            Changes will apply to your next round, not the current one.
-          </p>
-        </motion.div>
-      )}
+        {hasActiveRound && (
+          <NoticeCard title="Round in progress">
+            <p className="text-[#7C4A03]/80 text-[13px] mt-0.5 leading-snug">
+              Changes will apply to your next round, not the current one.
+            </p>
+          </NoticeCard>
+        )}
 
-      <main className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4 pb-32 mt-3">
-        {/* Game name */}
         <div>
-          <label className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground block mb-1.5">
-            {isPersonal ? 'Format Name' : 'Game Name'}
+          <label htmlFor="edit-format-name" className="block text-[13px] font-semibold text-muted-foreground mb-1.5 px-1">
+            {isPersonal ? 'Format name' : 'Game name'}
           </label>
           <input
+            id="edit-format-name"
             type="text"
             value={gameName}
             onChange={e => setGameName(e.target.value)}
             maxLength={40}
             placeholder={isPersonal ? 'My Format' : 'House Game'}
-            className="w-full bg-white border-2 border-foreground/20 focus:border-foreground rounded-xl px-4 py-3 text-[15px] font-bold text-foreground placeholder:text-muted-foreground/50 outline-none transition-colors"
+            className="w-full h-14 bg-card border border-border focus:border-primary rounded-[20px] px-4 text-[17px] font-bold text-foreground placeholder:text-muted-foreground/60 outline-none focus-visible:outline-none transition-colors"
           />
         </div>
 
         {isPersonal && personalFormat && (
-          <div className="flex items-center justify-between bg-white rounded-2xl px-4 py-3 mb-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)] border border-border/30">
-            <div className="flex items-center gap-2.5">
-              {personalFormat.isPublic
-                ? <Globe className="w-4 h-4 text-foreground" />
-                : <Lock className="w-4 h-4 text-muted-foreground" />}
+          <div className="flex items-center justify-between gap-3 bg-card rounded-[20px] border border-border px-4 min-h-[64px]">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-[14px] bg-muted flex items-center justify-center">
+                {personalFormat.isPublic
+                  ? <Globe className="w-5 h-5 text-primary" />
+                  : <Lock className="w-5 h-5 text-muted-foreground" />}
+              </div>
               <div>
-                <p className="text-[13px] font-bold text-foreground">
+                <p className="text-[16px] font-semibold text-foreground">
                   {personalFormat.isPublic ? 'Public' : 'Private'}
                 </p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
+                <p className="text-[13px] text-muted-foreground">
                   {personalFormat.isPublic
                     ? 'Friends in your group can use this format'
                     : 'Only visible to you'}
@@ -297,6 +284,7 @@ export default function HouseGameEdit() {
             </div>
             <Switch
               checked={personalFormat.isPublic ?? false}
+              aria-label="Public format"
               onCheckedChange={async (checked) => {
                 hapticLight();
                 if (personalFormat?.id) await togglePublic(personalFormat.id, checked);
@@ -305,78 +293,58 @@ export default function HouseGameEdit() {
           </div>
         )}
 
+        <p className="text-[13px] font-semibold text-muted-foreground px-1 mt-2 -mb-1.5">Rules</p>
         <div className="flex flex-col gap-2">
-        {CATEGORY_ORDER.map((catId, i) => {
-          const prims = PRIMITIVES_BY_CATEGORY[catId];
-          if (!prims?.length) return null;
-          const hasChecked = prims.some(p => checkedIds.has(p.id));
-          return (
-            <motion.div
-              key={catId}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ ...spring, delay: 0.05 + i * 0.03 }}
-            >
-              <CategorySection
-                categoryId={catId}
-                label={CATEGORY_LABELS[catId]}
-                primitives={prims}
-                checkedIds={checkedIds}
-                valueMap={valueMap}
-                onToggle={handleToggle}
-                onValueChange={handleValueChange}
-                defaultOpen={hasChecked}
-              />
-            </motion.div>
-          );
-        })}
+          {CATEGORY_ORDER.map((catId, i) => {
+            const prims = PRIMITIVES_BY_CATEGORY[catId];
+            if (!prims?.length) return null;
+            const hasChecked = prims.some(p => checkedIds.has(p.id));
+            return (
+              <motion.div
+                key={catId}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...spring, delay: 0.05 + i * 0.03 }}
+              >
+                <CategorySection
+                  categoryId={catId}
+                  label={CATEGORY_LABELS[catId]}
+                  primitives={prims}
+                  checkedIds={checkedIds}
+                  valueMap={valueMap}
+                  onToggle={handleToggle}
+                  onValueChange={handleValueChange}
+                  defaultOpen={hasChecked}
+                />
+              </motion.div>
+            );
+          })}
         </div>
-      </main>
 
-      {/* CTA */}
-      <div className="absolute bottom-0 left-0 right-0 px-6 pb-safe pt-4 bg-[#FAFAF7] border-t border-border/30">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[12px] text-muted-foreground">
-            {checkedIds.size} rule{checkedIds.size !== 1 ? 's' : ''} active
-          </span>
-        </div>
+        {/* Save — in the flow so the bottom nav can't cover it */}
         <motion.button
-          whileTap={{ scale: 0.97 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleSave}
           disabled={checkedIds.size === 0 || saving}
-          className="w-full bg-foreground text-background rounded-2xl h-[54px] font-bold text-[15px] flex items-center justify-center gap-2 disabled:opacity-40"
+          className={cn(fdPrimaryCta, 'mt-2')}
         >
-          <AnimatePresence mode="wait">
-            {saving ? (
+          {saving ? (
+            <>
               <motion.div
-                key="saving"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center gap-2"
-              >
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                  className="w-5 h-5 rounded-full border-2 border-background border-t-transparent"
-                />
-                <span>Saving changes...</span>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="idle"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center gap-2"
-              >
-                <Check className="w-5 h-5" />
-                <span>Save Changes</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                className="w-5 h-5 rounded-full border-2 border-white border-t-transparent"
+              />
+              <span>Saving changes...</span>
+            </>
+          ) : (
+            <>
+              <Check className="w-5 h-5 text-gold" />
+              <span>Save Changes · {checkedIds.size} rule{checkedIds.size !== 1 ? 's' : ''}</span>
+            </>
+          )}
         </motion.button>
-      </div>
+      </main>
     </div>
   );
 }

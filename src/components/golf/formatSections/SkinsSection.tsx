@@ -11,6 +11,13 @@ import {
   iconBoxClass,
   iconClass,
   springTransition,
+  gameDetailPanel,
+  stakeRow,
+  stakeCurrency,
+  stakeInput,
+  stakeSuffix,
+  optionRow,
+  optionCheckbox,
 } from '../formatStepStyles';
 
 export interface SkinsSectionProps {
@@ -45,8 +52,8 @@ export function SkinsSection({
             <DollarSign className={iconClass(skinsEnabled)} />
           </div>
           <div>
-            <p className="font-bold text-sm text-foreground">Skins</p>
-            <p className="text-[12px] text-muted-foreground mt-0.5">Win the hole outright to claim</p>
+            <p className="font-semibold text-[16px] text-foreground">Skins</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">Win the hole outright to claim</p>
           </div>
         </div>
         <Switch checked={skinsEnabled} onCheckedChange={onSkinsEnabledChange} onClick={e => e.stopPropagation()} />
@@ -57,26 +64,26 @@ export function SkinsSection({
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           transition={springTransition}
-          className="pt-3 mt-3 border-t border-border/50 space-y-3"
+          className={gameDetailPanel}
           onClick={e => e.stopPropagation()}
         >
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-muted-foreground">$</span>
+          <div className={stakeRow}>
+            <span className={stakeCurrency}>$</span>
             <Input
               type="number" placeholder="2" value={skinsStakes}
               onChange={e => onSkinsStakesChange(e.target.value)}
-              className="w-24 text-center font-mono bg-muted/50 rounded-xl border-0 py-2.5 text-sm"
+              className={stakeInput}
               min={1}
             />
-            <span className="text-sm text-muted-foreground">per hole</span>
+            <span className={stakeSuffix}>per hole</span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className={optionRow}>
             <Checkbox
               id="carryover"
               checked={skinsCarryover}
               disabled={!canUseSkinsCarryover()}
-              className="w-4 h-4 rounded border-border"
+              className={optionCheckbox}
               onCheckedChange={checked => {
                 if (canUseSkinsCarryover()) onSkinsCarryoverChange(checked === true);
                 else onProFeatureBlock('Skins Carryover');

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Flag } from 'lucide-react';
+import { Flag, Sparkles } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PaywallModal } from '@/components/subscription';
 import { cn } from '@/lib/utils';
 import { PersonalGameFormat } from '@/types/houseGame';
 import { SavedFormatsPicker } from './SavedFormatsPicker';
+import { HeroCard, HeroTile } from './setupUi';
+import { buildConfig, summarizeScoringConfig } from '@/engine/HouseGameEngine';
 import { MatchPlaySection } from './MatchPlaySection';
 import {
   SkinsSection,
@@ -192,13 +194,64 @@ export function FormatStep({
     setShowPaywall(true);
   };
 
+  // Display-only summary for the hero (mirrors each section's player-count gate).
+  const gamesOn = [
+    strokePlay,
+    matchPlay,
+    skinsEnabled,
+    nassauEnabled,
+    stablefordEnabled,
+    bestBallEnabled && playerCount >= 2,
+    wolfEnabled && (playerCount === 3 || playerCount === 4),
+    vegasEnabled && playerCount === 4,
+    ninesEnabled && playerCount === 3,
+    defenderEnabled && (playerCount === 3 || playerCount === 4),
+    sixesEnabled && playerCount === 4,
+  ].filter(Boolean).length;
+
+  const activeFormat = formatActive
+    ? personalFormats?.find(f => f.id === selectedPersonalFormatId) ?? groupAssignedFormat ?? null
+    : null;
+  const rulePills = activeFormat
+    ? summarizeScoringConfig(buildConfig(activeFormat.activePrimitives), 6)
+    : [];
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="pt-4"
+      className="pt-2"
     >
+      {formatActive ? (
+        <HeroCard
+          eyebrow={<span className="inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-gold" /> Your format is on</span>}
+          title={selectedFormatName ?? 'Format'}
+          body="It controls all scoring, bets and handicaps for this round."
+        >
+          {rulePills.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-4">
+              {rulePills.map(pill => (
+                <span key={pill} className="text-[12px] font-semibold bg-white/10 text-white px-3 py-1.5 rounded-full">
+                  {pill}
+                </span>
+              ))}
+            </div>
+          )}
+        </HeroCard>
+      ) : (
+        <HeroCard
+          eyebrow="Games"
+          title="What are you playing for?"
+          body="Turn on a scoring format and any side games, or load a saved format."
+        >
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            <HeroTile hot value={gamesOn} label={gamesOn === 1 ? 'Game on' : 'Games on'} />
+            <HeroTile value={playerCount} label={playerCount === 1 ? 'Player' : 'Players'} />
+          </div>
+        </HeroCard>
+      )}
+
       <SavedFormatsPicker
         groupAssignedFormat={groupAssignedFormat}
         personalFormats={personalFormats}
@@ -213,7 +266,7 @@ export function FormatStep({
       />
 
       {/* Scoring Section — hidden when format controls scoring */}
-      {!formatActive && <p className={sectionLabel}>Scoring Format</p>}
+      {!formatActive && <p className={sectionLabel}>Scoring format</p>}
 
       {!formatActive && (
       <>
@@ -232,8 +285,8 @@ export function FormatStep({
               <Flag className={iconClass(strokePlay)} />
             </div>
             <div>
-              <p className="font-bold text-sm text-foreground">Stroke Play</p>
-              <p className="text-[12px] text-muted-foreground mt-0.5">Traditional scoring, lowest total wins</p>
+              <p className="font-semibold text-[16px] text-foreground">Stroke Play</p>
+              <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">Traditional scoring, lowest total wins</p>
             </div>
           </div>
           <Switch checked={strokePlay} onCheckedChange={onStrokePlayChange} onClick={e => e.stopPropagation()} />
@@ -255,7 +308,7 @@ export function FormatStep({
       />
 
       {/* Side Games */}
-      <p className={sectionLabel}>Side Games</p>
+      <p className={sectionLabel}>Side games</p>
 
       <SkinsSection
         skinsEnabled={skinsEnabled}
