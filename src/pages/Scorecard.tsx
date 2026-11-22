@@ -9,6 +9,7 @@ import { HoleSummary } from '@/components/golf/HoleSummary';
 import { LiveLeaderboard } from '@/components/golf/LiveLeaderboard';
 import { ScorecardBanners } from '@/components/golf/ScorecardBanners';
 import { MoneyTracker } from '@/components/golf/MoneyTracker';
+import { useResumeHole } from '@/hooks/useResumeHole';
 import { PlayoffMode } from '@/components/golf/PlayoffMode';
 import { FinishOptionsOverlay } from '@/components/golf/FinishOptionsOverlay';
 import { ScorecardBottomBar } from '@/components/golf/ScorecardBottomBar';
@@ -159,6 +160,9 @@ export default function Scorecard() {
 
   // Use appropriate players list
   const playersWithScores: PlayerWithScores[] = useSupabaseData ? supabasePlayersWithScores : localPlayersWithScores;
+
+  // Re-opening mid-round lands on the hole the group is on, not hole 1
+  useResumeHole({ roundId: round?.id, totalHoles: round?.holes, players: playersWithScores, scores: roundScores, loading: supabaseLoading, setCurrentHole });
 
   // Detect solo rounds (1 real player, 0 games) so we can strip the multiplayer UI.
   const isSolo = useMemo(

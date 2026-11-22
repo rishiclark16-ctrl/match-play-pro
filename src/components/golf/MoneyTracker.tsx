@@ -5,6 +5,7 @@ import { TrendingUp, TrendingDown, Flame, Sparkles, ChevronRight } from 'lucide-
 import { PlayerWithScores, GameConfig, HoleInfo, Score, Press } from '@/types/golf';
 import { PropBet } from '@/types/betting';
 import { calculateLiveMoney, formatMoney, getMoneyColor } from '@/lib/games/moneyTracker';
+import { liveMoneyThroughHole } from '@/lib/scorecardProgress';
 import { BettingBreakdownSheet } from './BettingBreakdownSheet';
 import { cn } from '@/lib/utils';
 
@@ -38,15 +39,20 @@ export function MoneyTracker({
 
     if (!hasGames && !hasPropBetWinners) return null;
 
-    // Get previous hole's money state for comparison
-    const previousMoney = currentHole > 1
+    // Live money is the round's money right now, through the latest scored hole,
+    // not just up to the hole being viewed (otherwise reviewing hole 1 showed
+    // "All even" while the games below showed real winnings).
+    const throughHole = liveMoneyThroughHole(scores, currentHole, holeInfo.length || 18);
+
+    // Previous hole's money state, for the per-hole change arrows
+    const previousMoney = throughHole > 1
       ? new Map(
-          calculateLiveMoney(players, scores, games, holeInfo, presses, currentHole - 1, undefined, propBets)
+          calculateLiveMoney(players, scores, games, holeInfo, presses, throughHole - 1, undefined, propBets)
             .players.map(p => [p.playerId, p.currentBalance])
         )
       : undefined;
 
-    return calculateLiveMoney(players, scores, games, holeInfo, presses, currentHole, previousMoney, propBets);
+    return calculateLiveMoney(players, scores, games, holeInfo, presses, throughHole, previousMoney, propBets);
   }, [players, scores, games, holeInfo, presses, currentHole, propBets]);
 
   // Prepare breakdown data for the sheet - must be before early return
