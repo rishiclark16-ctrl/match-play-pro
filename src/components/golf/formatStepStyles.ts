@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
  * sections. Keeps the component split decoupled from inline-style duplication.
  */
 
-export const springTransition = { type: 'spring', stiffness: 300, damping: 28 };
+export const springTransition = { type: 'spring' as const, stiffness: 300, damping: 28 };
 
 export const sectionLabel =
   'text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2 mt-5';

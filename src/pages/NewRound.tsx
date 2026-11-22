@@ -298,10 +298,10 @@ export default function NewRound() {
     : ['mode', 'course', 'players', 'format'];
   const currentStepIndex = steps.indexOf(step);
   const stepConfig = {
-    mode: { title: 'New Round', icon: Flag },
-    course: { title: 'Course Setup', icon: Flag },
-    players: { title: 'Add Players', icon: Users },
-    format: { title: 'Game Format', icon: Gamepad2 },
+    mode: { title: 'New round', icon: Flag },
+    course: { title: 'Course', icon: Flag },
+    players: { title: 'Players', icon: Users },
+    format: { title: 'Games', icon: Gamepad2 },
   };
 
   const isFinalStep = step === steps[steps.length - 1];
@@ -320,7 +320,7 @@ export default function NewRound() {
 
       {/* Scrollable Content */}
       <main
-        className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-32 bg-background"
+        className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain relative z-10 px-5 pb-36 bg-background"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <AnimatePresence mode="wait">
@@ -477,11 +477,7 @@ export default function NewRound() {
         isOpen={showTeeSelector}
         courseDetails={pendingCourseDetails}
         onSelectTee={handleTeeSelect}
-        onClose={() => {
-          setShowTeeSelector(false);
-          setPendingCourseDetails(null);
-          setPendingApiCourse(null);
-        }}
+        onClose={() => setShowTeeSelector(false)}
       />
 
       <PaywallModal
