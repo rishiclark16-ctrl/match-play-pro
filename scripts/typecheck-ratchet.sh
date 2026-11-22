@@ -3,7 +3,7 @@
 # The app never ran tsc in CI, which let money bugs ship (Notion 09.2 M1/M2 were
 # TS2345 errors). Lower TS_BASELINE as errors are fixed; never raise it.
 set -euo pipefail
-TS_BASELINE=197
+TS_BASELINE=196
 count=$(bunx tsc -p tsconfig.app.json --noEmit 2>&1 | grep -c "error TS" || true)
 echo "TypeScript errors: ${count} (baseline ${TS_BASELINE})"
 if [ "${count}" -gt "${TS_BASELINE}" ]; then

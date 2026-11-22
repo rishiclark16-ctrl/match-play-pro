@@ -167,7 +167,7 @@ test.describe('Live Money Tracker — House Game Skins', () => {
     await expect(page.getByText('Live Money')).toBeVisible({ timeout: 10000 });
 
     // Click Alice's row in the money tracker
-    const moneyTracker = page.locator('[class*="bg-\\[\\#0A0A0A\\]"]');
+    const moneyTracker = page.getByTestId('money-tracker');
     const aliceRow = moneyTracker.locator('button').filter({ hasText: 'Alice' });
     await aliceRow.click();
 
