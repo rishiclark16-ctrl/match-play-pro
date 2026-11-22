@@ -23,9 +23,9 @@ export function OnboardingStep({ stepKey, children }: { stepKey: string; childre
 /** "Step n of N" caption, title and supporting line. */
 export function OnboardingIntro({ step, total, title, body }: { step: number; total: number; title: string; body: string }) {
   return (
-    <div className="mb-8">
+    <div className="mb-7">
       <p className="text-[13px] font-semibold text-primary mb-2">Step {step} of {total}</p>
-      <h1 className="text-[32px] font-extrabold tracking-[-0.02em] text-foreground leading-[1.1] mb-3">{title}</h1>
+      <h1 className="text-[30px] font-extrabold tracking-[-0.02em] text-foreground leading-[1.1] mb-2.5">{title}</h1>
       <p className="text-[15px] text-muted-foreground leading-relaxed">{body}</p>
     </div>
   );
@@ -63,4 +63,4 @@ export function OnboardingProgress({ total, current }: { total: number; current:
 
 /** Text input styles for the big onboarding fields (bare input inside OnboardingField). */
 export const onboardingInputClass =
-  'w-full min-w-0 bg-transparent outline-none text-foreground font-extrabold tracking-[-0.01em] placeholder:text-muted-foreground/35 placeholder:font-bold';
+  'w-full min-w-0 bg-transparent outline-none focus-visible:outline-none text-foreground font-extrabold tracking-[-0.01em] placeholder:text-muted-foreground/35 placeholder:font-bold';
