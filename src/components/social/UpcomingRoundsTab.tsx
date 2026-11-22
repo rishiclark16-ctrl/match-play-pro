@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Plus } from 'lucide-react';
+import { CalendarPlus, Calendar } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUpcomingRounds, UpcomingRound } from '@/hooks/useUpcomingRounds';
 import { UpcomingRoundCard } from './UpcomingRoundCard';
@@ -15,34 +15,31 @@ export function UpcomingRoundsTab() {
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
-    <div className="px-4 pt-4 pb-4 space-y-4">
-      {/* Schedule button */}
+    <div className="px-5 pt-2 pb-6 space-y-[18px]">
+      {/* Primary CTA */}
       <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={() => setCreateOpen(true)}
-        className="w-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 rounded-2xl py-3.5 font-bold text-sm flex items-center justify-center gap-2"
+        className="w-full h-[60px] rounded-[20px] bg-foreground text-background text-[16px] font-bold flex items-center justify-center gap-2.5"
       >
-        <Plus className="w-4 h-4" />
-        Schedule a Round
+        <CalendarPlus className="h-5 w-5" />
+        Schedule a round
       </motion.button>
 
-      {/* Round list */}
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground mb-3 px-0.5">
-          Upcoming
-        </p>
+      <section>
+        <p className="text-[13px] font-semibold text-muted-foreground mb-2 px-1">Upcoming</p>
 
         {loading ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <FeedItemSkeleton />
             <FeedItemSkeleton />
           </div>
         ) : error ? (
-          <div className="text-center py-10 bg-white rounded-2xl">
-            <p className="text-[13px] text-muted-foreground mb-3">{error}</p>
+          <div className="rounded-[20px] border border-border bg-card px-6 py-8 text-center">
+            <p className="text-[14px] text-muted-foreground mb-3">{error}</p>
             <button
               onClick={refetch}
-              className="text-[12px] font-bold text-foreground bg-muted px-4 py-2 rounded-xl"
+              className="h-11 rounded-[14px] bg-muted px-4 text-[14px] font-semibold text-primary"
             >
               Try again
             </button>
@@ -51,18 +48,18 @@ export function UpcomingRoundsTab() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-12 px-6 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+            className="rounded-[20px] border border-dashed border-border-strong px-6 py-8 text-center"
           >
-            <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
-              <Calendar className="w-8 h-8 text-muted-foreground" />
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-[16px] bg-muted text-primary">
+              <Calendar className="h-6 w-6" />
             </div>
-            <h3 className="text-[13px] font-bold text-foreground mb-1">No upcoming rounds</h3>
-            <p className="text-[12px] text-muted-foreground leading-relaxed max-w-[240px] mx-auto">
-              Schedule a round with friends to plan your next game and chat before you play.
+            <h3 className="text-[16px] font-semibold text-foreground">Nothing on the tee sheet</h3>
+            <p className="mx-auto mt-1 max-w-[250px] text-[13px] leading-relaxed text-muted-foreground">
+              Schedule a round to lock in the time, invite the group and talk trash before you play.
             </p>
           </motion.div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <AnimatePresence>
               {rounds.map((round, i) => (
                 <motion.div
@@ -81,7 +78,7 @@ export function UpcomingRoundsTab() {
             </AnimatePresence>
           </div>
         )}
-      </div>
+      </section>
 
       {/* Sheets */}
       <RoundChatSheet

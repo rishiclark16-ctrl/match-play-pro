@@ -37,7 +37,6 @@ function timeAgo(iso: string): string {
 
 export function FeedItem({ item, onPress, currentUserId }: FeedItemProps) {
   const navigate = useNavigate();
-  const playerCount = item.participantIds.filter(Boolean).length || 1;
   const firstNames = item.participantNames.map(n => n.split(' ')[0]);
   const shownNames = firstNames.slice(0, 5);
   const overflowCount = firstNames.length - shownNames.length;
@@ -62,199 +61,183 @@ export function FeedItem({ item, onPress, currentUserId }: FeedItemProps) {
     <motion.button
       whileTap={{ scale: 0.985 }}
       onClick={onPress}
-      className={cn(
-        'w-full text-left bg-white rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.07),0_0_0_1px_rgba(0,0,0,0.03)]',
-        userPlayed && 'border-l-[3px] border-l-[#BEF264]'
-      )}
+      className="w-full text-left rounded-[20px] border border-border bg-card p-4"
     >
-      {/* Top accent line */}
-      <div className={cn('h-[3px]', userPlayed ? 'bg-[#BEF264]' : 'bg-[#BEF264]/60')} />
-
-      <div className="p-4">
-        {/* Course name */}
-        <div className="mb-1.5">
-          <h3 className="text-[17px] font-black tracking-[-0.03em] text-foreground leading-tight">
+      {/* Course + date */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-[17px] font-bold leading-tight tracking-[-0.02em] text-foreground">
             {item.courseName}
           </h3>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">{dateStr}</p>
         </div>
-
-        {/* Date */}
-        <p className="text-[11px] text-muted-foreground/70 mb-2 font-medium">{dateStr}</p>
-
-        {/* Game type badges */}
-        {gameTypes.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
-            {gameTypes.map(type => (
-              <span
-                key={type}
-                className="text-[10px] font-bold bg-foreground/[0.06] text-foreground/60 px-2 py-0.5 rounded-md"
-              >
-                {formatGameType(type)}
-              </span>
-            ))}
-          </div>
+        {userPlayed && (
+          <span className="flex-shrink-0 rounded-full bg-gold px-2.5 py-1 text-[12px] font-semibold text-gold-foreground">
+            You played
+          </span>
         )}
+      </div>
 
-        {/* Match result headlines */}
-        {resultHeadlines.length > 0 && (
-          <div className="mb-3">
-            {resultHeadlines.map((headline, i) => (
+      {/* Game type chips */}
+      {gameTypes.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {gameTypes.map(type => (
+            <span key={type} className="rounded-full bg-muted px-2.5 py-[3px] text-[12px] font-medium text-foreground/80">
+              {formatGameType(type)}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Match result headlines */}
+      {resultHeadlines.length > 0 && (
+        <div className="mt-3 space-y-1.5">
+          {resultHeadlines.map((headline, i) => (
+            <div key={i} className="flex items-center gap-2 rounded-[14px] bg-primary/[0.06] px-3 py-2.5">
+              <Swords className="h-4 w-4 flex-shrink-0 text-primary" />
+              <span className="text-[14px] font-semibold tracking-[-0.01em] text-primary">{headline}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Scores leaderboard */}
+      {item.playerScores.length > 0 && (
+        <div className="mt-3 rounded-[14px] bg-muted/60 px-3 py-1">
+          {item.playerScores.slice(0, 4).map((ps, i) => {
+            const isCurrentUser = currentUserId && ps.profileId === currentUserId;
+            const isLeader = i === 0;
+            const firstName = ps.name.split(' ')[0];
+            const isClickable = !!ps.profileId && ps.profileId !== currentUserId;
+            return (
               <div
-                key={i}
-                className="flex items-center gap-2 bg-foreground/[0.04] rounded-xl px-3 py-2.5"
+                key={ps.playerId}
+                className={cn(
+                  'flex items-center justify-between py-2',
+                  i < Math.min(item.playerScores.length, 4) - 1 && 'border-b border-border'
+                )}
               >
-                <Swords className="w-4 h-4 text-[#D4A900] flex-shrink-0" />
-                <span className="text-[13px] font-bold text-foreground tracking-[-0.01em]">
-                  {headline}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Scores leaderboard */}
-        {item.playerScores.length > 0 && (
-          <div className="bg-[#FAFAF7] rounded-xl p-2.5 mb-3">
-            {item.playerScores.slice(0, 4).map((ps, i) => {
-              const isCurrentUser = currentUserId && ps.profileId === currentUserId;
-              const isLeader = i === 0;
-              const firstName = ps.name.split(' ')[0];
-              const isClickable = !!ps.profileId && ps.profileId !== currentUserId;
-              return (
-                <div
-                  key={ps.playerId}
-                  className={cn(
-                    'flex items-center justify-between py-1.5',
-                    i < Math.min(item.playerScores.length, 4) - 1 && 'border-b border-border/20'
-                  )}
-                >
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    {isLeader && <Trophy className="w-3 h-3 text-[#D4A900] flex-shrink-0" />}
-                    {!isLeader && <span className="w-3 text-center text-[10px] font-bold text-muted-foreground/50">{i + 1}</span>}
-                    {isClickable ? (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); navigate(`/profile/${ps.profileId}`); }}
-                        className={cn(
-                          'text-[12px] font-semibold truncate active:opacity-70',
-                          isCurrentUser ? 'text-foreground font-bold' : 'text-foreground'
-                        )}
-                      >
-                        {isCurrentUser ? 'You' : firstName}
-                      </button>
-                    ) : (
-                      <span className={cn(
-                        'text-[12px] font-semibold truncate',
-                        isCurrentUser ? 'text-foreground font-bold' : 'text-foreground'
-                      )}>
-                        {isCurrentUser ? 'You' : firstName}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className={cn(
-                      'text-[14px] font-black tabular-nums',
-                      isLeader ? 'text-foreground' : 'text-foreground/70'
-                    )}>
-                      {ps.totalStrokes}
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  {isLeader ? (
+                    <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gold">
+                      <Trophy className="h-3 w-3 text-gold-foreground" />
                     </span>
-                    {ps.holesPlayed < item.holes && (
-                      <span className="text-[9px] text-muted-foreground">({ps.holesPlayed}h)</span>
-                    )}
-                  </div>
+                  ) : (
+                    <span className="w-5 text-center text-[12px] font-semibold text-muted-foreground tabular-nums">{i + 1}</span>
+                  )}
+                  {isClickable ? (
+                    <span
+                      role="link"
+                      tabIndex={0}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/profile/${ps.profileId}`); }}
+                      className="text-[14px] font-semibold text-foreground truncate active:opacity-70"
+                    >
+                      {firstName}
+                    </span>
+                  ) : (
+                    <span className="text-[14px] font-semibold text-foreground truncate">
+                      {isCurrentUser ? 'You' : firstName}
+                    </span>
+                  )}
                 </div>
-              );
-            })}
-            {item.playerScores.length > 4 && (
-              <p className="text-[10px] text-muted-foreground text-center pt-1">
-                +{item.playerScores.length - 4} more
-              </p>
-            )}
-          </div>
-        )}
+                <div className="flex items-baseline gap-1">
+                  {ps.holesPlayed < item.holes && (
+                    <span className="text-[11px] text-muted-foreground">thru {ps.holesPlayed}</span>
+                  )}
+                  <span className={cn('text-[17px] font-extrabold tabular-nums', isLeader ? 'text-foreground' : 'text-foreground/70')}>
+                    {ps.totalStrokes}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+          {item.playerScores.length > 4 && (
+            <p className="py-1.5 text-center text-[12px] text-muted-foreground">
+              +{item.playerScores.length - 4} more
+            </p>
+          )}
+        </div>
+      )}
 
-        {/* Player name chips (only shown when no scores available) */}
-        {item.playerScores.length === 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {shownNames.map((name, i) => {
-              const pid = item.participantIds[i];
-              const isClickable = !!pid && pid !== currentUserId;
-              const chipClass = cn(
-                'text-[11px] font-bold border px-2.5 py-1 rounded-lg',
-                currentUserId && pid === currentUserId
-                  ? 'bg-[#BEF264]/10 border-[#BEF264]/40 text-foreground'
-                  : 'bg-[#FAFAF7] border-border/60 text-foreground'
-              );
+      {/* Player name chips (only shown when no scores available) */}
+      {item.playerScores.length === 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {shownNames.map((name, i) => {
+            const pid = item.participantIds[i];
+            const isClickable = !!pid && pid !== currentUserId;
+            const chipClass = cn(
+              'rounded-full px-2.5 py-1 text-[12px] font-semibold',
+              currentUserId && pid === currentUserId
+                ? 'bg-gold text-gold-foreground'
+                : 'bg-muted text-foreground'
+            );
 
-              if (isClickable) {
-                return (
-                  <button
-                    key={pid}
-                    onClick={(e) => { e.stopPropagation(); navigate(`/profile/${pid}`); }}
-                    className={cn(chipClass, 'active:opacity-70 transition-opacity')}
-                  >
-                    {name}
-                  </button>
-                );
-              }
-
+            if (isClickable) {
               return (
-                <span key={pid ?? `name-${i}`} className={chipClass}>
+                <span
+                  key={pid}
+                  role="link"
+                  tabIndex={0}
+                  onClick={(e) => { e.stopPropagation(); navigate(`/profile/${pid}`); }}
+                  className={cn(chipClass, 'active:opacity-70 transition-opacity')}
+                >
                   {name}
                 </span>
               );
-            })}
-            {overflowCount > 0 && (
-              <span className="text-[11px] font-bold bg-muted text-muted-foreground px-2.5 py-1 rounded-lg">
-                +{overflowCount}
+            }
+
+            return (
+              <span key={pid ?? `name-${i}`} className={chipClass}>
+                {name}
               </span>
-            )}
-          </div>
-        )}
-
-        {/* Watch Party badge */}
-        {item.watchPartyMessageCount > 0 && (
-          <div className="mb-2">
-            <WatchPartyFeedBadge roundId={item.roundId} messageCount={item.watchPartyMessageCount} />
-          </div>
-        )}
-
-        {/* Footer: reactions + creator + time */}
-        <div className="flex items-center justify-between pt-2.5 border-t border-border/40">
-          <div className="flex items-center gap-2">
-            <Avatar className="w-5 h-5 rounded-full flex-shrink-0">
-              <AvatarImage src={item.creatorAvatar ?? undefined} />
-              <AvatarFallback className="rounded-full text-[8px] font-black bg-muted">
-                {item.creatorName.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-[11px] text-muted-foreground">
-              <span className="font-bold text-foreground">{item.creatorName.split(' ')[0]}</span>
-              {' · '}{timeAgo(item.completedAt)}
+            );
+          })}
+          {overflowCount > 0 && (
+            <span className="rounded-full bg-muted px-2.5 py-1 text-[12px] font-semibold text-muted-foreground">
+              +{overflowCount}
             </span>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Reactions */}
-            {item.reactions.length > 0 && (
-              <div className="flex items-center gap-0.5 bg-muted/60 rounded-lg px-2 py-1">
-                <span className="text-[11px]">
-                  {item.reactions.slice(0, 3).map(r => REACTION_EMOJI[r.type] || '👍').join('')}
-                </span>
-                {item.totalReactions > 0 && (
-                  <span className="text-[10px] font-bold text-muted-foreground ml-0.5">{item.totalReactions}</span>
-                )}
-              </div>
-            )}
-            {/* Comments */}
-            {item.commentCount > 0 ? (
-              <div className="flex items-center gap-1 bg-muted/60 rounded-lg px-2 py-1">
-                <MessageCircle className="w-3 h-3 text-muted-foreground" />
-                <span className="text-[10px] font-black text-muted-foreground">{item.commentCount}</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1 text-muted-foreground/40">
-                <MessageCircle className="w-3 h-3" />
-              </div>
-            )}
+          )}
+        </div>
+      )}
+
+      {/* Watch Party badge */}
+      {item.watchPartyMessageCount > 0 && (
+        <div className="mt-3">
+          <WatchPartyFeedBadge roundId={item.roundId} messageCount={item.watchPartyMessageCount} />
+        </div>
+      )}
+
+      {/* Footer: creator + time, reactions + comments */}
+      <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <Avatar className="h-6 w-6 rounded-full flex-shrink-0">
+            <AvatarImage src={item.creatorAvatar ?? undefined} />
+            <AvatarFallback className="rounded-full bg-muted text-[10px] font-bold text-primary">
+              {item.creatorName.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-[13px] text-muted-foreground truncate">
+            <span className="font-semibold text-foreground">{item.creatorName.split(' ')[0]}</span>
+            {' · '}{timeAgo(item.completedAt)}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {item.reactions.length > 0 && (
+            <div className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">
+              <span className="text-[12px]">
+                {item.reactions.slice(0, 3).map(r => REACTION_EMOJI[r.type] || '👍').join('')}
+              </span>
+              {item.totalReactions > 0 && (
+                <span className="text-[12px] font-semibold text-muted-foreground">{item.totalReactions}</span>
+              )}
+            </div>
+          )}
+          <div className={cn(
+            'flex items-center gap-1 rounded-full px-2.5 py-1',
+            item.commentCount > 0 ? 'bg-muted text-muted-foreground' : 'text-muted-foreground/50'
+          )}>
+            <MessageCircle className="h-3.5 w-3.5" />
+            {item.commentCount > 0 && <span className="text-[12px] font-semibold">{item.commentCount}</span>}
           </div>
         </div>
       </div>
