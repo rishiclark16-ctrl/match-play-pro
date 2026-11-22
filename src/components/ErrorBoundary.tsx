@@ -55,15 +55,15 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-6">
           <div className="text-center space-y-6 max-w-sm">
-            <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center">
+            <div className="w-20 h-20 mx-auto rounded-[28px] bg-primary flex items-center justify-center">
               <span className="text-4xl">&#x1F3CC;&#xFE0F;</span>
             </div>
 
             <div className="space-y-2">
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-[28px] font-extrabold tracking-[-0.02em] text-foreground">
                 Something went wrong
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-[15px] text-muted-foreground leading-relaxed">
                 We hit it into the rough. Please try refreshing the page.
               </p>
             </div>
@@ -71,7 +71,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="space-y-3">
               <Button
                 onClick={this.handleRefresh}
-                className="w-full py-6 text-lg font-semibold rounded-xl"
+                className="w-full h-[60px] rounded-[20px] bg-ink text-ink-foreground text-base font-bold hover:bg-ink/90"
               >
                 Refresh Page
               </Button>
@@ -79,7 +79,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <Button
                 variant="outline"
                 onClick={this.handleGoHome}
-                className="w-full py-6 text-lg font-semibold rounded-xl"
+                className="w-full h-14 rounded-[20px] text-base"
               >
                 Go Home
               </Button>
@@ -87,14 +87,14 @@ export class ErrorBoundary extends Component<Props, State> {
               <Button
                 variant="ghost"
                 onClick={this.handleReportBug}
-                className="w-full py-4 text-sm font-medium text-muted-foreground"
+                className="w-full h-11 text-sm font-semibold text-muted-foreground"
               >
                 Report this bug
               </Button>
             </div>
 
             {import.meta.env.DEV && this.state.error && (
-              <details className="mt-6 text-left p-4 bg-muted rounded-xl">
+              <details className="mt-6 text-left p-4 bg-card border border-border rounded-[20px]">
                 <summary className="text-sm font-medium text-muted-foreground cursor-pointer">
                   Error Details
                 </summary>

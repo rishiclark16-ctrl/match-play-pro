@@ -1,12 +1,16 @@
 # MATCH Golf - Fastlane Configuration
 # https://docs.fastlane.tools
 
+require "base64"
+require "tmpdir"
+
 default_platform(:ios)
 
 # Constants
 APP_IDENTIFIER = "dev.matchgolf.app"
 SCHEME = "App"
 WORKSPACE = "App.xcworkspace"
+TEAM_ID = "YPMSN56J9D" # Apple Developer team (matches DEVELOPMENT_TEAM in project.pbxproj)
 
 platform :ios do
 
@@ -163,6 +167,83 @@ platform :ios do
       type: "appstore",
       readonly: true
     )
+  end
+
+  # ==========================================
+  # CI BETA - GitHub Actions -> TestFlight (no Mac, no Apple ID login)
+  # ==========================================
+  # Driven by .github/workflows/testflight.yml. Needs these env vars (GitHub secrets):
+  #   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64   App Store Connect API key (.p8, base64)
+  #   IOS_DIST_CERT_P12_BASE64, IOS_DIST_CERT_PASSWORD   Apple Distribution certificate (.p12, base64)
+  # Signing: imports the cert into a throwaway keychain, fetches/creates the App Store
+  # provisioning profile via the API key, and switches the App target to manual signing
+  # for this build only (the committed project keeps Automatic signing for local Xcode use).
+  # Build number: latest TestFlight build for this version + 1, so CI never needs to commit a bump.
+  desc "CI: build, sign and upload to TestFlight using an App Store Connect API key"
+  lane :ci_beta do
+    setup_ci # temporary keychain, fastlane match/sigh read-only friendly
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_content: ENV.fetch("ASC_KEY_P8_BASE64"),
+      is_key_content_base64: true,
+      in_house: false
+    )
+
+    cert_path = File.join(Dir.tmpdir, "dist_cert.p12")
+    File.binwrite(cert_path, Base64.decode64(ENV.fetch("IOS_DIST_CERT_P12_BASE64")))
+    import_certificate(
+      certificate_path: cert_path,
+      certificate_password: ENV.fetch("IOS_DIST_CERT_PASSWORD"),
+      keychain_name: ENV["MATCH_KEYCHAIN_NAME"] || "fastlane_tmp_keychain",
+      keychain_password: ENV["MATCH_KEYCHAIN_PASSWORD"] || ""
+    )
+
+    get_provisioning_profile(
+      api_key: api_key,
+      app_identifier: APP_IDENTIFIER,
+      team_id: TEAM_ID,
+      force: false,
+      readonly: false
+    )
+    profile_name = lane_context[SharedValues::SIGH_NAME]
+
+    update_code_signing_settings(
+      path: "App.xcodeproj",
+      targets: ["App"],
+      use_automatic_signing: false,
+      team_id: TEAM_ID,
+      code_sign_identity: "Apple Distribution",
+      profile_name: profile_name,
+      build_configurations: ["Release"]
+    )
+
+    version = get_version_number(xcodeproj: "App.xcodeproj", target: "App")
+    latest = latest_testflight_build_number(api_key: api_key, app_identifier: APP_IDENTIFIER, version: version, initial_build_number: 0)
+    current = get_build_number(xcodeproj: "App.xcodeproj").to_i
+    next_build = [latest.to_i, current].max + 1
+    increment_build_number(xcodeproj: "App.xcodeproj", build_number: next_build.to_s)
+
+    build_app(
+      workspace: WORKSPACE,
+      scheme: SCHEME,
+      configuration: "Release",
+      export_method: "app-store",
+      export_options: { provisioningProfiles: { APP_IDENTIFIER => profile_name } },
+      output_directory: "./build",
+      output_name: "MatchGolf.ipa",
+      clean: true
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true,
+      notify_external_testers: false,
+      changelog: ENV["TESTFLIGHT_CHANGELOG"]
+    )
+
+    puts "✅ MATCH Golf #{version} (#{next_build}) uploaded to TestFlight"
   end
 
   # ==========================================

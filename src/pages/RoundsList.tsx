@@ -44,7 +44,7 @@ export default function RoundsList() {
   };
 
   const headerContent = (
-    <div className="flex items-center gap-3 px-4 pb-3 pt-safe-content border-b-2 border-foreground">
+    <div className="flex items-center gap-2 px-5 pb-3 pt-safe-content">
       <motion.button
         whileTap={{ scale: 0.92 }}
         onClick={() => {
@@ -52,41 +52,37 @@ export default function RoundsList() {
           navigate(-1);
         }}
         aria-label="Back"
-        className="h-9 w-9 -ml-1 rounded-full flex items-center justify-center"
+        className="h-11 w-11 -ml-2 rounded-full flex items-center justify-center active:bg-muted"
         style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         <ArrowLeft className="w-5 h-5 text-foreground" />
       </motion.button>
-      <div className="flex-1">
-        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">MATCH Golf</p>
-        <h1 className="text-[22px] font-black tracking-[-0.04em] leading-tight text-foreground">All rounds</h1>
-      </div>
-      <div className="bg-muted rounded-xl px-3 py-1.5">
-        <span className="text-[12px] font-bold text-foreground tabular-nums">
-          {items.length} {items.length === 1 ? 'round' : 'rounds'}
-        </span>
-      </div>
+      <h1 className="flex-1 text-[28px] font-extrabold tracking-[-0.02em] leading-tight text-foreground">All rounds</h1>
+      <span className="h-8 rounded-full bg-muted px-3 inline-flex items-center text-[13px] font-semibold text-foreground tabular-nums">
+        {items.length} {items.length === 1 ? 'round' : 'rounds'}
+      </span>
     </div>
   );
 
   return (
     <AppLayout header={headerContent} mainClassName="pb-nav">
-      <div className="px-4 pt-4 pb-2 sticky top-0 z-10 bg-background">
+      <div className="px-5 pt-1 pb-2 sticky top-0 z-10 bg-background">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <input
             type="text"
             inputMode="search"
             placeholder="Search by course or date"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full h-11 pl-10 pr-10 rounded-2xl bg-muted text-[14px] font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10"
+            aria-label="Search rounds"
+            className="w-full h-12 pl-11 pr-12 rounded-[20px] bg-card border border-border text-[16px] font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
               aria-label="Clear search"
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full flex items-center justify-center"
+              className="absolute right-0.5 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full flex items-center justify-center"
             >
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
@@ -94,7 +90,7 @@ export default function RoundsList() {
         </div>
       </div>
 
-      <div className="px-4 pt-2">
+      <div className="px-5 pt-2">
         {isLoading ? (
           <PageSkeleton variant="default" />
         ) : items.length === 0 ? (
@@ -103,7 +99,7 @@ export default function RoundsList() {
           <NoMatchState query={query} onClear={() => setQuery('')} />
         ) : (
           <AnimatePresence initial={false}>
-            <div className="space-y-3 pb-6">
+            <div className="space-y-2 pb-6">
               {filtered.map(({ round, playerCount, currentHole }, i) => (
                 <motion.div
                   key={round.id}
@@ -135,13 +131,13 @@ function EmptyState({ onCta }: { onCta: () => void }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={spring}
-      className="mt-8 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex flex-col items-center justify-center py-12 px-6 text-center"
+      className="mt-6 bg-card rounded-[20px] border border-border flex flex-col items-center justify-center py-12 px-6 text-center"
     >
-      <p className="text-[16px] font-bold text-foreground">No rounds yet</p>
-      <p className="text-[13px] text-muted-foreground mt-1 mb-4">Your golf history will live here.</p>
+      <p className="text-[18px] font-bold text-foreground">No rounds yet</p>
+      <p className="text-[14px] text-muted-foreground mt-1 mb-5">Your golf history will live here.</p>
       <button
         onClick={onCta}
-        className="bg-foreground text-background rounded-2xl h-11 px-6 font-bold text-[14px]"
+        className="bg-[#0F1F17] text-white rounded-[14px] h-12 px-6 font-semibold text-[15px]"
       >
         Start a round
       </button>
@@ -157,7 +153,7 @@ function NoMatchState({ query, onClear }: { query: string; onClear: () => void }
       </p>
       <button
         onClick={onClear}
-        className="mt-3 text-[13px] font-bold text-foreground underline underline-offset-2"
+        className="mt-2 h-11 px-4 text-[14px] font-semibold text-[#14532D]"
       >
         Clear search
       </button>

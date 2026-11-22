@@ -1,0 +1,144 @@
+name: TestFlight
+
+# Builds, signs and uploads MATCH Golf to TestFlight from a GitHub macOS runner.
+# No Mac and no Apple ID login needed: signing uses an App Store Connect API key
+# and the Apple Distribution certificate stored as repository secrets.
+# Setup guide: docs/testflight-ci.md
+#
+# Runs on every push to main (and on demand from the Actions tab).
+# Feature branches are NOT uploaded, so experiments don't flood TestFlight;
+# use "Run workflow" on any branch to upload it manually.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      changelog:
+        description: 'What to test (shown to testers in TestFlight)'
+        required: false
+        default: ''
+
+# Never run two uploads at once: they would race for the same build number.
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    name: Build and upload to TestFlight
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    env:
+      VITE_SUPABASE_PROJECT_ID: puqgbsxabcyxrbwwoznn
+      VITE_SUPABASE_URL: https://puqgbsxabcyxrbwwoznn.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+      IOS_DIST_CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+      IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+      TESTFLIGHT_CHANGELOG: ${{ github.event.inputs.changelog || github.event.head_commit.message }}
+
+    steps:
+      - name: Check signing secrets are configured
+        id: secrets
+        run: |
+          missing=""
+          for v in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8_BASE64 IOS_DIST_CERT_P12_BASE64 IOS_DIST_CERT_PASSWORD VITE_SUPABASE_PUBLISHABLE_KEY; do
+            if [ -z "${!v}" ]; then missing="$missing $v"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::warning::TestFlight upload skipped. Missing repository secrets:$missing (see docs/testflight-ci.md)"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.secrets.outputs.ready == 'true'
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        if: steps.secrets.outputs.ready == 'true'
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Setup Bun
+        if: steps.secrets.outputs.ready == 'true'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+
+      - name: Setup Node (cap sync must run under node, not bun)
+        if: steps.secrets.outputs.ready == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Ruby + fastlane
+        if: steps.secrets.outputs.ready == 'true'
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: ios/App
+
+      - name: Install JS dependencies
+        if: steps.secrets.outputs.ready == 'true'
+        run: bun install --frozen-lockfile
+
+      - name: Unit tests (gate the upload)
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          bun test src/hooks src/lib src/engine src/components
+          bun test src/pages
+
+      - name: Build web bundle
+        if: steps.secrets.outputs.ready == 'true'
+        run: bun run build
+
+      - name: Cache CocoaPods
+        if: steps.secrets.outputs.ready == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios/App/Pods
+            ~/Library/Caches/CocoaPods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/App/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Capacitor sync iOS
+        if: steps.secrets.outputs.ready == 'true'
+        run: npx cap sync ios
+
+      - name: Pod install
+        if: steps.secrets.outputs.ready == 'true'
+        working-directory: ios/App
+        run: pod install
+
+      - name: Build, sign and upload (fastlane ci_beta)
+        if: steps.secrets.outputs.ready == 'true'
+        working-directory: ios/App
+        run: bundle exec fastlane ci_beta
+
+      - name: Keep the IPA and dSYMs for 14 days
+        if: always() && steps.secrets.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: MatchGolf-ipa-${{ github.run_number }}
+          path: |
+            ios/App/build/*.ipa
+            ios/App/build/*.dSYM.zip
+          if-no-files-found: ignore
+          retention-days: 14
