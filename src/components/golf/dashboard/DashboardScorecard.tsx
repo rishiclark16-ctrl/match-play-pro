@@ -8,10 +8,10 @@ interface DashboardScorecardProps {
 
 function scoreCellColor(strokes: number, par: number): string {
   const diff = strokes - par;
-  if (diff <= -2) return 'bg-amber-100 text-amber-800 font-black';
+  if (diff <= -2) return 'bg-[#ECFCCB] text-[#14532D] font-black';
   if (diff === -1) return 'bg-emerald-100 text-emerald-700 font-bold';
   if (diff === 0) return 'text-foreground';
-  if (diff === 1) return 'bg-red-50 text-red-600';
+  if (diff === 1) return 'bg-[#FEF3F2] text-[#B42318]';
   return 'bg-red-100 text-red-700 font-bold';
 }
 
@@ -45,7 +45,7 @@ export function DashboardScorecard({ round, playersWithScores }: DashboardScorec
 
   return (
     <div className="px-4 pb-6">
-      <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground mb-3">
+      <h3 className="text-[12px] font-bold tracking-[0.1em] text-muted-foreground mb-3">
         Scorecard
       </h3>
 
@@ -59,7 +59,7 @@ export function DashboardScorecard({ round, playersWithScores }: DashboardScorec
             {/* ── Front 9 ── */}
             {/* Hole numbers */}
             <div className="flex">
-              <div className={cn(labelCell, 'bg-[#0F1F17] text-white/50 font-bold text-[10px] uppercase tracking-wider')}>Hole</div>
+              <div className={cn(labelCell, 'bg-[#0F1F17] text-white/50 font-bold text-[12px]')}>Hole</div>
               {front9.map(h => (
                 <div key={h.number} className={headerCell}>{h.number}</div>
               ))}
@@ -175,7 +175,7 @@ export function DashboardScorecard({ round, playersWithScores }: DashboardScorec
                     {scoredHoles > 0 && (
                       <span className={cn(
                         'text-[9px]',
-                        relPar < 0 ? 'text-emerald-600' : relPar > 0 ? 'text-red-500' : 'text-muted-foreground'
+                        relPar < 0 ? 'text-[#14532D]' : relPar > 0 ? 'text-[#B42318]' : 'text-muted-foreground'
                       )}>
                         {formatRelPar(relPar)}
                       </span>

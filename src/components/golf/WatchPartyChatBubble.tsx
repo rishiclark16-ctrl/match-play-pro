@@ -55,7 +55,7 @@ export function WatchPartyChatBubble({ message, isSelf, showSender, showTimestam
               {message.isPlayer && <span className="ml-1">🏌️</span>}
             </span>
             {showTimestamp && (
-              <span className="text-[10px] text-gray-400">{formatTime(message.createdAt)}</span>
+              <span className="text-[10px] text-[#5A6B61]">{formatTime(message.createdAt)}</span>
             )}
           </div>
         )}

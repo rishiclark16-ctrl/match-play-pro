@@ -175,7 +175,7 @@ export function PropBetSheet({
             <SheetTitle className="text-[20px] font-black tracking-[-0.04em] text-foreground">
               Prop Bets
             </SheetTitle>
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+            <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
               Hole {currentHole}
             </p>
           </div>
@@ -191,7 +191,7 @@ export function PropBetSheet({
           {/* Active Bets */}
           {currentHoleBets.length > 0 && (
             <div className="space-y-2">
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-6">
+              <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground px-6">
                 Active Bets
               </p>
 
@@ -203,7 +203,7 @@ export function PropBetSheet({
                   transition={{ delay: index * 0.05 }}
                   className={cn(
                     "bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 overflow-hidden",
-                    bet.winnerId ? "bg-[#F0FFF4]" : ""
+                    bet.winnerId ? "bg-[#ECFCCB]" : ""
                   )}
                 >
                   {/* Bet header row */}
@@ -221,7 +221,7 @@ export function PropBetSheet({
                         )}
                       </div>
                     </div>
-                    <span className="text-[#22C55E] font-black tabular-nums">${bet.stakes}</span>
+                    <span className="text-[#14532D] font-black tabular-nums">${bet.stakes}</span>
                   </div>
 
                   {/* Winner Selection */}
@@ -229,20 +229,20 @@ export function PropBetSheet({
                     {bet.winnerId && isPenaltyPropBet(bet.type) ? (
                       <div className="flex items-center gap-2">
                         <span aria-hidden>🐍</span>
-                        <span className="text-sm text-red-600 font-bold">
+                        <span className="text-sm text-[#B42318] font-bold">
                           {players.find(p => p.id === bet.winnerId)?.name} pays ${bet.stakes} each
                         </span>
                       </div>
                     ) : bet.winnerId ? (
                       <div className="flex items-center gap-2">
-                        <Trophy className="w-4 h-4 text-[#22C55E]" />
-                        <span className="text-sm text-[#22C55E] font-bold">
+                        <Trophy className="w-4 h-4 text-[#14532D]" />
+                        <span className="text-sm text-[#14532D] font-bold">
                           {players.find(p => p.id === bet.winnerId)?.name} wins!
                         </span>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                        <span className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
                           {isPenaltyPropBet(bet.type) ? 'Who 3-putted?' : 'Select winner:'}
                         </span>
                         <div className="flex flex-wrap gap-2">
@@ -272,13 +272,13 @@ export function PropBetSheet({
 
           {/* Add New Bet */}
           <div className="space-y-3 px-6">
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+            <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
               Add Side Bet
             </p>
 
             {/* Standard Bets */}
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
+              <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground mb-2">
                 Standard
               </p>
               <div className="grid grid-cols-3 gap-2">
@@ -316,7 +316,7 @@ export function PropBetSheet({
 
             {/* Junk/Save Bets */}
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
+              <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground mb-2">
                 Junk / Saves
               </p>
               <div className="grid grid-cols-3 gap-2">
@@ -351,7 +351,7 @@ export function PropBetSheet({
 
             {/* Negative Bets & Custom */}
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
+              <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground mb-2">
                 Penalty / Custom
               </p>
               <div className="grid grid-cols-3 gap-2">
@@ -394,7 +394,7 @@ export function PropBetSheet({
                   className="space-y-3"
                 >
                   <div>
-                    <Label htmlFor="stakes" className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                    <Label htmlFor="stakes" className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
                       Stakes ($)
                     </Label>
                     <Input
@@ -410,7 +410,7 @@ export function PropBetSheet({
 
                   {selectedType === 'custom' && (
                     <div>
-                      <Label htmlFor="description" className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                      <Label htmlFor="description" className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
                         What's the bet?
                       </Label>
                       <Textarea

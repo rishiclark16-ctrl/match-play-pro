@@ -14,10 +14,10 @@ export function SpectatorBanner({ isSpectator = true, isScorekeeper = false }: S
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-        className="bg-[#F0FFF4] border-b-2 border-[#22C55E] px-4 py-2.5 flex items-center gap-2"
+        className="bg-[#ECFCCB] border-b-2 border-[#14532D] px-4 py-2.5 flex items-center gap-2"
       >
-        <Eye className="text-[#22C55E] w-4 h-4 shrink-0" />
-        <span className="text-sm font-semibold text-[#15803D]">Watching this round live</span>
+        <Eye className="text-[#14532D] w-4 h-4 shrink-0" />
+        <span className="text-sm font-semibold text-[#14532D]">Watching this round live</span>
       </motion.div>
     );
   }

@@ -29,13 +29,13 @@ export function DashboardHouseGameCard({ result }: DashboardHouseGameCardProps) 
               <span className="text-[13px] font-medium">{s.playerName}</span>
               <div className="flex gap-3 mt-0.5">
                 <span className="text-[10px] text-muted-foreground">{s.holesWon} won</span>
-                {s.birdies > 0 && <span className="text-[10px] text-emerald-600">{s.birdies} birdie{s.birdies !== 1 ? 's' : ''}</span>}
-                {s.eagles > 0 && <span className="text-[10px] text-amber-600">{s.eagles} eagle{s.eagles !== 1 ? 's' : ''}</span>}
+                {s.birdies > 0 && <span className="text-[10px] text-[#14532D]">{s.birdies} birdie{s.birdies !== 1 ? 's' : ''}</span>}
+                {s.eagles > 0 && <span className="text-[10px] text-[#14532D]">{s.eagles} eagle{s.eagles !== 1 ? 's' : ''}</span>}
               </div>
             </div>
             <span className={cn(
               'text-[13px] font-bold',
-              s.netEarnings > 0 ? 'text-emerald-600' : s.netEarnings < 0 ? 'text-red-500' : 'text-muted-foreground'
+              s.netEarnings > 0 ? 'text-[#14532D]' : s.netEarnings < 0 ? 'text-[#B42318]' : 'text-muted-foreground'
             )}>
               {s.netEarnings > 0 ? '+' : ''}{s.netEarnings !== 0 ? `$${Math.abs(s.netEarnings).toFixed(2)}` : '-'}
             </span>

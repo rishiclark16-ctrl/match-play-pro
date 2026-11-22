@@ -48,7 +48,7 @@ export function DashboardMatchPlayCard({ result, players, round }: DashboardMatc
                 className={cn(
                   'w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold',
                   p1Won ? 'bg-blue-100 text-blue-700' :
-                  p2Won ? 'bg-red-100 text-red-600' :
+                  p2Won ? 'bg-red-100 text-[#B42318]' :
                   'bg-muted/30 text-muted-foreground/50'
                 )}
               >
@@ -63,7 +63,7 @@ export function DashboardMatchPlayCard({ result, players, round }: DashboardMatc
             <span className="text-[10px] text-muted-foreground">{players[0]?.name}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#B42318]" />
             <span className="text-[10px] text-muted-foreground">{players[1]?.name}</span>
           </div>
         </div>

@@ -77,7 +77,7 @@ export default function JoinRound() {
             <ArrowLeft className="w-4 h-4 text-foreground" />
           </motion.button>
           <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">MATCH Golf</p>
+            <p className="text-[12px] font-bold tracking-[0.18em] text-muted-foreground">MATCH Golf</p>
             <h1 className="text-[22px] font-black tracking-[-0.04em] text-foreground leading-none">Watch Live</h1>
           </div>
         </div>
@@ -93,7 +93,7 @@ export default function JoinRound() {
         >
           {/* Icon + title */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-foreground flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-[20px] bg-[#14532D] flex items-center justify-center mx-auto mb-4">
               <Eye className="w-7 h-7 text-[#BEF264]" />
             </div>
             <h2 className="text-[20px] font-black tracking-[-0.04em] text-foreground mb-2">Watch a Round</h2>
@@ -113,7 +113,7 @@ export default function JoinRound() {
                   clearError();
                 }}
                 maxLength={6}
-                className="py-6 text-center text-2xl font-black tracking-[0.4em] uppercase rounded-2xl bg-white border-0 shadow-[0_1px_3px_rgba(0,0,0,0.06)] font-mono pr-14"
+                className="py-6 text-center text-2xl font-semibold tracking-[0.4em] rounded-2xl bg-white border-0 shadow-[0_1px_3px_rgba(0,0,0,0.06)] font-mono pr-14"
               />
               <motion.button
                 whileTap={{ scale: 0.9 }}
@@ -126,7 +126,7 @@ export default function JoinRound() {
             </div>
 
             {error && (
-              <p className="text-[#EF4444] text-sm font-medium text-center">{error}</p>
+              <p className="text-[#B42318] text-sm font-medium text-center">{error}</p>
             )}
 
             <motion.button
