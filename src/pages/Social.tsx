@@ -400,7 +400,11 @@ export default function Social() {
                   {friendCode && (
                     <motion.button
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => { setShowCode(true); hapticLight(); }}
+                      onClick={() => {
+                        setShowCode(true);
+                        hapticLight();
+                        document.getElementById('friend-code-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
                       className="mt-4 h-11 rounded-[14px] bg-primary px-4 inline-flex items-center gap-1.5 text-[14px] font-semibold text-primary-foreground"
                     >
                       Share my code

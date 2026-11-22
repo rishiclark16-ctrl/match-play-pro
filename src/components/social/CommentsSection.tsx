@@ -33,7 +33,7 @@ export function CommentsSection({ roundId }: CommentsSectionProps) {
 
   return (
     <div className="mt-4">
-      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-3">
+      <p className="text-[13px] font-semibold text-muted-foreground mb-3">
         Comments {comments.length > 0 && `(${comments.length})`}
       </p>
 

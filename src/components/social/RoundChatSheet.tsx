@@ -64,22 +64,22 @@ export function RoundChatSheet({ round, onClose }: RoundChatSheetProps) {
         </div>
 
         {/* Dark hero header */}
-        <div className="bg-[#0F1F17] mx-4 mt-3 rounded-2xl p-5 relative overflow-hidden flex-shrink-0">
+        <div className="bg-primary mx-4 mt-3 rounded-[28px] p-5 relative overflow-hidden flex-shrink-0">
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center"
+            aria-label="Close" className="absolute top-3 right-3 w-11 h-11 rounded-[14px] bg-white/10 flex items-center justify-center"
           >
-            <X className="w-3.5 h-3.5 text-white/70" />
+            <X className="w-4 h-4 text-white" />
           </motion.button>
 
           {round && (
             <>
-              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/40 mb-1">Upcoming Round</p>
-              <h2 className="text-[20px] font-black tracking-[-0.03em] text-white leading-tight pr-10 mb-1">
+              <p className="text-[13px] font-semibold text-[#CFE3D6] mb-1">Upcoming Round</p>
+              <h2 className="text-[24px] font-extrabold tracking-[-0.02em] text-white leading-tight pr-12 mb-1">
                 {round.courseName}
               </h2>
-              <div className="flex items-center gap-1.5 text-[11px] text-white/50 font-medium">
+              <div className="flex items-center gap-1.5 text-[13px] text-[#CFE3D6]">
                 <Calendar className="w-3.5 h-3.5" />
                 {formatTeeTime(round.teeTime)}
               </div>
@@ -88,8 +88,8 @@ export function RoundChatSheet({ round, onClose }: RoundChatSheetProps) {
               {round.participantNames.length > 0 && (
                 <div className="mt-3 flex items-center gap-2 flex-wrap">
                   {round.participantNames.map((name, i) => (
-                    <div key={i} className="flex items-center gap-1.5 bg-white/[0.08] rounded-xl px-2.5 py-1.5">
-                      <span className="text-[11px] font-bold text-white/80">
+                    <div key={i} className="flex items-center gap-1.5 bg-white/10 rounded-full px-2.5 py-1.5">
+                      <span className="text-[13px] font-semibold text-white">
                         {name.split(' ')[0]}
                       </span>
                     </div>
@@ -102,7 +102,7 @@ export function RoundChatSheet({ round, onClose }: RoundChatSheetProps) {
 
         {/* Chat messages — scrollable */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pt-4 min-h-0">
-          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-3">
+          <p className="text-[13px] font-semibold text-muted-foreground mb-3">
             Chat {messages.length > 0 && `(${messages.length})`}
           </p>
 

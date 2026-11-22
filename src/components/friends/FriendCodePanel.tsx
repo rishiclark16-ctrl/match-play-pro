@@ -15,7 +15,7 @@ interface FriendCodePanelProps {
 /** Collapsible "Your friend code" row with share actions and QR. */
 export function FriendCodePanel({ friendCode, userName, open, onToggle }: FriendCodePanelProps) {
   return (
-    <div className="rounded-[20px] border border-border bg-card overflow-hidden">
+    <div id="friend-code-panel" className="scroll-mt-4 rounded-[20px] border border-border bg-card overflow-hidden">
       <motion.button
         whileTap={{ scale: 0.99 }}
         onClick={() => { onToggle(); hapticLight(); }}
