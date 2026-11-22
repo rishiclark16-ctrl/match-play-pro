@@ -33,14 +33,14 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-card"
+      aria-label="Main"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border"
       style={{
         WebkitTransform: 'translateZ(0)',
         transform: 'translateZ(0)',
         WebkitTapHighlightColor: 'transparent',
         touchAction: 'manipulation',
         paddingBottom: '34px',
-        borderTop: '1px solid rgba(0,0,0,0.06)',
       }}
     >
       <div className="flex items-center justify-around h-16 px-2">
@@ -52,18 +52,16 @@ export function BottomNav() {
               <Link
                 key={item.to}
                 to={item.to}
+                aria-label="New round"
                 onClick={() => hapticLight()}
-                className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[56px] px-3 py-2 touch-manipulation cursor-pointer select-none"
+                className="flex items-center justify-center min-w-[56px] min-h-[56px] px-2 touch-manipulation cursor-pointer select-none"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 <motion.div
-                  whileTap={{ scale: 0.9 }}
-                  className="w-14 h-14 rounded-full bg-[#BEF264] flex items-center justify-center shadow-[0_4px_16px_rgba(240,238,58,0.4)]"
+                  whileTap={{ scale: 0.92 }}
+                  className="w-14 h-14 rounded-[20px] bg-gold flex items-center justify-center shadow-[0_6px_18px_rgba(20,83,45,0.18)] ring-1 ring-primary/10"
                 >
-                  <item.icon
-                    className="w-[22px] h-[22px] text-foreground"
-                    strokeWidth={2.5}
-                  />
+                  <item.icon className="w-6 h-6 text-primary" strokeWidth={2.5} />
                 </motion.div>
               </Link>
             );
@@ -73,28 +71,30 @@ export function BottomNav() {
             <Link
               key={item.to}
               to={item.to}
+              aria-current={active ? 'page' : undefined}
               onClick={() => hapticLight()}
-              className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[56px] px-2 py-2 touch-manipulation cursor-pointer select-none active:scale-95 transition-transform"
+              className="flex flex-col items-center justify-center gap-1 min-w-[60px] min-h-[56px] px-1 touch-manipulation cursor-pointer select-none active:scale-95 transition-transform"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <div className="flex flex-col items-center gap-0.5 px-3 py-1">
+              <span
+                className={cn(
+                  'flex items-center justify-center w-12 h-8 rounded-full transition-colors',
+                  active ? 'bg-primary/10' : 'bg-transparent'
+                )}
+              >
                 <item.icon
-                  className={cn(
-                    "w-[22px] h-[22px] transition-colors",
-                    active ? "text-foreground" : "text-muted-foreground"
-                  )}
-                  strokeWidth={active ? 2.5 : 1.75}
+                  className={cn('w-[22px] h-[22px] transition-colors', active ? 'text-primary' : 'text-muted-foreground')}
+                  strokeWidth={active ? 2.4 : 1.9}
                 />
-                <span className={cn(
-                  "text-[9px] font-bold uppercase tracking-[0.08em] transition-colors",
-                  active ? "text-foreground" : "text-muted-foreground"
-                )}>
-                  {item.label}
-                </span>
-              </div>
-              {active && (
-                <span className="w-1 h-1 rounded-full bg-[#BEF264] mt-0.5" />
-              )}
+              </span>
+              <span
+                className={cn(
+                  'text-[11px] leading-none transition-colors',
+                  active ? 'font-semibold text-primary' : 'font-medium text-muted-foreground'
+                )}
+              >
+                {item.label}
+              </span>
             </Link>
           );
         })}

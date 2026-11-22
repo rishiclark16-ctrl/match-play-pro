@@ -2,9 +2,10 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Cropper, { Area } from 'react-easy-crop';
-import { Camera, ChevronRight, Check, X, ZoomIn, Phone, User } from 'lucide-react';
+import { Camera, ChevronRight, Check, X, ZoomIn, Phone, User, ArrowLeft } from 'lucide-react';
 import { useProfile, ProfileUpdate } from '@/hooks/useProfile';
 import { HomeCourseSelector } from '@/components/profile/HomeCourseSelector';
+import { OnboardingStep, OnboardingIntro, OnboardingField, OnboardingProgress, onboardingInputClass } from '@/components/onboarding/OnboardingParts';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -38,7 +39,7 @@ async function getCroppedFile(imageSrc: string, cropArea: Area, fileName: string
 const TEE_OPTIONS = [
   { label: 'Black', color: 'bg-[#1a1a1a]' },
   { label: 'Blue', color: 'bg-blue-600' },
-  { label: 'White', color: 'bg-white border border-gray-300' },
+  { label: 'White', color: 'bg-white ring-1 ring-inset ring-border-strong' },
   { label: 'Gold', color: 'bg-yellow-500' },
   { label: 'Red', color: 'bg-red-500' },
 ];
@@ -190,28 +191,19 @@ export default function Onboarding() {
     }
   };
 
-  const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
+  const total = STEPS.length;
+  const stepNo = currentStep + 1;
 
   return (
-    <div className="h-screen flex flex-col bg-[#FAFAF7]">
-      {/* Progress bar + skip all */}
-      <header className="flex-shrink-0 px-6 pt-safe-content pb-4">
-        <div className="flex items-center justify-between pt-4">
-          <div className="flex gap-1.5">
-            {STEPS.map((_, i) => (
-              <div
-                key={i}
-                className={cn(
-                  'h-1.5 rounded-full transition-all duration-300',
-                  i <= currentStep ? 'bg-foreground w-6' : 'bg-muted w-3'
-                )}
-              />
-            ))}
-          </div>
+    <div className="h-screen flex flex-col bg-background">
+      {/* Progress bar + skip */}
+      <header className="flex-shrink-0 px-5 pt-safe-content pb-3">
+        <div className="flex items-center justify-between gap-4 h-11">
+          <OnboardingProgress total={total} current={currentStep} />
           {step !== 'name' && (
             <button
               onClick={handleSkip}
-              className="text-[13px] font-bold text-muted-foreground py-1 px-2"
+              className="h-11 px-3 -mr-3 text-[14px] font-semibold text-muted-foreground"
             >
               {isLastStep ? 'Finish' : 'Skip'}
             </button>
@@ -220,96 +212,57 @@ export default function Onboarding() {
       </header>
 
       {/* Step content */}
-      <main className="flex-1 overflow-y-auto px-6">
+      <main className="flex-1 overflow-y-auto px-5">
         <AnimatePresence mode="wait">
 
           {/* ── Step 1: Name ── */}
           {step === 'name' && (
-            <motion.div
-              key="name"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
-              transition={spring}
-              className="flex flex-col pt-4"
-            >
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step {currentStep + 1} of {STEPS.length}
-              </p>
-              <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
-                What's your name?
-              </h1>
-              <p className="text-[15px] text-muted-foreground leading-relaxed mb-10">
-                This is how friends find and recognize you. A first name is fine.
-              </p>
-
-              <div className="bg-white rounded-2xl border-2 border-foreground/10 focus-within:border-foreground px-5 py-4 transition-colors">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                  Name
-                </p>
-                <div className="flex items-center gap-3">
-                  <User className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                  <input
-                    type="text"
-                    aria-label="Your name"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    placeholder="Your name"
-                    autoFocus
-                    autoComplete="name"
-                    maxLength={50}
-                    className="w-full text-[24px] font-black text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30"
-                  />
-                </div>
-              </div>
-              <p className="text-[12px] text-muted-foreground mt-2 ml-1">Friends search for you by name</p>
-            </motion.div>
+            <OnboardingStep key="name" stepKey="name">
+              <OnboardingIntro step={stepNo} total={total} title="What's your name?" body="This is how friends find and recognize you. A first name is fine." />
+              <OnboardingField label="Name" hint="Friends search for you by name" icon={<User className="w-5 h-5 text-primary flex-shrink-0" />}>
+                <input
+                  type="text"
+                  aria-label="Your name"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Your name"
+                  autoFocus
+                  autoComplete="name"
+                  maxLength={50}
+                  className={cn(onboardingInputClass, 'text-[24px]')}
+                />
+              </OnboardingField>
+            </OnboardingStep>
           )}
 
           {/* ── Step 2: Photo ── */}
           {step === 'photo' && (
-            <motion.div
-              key="photo"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
-              transition={spring}
-              className="flex flex-col pt-4"
-            >
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step {currentStep + 1} of {STEPS.length}
-              </p>
-              <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
-                Add a profile photo
-              </h1>
-              <p className="text-[15px] text-muted-foreground leading-relaxed mb-10">
-                Your group sees this during rounds. You can always add one later.
-              </p>
-
-              <div className="flex justify-center">
+            <OnboardingStep key="photo" stepKey="photo">
+              <OnboardingIntro step={stepNo} total={total} title="Add a profile photo" body="Your group sees this during rounds. You can always add one later." />
+              <div className="flex justify-center pt-2">
                 <button
                   onClick={() => fileInputRef.current?.click()}
+                  aria-label={avatarPreview ? 'Change profile photo' : 'Add profile photo'}
                   className="relative"
                 >
                   <div className={cn(
-                    'w-36 h-36 rounded-full overflow-hidden flex items-center justify-center transition-colors',
-                    avatarPreview
-                      ? 'border-2 border-foreground'
-                      : 'border-2 border-dashed border-border bg-white'
+                    'w-40 h-40 rounded-[28px] overflow-hidden flex items-center justify-center transition-colors',
+                    avatarPreview ? 'bg-card' : 'bg-card border-2 border-dashed border-border-strong'
                   )}>
                     {avatarPreview ? (
                       <img src={avatarPreview} className="w-full h-full object-cover" alt="Profile" />
                     ) : (
-                      <div className="flex flex-col items-center gap-2">
-                        <Camera className="w-8 h-8 text-muted-foreground" />
-                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Tap to add</span>
+                      <div className="flex flex-col items-center gap-2.5">
+                        <div className="w-14 h-14 rounded-[18px] bg-primary/10 flex items-center justify-center">
+                          <Camera className="w-7 h-7 text-primary" />
+                        </div>
+                        <span className="text-[13px] font-semibold text-muted-foreground">Tap to add</span>
                       </div>
                     )}
                   </div>
-                  {/* Edit badge when photo is set */}
                   {avatarPreview && (
-                    <div className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-foreground flex items-center justify-center border-2 border-[#FAFAF7]">
-                      <Camera className="w-4 h-4 text-background" />
+                    <div className="absolute -bottom-1 -right-1 w-11 h-11 rounded-full bg-ink flex items-center justify-center ring-4 ring-background">
+                      <Camera className="w-[18px] h-[18px] text-white" />
                     </div>
                   )}
                   <input
@@ -321,75 +274,33 @@ export default function Onboarding() {
                   />
                 </button>
               </div>
-            </motion.div>
+            </OnboardingStep>
           )}
 
           {/* ── Step 3: Phone ── */}
           {step === 'phone' && (
-            <motion.div
-              key="phone"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
-              transition={spring}
-              className="flex flex-col pt-4"
-            >
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step {currentStep + 1} of {STEPS.length}
-              </p>
-              <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
-                What's your number?
-              </h1>
-              <p className="text-[15px] text-muted-foreground leading-relaxed mb-10">
-                Friends can find you by phone number. This won't be shared publicly.
-              </p>
-
-              <div className="bg-white rounded-2xl border-2 border-foreground/10 focus-within:border-foreground px-5 py-4 transition-colors">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                  Phone Number
-                </p>
-                <div className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                  <input
-                    type="tel"
-                    inputMode="tel"
-                    aria-label="Phone number"
-                    value={phone}
-                    onChange={e => setPhone(e.target.value)}
-                    placeholder="(555) 123-4567"
-                    autoFocus
-                    className="w-full text-[24px] font-black text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30 tabular-nums"
-                  />
-                </div>
-              </div>
-              <p className="text-[12px] text-muted-foreground mt-2 ml-1">Helps your group find you</p>
-            </motion.div>
+            <OnboardingStep key="phone" stepKey="phone">
+              <OnboardingIntro step={stepNo} total={total} title="What's your number?" body="Friends can find you by phone number. This won't be shared publicly." />
+              <OnboardingField label="Phone number" hint="Helps your group find you" icon={<Phone className="w-5 h-5 text-primary flex-shrink-0" />}>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  aria-label="Phone number"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="(555) 123-4567"
+                  autoFocus
+                  className={cn(onboardingInputClass, 'text-[24px] tabular-nums')}
+                />
+              </OnboardingField>
+            </OnboardingStep>
           )}
 
           {/* ── Step 4: Handicap ── */}
           {step === 'handicap' && (
-            <motion.div
-              key="handicap"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
-              transition={spring}
-              className="flex flex-col pt-4"
-            >
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step {currentStep + 1} of {STEPS.length}
-              </p>
-              <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
-                What's your handicap?
-              </h1>
-              <p className="text-[15px] text-muted-foreground leading-relaxed mb-10">
-                Used to calculate strokes per hole during rounds. You can update it anytime.
-              </p>
-
-              <div className="bg-white rounded-2xl border-2 border-foreground/10 focus-within:border-foreground px-5 py-4 transition-colors">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                  Handicap Index
-                </p>
+            <OnboardingStep key="handicap" stepKey="handicap">
+              <OnboardingIntro step={stepNo} total={total} title="What's your handicap?" body="Used to calculate strokes per hole during rounds. You can update it anytime." />
+              <OnboardingField label="Handicap index" hint="Range: -5 to 54">
                 <input
                   type="number"
                   inputMode="decimal"
@@ -401,118 +312,91 @@ export default function Onboarding() {
                   max="54"
                   step="0.1"
                   autoFocus
-                  className="w-full text-[36px] font-black text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30 tabular-nums"
+                  className={cn(onboardingInputClass, 'text-[52px] leading-none tracking-[-0.04em] tabular-nums')}
                 />
-              </div>
-              <p className="text-[12px] text-muted-foreground mt-2 ml-1">Range: -5 to 54</p>
-            </motion.div>
+              </OnboardingField>
+            </OnboardingStep>
           )}
 
           {/* ── Step 5: Tee Preference ── */}
           {step === 'tees' && (
-            <motion.div
-              key="tees"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
-              transition={spring}
-              className="flex flex-col pt-4"
-            >
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step {currentStep + 1} of {STEPS.length}
-              </p>
-              <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
-                Which tees do you play?
-              </h1>
-              <p className="text-[15px] text-muted-foreground leading-relaxed mb-8">
-                Your default tee box. This is just a preference — you can change it per round.
-              </p>
-
-              <div className="flex flex-col gap-3">
+            <OnboardingStep key="tees" stepKey="tees">
+              <OnboardingIntro step={stepNo} total={total} title="Which tees do you play?" body="Your default tee box. This is just a preference — you can change it per round." />
+              <div className="flex flex-col gap-2" role="radiogroup" aria-label="Tee preference">
                 {TEE_OPTIONS.map(({ label, color }) => {
                   const selected = teePreference === label;
                   return (
                     <motion.button
                       key={label}
+                      role="radio"
+                      aria-checked={selected}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => { hapticLight(); setTeePreference(label); }}
                       className={cn(
-                        'w-full flex items-center justify-between px-5 py-4 rounded-2xl border-2 transition-colors',
-                        selected ? 'bg-foreground border-foreground' : 'bg-white border-border/40'
+                        'w-full h-14 flex items-center justify-between px-4 rounded-[20px] border transition-colors',
+                        selected ? 'bg-primary border-primary' : 'bg-card border-border'
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={cn('w-4 h-4 rounded-full flex-shrink-0', color)} />
-                        <span className={cn('text-[16px] font-bold', selected ? 'text-background' : 'text-foreground')}>
+                        <div className={cn('w-5 h-5 rounded-full flex-shrink-0', color, selected && 'ring-2 ring-white/70')} />
+                        <span className={cn('text-[16px] font-semibold', selected ? 'text-white' : 'text-foreground')}>
                           {label}
                         </span>
                       </div>
-                      {selected && <Check className="w-5 h-5 text-background" />}
+                      {selected
+                        ? <span className="w-6 h-6 rounded-full bg-gold flex items-center justify-center"><Check className="w-4 h-4 text-gold-foreground" strokeWidth={3} /></span>
+                        : <span className="w-6 h-6 rounded-full border-2 border-border-strong" />}
                     </motion.button>
                   );
                 })}
               </div>
-            </motion.div>
+            </OnboardingStep>
           )}
 
           {/* ── Step 6: Home Course ── */}
           {step === 'course' && (
-            <motion.div
-              key="course"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
-              transition={spring}
-              className="flex flex-col pt-4"
-            >
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                Step {currentStep + 1} of {STEPS.length}
-              </p>
-              <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3">
-                Where do you play?
-              </h1>
-              <p className="text-[15px] text-muted-foreground leading-relaxed mb-8">
-                Your home course. Shown on your profile and pre-filled when starting a round.
-              </p>
-
-              <HomeCourseSelector
-                courseId={homeCourseId}
-                courseName={homeCourseName}
-                onSelect={(id, name) => { setHomeCourseId(id); setHomeCourseName(name); hapticLight(); }}
-                onClear={() => { setHomeCourseId(null); setHomeCourseName(null); }}
-              />
-            </motion.div>
+            <OnboardingStep key="course" stepKey="course">
+              <OnboardingIntro step={stepNo} total={total} title="Where do you play?" body="Your home course. Shown on your profile and pre-filled when starting a round." />
+              <div className="bg-card border border-border rounded-[20px] px-4 py-2 flex items-center justify-between gap-3">
+                <span className="text-[15px] font-semibold text-foreground">Home course</span>
+                <HomeCourseSelector
+                  courseId={homeCourseId}
+                  courseName={homeCourseName}
+                  onSelect={(id, name) => { setHomeCourseId(id); setHomeCourseName(name); hapticLight(); }}
+                  onClear={() => { setHomeCourseId(null); setHomeCourseName(null); }}
+                />
+              </div>
+            </OnboardingStep>
           )}
 
         </AnimatePresence>
       </main>
 
       {/* Bottom CTA */}
-      <div className="flex-shrink-0 px-6 pb-safe pt-4 border-t border-border/20 bg-[#FAFAF7]">
-        <div className="flex gap-3 pb-2">
-          {/* Back button */}
+      <div className="flex-shrink-0 px-5 pb-safe pt-3 bg-background">
+        <div className="flex gap-2 pb-3">
           {currentStep > 0 && (
             <motion.button
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 0.96 }}
               onClick={() => { hapticLight(); setCurrentStep(s => s - 1); }}
-              className="w-14 h-[54px] rounded-2xl bg-muted flex items-center justify-center text-foreground font-bold text-[18px]"
+              aria-label="Back"
+              className="w-[60px] h-[60px] rounded-[20px] bg-muted flex items-center justify-center text-foreground flex-shrink-0"
             >
-              ←
+              <ArrowLeft className="w-5 h-5" />
             </motion.button>
           )}
 
-          {/* Continue / Finish */}
           <motion.button
-            whileTap={{ scale: 0.97 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleContinue}
             disabled={saving || (step === 'name' && !name.trim())}
-            className="flex-1 bg-foreground text-background rounded-2xl h-[54px] font-bold text-[15px] flex items-center justify-center gap-2 disabled:opacity-40"
+            className="flex-1 bg-ink text-ink-foreground rounded-[20px] h-[60px] font-bold text-[16px] flex items-center justify-center gap-2 disabled:opacity-40"
           >
             {saving ? (
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                className="w-5 h-5 rounded-full border-2 border-background border-t-transparent"
+                className="w-5 h-5 rounded-full border-2 border-white border-t-transparent"
               />
             ) : isLastStep ? (
               <>
@@ -527,7 +411,6 @@ export default function Onboarding() {
             )}
           </motion.button>
         </div>
-
       </div>
 
       {/* Crop Modal */}
@@ -536,25 +419,25 @@ export default function Onboarding() {
           <div className="flex items-center justify-between px-4 py-3 bg-black/80 backdrop-blur-sm pt-safe-content">
             <button
               onClick={handleCropCancel}
-              className="flex items-center gap-1.5 text-white/80 active:text-white/50 text-sm font-medium py-2 px-1"
+              className="flex items-center gap-1.5 text-white/80 active:text-white/50 text-[15px] font-medium h-11 px-1"
             >
               <X className="w-5 h-5" />
               Cancel
             </button>
-            <p className="text-white font-bold text-sm">Move and Scale</p>
+            <p className="text-white font-semibold text-[15px]">Move and scale</p>
             <button
               onClick={handleCropSave}
               disabled={uploading}
-              className="flex items-center gap-1.5 text-[#BEF264] active:text-[#BEF264]/50 text-sm font-bold py-2 px-1 disabled:opacity-50"
+              className="flex items-center gap-1.5 bg-gold text-gold-foreground text-[15px] font-bold h-10 px-4 rounded-full disabled:opacity-50"
             >
               {uploading ? (
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                  className="w-4 h-4 rounded-full border-2 border-[#BEF264] border-t-transparent"
+                  className="w-4 h-4 rounded-full border-2 border-gold-foreground border-t-transparent"
                 />
               ) : (
-                <Check className="w-5 h-5" />
+                <Check className="w-4 h-4" strokeWidth={3} />
               )}
               {uploading ? 'Saving…' : 'Choose'}
             </button>
@@ -572,7 +455,7 @@ export default function Onboarding() {
               onCropComplete={onCropComplete}
               style={{
                 containerStyle: { background: '#000' },
-                cropAreaStyle: { borderRadius: '20px', border: '2px solid rgba(255,255,255,0.6)' },
+                cropAreaStyle: { borderRadius: '28px', border: '2px solid rgba(255,255,255,0.6)' },
               }}
             />
           </div>
@@ -585,8 +468,9 @@ export default function Onboarding() {
               step={0.01}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
+              aria-label="Zoom"
               className="flex-1 h-1 appearance-none bg-white/20 rounded-full outline-none
-                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
+                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
                 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md"
             />
           </div>

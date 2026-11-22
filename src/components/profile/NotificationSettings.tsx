@@ -5,7 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { shouldPromptForPush, requestPushPermission } from '@/lib/pushUtils';
 import type { NotificationPreferences } from '@/hooks/useProfile';
-import { Card, Row, SectionLabel } from './ProfileRowPrimitives';
+import { Card, Row, RowText, SectionLabel } from './ProfileRowPrimitives';
 
 const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
 
@@ -59,16 +59,14 @@ export function NotificationSettings({
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.18 }}>
       <SectionLabel>Notifications</SectionLabel>
-      <Card className="mb-5">
-        <Row className={pushPermission === 'granted' ? '' : undefined}>
-          <div className="flex-1">
-            <p className="text-[14px] font-medium text-foreground">Push Notifications</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              {pushPermission === 'granted' ? 'Enabled' : pushPermission === 'denied' ? 'Blocked in Settings' : 'Not enabled'}
-            </p>
-          </div>
+      <Card>
+        <Row last={pushPermission !== 'granted'}>
+          <RowText
+            title="Push notifications"
+            caption={pushPermission === 'granted' ? 'Enabled' : pushPermission === 'denied' ? 'Blocked in Settings' : 'Not enabled'}
+          />
           {pushPermission === 'granted' ? (
-            <span className="text-[11px] font-black text-[#22C55E] bg-[#F0FFF4] px-2.5 py-1 rounded-full">On</span>
+            <span className="text-[12px] font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">On</span>
           ) : pushPermission === 'denied' ? (
             <button
               onClick={() => {
@@ -77,7 +75,7 @@ export function NotificationSettings({
                   if (Cap.isNativePlatform()) import('@capacitor/app').then(({ App }) => { App.openUrl({ url: 'app-settings:' }); });
                 });
               }}
-              className="text-[12px] font-bold text-primary flex items-center gap-1"
+              className="h-11 px-1 text-[13px] font-semibold text-primary flex items-center gap-1"
             >
               Open Settings <ExternalLink className="w-3 h-3" />
             </button>
@@ -89,7 +87,7 @@ export function NotificationSettings({
                 setPushPermission(granted ? 'granted' : 'denied');
                 if (granted) hapticSuccess();
               }}
-              className="text-[12px] font-black text-foreground bg-[#BEF264] px-3 py-1.5 rounded-xl"
+              className="h-10 px-4 text-[13px] font-bold text-ink-foreground bg-ink rounded-[12px]"
             >
               Enable
             </button>
@@ -99,10 +97,7 @@ export function NotificationSettings({
           <>
             {NOTIFICATION_OPTIONS.map(({ key, label, desc }, i, arr) => (
               <Row key={key} last={i === arr.length - 1}>
-                <div className="flex-1">
-                  <p className="text-[14px] font-medium text-foreground">{label}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{desc}</p>
-                </div>
+                <RowText title={label} caption={desc} />
                 <Switch
                   checked={notifPrefs[key]}
                   onCheckedChange={(checked) => {
@@ -111,7 +106,7 @@ export function NotificationSettings({
                     setNotifPrefs(updated);
                     onUpdateProfile({ notification_preferences: updated });
                   }}
-                  className="data-[state=checked]:bg-foreground"
+                  aria-label={label}
                 />
               </Row>
             ))}

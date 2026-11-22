@@ -1,14 +1,36 @@
-import { Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Player } from '@/types/golf';
-import { CollapsibleSection } from './CollapsibleSection';
 import { GameResults } from '@/hooks/useGameResults';
+import { CollapsibleResults, ResultsCard } from './results/resultsUi';
+import { formatMoney, moneyClass } from './results/resultsFormat';
 
 interface GameResultsSectionProps {
   gameResults: GameResults;
   players: Player[];
   isOpen: boolean;
   onToggle: () => void;
+}
+
+function GameCard({ title, meta, children }: { title: string; meta?: string; children: React.ReactNode }) {
+  return (
+    <ResultsCard>
+      <div className="flex items-baseline justify-between px-4 pt-3.5 pb-2">
+        <h3 className="text-[16px] font-semibold text-foreground">{title}</h3>
+        {meta && <span className="text-[12px] text-muted-foreground">{meta}</span>}
+      </div>
+      <div className="pb-1.5">{children}</div>
+    </ResultsCard>
+  );
+}
+
+function Line({ label, detail, value, valueClass }: { label: string; detail?: string; value: string; valueClass?: string }) {
+  return (
+    <div className="flex items-center gap-3 px-4 min-h-[40px]">
+      <span className="text-[14px] font-medium text-foreground truncate flex-1">{label}</span>
+      {detail && <span className="text-[13px] text-muted-foreground tabular-nums">{detail}</span>}
+      <span className={cn('text-[15px] font-bold tabular-nums w-16 text-right', valueClass)}>{value}</span>
+    </div>
+  );
 }
 
 export function GameResultsSection({
@@ -22,112 +44,60 @@ export function GameResultsSection({
 
   if (!hasResults) return null;
 
+  const nameOf = (id: string | null | undefined) =>
+    id ? players.find(p => p.id === id)?.name ?? 'Unknown' : 'Tied';
+
   return (
-    <CollapsibleSection
-      title="Games"
-      icon={Target}
-      isOpen={isOpen}
-      onToggle={onToggle}
-    >
-      {/* Skins Results */}
+    <CollapsibleResults title="Games" isOpen={isOpen} onToggle={onToggle}>
       {gameResults.skinsResult && (
-        <div className="bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 mb-2">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-sm">
-              🎯
-            </div>
-            <span className="font-bold text-xs uppercase tracking-wider">Skins</span>
-          </div>
-          <div className="space-y-1">
-            {gameResults.skinsResult.standings.map((s, i) => (
-              <div key={i} className="flex justify-between text-sm">
-                <span className="font-semibold text-sm text-foreground">{s.playerName}</span>
-                <span
-                  className={cn(
-                    'font-black tabular-nums',
-                    s.earnings > 0
-                      ? 'text-[#22C55E]'
-                      : s.earnings < 0
-                      ? 'text-[#EF4444]'
-                      : 'text-muted-foreground'
-                  )}
-                >
-                  {s.skins} ({s.earnings > 0 ? '+' : ''}${s.earnings.toFixed(0)})
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <GameCard title="Skins" meta="Skins won · money">
+          {gameResults.skinsResult.standings.map((s) => (
+            <Line
+              key={s.playerId}
+              label={s.playerName}
+              detail={`${s.skins} ${s.skins === 1 ? 'skin' : 'skins'}`}
+              value={s.earnings === 0 ? 'Even' : formatMoney(s.earnings)}
+              valueClass={moneyClass(s.earnings)}
+            />
+          ))}
+        </GameCard>
       )}
 
-      {/* Nassau Results */}
       {gameResults.nassauResult && (
-        <div className="bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 mb-2">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-sm">
-              🏌️
-            </div>
-            <span className="font-bold text-xs uppercase tracking-wider">Nassau</span>
-          </div>
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Front 9</span>
-              <span className="font-semibold text-sm text-foreground">
-                {gameResults.nassauResult.front9.winnerId
-                  ? players.find(p => p.id === gameResults.nassauResult!.front9.winnerId)?.name
-                  : 'Tied'}
+        <GameCard title="Nassau" meta="Winner">
+          {([
+            ['Front 9', gameResults.nassauResult.front9.winnerId],
+            ['Back 9', gameResults.nassauResult.back9.winnerId],
+            ['Overall', gameResults.nassauResult.overall.winnerId],
+          ] as const).map(([label, winnerId]) => (
+            <div key={label} className="flex items-center gap-3 px-4 min-h-[40px]">
+              <span className="text-[14px] text-muted-foreground flex-1">{label}</span>
+              <span
+                className={cn(
+                  'text-[14px] font-semibold',
+                  winnerId ? 'text-foreground' : 'text-muted-foreground',
+                )}
+              >
+                {nameOf(winnerId)}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Back 9</span>
-              <span className="font-semibold text-sm text-foreground">
-                {gameResults.nassauResult.back9.winnerId
-                  ? players.find(p => p.id === gameResults.nassauResult!.back9.winnerId)?.name
-                  : 'Tied'}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Overall</span>
-              <span className="font-semibold text-sm text-foreground">
-                {gameResults.nassauResult.overall.winnerId
-                  ? players.find(p => p.id === gameResults.nassauResult!.overall.winnerId)?.name
-                  : 'Tied'}
-              </span>
-            </div>
-          </div>
-        </div>
+          ))}
+        </GameCard>
       )}
 
-      {/* Wolf Results */}
       {gameResults.wolfStandings && (
-        <div className="bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 mb-2">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-sm">
-              🐺
-            </div>
-            <span className="font-bold text-xs uppercase tracking-wider">Wolf</span>
-          </div>
-          <div className="space-y-1">
-            {gameResults.wolfStandings.map((s, i) => (
-              <div key={i} className="flex justify-between text-sm">
-                <span className="font-semibold text-sm text-foreground">{s.playerName}</span>
-                <span
-                  className={cn(
-                    'font-black tabular-nums',
-                    s.earnings > 0
-                      ? 'text-[#22C55E]'
-                      : s.earnings < 0
-                      ? 'text-[#EF4444]'
-                      : 'text-muted-foreground'
-                  )}
-                >
-                  {s.totalPoints}pts ({s.earnings > 0 ? '+' : ''}${s.earnings.toFixed(0)})
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <GameCard title="Wolf" meta="Points · money">
+          {gameResults.wolfStandings.map((s) => (
+            <Line
+              key={s.playerId}
+              label={s.playerName}
+              detail={`${s.totalPoints} pts`}
+              value={s.earnings === 0 ? 'Even' : formatMoney(s.earnings)}
+              valueClass={moneyClass(s.earnings)}
+            />
+          ))}
+        </GameCard>
       )}
-    </CollapsibleSection>
+    </CollapsibleResults>
   );
 }

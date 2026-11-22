@@ -59,25 +59,25 @@ class RouteErrorBoundaryInner extends Component<InnerProps, InnerState> {
       return (
         <div className="min-h-[60vh] flex items-center justify-center p-6">
           <div className="text-center space-y-4 max-w-sm">
-            <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto rounded-[20px] bg-muted flex items-center justify-center">
               <span className="text-3xl">&#x1F3CC;&#xFE0F;</span>
             </div>
             <div className="space-y-1">
-              <h2 className="text-lg font-bold text-foreground">This page hit a snag</h2>
+              <h2 className="text-[22px] font-extrabold tracking-[-0.02em] text-foreground">This page hit a snag</h2>
               <p className="text-sm text-muted-foreground">
                 You can retry, or head back home — your data is safe.
               </p>
             </div>
             <div className="space-y-2">
-              <Button onClick={this.handleRetry} className="w-full">
+              <Button onClick={this.handleRetry} className="w-full h-14 rounded-[20px] bg-ink text-ink-foreground text-base font-bold hover:bg-ink/90">
                 Try again
               </Button>
-              <Button variant="outline" onClick={this.handleGoHome} className="w-full">
+              <Button variant="outline" onClick={this.handleGoHome} className="w-full h-12 rounded-[20px]">
                 Go home
               </Button>
             </div>
             {import.meta.env.DEV && this.state.error && (
-              <details className="mt-4 text-left p-3 bg-muted rounded-lg">
+              <details className="mt-4 text-left p-3 bg-card border border-border rounded-[20px]">
                 <summary className="text-xs font-medium text-muted-foreground cursor-pointer">
                   Error details
                 </summary>

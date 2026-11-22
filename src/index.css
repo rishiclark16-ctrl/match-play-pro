@@ -43,7 +43,7 @@
     --accent-foreground: 150 35% 9%;
 
     /* Destructive */
-    --destructive: 0 85% 55%;
+    --destructive: 4 77% 40%; /* #B42318 loss red (spec) */
     --destructive-foreground: 0 0% 100%;
 
     /* Success - Bright green for live/active */
@@ -72,6 +72,10 @@
     --gold: 82 85% 67%;
     --gold-foreground: 144 61% 20%;
     --gold-muted: 82 80% 92%;
+
+    /* Fairway Day additions (additive, see docs/design/fairway-day.md) */
+    --loss: 4 77% 40%;            /* #B42318 money owed / destructive text */
+    --on-forest-muted: 141 26% 85%; /* #CFE3D6 secondary text on Forest */
 
     /* Borders */
     --border: 80 10% 90%;
@@ -140,6 +144,9 @@
     --gold: 59 86% 57%;
     --gold-foreground: 0 0% 4%;
     --gold-muted: 59 40% 12%;
+
+    --loss: 4 70% 60%;
+    --on-forest-muted: 141 26% 85%;
 
     /* Score state backgrounds — darker for dark mode */
     --score-eagle: 142 40% 15%;

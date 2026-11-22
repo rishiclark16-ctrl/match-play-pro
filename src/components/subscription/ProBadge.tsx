@@ -21,22 +21,22 @@ export function ProBadge({ className, size = 'sm', variant = 'default' }: ProBad
   };
 
   const variantClasses = {
-    default: 'bg-[#BEF264] text-[#0F1F17]',
-    subtle: 'bg-[#BEF264]/20 text-[#0F1F17] border border-[#BEF264]/40',
-    outline: 'bg-transparent text-[#0F1F17] border border-[#BEF264]/60',
+    default: 'bg-gold text-gold-foreground',
+    subtle: 'bg-gold-muted text-gold-foreground',
+    outline: 'bg-transparent text-primary border border-primary/40',
   };
 
   return (
     <span
       className={cn(
-        'inline-flex items-center font-black uppercase tracking-[0.06em] rounded-full',
+        'inline-flex items-center font-bold rounded-full',
         sizeClasses[size],
         variantClasses[variant],
         className
       )}
     >
       <Crown className={iconSizes[size]} />
-      PRO
+      Pro
     </span>
   );
 }

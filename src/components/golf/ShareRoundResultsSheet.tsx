@@ -180,7 +180,7 @@ export function ShareRoundResultsSheet({
       await sendPushToProfiles({
         profileIds: friendIds,
         title: 'Round results shared ⛳',
-        body: `Check out the results from ${round?.course_name ?? 'a recent round'}`,
+        body: `Check out the results from ${round?.courseName ?? 'a recent round'}`,
         data: { roundId: round?.id, route: round?.id ? `/round/${round.id}/complete` : undefined },
         type: 'roundCompleted',
       });
@@ -200,19 +200,19 @@ export function ShareRoundResultsSheet({
     {
       label: 'Share',
       icon: <Share2 className="w-5 h-5 text-white" />,
-      iconBg: 'bg-[#0F1F17]',
+      iconBg: 'bg-[#14532D]',
       onClick: handleNativeShare,
     },
     {
       label: 'Messages',
-      icon: <MessageSquare className="w-5 h-5 text-white" />,
-      iconBg: 'bg-[#22C55E]',
+      icon: <MessageSquare className="w-5 h-5 text-foreground" />,
+      iconBg: 'bg-muted',
       onClick: handleSMS,
     },
     {
       label: 'Email',
-      icon: <Mail className="w-5 h-5 text-white" />,
-      iconBg: 'bg-blue-500',
+      icon: <Mail className="w-5 h-5 text-foreground" />,
+      iconBg: 'bg-muted',
       onClick: handleEmail,
     },
   ];
@@ -226,7 +226,7 @@ export function ShareRoundResultsSheet({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-40"
+            className="fixed inset-0 bg-[#0F1F17]/40 z-40"
             onClick={onClose}
           />
 
@@ -236,37 +236,36 @@ export function ShareRoundResultsSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="fixed bottom-0 left-0 right-0 bg-[#FAFAF7] rounded-t-3xl z-50 shadow-2xl max-h-[90vh] flex flex-col"
+            className="fixed bottom-0 left-0 right-0 bg-background rounded-t-[28px] z-50 max-h-[90vh] flex flex-col"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             {/* Handle */}
-            <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3 shrink-0" />
+            <div className="w-10 h-1 rounded-full bg-border mx-auto mb-3 mt-3 shrink-0" />
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 pb-4 shrink-0">
-              <h3 className="text-[20px] font-black tracking-[-0.04em] text-[#0F1F17]">
-                Share Results
+            <div className="flex items-center justify-between px-5 pb-3 shrink-0">
+              <h3 className="text-[24px] font-extrabold tracking-[-0.02em] text-foreground">
+                Share results
               </h3>
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={onClose}
-                className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+                aria-label="Close"
+                className="w-11 h-11 rounded-full bg-muted flex items-center justify-center"
               >
-                <X className="w-4 h-4 text-muted-foreground" />
+                <X className="w-5 h-5 text-foreground" />
               </motion.button>
             </div>
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto pb-4">
               {/* Share preview card */}
-              <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-4 overflow-hidden">
-                {/* Top accent stripe */}
-                <div className="h-1 bg-[#BEF264]" />
-                <div className="p-5">
-                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-muted-foreground">
-                    MATCH Golf
+              <div className="bg-card rounded-[20px] border border-border mx-5 mb-4 overflow-hidden">
+                <div className="p-4">
+                  <p className="text-[12px] font-semibold text-muted-foreground">
+                    MATCH Golf · Preview
                   </p>
-                  <p className="font-black text-[18px] tracking-[-0.04em] mt-1">
+                  <p className="font-bold text-[18px] tracking-[-0.01em] mt-0.5 text-foreground">
                     {round.courseName}
                   </p>
                   {winner && (
@@ -275,19 +274,19 @@ export function ShareRoundResultsSheet({
                         <span>Tied</span>
                       ) : (
                         <>
-                          Winner: <span className="text-[#22C55E] font-black">{winner.name}</span>
+                          Winner: <span className="text-[#14532D] font-bold">{winner.name}</span>
                         </>
                       )}
                     </p>
                   )}
-                  <div className="mt-3 p-3 rounded-xl bg-[#FAFAF7] text-[12px] font-mono whitespace-pre-wrap max-h-28 overflow-y-auto text-muted-foreground">
+                  <div className="mt-3 p-3 rounded-[14px] bg-muted text-[12px] font-mono whitespace-pre-wrap max-h-28 overflow-y-auto text-foreground/80">
                     {shortSummary}
                   </div>
                 </div>
               </div>
 
               {/* Section label */}
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-6 mb-3">
+              <p className="text-[13px] font-semibold text-muted-foreground px-6 mb-2">
                 Share via
               </p>
 
@@ -300,12 +299,12 @@ export function ShareRoundResultsSheet({
                   transition={{ delay: index * 0.05, type: 'spring', stiffness: 300, damping: 28 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={option.onClick}
-                  className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-2 px-4 py-3 flex items-center gap-3 w-[calc(100%-48px)]"
+                  className="bg-card rounded-[20px] border border-border mx-5 mb-2 px-4 min-h-[60px] flex items-center gap-3 w-[calc(100%-40px)]"
                 >
-                  <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', option.iconBg)}>
+                  <div className={cn('w-10 h-10 rounded-full flex items-center justify-center shrink-0', option.iconBg)}>
                     {option.icon}
                   </div>
-                  <span className="font-semibold text-foreground">{option.label}</span>
+                  <span className="text-[16px] font-semibold text-foreground">{option.label}</span>
                   <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
                 </motion.button>
               ))}
@@ -314,7 +313,7 @@ export function ShareRoundResultsSheet({
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={handleCopy}
-                className="bg-foreground text-background rounded-2xl h-[52px] font-bold mx-6 mt-3 w-[calc(100%-48px)] flex items-center justify-center gap-2"
+                className="bg-[#0F1F17] text-white rounded-[20px] h-[60px] text-[16px] font-semibold mx-5 mt-3 w-[calc(100%-40px)] flex items-center justify-center gap-2"
               >
                 {copied ? (
                   <>
@@ -324,7 +323,7 @@ export function ShareRoundResultsSheet({
                 ) : (
                   <>
                     <Copy className="w-5 h-5" />
-                    Copy Summary
+                    Copy summary
                   </>
                 )}
               </motion.button>
@@ -333,8 +332,8 @@ export function ShareRoundResultsSheet({
               {friendsNotInRound.length > 0 && (
                 <div className="mt-6">
                   {/* Section label */}
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-6 mb-3">
-                    Send to Friends ({selectedFriendIds.size} selected)
+                  <p className="text-[13px] font-semibold text-muted-foreground px-6 mb-2">
+                    Send to friends ({selectedFriendIds.size} selected)
                   </p>
 
                   {friendsLoading ? (
@@ -352,12 +351,12 @@ export function ShareRoundResultsSheet({
                           whileTap={{ scale: 0.97 }}
                           onClick={() => toggleFriend(friend.id)}
                           className={cn(
-                            'bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-2 px-4 py-3 flex items-center gap-3 w-[calc(100%-48px)] transition-all',
-                            selectedFriendIds.has(friend.id) && 'ring-2 ring-foreground'
+                            'bg-card rounded-[20px] border border-border mx-5 mb-2 px-4 min-h-[60px] flex items-center gap-3 w-[calc(100%-40px)] transition-all',
+                            selectedFriendIds.has(friend.id) && 'border-[#14532D] ring-1 ring-[#14532D]'
                           )}
                         >
                           {/* Avatar */}
-                          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                             {friend.avatarUrl ? (
                               <img
                                 src={friend.avatarUrl}
@@ -365,7 +364,7 @@ export function ShareRoundResultsSheet({
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <span className="text-sm font-bold text-muted-foreground">
+                              <span className="text-sm font-bold text-foreground">
                                 {(friend.fullName || '?')[0].toUpperCase()}
                               </span>
                             )}
@@ -386,14 +385,14 @@ export function ShareRoundResultsSheet({
                           {/* Checkbox */}
                           <div
                             className={cn(
-                              'w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
+                              'w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
                               selectedFriendIds.has(friend.id)
-                                ? 'bg-foreground border-foreground'
+                                ? 'bg-[#14532D] border-[#14532D]'
                                 : 'border-muted-foreground/30'
                             )}
                           >
                             {selectedFriendIds.has(friend.id) && (
-                              <Check className="w-3 h-3 text-background" />
+                              <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
                             )}
                           </div>
                         </motion.button>
@@ -418,19 +417,19 @@ export function ShareRoundResultsSheet({
 
             {/* Bottom Action — send to friends */}
             {friendsNotInRound.length > 0 && selectedFriendIds.size > 0 && (
-              <div className="px-6 pb-6 pt-2 shrink-0">
+              <div className="px-5 pb-5 pt-2 shrink-0 border-t border-border">
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={handleSendToFriends}
                   disabled={isSending}
-                  className="bg-foreground text-background rounded-2xl h-[52px] font-bold w-full flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="bg-[#0F1F17] text-white rounded-[20px] h-[60px] text-[16px] font-semibold w-full flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   {isSending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
                     <Send className="w-5 h-5" />
                   )}
-                  Send to {selectedFriendIds.size} Friend{selectedFriendIds.size > 1 ? 's' : ''}
+                  Send to {selectedFriendIds.size} friend{selectedFriendIds.size > 1 ? 's' : ''}
                 </motion.button>
               </div>
             )}

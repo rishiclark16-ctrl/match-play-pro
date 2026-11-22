@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Loader2, CloudRain, Shuffle, Coins, Zap, Plus, Share2, Sparkles } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useRounds } from '@/hooks/useRounds';
 import { useRoundSharing } from '@/hooks/useRoundSharing';
 import { useSettings } from '@/hooks/useSettings';
@@ -17,7 +16,6 @@ import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { supabase } from '@/integrations/supabase/client';
 import { shouldPromptForPush, requestPushPermission } from '@/lib/pushUtils';
 import { isCustomPrimitive } from '@/types/houseGame';
-import { getPropBetLabel, getPropBetIcon } from '@/types/betting';
 import { useGroups } from '@/hooks/useGroups';
 import { useAuth } from '@/hooks/useAuth';
 import { useReviewPrompt } from '@/hooks/useReviewPrompt';
@@ -41,6 +39,8 @@ import { useRoundCompletePlayers, useRoundCompleteSettlements } from '@/hooks/us
 import { useAddToTab } from '@/hooks/useAddToTab';
 import { useRoundShareHandlers } from '@/hooks/useRoundShareHandlers';
 import { buildHouseGameShareText } from '@/lib/shareHouseGameText';
+import { RoundNotices, GhostPotCard, HouseGameCard, CustomRulesCard, JunkBetsCard } from '@/components/golf/results/RoundExtras';
+import { AddToGroupTab } from '@/components/golf/results/AddToGroupTab';
 
 export default function RoundComplete() {
   const { id } = useParams<{ id: string }>();
@@ -83,7 +83,7 @@ export default function RoundComplete() {
         particleCount: 120,
         spread: 80,
         origin: { y: 0.3 },
-        colors: ['#BEF264', '#ffffff', '#22C55E', '#0F1F17'],
+        colors: ['#BEF264', '#ffffff', '#14532D', '#0F1F17'],
         disableForReducedMotion: true,
       });
     }, 400);
@@ -244,6 +244,10 @@ export default function RoundComplete() {
     }
   };
 
+  // Viewer's own player row, for "your money" and "You pay" phrasing.
+  const myPlayerId = user ? rawPlayers.find(p => p.profileId === user.id)?.id : undefined;
+  const customRules = (houseGameEntry?.activePrimitives ?? []).filter(isCustomPrimitive);
+
   // Loading state
   if (loading) {
     return (
@@ -260,15 +264,15 @@ export default function RoundComplete() {
   if (!round) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center px-6 space-y-4">
-          <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mx-auto">
+        <div className="text-center px-6 space-y-3">
+          <div className="w-16 h-16 rounded-[20px] bg-card border border-border flex items-center justify-center mx-auto">
             <span className="text-3xl">🏌️</span>
           </div>
-          <h2 className="text-xl font-bold">Round not found</h2>
+          <h2 className="text-[22px] font-extrabold tracking-[-0.02em]">Round not found</h2>
           <p className="text-muted-foreground text-sm">
             This round may have been deleted or doesn't exist
           </p>
-          <Button onClick={() => navigate('/')} className="mt-4">
+          <Button onClick={() => navigate('/')} className="mt-4 h-12 px-6 rounded-[14px]">
             Go Home
           </Button>
         </div>
@@ -285,21 +289,13 @@ export default function RoundComplete() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background relative">
-      {/* Technical Grid Background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
-        <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-primary/3 to-transparent" />
-      </div>
-
-      {/* Fixed Header Section */}
       <RoundCompleteHeader round={round} />
 
       {/* Scrollable Content */}
       <main
-        className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-4 pb-48"
+        className="flex-1 overflow-y-auto overscroll-y-contain relative z-10 px-5 pt-1 pb-48"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        {/* Winner Card */}
         {winner && (
           <WinnerCard
             winner={winner}
@@ -308,61 +304,19 @@ export default function RoundComplete() {
             round={round}
             matchPlayResult={matchPlayResult}
             useNetScoring={settings.useNetScoring}
+            settlements={settlements}
+            myPlayerId={myPlayerId}
           />
         )}
 
-        {/* Match Play Result */}
-        {matchPlayResult && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="mx-4 mb-4"
-          >
-            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Match Play
-                  </span>
-                  <span className="font-bold text-sm">{matchPlayResult.statusText}</span>
-                </div>
-            </div>
-          </motion.div>
-        )}
+        <RoundNotices
+          matchPlayResult={round.matchPlay ? null : matchPlayResult}
+          isRainShortened={isRainShortened}
+          netOut={!!houseGameConfig?.settlementConfig.netOut}
+        />
 
-        {/* Rain-shortened banner */}
-        {isRainShortened && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mx-4 mb-3 bg-[#1E3A5F] rounded-2xl px-4 py-3 flex items-center gap-3"
-          >
-            <CloudRain className="w-5 h-5 text-[#60A5FA] flex-shrink-0" />
-            <div>
-              <p className="text-white text-[13px] font-bold">Rain-shortened settlement applied</p>
-              <p className="text-white/60 text-[11px]">Front 9 settled normally · Back 9 and overall not scored</p>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Net-out banner */}
-        {houseGameConfig?.settlementConfig.netOut && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.32 }}
-            className="mx-4 mb-3 bg-[#BEF264] rounded-2xl px-4 py-2.5 flex items-center gap-3"
-          >
-            <Shuffle className="w-4 h-4 text-[#0F1F17] flex-shrink-0" />
-            <p className="text-[#0F1F17] text-[12px] font-bold">Net-out applied — all debts combined into minimum payments</p>
-          </motion.div>
-        )}
-
-        {/* Watch Party Reveal */}
         {id && <WatchPartyRevealCard roundId={id} />}
 
-        {/* Settlements Section */}
         <SettlementsSection
           trackedSettlements={trackedSettlements}
           settlementStats={settlementStats}
@@ -371,163 +325,33 @@ export default function RoundComplete() {
           markAsPaid={markAsPaid}
           markAsForgiven={markAsForgiven}
           markAsPending={markAsPending}
+          myPlayerId={myPlayerId}
+          footer={
+            groups.length > 0 && settlements.length > 0 ? (
+              <AddToGroupTab
+                groups={groups}
+                addingToTab={addingToTab}
+                addedToGroupId={addedToGroupId}
+                showGroupPicker={showGroupPicker}
+                setShowGroupPicker={setShowGroupPicker}
+                onAdd={handleAddToTab}
+              />
+            ) : null
+          }
         />
 
-        {/* Ghost Pot */}
-        {ghostPotAmount > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.36 }}
-            className="mx-4 mb-4"
-          >
-            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
-                <span className="text-base leading-none">👻</span>
-                <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-foreground">Ghost Pot</span>
-                <span className="ml-auto text-[14px] font-black text-foreground">${ghostPotAmount.toFixed(0)}</span>
-              </div>
-              {ghostPotEntries.map((s) => (
-                <div key={`${s.fromPlayerId}-${s.toPlayerId}`} className="flex items-center justify-between px-4 py-2.5 border-b border-border/10 last:border-b-0">
-                  <span className="text-[13px] text-muted-foreground">
-                    {s.fromPlayerName.split(' ')[0]} → pot
-                  </span>
-                  <span className="text-[13px] font-bold text-foreground">${s.amount.toFixed(0)}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
+        <FinalStandings
+          sortedPlayers={sortedPlayers}
+          settlements={settlements}
+          useNetScoring={settings.useNetScoring}
+          myPlayerId={myPlayerId}
+        />
 
-        {/* House Game Settlement */}
-        {houseGameSettlements.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.38 }}
-            className="mx-4 mb-4"
-          >
-            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
-                <div className="w-5 h-5 rounded-md bg-[#BEF264] flex items-center justify-center">
-                  <Coins className="w-3 h-3 text-[#0F1F17]" />
-                </div>
-                <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-foreground">House Game</span>
-              </div>
-              {houseGameSettlements.map((s) => (
-                <div key={`${s.fromPlayerId}-${s.toPlayerId}`} className="flex items-center justify-between px-4 py-3 border-b border-border/10 last:border-b-0">
-                  <span className="text-[13px] font-semibold text-foreground">
-                    {s.fromPlayerName.split(' ')[0]} → {s.toPlayerName.split(' ')[0]}
-                  </span>
-                  <span className="text-[14px] font-black text-foreground">${s.amount.toFixed(0)}</span>
-                </div>
-              ))}
-              <button
-                onClick={handleShareHouseGame}
-                className="w-full flex items-center justify-center gap-1.5 py-3 text-[12px] font-bold text-muted-foreground"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-                Share House Game Results
-              </button>
-            </div>
-          </motion.div>
-        )}
+        <GhostPotCard entries={ghostPotEntries} total={ghostPotAmount} />
+        <HouseGameCard settlements={houseGameSettlements} onShare={handleShareHouseGame} />
+        <CustomRulesCard rules={customRules} />
+        <JunkBetsCard bets={wonJunkBets} players={rawPlayers} summary={junkSummary} />
 
-        {/* Custom Rules (manual settlement reminders) */}
-        {(() => {
-          const customRules = (houseGameEntry?.activePrimitives ?? []).filter(isCustomPrimitive);
-          if (customRules.length === 0) return null;
-          return (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.40 }}
-              className="mx-4 mb-4"
-            >
-              <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
-                  <div className="w-5 h-5 rounded-md bg-[#BEF264] flex items-center justify-center">
-                    <Sparkles className="w-3 h-3 text-[#0F1F17]" />
-                  </div>
-                  <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-foreground">Custom Rules</span>
-                  <span className="ml-auto text-[10px] font-bold text-muted-foreground">Settle manually</span>
-                </div>
-                {customRules.map((rule, i) => {
-                  const label = rule.label ?? rule.id.replace('custom_', '').replace(/_/g, ' ');
-                  const desc = rule.description ?? '';
-                  const val = rule.value;
-                  return (
-                    <div key={rule.id} className="px-4 py-3 border-b border-border/10 last:border-b-0">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <span className="text-[13px] font-semibold text-foreground block">{label}</span>
-                          {desc && <span className="text-[11px] text-muted-foreground leading-snug">{desc}</span>}
-                        </div>
-                        {val != null && (
-                          <span className="text-[13px] font-black text-foreground flex-shrink-0">${val}</span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          );
-        })()}
-
-        {/* Junk Bets Settlement */}
-        {wonJunkBets.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.42 }}
-            className="mx-4 mb-4"
-          >
-            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
-                <div className="w-5 h-5 rounded-md bg-[#BEF264] flex items-center justify-center">
-                  <Zap className="w-3 h-3 text-[#0F1F17]" />
-                </div>
-                <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-foreground">Junk Bets</span>
-                <span className="ml-auto text-[11px] font-bold text-muted-foreground">{wonJunkBets.length} logged</span>
-              </div>
-              {/* Per-hole line items */}
-              {wonJunkBets.map((bet, i) => {
-                const winner = rawPlayers.find(p => p.id === bet.winnerId);
-                return (
-                  <div key={bet.id} className="flex items-center justify-between px-4 py-2.5 border-b border-border/10 last:border-b-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base">{getPropBetIcon(bet.type)}</span>
-                      <div>
-                        <span className="text-[13px] font-semibold text-foreground">{getPropBetLabel(bet.type)}</span>
-                        <span className="text-[11px] text-muted-foreground ml-1.5">H{bet.holeNumber}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[12px] text-muted-foreground">{winner?.name.split(' ')[0]}</span>
-                      <span className="text-[13px] font-black text-[#22C55E]">+${bet.stakes}</span>
-                    </div>
-                  </div>
-                );
-              })}
-              {/* Net summary */}
-              {junkSummary.length > 0 && (
-                <div className="px-4 py-3 bg-muted/30 space-y-1">
-                  {junkSummary.map(entry => (
-                    <div key={entry.name} className="flex items-center justify-between">
-                      <span className="text-[12px] text-muted-foreground">{entry.name.split(' ')[0]}</span>
-                      <span className={`text-[12px] font-black ${entry.net >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-                        {entry.net >= 0 ? '+' : ''}${entry.net.toFixed(0)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Game Results */}
         {gameResults && (
           <GameResultsSection
             gameResults={gameResults}
@@ -537,82 +361,12 @@ export default function RoundComplete() {
           />
         )}
 
-        {/* Highlights Section */}
         <HighlightsSection
           highlights={highlights}
           isOpen={showHighlights}
           onToggle={() => setShowHighlights(!showHighlights)}
         />
-
-        {/* Final Standings */}
-        <FinalStandings
-          sortedPlayers={sortedPlayers}
-          settlements={settlements}
-          useNetScoring={settings.useNetScoring}
-        />
       </main>
-
-      {/* Add to Group Tab */}
-      {groups.length > 0 && settlements.length > 0 && (
-        <div className="mx-4 mb-4">
-          {!addedToGroupId ? (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              {!showGroupPicker ? (
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => { hapticLight(); if (groups.length === 1) { handleAddToTab(groups[0].id); } else { setShowGroupPicker(true); } }}
-                  disabled={addingToTab}
-                  className="w-full bg-white border-2 border-foreground/10 rounded-2xl py-3.5 flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {addingToTab ? (
-                    <span className="text-[13px] font-bold text-muted-foreground animate-pulse">Adding…</span>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4 text-foreground" />
-                      <span className="text-[13px] font-bold text-foreground">Add to Group Tab</span>
-                    </>
-                  )}
-                </motion.button>
-              ) : (
-                <div className="bg-white border-2 border-foreground/10 rounded-2xl p-4">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-3">Select group</p>
-                  <div className="space-y-2">
-                    {groups.map(g => (
-                      <motion.button
-                        key={g.id}
-                        whileTap={{ scale: 0.97 }}
-                        disabled={addingToTab}
-                        onClick={() => handleAddToTab(g.id)}
-                        className="w-full flex items-center justify-between bg-muted rounded-xl px-4 py-3 disabled:opacity-50"
-                      >
-                        <span className="text-[13px] font-bold text-foreground">{g.name}</span>
-                        <span className="text-[11px] text-muted-foreground">{g.members.length} members</span>
-                      </motion.button>
-                    ))}
-                  </div>
-                  <button onClick={() => setShowGroupPicker(false)} className="mt-3 w-full text-[12px] text-muted-foreground font-bold py-1">Cancel</button>
-                </div>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-[#F0FFF4] border border-[#22C55E]/30 rounded-2xl px-4 py-3 flex items-center gap-3"
-            >
-              <span className="text-base">✓</span>
-              <div>
-                <p className="text-[13px] font-bold text-[#15803D]">Added to {groups.find(g => g.id === addedToGroupId)?.name} tab</p>
-                <p className="text-[11px] text-[#15803D]/70">Visible in group ledger</p>
-              </div>
-            </motion.div>
-          )}
-        </div>
-      )}
 
       {/* Bottom Buttons */}
       <RoundCompleteActions
@@ -631,7 +385,7 @@ export default function RoundComplete() {
         round={round}
         players={playersWithScores}
         settlements={settlements}
-        winner={winner}
+        winner={winner ?? null}
         hasTie={hasTie}
         useNetScoring={settings.useNetScoring}
         matchPlayResult={matchPlayResult}
