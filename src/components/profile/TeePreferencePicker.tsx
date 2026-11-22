@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 import { hapticLight } from '@/lib/haptics';
 
 /** Tee colours are the physical tee-marker colours, not brand colours. */
-export const PROFILE_TEE_OPTIONS = [
+const PROFILE_TEE_OPTIONS = [
   { value: 'back', label: 'Black', dot: 'bg-[#1a1a1a]' },
   { value: 'blue', label: 'Blue', dot: 'bg-blue-600' },
   { value: 'white', label: 'White', dot: 'bg-white ring-1 ring-inset ring-border-strong' },
