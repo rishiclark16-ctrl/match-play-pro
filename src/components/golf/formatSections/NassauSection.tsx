@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Lock, Trophy } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -10,6 +10,13 @@ import {
   iconBoxClass,
   iconClass,
   springTransition,
+  gameDetailPanel,
+  stakeRow,
+  stakeCurrency,
+  stakeInput,
+  stakeSuffix,
+  optionRow,
+  optionCheckbox,
 } from '../formatStepStyles';
 import { ProLabel } from './ProLabel';
 
@@ -41,20 +48,19 @@ export function NassauSection({
       className={cn(
         gameCardBase,
         nassauEnabled && allowed && gameCardSelected,
-        !allowed && 'opacity-60'
+        !allowed && 'opacity-70'
       )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {!allowed && <Lock className="w-4 h-4 text-muted-foreground" />}
           <div className={iconBoxClass(nassauEnabled && allowed, !allowed)}>
             <Trophy className={iconClass(nassauEnabled && allowed, !allowed)} />
           </div>
           <div>
-            <p className="font-bold text-sm text-foreground flex items-center gap-2">
+            <p className="font-semibold text-[16px] text-foreground flex items-center gap-2">
               Nassau{!allowed && <ProLabel />}
             </p>
-            <p className="text-[12px] text-muted-foreground mt-0.5">Front 9 + Back 9 + Overall</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">Front 9 + Back 9 + Overall</p>
           </div>
         </div>
         <Switch
@@ -70,24 +76,24 @@ export function NassauSection({
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           transition={springTransition}
-          className="pt-3 mt-3 border-t border-border/50 space-y-3"
+          className={gameDetailPanel}
           onClick={e => e.stopPropagation()}
         >
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-muted-foreground">$</span>
+          <div className={stakeRow}>
+            <span className={stakeCurrency}>$</span>
             <Input
               type="number" placeholder="5" value={nassauStakes}
               onChange={e => onNassauStakesChange(e.target.value)}
-              className="w-24 text-center font-mono bg-muted/50 rounded-xl border-0 py-2.5 text-sm"
+              className={stakeInput}
               min={1}
             />
-            <span className="text-sm text-muted-foreground">per bet</span>
+            <span className={stakeSuffix}>per bet</span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className={optionRow}>
             <Checkbox
               id="autopress" checked={nassauAutoPress}
-              className="w-4 h-4 rounded border-border"
+              className={optionCheckbox}
               onCheckedChange={checked => onNassauAutoPressChange(checked === true)}
             />
             <label htmlFor="autopress">Auto-press when 2 down</label>

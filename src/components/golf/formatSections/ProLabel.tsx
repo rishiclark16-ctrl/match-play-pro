@@ -1,5 +1,8 @@
+import { Lock } from 'lucide-react';
+
 export const ProLabel = () => (
-  <span className="bg-foreground text-[#BEF264] text-[9px] font-black tracking-[0.1em] px-1.5 py-0.5 rounded-md">
+  <span className="inline-flex items-center gap-1 bg-gold text-primary text-[11px] font-bold px-2 py-0.5 rounded-full">
+    <Lock className="w-2.5 h-2.5" strokeWidth={3} />
     PRO
   </span>
 );

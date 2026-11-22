@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flag, Users, Gamepad2 } from 'lucide-react';
@@ -305,6 +305,8 @@ export default function NewRound() {
   };
 
   const isFinalStep = step === steps[steps.length - 1];
+  const mainRef = useRef<HTMLElement>(null);
+  useEffect(() => { if (mainRef.current) mainRef.current.scrollTop = 0; }, [step]);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background relative">
@@ -320,6 +322,7 @@ export default function NewRound() {
 
       {/* Scrollable Content */}
       <main
+        ref={mainRef}
         className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain relative z-10 px-5 pb-36 bg-background"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >

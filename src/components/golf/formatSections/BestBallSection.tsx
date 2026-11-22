@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Lock, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import {
@@ -8,6 +8,11 @@ import {
   iconBoxClass,
   iconClass,
   springTransition,
+  gameDetailPanel,
+  teamBoxA,
+  teamBoxB,
+  teamLabelA,
+  teamLabelB,
 } from '../formatStepStyles';
 import { ProLabel } from './ProLabel';
 
@@ -40,20 +45,19 @@ export function BestBallSection({
       className={cn(
         gameCardBase,
         bestBallEnabled && allowed && gameCardSelected,
-        !allowed && 'opacity-60'
+        !allowed && 'opacity-70'
       )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {!allowed && <Lock className="w-4 h-4 text-muted-foreground" />}
           <div className={iconBoxClass(bestBallEnabled && allowed, !allowed)}>
             <Users className={iconClass(bestBallEnabled && allowed, !allowed)} />
           </div>
           <div>
-            <p className="font-bold text-sm text-foreground flex items-center gap-2">
+            <p className="font-semibold text-[16px] text-foreground flex items-center gap-2">
               Best Ball{!allowed && <ProLabel />}
             </p>
-            <p className="text-[12px] text-muted-foreground mt-0.5">
+            <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">
               {playerCount === 4 ? '2v2 team format' : 'Team format - best score counts'}
             </p>
           </div>
@@ -71,20 +75,20 @@ export function BestBallSection({
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           transition={springTransition}
-          className="pt-3 mt-3 border-t border-border/50"
+          className={gameDetailPanel}
           onClick={e => e.stopPropagation()}
         >
-          <p className="text-xs text-muted-foreground mb-2">Teams auto-assigned:</p>
+          <p className="text-[13px] text-muted-foreground mb-2">Teams auto-assigned</p>
           <div className="grid grid-cols-2 gap-2">
-            <div className="p-3 rounded-lg bg-[#22C55E]/10 border border-[#22C55E]/30">
-              <p className="text-[10px] font-semibold text-[#22C55E] uppercase tracking-wide">Team 1</p>
-              <p className="text-sm font-medium truncate">
+            <div className={teamBoxA}>
+              <p className={teamLabelA}>Team 1</p>
+              <p className="text-[15px] font-semibold text-foreground truncate mt-0.5">
                 {validPlayers[0]?.name.split(' ')[0]} & {validPlayers[1]?.name.split(' ')[0]}
               </p>
             </div>
-            <div className="p-3 rounded-lg bg-foreground/5 border border-foreground/20">
-              <p className="text-[10px] font-semibold text-foreground/60 uppercase tracking-wide">Team 2</p>
-              <p className="text-sm font-medium truncate">
+            <div className={teamBoxB}>
+              <p className={teamLabelB}>Team 2</p>
+              <p className="text-[15px] font-semibold text-foreground truncate mt-0.5">
                 {validPlayers[2]?.name.split(' ')[0]} & {validPlayers[3]?.name.split(' ')[0]}
               </p>
             </div>
