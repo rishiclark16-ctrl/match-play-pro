@@ -46,13 +46,13 @@ function TypingAnimation() {
   }, [idx, text]);
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
-      <p className="text-[13px] text-foreground leading-relaxed min-h-[60px]">
+    <div className="bg-card rounded-[20px] p-4 border border-border">
+      <p className="text-[16px] text-foreground leading-relaxed min-h-[76px]">
         {displayed}
         <motion.span
           animate={{ opacity: [1, 0] }}
           transition={{ repeat: Infinity, duration: 0.6 }}
-          className="inline-block w-[2px] h-[14px] bg-foreground ml-[1px] align-middle"
+          className="inline-block w-[2px] h-[18px] bg-primary ml-[1px] align-middle"
         />
       </p>
     </div>
@@ -78,17 +78,17 @@ function ParseAnimation() {
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-            className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.06)]"
+            className="flex items-center gap-3 bg-card rounded-[20px] border border-border px-4 min-h-[52px]"
           >
-            <span className="w-2 h-2 rounded-full bg-[#BEF264] flex-shrink-0" />
-            <span className="text-[13px] font-medium text-foreground">{rule}</span>
+            <span className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center flex-shrink-0 text-white text-[13px] font-bold">✓</span>
+            <span className="text-[15px] font-semibold text-foreground">{rule}</span>
             <motion.span
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.15, type: 'spring', stiffness: 500 }}
-              className="ml-auto text-[11px] font-bold text-[#22C55E]"
+              className="ml-auto text-[12px] font-semibold text-primary bg-gold-muted px-2 py-0.5 rounded-full"
             >
-              ✓
+              High
             </motion.span>
           </motion.div>
         ))}
@@ -103,15 +103,15 @@ function SaveAnimation() {
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.1 }}
-      className="bg-[#0F1F17] rounded-2xl p-4"
+      className="bg-primary rounded-[28px] p-5"
     >
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[#BEF264]/15 flex items-center justify-center flex-shrink-0">
-          <Sparkles className="w-5 h-5 text-[#BEF264]" />
+        <div className="w-11 h-11 rounded-[14px] bg-gold flex items-center justify-center flex-shrink-0">
+          <Sparkles className="w-5 h-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-black text-white text-[15px] leading-tight">Saturday Nassau</p>
-          <p className="text-white/50 text-[12px] mt-0.5">Nassau · Auto Press · Birdies</p>
+          <p className="font-extrabold text-white text-[18px] leading-tight">Saturday Nassau</p>
+          <p className="text-[#CFE3D6] text-[13px] mt-0.5">Nassau · Auto Press · Birdies</p>
         </div>
         <motion.div
           initial={{ scale: 0 }}
@@ -119,11 +119,11 @@ function SaveAnimation() {
           transition={{ delay: 0.4, type: 'spring', stiffness: 500 }}
           className="w-6 h-6 rounded-full bg-[#BEF264] flex items-center justify-center flex-shrink-0"
         >
-          <span className="text-[10px] font-black text-[#0F1F17]">✓</span>
+          <span className="text-[12px] font-black text-primary">✓</span>
         </motion.div>
       </div>
       <div className="mt-3 pt-3 border-t border-white/10">
-        <p className="text-white/30 text-[11px] font-medium tracking-wide uppercase">Appears in every new round</p>
+        <p className="text-[#CFE3D6] text-[13px] font-medium">Appears in every new round</p>
       </div>
     </motion.div>
   );
@@ -152,8 +152,8 @@ export function AIBuilderTutorial({ onDismiss }: Props) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end"
-      style={{ background: 'rgba(0,0,0,0.75)' }}
+      className="fixed inset-0 z-[60] flex items-end"
+      style={{ background: 'rgba(15,31,23,0.6)' }}
     >
       {/* Tap backdrop to skip */}
       <div className="absolute inset-0" onClick={() => { localStorage.setItem(STORAGE_KEY, '1'); onDismiss(); }} />
@@ -163,8 +163,8 @@ export function AIBuilderTutorial({ onDismiss }: Props) {
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        className="relative w-full bg-[#FAFAF7] rounded-t-3xl px-6 pt-6"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 80px)' }}
+        className="relative w-full bg-background rounded-t-[28px] px-5 pt-5"
+        style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Progress dots */}
@@ -172,7 +172,7 @@ export function AIBuilderTutorial({ onDismiss }: Props) {
           {STEPS.map((_, i) => (
             <motion.div
               key={i}
-              animate={{ width: i === step ? 20 : 6, backgroundColor: i === step ? '#0F1F17' : '#D1D5DB' }}
+              animate={{ width: i === step ? 20 : 6, backgroundColor: i === step ? '#14532D' : '#E7E9E3' }}
               transition={{ type: 'spring', stiffness: 400, damping: 28 }}
               className="h-1.5 rounded-full"
             />
@@ -190,10 +190,10 @@ export function AIBuilderTutorial({ onDismiss }: Props) {
           >
             {/* Header */}
             <div className="flex items-center gap-2 mb-1">
-              <current.icon className="w-5 h-5" style={{ color: current.iconColor }} />
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{current.subtitle}</p>
+              <span className="w-7 h-7 rounded-[9px] bg-gold flex items-center justify-center"><current.icon className="w-4 h-4 text-primary" /></span>
+              <p className="text-[13px] font-semibold text-muted-foreground">{current.subtitle}</p>
             </div>
-            <h2 className="text-[26px] font-black tracking-[-0.04em] text-foreground leading-tight mb-2">
+            <h2 className="text-[28px] font-extrabold tracking-[-0.02em] text-foreground leading-tight mt-2 mb-2">
               {current.title}
             </h2>
             <p className="text-[14px] text-muted-foreground leading-relaxed mb-5">
@@ -211,12 +211,12 @@ export function AIBuilderTutorial({ onDismiss }: Props) {
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={handleNext}
-          className="w-full bg-foreground text-background rounded-2xl h-[54px] font-bold text-[15px] flex items-center justify-center gap-2 mb-4"
+          className="w-full bg-ink text-white rounded-[20px] h-[60px] font-bold text-[16px] flex items-center justify-center gap-2 mb-2"
         >
           {isLast ? (
             <>
               <Sparkles className="w-5 h-5 text-[#BEF264]" />
-              <span>Let's Build It</span>
+              <span>Let's build it</span>
             </>
           ) : (
             <span>Next</span>
@@ -226,7 +226,7 @@ export function AIBuilderTutorial({ onDismiss }: Props) {
         {/* Skip */}
         <button
           onClick={() => { localStorage.setItem(STORAGE_KEY, '1'); onDismiss(); }}
-          className="w-full text-center text-[13px] text-muted-foreground pb-2"
+          className="w-full h-11 text-center text-[14px] font-semibold text-muted-foreground"
         >
           Skip tutorial
         </button>
