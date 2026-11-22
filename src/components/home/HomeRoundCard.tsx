@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, Trash2, Users, ChevronRight } from 'lucide-react';
+import { Loader2, Trash2, Users, ChevronRight, Check } from 'lucide-react';
 import { formatGameType } from '@/lib/formatGameType';
 import type { Round } from '@/types/golf';
 
@@ -69,8 +69,9 @@ export function HomeRoundCard({
                 Live
               </span>
             ) : (
-              <span className="inline-flex items-center rounded-full bg-muted px-2.5 h-6 text-[12px] font-semibold text-muted-foreground">
-                Done
+              <span className="inline-flex items-center gap-1 rounded-full bg-gold-muted px-2.5 h-6 text-[12px] font-semibold text-primary">
+                <Check className="h-3 w-3" strokeWidth={3} />
+                Final
               </span>
             )}
             <span className="text-[12px] text-muted-foreground truncate">

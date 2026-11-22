@@ -96,19 +96,17 @@ export default function PublicProfile() {
   };
 
   const headerContent = (
-    <div className="px-4 pt-safe-content pb-3 border-b-2 border-foreground">
+    <div className="px-5 pt-safe-content pb-3">
       <div className="flex items-center gap-3">
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+          aria-label="Back"
+          className="h-11 w-11 rounded-[14px] bg-muted flex items-center justify-center"
         >
-          <ArrowLeft className="w-4 h-4 text-foreground" />
+          <ArrowLeft className="h-5 w-5 text-foreground" />
         </motion.button>
-        <div>
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">MATCH Golf</p>
-          <h1 className="text-[22px] font-black tracking-[-0.04em] text-foreground leading-none">Profile</h1>
-        </div>
+        <h1 className="text-[24px] font-extrabold tracking-[-0.03em] text-foreground leading-none">Golfer</h1>
       </div>
     </div>
   );
@@ -116,8 +114,8 @@ export default function PublicProfile() {
   if (loading) {
     return (
       <AppLayout header={headerContent}>
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        <div className="px-5 pt-1">
+          <div className="h-[260px] rounded-[28px] bg-primary/90 animate-pulse" aria-hidden="true" />
         </div>
       </AppLayout>
     );
@@ -126,12 +124,14 @@ export default function PublicProfile() {
   if (!profile) {
     return (
       <AppLayout header={headerContent}>
-        <div className="px-6 py-20 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
-            <Flag className="w-7 h-7 text-muted-foreground" />
+        <div className="px-5 pt-1">
+          <div className="rounded-[20px] border border-dashed border-border-strong px-6 py-10 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-[16px] bg-muted text-primary">
+              <Flag className="h-6 w-6" />
+            </div>
+            <h2 className="text-[16px] font-semibold text-foreground">Profile not found</h2>
+            <p className="mt-1 text-[13px] text-muted-foreground">This player doesn't have a MATCH account.</p>
           </div>
-          <h2 className="text-[15px] font-black mb-1">Profile Not Found</h2>
-          <p className="text-[12px] text-muted-foreground">This player doesn't have a MATCH Golf account.</p>
         </div>
       </AppLayout>
     );
@@ -140,147 +140,114 @@ export default function PublicProfile() {
   const memberSince = profile.created_at
     ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : null;
+  // Plus handicaps are stored negative; golfers write them "+2.1".
+  const hcp = profile.handicap == null ? '–' : profile.handicap < 0 ? `+${Math.abs(profile.handicap)}` : `${profile.handicap}`;
+  const actionBase = 'w-full h-[56px] rounded-[18px] font-bold text-[16px] flex items-center justify-center gap-2';
 
   return (
     <AppLayout header={headerContent}>
-      <div className="px-6 pt-6 pb-6 space-y-4">
-        {/* Profile Card */}
+      <div className="px-5 pt-1 pb-6 space-y-[14px]">
+        {/* Forest hero */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-6 flex flex-col items-center"
+          className="relative overflow-hidden rounded-[28px] bg-primary p-5 text-primary-foreground"
         >
-          <Avatar className="w-20 h-20 rounded-2xl mb-3">
-            <AvatarImage src={profile.avatar_url ?? undefined} />
-            <AvatarFallback className="rounded-2xl text-2xl font-black bg-muted">
-              {(profile.full_name ?? '?').charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-
-          <h2 className="text-[20px] font-black tracking-[-0.03em] text-foreground mb-0.5">
-            {profile.full_name ?? 'Unknown'}
-          </h2>
-
-          {memberSince && (
-            <p className="text-[11px] text-muted-foreground mb-4">Member since {memberSince}</p>
-          )}
-
-          {/* Friend action button */}
-          {friendStatus === 'none' && (
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={handleAddFriend}
-              disabled={sending}
-              className="w-full bg-foreground text-background rounded-2xl h-[48px] font-bold text-[14px] flex items-center justify-center gap-2 disabled:opacity-40"
-            >
-              {sending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  <UserPlus className="w-4 h-4" />
-                  Add Friend
-                </>
-              )}
-            </motion.button>
-          )}
-
-          {friendStatus === 'friends' && (
-            <div className="w-full bg-emerald-50 text-emerald-700 rounded-2xl h-[48px] font-bold text-[14px] flex items-center justify-center gap-2">
-              <UserCheck className="w-4 h-4" />
-              Friends
+          <div className="flex items-center gap-4">
+            <Avatar className="h-[72px] w-[72px] rounded-[22px] ring-2 ring-white/15">
+              <AvatarImage src={profile.avatar_url ?? undefined} />
+              <AvatarFallback className="rounded-[22px] bg-white/15 text-[26px] font-extrabold text-white">
+                {(profile.full_name ?? '?').charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <h2 className="text-[26px] font-extrabold leading-tight tracking-[-0.03em] text-white truncate">
+                {profile.full_name ?? 'Unknown'}
+              </h2>
+              {memberSince && <p className="mt-0.5 text-[13px] text-[#CFE3D6]">On MATCH since {memberSince}</p>}
             </div>
-          )}
+          </div>
 
-          {friendStatus === 'pending_sent' && (
-            <div className="w-full bg-muted text-muted-foreground rounded-2xl h-[48px] font-bold text-[14px] flex items-center justify-center gap-2">
-              <Clock className="w-4 h-4" />
-              Request Sent
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            <div className="rounded-[18px] bg-gold px-4 py-3 text-gold-foreground">
+              <p className="text-[12px] font-semibold leading-none text-gold-foreground/80">Handicap</p>
+              <p className="mt-2 text-[32px] font-extrabold leading-none tracking-[-0.04em] tabular-nums">{hcp}</p>
             </div>
-          )}
+            <div className="rounded-[18px] bg-white/10 px-4 py-3">
+              <p className="text-[12px] font-semibold leading-none text-[#CFE3D6]">Rounds played</p>
+              <p className="mt-2 text-[32px] font-extrabold leading-none tracking-[-0.04em] tabular-nums text-white">{roundCount}</p>
+            </div>
+          </div>
 
-          {friendStatus === 'pending_received' && (
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => navigate('/social?tab=friends')}
-              className="w-full bg-[#BEF264] text-foreground rounded-2xl h-[48px] font-bold text-[14px] flex items-center justify-center gap-2"
-            >
-              <UserPlus className="w-4 h-4" />
-              Accept Request
-            </motion.button>
-          )}
-
-          {friendStatus === 'self' && (
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => navigate('/profile')}
-              className="w-full bg-muted text-foreground rounded-2xl h-[48px] font-bold text-[14px] flex items-center justify-center gap-2"
-            >
-              Edit Profile
-            </motion.button>
-          )}
+          <div className="mt-4">
+            {friendStatus === 'none' && (
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={handleAddFriend}
+                disabled={sending}
+                className={cn(actionBase, 'bg-white text-primary disabled:opacity-50')}
+              >
+                {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <><UserPlus className="h-5 w-5" />Add friend</>}
+              </motion.button>
+            )}
+            {friendStatus === 'friends' && (
+              <div className={cn(actionBase, 'bg-white/10 text-white')}>
+                <UserCheck className="h-5 w-5 text-gold" />
+                Friends
+              </div>
+            )}
+            {friendStatus === 'pending_sent' && (
+              <div className={cn(actionBase, 'bg-white/10 text-[#CFE3D6]')}>
+                <Clock className="h-5 w-5" />
+                Request sent
+              </div>
+            )}
+            {friendStatus === 'pending_received' && (
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => navigate('/social?tab=friends')}
+                className={cn(actionBase, 'bg-gold text-gold-foreground')}
+              >
+                <UserPlus className="h-5 w-5" />
+                Accept request
+              </motion.button>
+            )}
+            {friendStatus === 'self' && (
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => navigate('/profile')}
+                className={cn(actionBase, 'bg-white text-primary')}
+              >
+                Edit profile
+              </motion.button>
+            )}
+          </div>
         </motion.div>
 
-        {/* Stats Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden"
-        >
-          <div className="px-5 py-3 border-b border-border/30">
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Golf Info</p>
-          </div>
-
-          {/* Handicap */}
-          <div className="px-5 py-4 flex items-center justify-between border-b border-border/30">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                <Flag className="w-4 h-4 text-muted-foreground" />
-              </div>
-              <span className="text-[14px] font-medium">Handicap</span>
-            </div>
-            <span className="text-[14px] font-bold">
-              {profile.handicap != null ? profile.handicap : '—'}
-            </span>
-          </div>
-
-          {/* Home Course */}
-          <div className="px-5 py-4 flex items-center justify-between border-b border-border/30">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                <Home className="w-4 h-4 text-muted-foreground" />
-              </div>
-              <span className="text-[14px] font-medium">Home Course</span>
-            </div>
-            <span className={cn('text-[13px] font-medium max-w-[160px] text-right truncate', profile.home_course_name ? '' : 'text-muted-foreground')}>
-              {profile.home_course_name ?? '—'}
-            </span>
-          </div>
-
-          {/* Tee Preference */}
-          {profile.tee_preference && (
-            <div className="px-5 py-4 flex items-center justify-between border-b border-border/30">
+        {/* Golf info */}
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <p className="mb-2 px-1 text-[13px] font-semibold text-muted-foreground">Golf info</p>
+          <div className="overflow-hidden rounded-[20px] border border-border bg-card">
+            <div className="flex min-h-[60px] items-center justify-between gap-3 border-b border-border px-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                  <Flag className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <span className="text-[14px] font-medium">Plays From</span>
+                <span className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-muted text-primary"><Home className="h-4 w-4" /></span>
+                <span className="text-[15px] font-medium text-foreground">Home course</span>
               </div>
-              <span className="text-[14px] font-bold">{TEE_LABELS[profile.tee_preference] ?? profile.tee_preference}</span>
+              <span className={cn('max-w-[170px] truncate text-right text-[15px] font-semibold', profile.home_course_name ? 'text-foreground' : 'text-muted-foreground')}>
+                {profile.home_course_name ?? '–'}
+              </span>
             </div>
-          )}
-
-          {/* Rounds Played */}
-          <div className="px-5 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                <Flag className="w-4 h-4 text-muted-foreground" />
+            <div className="flex min-h-[60px] items-center justify-between gap-3 px-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-muted text-primary"><Flag className="h-4 w-4" /></span>
+                <span className="text-[15px] font-medium text-foreground">Plays from</span>
               </div>
-              <span className="text-[14px] font-medium">Rounds Played</span>
+              <span className={cn('text-[15px] font-semibold', profile.tee_preference ? 'text-foreground' : 'text-muted-foreground')}>
+                {profile.tee_preference ? (TEE_LABELS[profile.tee_preference] ?? profile.tee_preference) : '–'}
+              </span>
             </div>
-            <span className="text-[14px] font-bold">{roundCount}</span>
           </div>
-        </motion.div>
+        </motion.section>
       </div>
     </AppLayout>
   );
