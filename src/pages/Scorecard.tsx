@@ -17,6 +17,7 @@ import { ScorecardModals } from '@/components/golf/ScorecardModals';
 import { HandicapStrokesSheet } from '@/components/golf/HandicapStrokesSheet';
 import { ScorecardTutorial } from '@/components/golf/ScorecardTutorial';
 import { BingoBangoSheet } from '@/components/golf/BingoBangoSheet';
+import { PropBetSheet } from '@/components/golf/PropBetSheet';
 import { useRounds } from '@/hooks/useRounds';
 import { useSupabaseRound } from '@/hooks/useSupabaseRound';
 import { useKeepAwake } from '@/hooks/useKeepAwake';
@@ -419,6 +420,12 @@ export default function Scorecard() {
         onRemoveScorekeeper={removeScorekeeper}
         onUpdateGames={handleUpdateGames}
         isSolo={isSolo}
+        completedHoles={completedHoles}
+        onNavigateToLeaderboard={() => navigate(`/round/${round.id}/leaderboard`)}
+        sideBets={!isSolo && !isSpectator && playoffHole === 0 ? (
+          <PropBetSheet roundId={round.id} players={playersWithScores} currentHole={currentHole}
+            holeInfo={round.holeInfo} propBets={propBets} onPropBetAdded={addPropBet} onPropBetUpdated={updatePropBet} />
+        ) : undefined}
       />
 
       {/* Hole Navigator — hide during playoff */}
@@ -427,26 +434,23 @@ export default function Scorecard() {
           className="flex-shrink-0"
           style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
         >
-          <div className="relative">
-            <HoleNavigator
-              ref={holeNavRef}
+          <HoleNavigator
+            ref={holeNavRef}
+            currentHole={currentHole}
+            totalHoles={round.holes}
+            holeInfo={currentHoleInfo}
+            onPrevious={() => setCurrentHole(h => Math.max(1, h - 1))}
+            onNext={() => setCurrentHole(h => Math.min(round.holes, h + 1))}
+          >
+            <HoleSummary
+              round={round}
+              players={playersWithScores}
+              scores={roundScores}
               currentHole={currentHole}
-              totalHoles={round.holes}
-              holeInfo={currentHoleInfo}
-              onPrevious={() => setCurrentHole(h => Math.max(1, h - 1))}
-              onNext={() => setCurrentHole(h => Math.min(round.holes, h + 1))}
+              currentHoleInfo={currentHoleInfo}
+              onShowStrokes={() => setShowHandicapSheet(true)}
             />
-            {/* Stroke allocation button — only when handicaps are active */}
-            {playersWithScores.some(p => p.strokesPerHole && Array.from(p.strokesPerHole.values()).some(s => s > 0)) && (
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setShowHandicapSheet(true)}
-                className="absolute right-14 top-1/2 -translate-y-1/2 bg-[#BEF264] rounded-lg px-2 py-1 flex items-center gap-1"
-              >
-                <span className="text-[10px] font-black text-[#0F1F17] tracking-[0.05em]">HCP</span>
-              </motion.button>
-            )}
-          </div>
+          </HoleNavigator>
         </div>
       )}
 
@@ -467,66 +471,16 @@ export default function Scorecard() {
 
       {/* Scrollable Content Area */}
       <main
-        className="flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain relative z-10 px-4 pt-2 pb-48"
+        className="flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain relative z-10 px-3.5 pt-1 pb-40"
         style={{
           WebkitOverflowScrolling: 'touch',
           scrollBehavior: 'smooth',
         }}
       >
-        {/* Live Leaderboard — hide during playoff and for solo rounds (nothing to rank) */}
-        {!isSolo && playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && (
-          <div className="mb-4">
-            <LiveLeaderboard
-              ref={leaderboardRef}
-              players={playersWithScores}
-              useNetScoring={
-                round.matchPlay || round.games?.some(g => g.useNet) || false
-              }
-              isMatchPlay={round.matchPlay}
-              holeInfo={round.holeInfo}
-              scores={roundScores}
-              matchPlayFormat={round.games?.find(g => g.type === 'match')?.matchPlayFormat}
-              matchPlayTeams={round.games?.find(g => g.type === 'match')?.matchPlayTeams}
-            />
-          </div>
-        )}
-
-        {/* Live Money Tracker */}
-        {playoffHole === 0 && (round.games?.length > 0 || propBets.some(pb => pb.winnerId)) && (
-          <div className="mb-4">
-            <MoneyTracker
-              players={playersWithScores}
-              scores={roundScores}
-              games={round.games || []}
-              holeInfo={round.holeInfo}
-              presses={round.presses || []}
-              currentHole={currentHole}
-              propBets={propBets}
-            />
-          </div>
-        )}
-
-        <div className="space-y-4 mt-3">
-          {/* Hole Summary — hide during playoff */}
-          {playoffHole === 0 &&
-            (round.games?.length > 0 || playersWithScores.some(p => p.handicap !== undefined)) && (
-              <HoleSummary
-                round={round}
-                players={playersWithScores}
-                scores={roundScores}
-                currentHole={currentHole}
-                currentHoleInfo={currentHoleInfo}
-              />
-            )}
-
+        <div className="space-y-2">
           {/* Regular scoring mode */}
           {playoffHole === 0 && (
             <>
-              {/* PLAYERS section label */}
-              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1">
-                Players
-              </p>
-
               <LayoutGroup>
                 <AnimatePresence mode="popLayout">
                   {playersWithScores.map((player, index) => {
@@ -565,12 +519,43 @@ export default function Scorecard() {
             </>
           )}
 
+          {/* Live Leaderboard — hide during playoff and for solo rounds (nothing to rank) */}
+          {!isSolo && playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && (
+            <div className="pt-3">
+              <LiveLeaderboard
+                ref={leaderboardRef}
+                players={playersWithScores}
+                useNetScoring={
+                  round.matchPlay || round.games?.some(g => g.useNet) || false
+                }
+                isMatchPlay={round.matchPlay}
+                holeInfo={round.holeInfo}
+                scores={roundScores}
+                matchPlayFormat={round.games?.find(g => g.type === 'match')?.matchPlayFormat}
+                matchPlayTeams={round.games?.find(g => g.type === 'match')?.matchPlayTeams}
+              />
+            </div>
+          )}
+
+          {/* Live Money Tracker */}
+          {playoffHole === 0 && (round.games?.length > 0 || propBets.some(pb => pb.winnerId)) && (
+            <div className="pt-3">
+              <MoneyTracker
+                players={playersWithScores}
+                scores={roundScores}
+                games={round.games || []}
+                holeInfo={round.holeInfo}
+                presses={round.presses || []}
+                currentHole={currentHole}
+                propBets={propBets}
+              />
+            </div>
+          )}
+
           {/* LIVE GAMES section label + Games Section — hide during playoff */}
           {playoffHole === 0 && (round.games?.length > 0 || propBets.length > 0) && (
             <>
-              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1 mt-2">
-                Live Games
-              </p>
+              <p className="text-[12px] font-semibold text-[#5A6B61] px-1 pt-3">Games</p>
               <GamesSection
                 round={round}
                 players={playersWithScores}
@@ -591,8 +576,8 @@ export default function Scorecard() {
             transition={{ delay: 0.5 }}
             className="flex items-center justify-center gap-1.5 mt-6"
           >
-            <Mic className="w-3 h-3 text-muted-foreground/50" />
-            <p className="text-xs text-muted-foreground/60 font-medium">
+            <Mic className="w-3.5 h-3.5 text-[#5A6B61]" />
+            <p className="text-[13px] text-[#5A6B61] font-medium">
               {isSolo
                 ? `Say "I made a 4 on ${currentHole}" to score`
                 : <>Say "{(playersWithScores[0]?.name || 'Mike').split(' ')[0]} 5,{' '}
@@ -623,7 +608,6 @@ export default function Scorecard() {
         players={playersWithScores}
         currentHole={currentHole}
         holeInfo={round.holeInfo}
-        completedHoles={completedHoles}
         totalHoles={round.holes}
         playoffHole={playoffHole}
         canFinish={canFinish || false}
@@ -642,14 +626,10 @@ export default function Scorecard() {
         autoAdvanceCountdown={autoAdvanceCountdown}
         allCurrentHoleScored={allCurrentHoleScored}
         voiceButtonRef={voiceButtonRef}
-        onNavigateToLeaderboard={() => navigate(`/round/${round.id}/leaderboard`)}
         onVoicePress={handleVoicePress}
         onShowFinishOptions={() => setShowFinishOptions(true)}
         onFinishRound={handleFinishRound}
         onNextHole={advanceToNextHole}
-        onPropBetAdded={addPropBet}
-        onPropBetUpdated={updatePropBet}
-        onShowShare={() => setShowShareModal(true)}
         isSolo={isSolo}
       />
 

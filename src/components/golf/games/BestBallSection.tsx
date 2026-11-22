@@ -19,11 +19,11 @@ export function BestBallSection({
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-0">
         <LiveDot />
-        <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+        <span className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
           Best Ball
         </span>
         {bestBallGame.useNet && <NetBadge />}
-        <span className="ml-auto text-[10px] text-slate-400">
+        <span className="ml-auto text-[10px] text-[#5A6B61]">
           Thru {bestBallResult.holesPlayed}
         </span>
       </div>
@@ -43,13 +43,13 @@ export function BestBallSection({
               className={cn(
                 'rounded-2xl p-3 text-center border',
                 isWinning
-                  ? 'bg-[#DCFCE7] border-[#22C55E]/30'
+                  ? 'bg-[#DCFCE7] border-[#14532D]/30'
                   : isEven
-                  ? 'bg-slate-50 border-slate-100'
-                  : 'bg-white border-slate-100',
+                  ? 'bg-[#FAFAF7] border-[#E7E9E3]'
+                  : 'bg-white border-[#E7E9E3]',
               )}
             >
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate mb-1">
+              <p className="text-[12px] font-bold text-[#5A6B61] truncate mb-1">
                 {standing.teamName}
               </p>
               <p className="text-2xl font-black text-[#0F1F17] tabular-nums">
@@ -58,15 +58,15 @@ export function BestBallSection({
               <p
                 className={cn(
                   'text-xs font-semibold mt-0.5',
-                  standing.relativeToPar < 0 && 'text-[#22C55E]',
-                  standing.relativeToPar > 0 && 'text-red-500',
-                  standing.relativeToPar === 0 && 'text-slate-400',
+                  standing.relativeToPar < 0 && 'text-[#14532D]',
+                  standing.relativeToPar > 0 && 'text-[#B42318]',
+                  standing.relativeToPar === 0 && 'text-[#5A6B61]',
                 )}
               >
                 {formatBestBallStatus(standing.relativeToPar)}
               </p>
               {standing.playerContributions?.length > 0 && (
-                <p className="text-[9px] text-slate-400 mt-1 truncate">
+                <p className="text-[9px] text-[#5A6B61] mt-1 truncate">
                   {standing.playerContributions
                     .slice()
                     .sort((a, b) => b.holesContributed - a.holesContributed)[0]?.playerName?.split(' ')[0]}
@@ -81,7 +81,7 @@ export function BestBallSection({
       {/* Recent hole winners */}
       {bestBallResult.holeWinners.length > 0 && (
         <div className="space-y-1">
-          <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-400">
+          <p className="text-[12px] font-semibold text-[#5A6B61]">
             Recent holes
           </p>
           <div className="flex gap-1.5 overflow-x-auto pb-0.5">
@@ -93,10 +93,10 @@ export function BestBallSection({
                   key={hw.holeNumber}
                   className={cn(
                     'flex flex-col items-center rounded-lg px-2 py-1 shrink-0',
-                    isPush ? 'bg-slate-100' : 'bg-[#DCFCE7]',
+                    isPush ? 'bg-[#F0F2EC]' : 'bg-[#DCFCE7]',
                   )}
                 >
-                  <span className="text-[8px] text-slate-400 font-bold">H{hw.holeNumber}</span>
+                  <span className="text-[8px] text-[#5A6B61] font-bold">H{hw.holeNumber}</span>
                   <span className="text-[9px] font-bold text-[#0F1F17] truncate max-w-[36px]">
                     {isPush ? 'Push' : winner?.teamName?.split(' ')[0] ?? '?'}
                   </span>

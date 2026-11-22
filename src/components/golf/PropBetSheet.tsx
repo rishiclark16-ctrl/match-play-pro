@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Target, Flame, Dices, Check, X, Trophy } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -151,19 +150,19 @@ export function PropBetSheet({
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          className="gap-2 bg-card px-4 h-12 min-h-[48px] rounded-xl text-sm font-semibold shadow-sm touch-manipulation border-border"
+        <button
+          type="button"
+          aria-label={currentHoleBets.length > 0 ? `Side bets, ${currentHoleBets.length} on this hole` : 'Side bets'}
+          className="relative w-11 h-11 rounded-[14px] bg-white border border-[#E7E9E3] text-[#0F1F17] flex items-center justify-center touch-manipulation active:bg-[#F0F2EC]"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
-          <Dices className="w-5 h-5" />
-          <span className="hidden xs:inline">Props</span>
+          <Dices className="w-5 h-5" strokeWidth={2} />
           {currentHoleBets.length > 0 && (
-            <span className="w-5 h-5 rounded-full bg-foreground text-background text-xs font-bold flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#BEF264] text-[#14532D] text-[11px] font-bold flex items-center justify-center">
               {currentHoleBets.length}
             </span>
           )}
-        </Button>
+        </button>
       </SheetTrigger>
 
       <SheetContent side="bottom" className="h-[85vh] bg-[#FAFAF7] rounded-t-3xl p-0 border-0 [&>button]:hidden">

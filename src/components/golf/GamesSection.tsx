@@ -303,10 +303,10 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
         <button onClick={() => setIsExpanded(!isExpanded)} className="w-full px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <LiveDot />
-            <span className="text-[13px] font-bold uppercase tracking-[0.08em] text-[#0F1F17]">Games</span>
-            <span className="text-[11px] text-slate-400 font-medium">{sections.length} active</span>
+            <span className="text-[13px] font-bold tracking-[0.08em] text-[#0F1F17]">Games</span>
+            <span className="text-[11px] text-[#5A6B61] font-medium">{sections.length} active</span>
           </div>
-          {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+          {isExpanded ? <ChevronUp className="w-4 h-4 text-[#5A6B61]" /> : <ChevronDown className="w-4 h-4 text-[#5A6B61]" />}
         </button>
 
         <AnimatePresence>

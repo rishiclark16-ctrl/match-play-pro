@@ -49,11 +49,11 @@ export function MatchPlaySection({
   };
 
   const statusBg = isOver
-    ? 'bg-[#DCFCE7] border-[#22C55E]/30'
+    ? 'bg-[#DCFCE7] border-[#14532D]/30'
     : isDormie
-    ? 'bg-amber-50 border-amber-200'
+    ? 'bg-[#ECFCCB] border-[#BEF264]'
     : isAllSquare
-    ? 'bg-slate-50 border-slate-200'
+    ? 'bg-[#FAFAF7] border-[#E7E9E3]'
     : 'bg-[#0F1F17]/5 border-[#0F1F17]/10';
 
   // Build running match score per hole for the table
@@ -80,7 +80,7 @@ export function MatchPlaySection({
       <div className="flex items-center justify-between mb-0">
         <div className="flex items-center gap-2">
           <LiveDot />
-          <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+          <span className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
             {isFourball ? 'Fourball Match Play' : 'Match Play'}
           </span>
           {matchGame?.stakes && matchGame.stakes > 0 && (
@@ -88,7 +88,7 @@ export function MatchPlaySection({
           )}
         </div>
         {matchPlayResult.holesPlayed > 0 && (
-          <span className="text-[10px] text-slate-400 font-medium">
+          <span className="text-[10px] text-[#5A6B61] font-medium">
             Thru {matchPlayResult.holesPlayed}
           </span>
         )}
@@ -103,22 +103,22 @@ export function MatchPlaySection({
           transition={SPRING}
           className={cn(
             'text-xl font-black tracking-tight leading-tight',
-            isOver && 'text-[#22C55E]',
-            isDormie && 'text-amber-700',
+            isOver && 'text-[#14532D]',
+            isDormie && 'text-[#14532D]',
             isAllSquare && 'text-[#0F1F17]',
             !isOver && !isDormie && !isAllSquare && !notStarted && 'text-[#0F1F17]',
-            notStarted && 'text-slate-400',
+            notStarted && 'text-[#5A6B61]',
           )}
         >
           {matchPlayResult.statusText}
         </motion.p>
         {matchPlayResult.holesRemaining > 0 && !isOver && (
-          <p className="text-[11px] text-slate-400 mt-1">
+          <p className="text-[11px] text-[#5A6B61] mt-1">
             {matchPlayResult.holesRemaining} hole{matchPlayResult.holesRemaining !== 1 ? 's' : ''} to play
           </p>
         )}
         {isOver && matchPlayResult.winMargin && (
-          <p className="text-xs font-semibold text-[#22C55E] mt-1">{matchPlayResult.winMargin}</p>
+          <p className="text-xs font-semibold text-[#14532D] mt-1">{matchPlayResult.winMargin}</p>
         )}
       </div>
 
@@ -133,16 +133,16 @@ export function MatchPlaySection({
                 key={team.id}
                 className={cn(
                   'flex items-center justify-between px-3 py-2.5 rounded-xl',
-                  isWinner ? 'bg-[#DCFCE7]' : isLeader && !isOver ? 'bg-slate-100' : 'bg-slate-50',
+                  isWinner ? 'bg-[#DCFCE7]' : isLeader && !isOver ? 'bg-[#F0F2EC]' : 'bg-[#FAFAF7]',
                 )}
               >
                 <div className="flex items-center gap-2">
-                  {isWinner && <Trophy className="w-3.5 h-3.5 text-[#22C55E]" />}
+                  {isWinner && <Trophy className="w-3.5 h-3.5 text-[#14532D]" />}
                   <div>
-                    <span className={cn('text-sm', isLeader && !isOver && 'font-bold text-[#0F1F17]', (!isLeader || isOver) && 'font-medium text-slate-600')}>
+                    <span className={cn('text-sm', isLeader && !isOver && 'font-bold text-[#0F1F17]', (!isLeader || isOver) && 'font-medium text-[#5A6B61]')}>
                       {team.name}
                     </span>
-                    <p className="text-[10px] text-slate-400">{getTeamPlayerNames(team.id)}</p>
+                    <p className="text-[10px] text-[#5A6B61]">{getTeamPlayerNames(team.id)}</p>
                   </div>
                 </div>
                 <span
@@ -171,11 +171,11 @@ export function MatchPlaySection({
             return (
               <div
                 key={player.id}
-                className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50"
+                className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#FAFAF7]"
               >
                 <div className="flex items-center gap-2">
-                  {isWinner && <Trophy className="w-3 h-3 text-[#22C55E]" />}
-                  <span className={cn('text-sm', isLeader && !isOver && 'font-bold text-[#0F1F17]', (!isLeader || isOver) && 'font-medium text-slate-600')}>
+                  {isWinner && <Trophy className="w-3 h-3 text-[#14532D]" />}
+                  <span className={cn('text-sm', isLeader && !isOver && 'font-bold text-[#0F1F17]', (!isLeader || isOver) && 'font-medium text-[#5A6B61]')}>
                     {player.name}
                   </span>
                   {strokesReceived > 0 && (
@@ -205,12 +205,12 @@ export function MatchPlaySection({
       {/* Fourball hole-by-hole table */}
       {isFourball && runningScores.length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-400">
+          <p className="text-[12px] font-semibold text-[#5A6B61]">
             Best Ball Per Hole
           </p>
-          <div className="rounded-xl overflow-hidden border border-slate-100">
+          <div className="rounded-xl overflow-hidden border border-[#E7E9E3]">
             {/* Header */}
-            <div className="grid grid-cols-[40px_1fr_1fr_1fr] bg-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+            <div className="grid grid-cols-[40px_1fr_1fr_1fr] bg-[#F0F2EC] text-[12px] font-bold text-[#5A6B61]">
               <span className="px-2 py-1.5 text-center">Hole</span>
               <span className="px-2 py-1.5 text-center">{matchPlayResult.teams![0].name}</span>
               <span className="px-2 py-1.5 text-center">{matchPlayResult.teams![1].name}</span>
@@ -227,27 +227,27 @@ export function MatchPlaySection({
                   key={row.holeNum}
                   className={cn(
                     'grid grid-cols-[40px_1fr_1fr_1fr] text-xs border-t border-slate-50',
-                    aWon && 'bg-emerald-50/50',
-                    bWon && 'bg-red-50/30',
+                    aWon && 'bg-[#ECFCCB]/50',
+                    bWon && 'bg-[#FEF3F2]/30',
                     !aWon && !bWon && 'bg-white',
                   )}
                 >
-                  <span className="px-2 py-1.5 text-center font-bold text-slate-400 tabular-nums">
+                  <span className="px-2 py-1.5 text-center font-bold text-[#5A6B61] tabular-nums">
                     {row.holeNum}
                   </span>
                   <span className={cn(
                     'px-2 py-1.5 text-center tabular-nums font-semibold',
-                    aWon ? 'text-emerald-600 font-bold' : 'text-slate-500',
+                    aWon ? 'text-[#14532D] font-bold' : 'text-[#5A6B61]',
                   )}>
                     {row.teamANet ?? '–'}
                   </span>
                   <span className={cn(
                     'px-2 py-1.5 text-center tabular-nums font-semibold',
-                    bWon ? 'text-red-500 font-bold' : 'text-slate-500',
+                    bWon ? 'text-[#B42318] font-bold' : 'text-[#5A6B61]',
                   )}>
                     {row.teamBNet ?? '–'}
                   </span>
-                  <span className="px-2 py-1.5 text-center text-[10px] font-medium text-slate-400 truncate">
+                  <span className="px-2 py-1.5 text-center text-[10px] font-medium text-[#5A6B61] truncate">
                     {row.runningText}
                   </span>
                 </div>
@@ -260,14 +260,14 @@ export function MatchPlaySection({
       {/* Hole-by-hole dots (singles) */}
       {!isFourball && holeDots.length > 0 && p1 && (
         <div className="space-y-1">
-          <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-400">
+          <p className="text-[12px] font-semibold text-[#5A6B61]">
             {p1.name.split(' ')[0]} result per hole
           </p>
           <div className="flex flex-wrap gap-1">
             {holeDots.map((dot, i) => (
               <div key={i} className="flex flex-col items-center gap-0.5">
                 <HoleDot result={dot} />
-                <span className="text-[8px] text-slate-300">{i + 1}</span>
+                <span className="text-[8px] text-[#B4BDB7]">{i + 1}</span>
               </div>
             ))}
           </div>
