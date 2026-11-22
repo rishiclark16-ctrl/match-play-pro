@@ -121,7 +121,7 @@ export function ManageScorekeepersSheet({
         </div>
 
         {/* Section label */}
-        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-6 mb-3">
+        <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground px-6 mb-3">
           Players ({scorekeeperIds.length}/{MAX_ADDITIONAL_SCOREKEEPERS} additional scorekeepers)
         </p>
 
@@ -147,7 +147,7 @@ export function ManageScorekeepersSheet({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05, type: 'spring', stiffness: 300, damping: 28 }}
-                    className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-2 px-4 py-3 flex items-center justify-between"
+                    className="bg-white rounded-[20px] border border-[#E7E9E3] mx-6 mb-2 px-4 py-3 flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
                       <Avatar className="w-10 h-10 rounded-xl overflow-hidden bg-muted">
@@ -196,7 +196,7 @@ export function ManageScorekeepersSheet({
           </div>
 
           {/* Info note */}
-          <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mt-3 p-4 flex items-start gap-3">
+          <div className="bg-white rounded-[20px] border border-[#E7E9E3] mx-6 mt-3 p-4 flex items-start gap-3">
             <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center shrink-0">
               <Info className="w-4 h-4 text-muted-foreground" />
             </div>

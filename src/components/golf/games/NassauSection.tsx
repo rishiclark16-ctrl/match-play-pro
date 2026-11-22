@@ -87,26 +87,26 @@ export function NassauSection({
               layout
               transition={SPRING}
               className={cn(
-                'rounded-xl p-2.5 text-center border',
-                isAllSquare ? 'border-slate-100' : 'border-[#22C55E]/30',
+                'rounded-[14px] p-2.5 text-center border',
+                isAllSquare ? 'border-[#E7E9E3]' : 'border-[#14532D]/30',
                 bg,
               )}
             >
-              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">
+              <p className="text-[12px] font-bold text-[#5A6B61] mb-1">
                 {label}
               </p>
               <p className="text-[13px] font-bold text-[#0F1F17] leading-tight">
                 {isAllSquare ? 'AS' : leaderName}
               </p>
               {!isAllSquare && (
-                <p className="text-[11px] font-semibold text-[#22C55E]">
+                <p className="text-[11px] font-semibold text-[#14532D]">
                   +{segment.margin}
                 </p>
               )}
               {isAllSquare && (
-                <p className="text-[11px] text-slate-400">All Square</p>
+                <p className="text-[11px] text-[#5A6B61]">All square</p>
               )}
-              <p className="text-[9px] text-slate-400 mt-0.5">
+              <p className="text-[11px] text-[#5A6B61] mt-0.5">
                 {segment.holesPlayed > 0 ? `Thru ${segment.holesPlayed}` : '—'}
               </p>
             </motion.div>
@@ -120,7 +120,7 @@ export function NassauSection({
           {round.presses?.map((press, i) => (
             <span
               key={press.id}
-              className="text-[10px] font-semibold px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full border border-amber-200"
+              className="text-[12px] font-semibold px-2 py-0.5 bg-[#ECFCCB] text-[#14532D] rounded-full border border-[#BEF264]"
             >
               Press #{i + 1} · h{press.startHole} · ${press.stakes}
             </span>
@@ -134,17 +134,17 @@ export function NassauSection({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={SPRING}
-          className="flex items-center justify-between px-3 py-2 bg-amber-50 rounded-xl border border-amber-200"
+          className="flex items-center justify-between px-3 py-2 bg-[#ECFCCB] rounded-[14px] border border-[#BEF264]"
         >
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-            <span className="text-xs text-amber-800 font-medium">
+            <AlertCircle className="w-3.5 h-3.5 text-[#14532D] shrink-0" />
+            <span className="text-xs text-[#14532D] font-medium">
               {pressablePlayer.player.name.split(' ')[0]} is {Math.abs(pressablePlayer.standing)} down
             </span>
           </div>
           <Button
             size="sm"
-            className="h-7 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white border-0 rounded-lg px-3"
+            className="h-7 text-xs font-bold bg-[#ECFCCB]0 hover:bg-amber-600 text-white border-0 rounded-[10px] px-3"
             onClick={() => onPressClick(pressablePlayer.player)}
           >
             Press ${nassauGame.stakes}

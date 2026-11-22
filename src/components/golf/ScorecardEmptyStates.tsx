@@ -39,7 +39,7 @@ export function ScorecardLoading() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="text-white/50 text-sm font-medium tracking-wider uppercase"
+          className="text-white/50 text-sm font-medium"
         >
           Loading round...
         </motion.p>

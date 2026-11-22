@@ -114,7 +114,7 @@ export function BingoBangoSheet({
                   : players.filter(p => !p.isGhost);
                 return (
                 <div key={key}>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
+                  <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground mb-2">
                     {label} — {description}
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -159,7 +159,7 @@ export function BingoBangoSheet({
 
             {/* Validation error */}
             {validationError && (
-              <p className="px-5 pb-2 text-[12px] font-medium text-[#EF4444]">
+              <p className="px-5 pb-2 text-[12px] font-medium text-[#B42318]">
                 {validationError}
               </p>
             )}

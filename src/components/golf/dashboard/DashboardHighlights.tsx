@@ -17,7 +17,7 @@ export function DashboardHighlights({ highlights }: DashboardHighlightsProps) {
 
   return (
     <div className="px-4 pb-6">
-      <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground mb-3">
+      <h3 className="text-[12px] font-bold tracking-[0.1em] text-muted-foreground mb-3">
         Highlights
       </h3>
 

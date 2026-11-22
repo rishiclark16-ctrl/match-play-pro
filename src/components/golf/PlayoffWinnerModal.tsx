@@ -91,7 +91,7 @@ export function PlayoffWinnerModal({ isOpen, winner, onFinish }: PlayoffWinnerMo
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-[12px] font-black uppercase tracking-[0.1em] text-[#D4B800] mb-2"
+              className="text-[12px] font-semibold tracking-[0.1em] text-[#D4B800] mb-2"
             >
               PLAYOFF WINNER
             </motion.p>

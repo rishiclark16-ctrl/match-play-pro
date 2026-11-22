@@ -11,7 +11,7 @@ export function WatchPartyEmptyState() {
       <p className="text-[15px] font-semibold text-gray-800 mb-1">
         You're in the Watch Party!
       </p>
-      <p className="text-[13px] text-gray-500 max-w-[260px]">
+      <p className="text-[13px] text-[#5A6B61] max-w-[260px]">
         Chat about the round — players can't see this until it's over.
       </p>
     </motion.div>

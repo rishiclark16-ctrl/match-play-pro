@@ -98,13 +98,13 @@ export function WatchPartyScoreHeader({
         <div className="flex items-center gap-2">
           {!isRoundComplete ? (
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[11px] font-semibold text-green-600 uppercase tracking-wide">Live</span>
+              <span className="w-2 h-2 rounded-full bg-[#ECFCCB]0 animate-pulse" />
+              <span className="text-[12px] font-semibold text-[#14532D]">Live</span>
             </div>
           ) : (
-            <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Final</span>
+            <span className="text-[12px] font-semibold text-[#5A6B61]">Final</span>
           )}
-          {collapsed ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronUp className="w-4 h-4 text-gray-400" />}
+          {collapsed ? <ChevronDown className="w-4 h-4 text-[#5A6B61]" /> : <ChevronUp className="w-4 h-4 text-[#5A6B61]" />}
         </div>
       </button>
 
@@ -142,7 +142,7 @@ export function WatchPartyScoreHeader({
                   </span>
                   <span className={cn(
                     'text-[13px] font-bold mt-0.5',
-                    ps.scoreVsPar < 0 ? 'text-red-600' : ps.scoreVsPar > 0 ? 'text-gray-900' : 'text-green-600'
+                    ps.scoreVsPar < 0 ? 'text-[#B42318]' : ps.scoreVsPar > 0 ? 'text-gray-900' : 'text-[#14532D]'
                   )}>
                     {formatScoreVsPar(ps.scoreVsPar)} ({ps.totalStrokes})
                   </span>
@@ -153,15 +153,15 @@ export function WatchPartyScoreHeader({
 
             {/* Bottom bar: hole progress + spectator count */}
             <div className="px-4 pb-3 flex items-center justify-between">
-              <span className="text-[12px] text-gray-500">
+              <span className="text-[12px] text-[#5A6B61]">
                 {isRoundComplete
                   ? `${totalHoles} holes complete`
                   : `Hole ${currentHole} of ${totalHoles}`
                 }
               </span>
               <div className="flex items-center gap-1">
-                <Eye className="w-3.5 h-3.5 text-gray-400" />
-                <span className="text-[12px] text-gray-500">{memberCount} watching</span>
+                <Eye className="w-3.5 h-3.5 text-[#5A6B61]" />
+                <span className="text-[12px] text-[#5A6B61]">{memberCount} watching</span>
               </div>
             </div>
           </motion.div>

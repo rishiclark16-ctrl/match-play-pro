@@ -5,6 +5,7 @@ import { HouseGameResult } from '@/lib/games/houseGame';
 import { createPress } from '@/lib/games/nassau';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { signedMoney } from './money';
 
 export function HouseGameSection({
   result,
@@ -71,17 +72,17 @@ export function HouseGameSection({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-[#BEF264] flex items-center justify-center">
+          <div className="w-6 h-6 rounded-[10px] bg-[#BEF264] flex items-center justify-center">
             <Sparkles className="w-3.5 h-3.5 text-[#0F1F17]" />
           </div>
-          <span className="text-[13px] font-bold text-foreground">House Game</span>
+          <span className="text-[15px] font-semibold text-[#0F1F17]">House Game</span>
         </div>
         {leader && leader.netEarnings !== 0 && (
           <span className={cn(
-            'text-[12px] font-black',
-            leader.netEarnings > 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'
+            'text-[12px] font-extrabold',
+            leader.netEarnings > 0 ? 'text-[#14532D]' : 'text-[#B42318]'
           )}>
-            {leader.playerName.split(' ')[0]} {leader.netEarnings > 0 ? '+' : ''}${leader.netEarnings.toFixed(0)}
+            {leader.playerName.split(' ')[0]} {signedMoney(Math.round(leader.netEarnings))}
           </span>
         )}
       </div>
@@ -99,15 +100,15 @@ export function HouseGameSection({
                 <span className="text-[11px] text-amber-500 font-bold">{standing.eagles}🦅</span>
               )}
               {standing.birdies > 0 && (
-                <span className="text-[11px] text-[#22C55E] font-bold">{standing.birdies}🐦</span>
+                <span className="text-[11px] text-[#14532D] font-bold">{standing.birdies}🐦</span>
               )}
               <span className={cn(
-                'text-[13px] font-black tabular-nums',
-                standing.netEarnings > 0 ? 'text-[#22C55E]' :
-                standing.netEarnings < 0 ? 'text-[#EF4444]' :
+                'text-[13px] font-extrabold tabular-nums',
+                standing.netEarnings > 0 ? 'text-[#14532D]' :
+                standing.netEarnings < 0 ? 'text-[#B42318]' :
                 'text-muted-foreground'
               )}>
-                {standing.netEarnings > 0 ? '+' : ''}{standing.netEarnings === 0 ? 'E' : `$${standing.netEarnings.toFixed(0)}`}
+                {standing.netEarnings === 0 ? 'Even' : signedMoney(Math.round(standing.netEarnings))}
               </span>
             </div>
           </div>
@@ -124,10 +125,10 @@ export function HouseGameSection({
                 <div
                   key={hr.holeNumber}
                   className={cn(
-                    'flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-[9px] font-black',
+                    'flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-[11px] font-extrabold',
                     hr.holeNumber === currentHole && 'ring-1 ring-[#BEF264]',
-                    playerEarning > 0 ? 'bg-[#22C55E]/15 text-[#22C55E]' :
-                    playerEarning < 0 ? 'bg-[#EF4444]/15 text-[#EF4444]' :
+                    playerEarning > 0 ? 'bg-[#14532D]/15 text-[#14532D]' :
+                    playerEarning < 0 ? 'bg-[#B42318]/15 text-[#B42318]' :
                     'bg-muted/40 text-muted-foreground'
                   )}
                   title={`Hole ${hr.holeNumber}`}
@@ -147,7 +148,7 @@ export function HouseGameSection({
             <Trophy className="w-3 h-3 text-amber-500" />
             <span className="text-[11px] font-bold text-muted-foreground">Skins</span>
             {result.skinsResult.carryover > 0 && (
-              <span className="text-[10px] text-amber-500 font-bold ml-auto">
+              <span className="text-[12px] text-amber-500 font-bold ml-auto">
                 {result.skinsResult.carryover} carry
               </span>
             )}
@@ -157,8 +158,8 @@ export function HouseGameSection({
               <div
                 key={r.holeNumber}
                 className={cn(
-                  'w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black',
-                  r.winnerId ? 'bg-amber-500/20 text-amber-500' : 'bg-muted/30 text-muted-foreground'
+                  'w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-extrabold',
+                  r.winnerId ? 'bg-[#ECFCCB]0/20 text-amber-500' : 'bg-muted/30 text-muted-foreground'
                 )}
                 title={r.winnerId ? `Hole ${r.holeNumber}: ${r.value} skin${r.value > 1 ? 's' : ''}` : `Hole ${r.holeNumber}: carry`}
               >
@@ -203,7 +204,7 @@ export function HouseGameSection({
             {result.quotaResult.standings.slice(0, 4).map(s => (
               <div key={s.playerId} className="flex items-center justify-between text-[11px]">
                 <span className="text-muted-foreground">{s.playerName.split(' ')[0]}</span>
-                <span className={cn('font-bold', s.overUnder > 0 ? 'text-[#22C55E]' : s.overUnder < 0 ? 'text-[#EF4444]' : 'text-muted-foreground')}>
+                <span className={cn('font-bold', s.overUnder > 0 ? 'text-[#14532D]' : s.overUnder < 0 ? 'text-[#B42318]' : 'text-muted-foreground')}>
                   {s.totalPoints}pts ({s.overUnder > 0 ? '+' : ''}{s.overUnder} quota)
                 </span>
               </div>
@@ -221,7 +222,7 @@ export function HouseGameSection({
               const lastResult = result.rabbitResult!.holeResults[result.rabbitResult!.holeResults.length - 1];
               const holderName = lastResult.holderId ? players.find(p => p.id === lastResult.holderId)?.name?.split(' ')[0] : null;
               return holderName ? (
-                <span className="text-[10px] text-[#EF4444] font-bold ml-auto">
+                <span className="text-[12px] text-[#B42318] font-bold ml-auto">
                   {holderName} has it
                 </span>
               ) : null;
@@ -233,13 +234,13 @@ export function HouseGameSection({
       {result.vegasResult && result.vegasResult.holeResults.length > 0 && (
         <div className="mt-2 pt-2 border-t border-border/30">
           <div className="flex items-center gap-1.5 mb-1">
-            <Dices className="w-3 h-3 text-emerald-500" />
+            <Dices className="w-3 h-3 text-[#14532D]" />
             <span className="text-[11px] font-bold text-muted-foreground">Vegas</span>
-            <div className="flex items-center gap-2 text-[10px] font-bold ml-auto">
-              <span className={cn(result.vegasResult.teamATotal > 0 ? 'text-[#22C55E]' : result.vegasResult.teamATotal < 0 ? 'text-[#EF4444]' : 'text-muted-foreground')}>
+            <div className="flex items-center gap-2 text-[12px] font-bold ml-auto">
+              <span className={cn(result.vegasResult.teamATotal > 0 ? 'text-[#14532D]' : result.vegasResult.teamATotal < 0 ? 'text-[#B42318]' : 'text-muted-foreground')}>
                 A: {result.vegasResult.teamATotal > 0 ? '+' : ''}{result.vegasResult.teamATotal}
               </span>
-              <span className={cn(result.vegasResult.teamBTotal > 0 ? 'text-[#22C55E]' : result.vegasResult.teamBTotal < 0 ? 'text-[#EF4444]' : 'text-muted-foreground')}>
+              <span className={cn(result.vegasResult.teamBTotal > 0 ? 'text-[#14532D]' : result.vegasResult.teamBTotal < 0 ? 'text-[#B42318]' : 'text-muted-foreground')}>
                 B: {result.vegasResult.teamBTotal > 0 ? '+' : ''}{result.vegasResult.teamBTotal}
               </span>
             </div>
@@ -268,7 +269,7 @@ export function HouseGameSection({
                 }
               }
               return (
-                <span key={`${b}-${idx}`} className="text-[10px] font-bold bg-[#BEF264] text-[#0F1F17] px-2 py-0.5 rounded-full">
+                <span key={`${b}-${idx}`} className="text-[12px] font-bold bg-[#BEF264] text-[#0F1F17] px-2 py-0.5 rounded-full">
                   {bonusLabel(b)}{dollarText}
                 </span>
               );
@@ -281,13 +282,13 @@ export function HouseGameSection({
       {result.cappedPlayerIds.length > 0 && (
         <div className="mt-2 flex items-center gap-1">
           <AlertCircle className="w-3 h-3 text-amber-500" />
-          <span className="text-[10px] text-amber-500 font-medium">Loss cap applied</span>
+          <span className="text-[12px] text-amber-500 font-medium">Loss cap applied</span>
         </div>
       )}
 
       {/* Stubs notice */}
       {result.stubbedPrimitives.length > 0 && (
-        <p className="text-[10px] text-muted-foreground mt-2">
+        <p className="text-[12px] text-muted-foreground mt-2">
           {result.stubbedPrimitives.length} rule{result.stubbedPrimitives.length > 1 ? 's' : ''} coming soon
         </p>
       )}

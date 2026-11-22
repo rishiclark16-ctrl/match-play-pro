@@ -21,7 +21,7 @@ export function WatchPartyFeedBadge({ roundId, messageCount }: WatchPartyFeedBad
     >
       <Mic className="w-3.5 h-3.5 text-violet-600" />
       <span className="text-[12px] font-medium text-violet-600">Watch Party</span>
-      <span className="text-[12px] text-gray-400">({messageCount} messages)</span>
+      <span className="text-[12px] text-[#5A6B61]">({messageCount} messages)</span>
     </button>
   );
 }

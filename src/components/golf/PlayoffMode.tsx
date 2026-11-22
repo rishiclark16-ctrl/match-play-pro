@@ -32,11 +32,11 @@ export function PlayoffMode({
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#F0FFF4] border border-[#BBF7D0] rounded-2xl mx-0 mb-4 p-4"
+        className="bg-[#ECFCCB] border border-[#BBF7D0] rounded-2xl mx-0 mb-4 p-4"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#22C55E] flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-[#14532D] flex items-center justify-center flex-shrink-0">
               <Swords className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -98,7 +98,7 @@ export function PlayoffMode({
                     <span
                       className={cn(
                         'font-black text-3xl tabular-nums',
-                        playoffScore < currentHolePar && 'text-red-600',
+                        playoffScore < currentHolePar && 'text-[#B42318]',
                         playoffScore === currentHolePar && 'text-foreground',
                         playoffScore > currentHolePar && 'text-blue-600'
                       )}
@@ -133,7 +133,7 @@ export function PlayoffMode({
                         )}
                       >
                         <span className="text-base font-black">{score}</span>
-                        <span className="text-[9px] font-bold uppercase">
+                        <span className="text-[12px] font-bold">
                           {score < currentHolePar ? 'Under' : score === currentHolePar ? 'Par' : 'Over'}
                         </span>
                       </motion.button>
@@ -148,7 +148,7 @@ export function PlayoffMode({
         {/* Playoff History */}
         {playoffHole > 1 && (
           <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">Playoff History</p>
+            <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground mb-2">Playoff History</p>
             <div className="space-y-1">
               {Array.from({ length: playoffHole }).map((_, holeIdx) => {
                 const holeNum = holeIdx + 1;

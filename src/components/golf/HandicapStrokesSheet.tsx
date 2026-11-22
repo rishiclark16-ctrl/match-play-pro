@@ -67,7 +67,7 @@ export function HandicapStrokesSheet({
             <h2 className="text-[20px] font-black tracking-[-0.04em] text-foreground leading-none">
               Stroke Allocation
             </h2>
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mt-0.5">
+            <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground mt-0.5">
               By hole · stroke index
             </p>
           </div>
@@ -106,7 +106,7 @@ export function HandicapStrokesSheet({
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.06, type: 'spring', stiffness: 300, damping: 28 }}
-                      className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden"
+                      className="bg-white rounded-[20px] border border-[#E7E9E3] overflow-hidden"
                     >
                       {/* Player header */}
                       <div className="flex items-center gap-3 px-4 py-3 border-b border-border/50">
@@ -131,7 +131,7 @@ export function HandicapStrokesSheet({
 
                       {/* Stroke holes list */}
                       <div className="px-4 py-3">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
+                        <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground mb-2">
                           Receives a stroke on:
                         </p>
                         <div className="flex flex-wrap gap-1.5">
@@ -171,14 +171,14 @@ export function HandicapStrokesSheet({
 
               {/* Full hole grid — who gets a stroke where */}
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-3">
+                <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground mb-3">
                   Hole-by-hole grid
                 </p>
-                <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
+                <div className="bg-white rounded-[20px] border border-[#E7E9E3] overflow-hidden">
                   {/* Column headers: player names */}
                   <div className="grid border-b border-border/50" style={{ gridTemplateColumns: `64px repeat(${activePlayers.length}, 1fr)` }}>
                     <div className="px-3 py-2">
-                      <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Hole</span>
+                      <span className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">Hole</span>
                     </div>
                     {activePlayers.map((player, i) => {
                       const colors = avatarColors[i % avatarColors.length];

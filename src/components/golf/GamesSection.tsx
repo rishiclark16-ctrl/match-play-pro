@@ -266,8 +266,8 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
           <div className="w-4 h-4 rounded-md bg-[#BEF264] flex items-center justify-center">
             <Sparkles className="w-2.5 h-2.5 text-[#0F1F17]" />
           </div>
-          <span className="text-[12px] font-bold text-foreground">Custom Rules</span>
-          <span className="ml-auto text-[10px] font-bold text-muted-foreground">Settle manually</span>
+          <span className="text-[12px] font-bold text-foreground">Custom rules</span>
+          <span className="ml-auto text-[12px] font-bold text-muted-foreground">Settle manually</span>
         </div>
         <div className="space-y-1.5">
           {customRules.map(rule => {
@@ -275,14 +275,14 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
             const desc = rule.description ?? '';
             const val = rule.value;
             return (
-              <div key={rule.id} className="rounded-xl bg-[#BEF264]/10 border border-[#BEF264]/40 px-3 py-2">
+              <div key={rule.id} className="rounded-[14px] bg-[#BEF264]/10 border border-[#BEF264]/40 px-3 py-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <span className="text-[12px] font-bold text-foreground block">{label}</span>
                     {desc && <span className="text-[11px] text-muted-foreground leading-snug">{desc}</span>}
                   </div>
                   {val != null && (
-                    <span className="text-[12px] font-black text-foreground flex-shrink-0">${val}</span>
+                    <span className="text-[12px] font-extrabold text-foreground flex-shrink-0">${val}</span>
                   )}
                 </div>
               </div>
@@ -303,10 +303,10 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
         <button onClick={() => setIsExpanded(!isExpanded)} className="w-full px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <LiveDot />
-            <span className="text-[13px] font-bold uppercase tracking-[0.08em] text-[#0F1F17]">Games</span>
-            <span className="text-[11px] text-slate-400 font-medium">{sections.length} active</span>
+            <span className="text-[17px] font-bold tracking-[-0.01em] text-[#0F1F17]">Games</span>
+            <span className="text-[11px] text-[#5A6B61] font-medium">{sections.length} active</span>
           </div>
-          {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+          {isExpanded ? <ChevronUp className="w-4 h-4 text-[#5A6B61]" /> : <ChevronDown className="w-4 h-4 text-[#5A6B61]" />}
         </button>
 
         <AnimatePresence>
@@ -334,7 +334,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
       <AlertDialog open={!!pressConfirmPlayer} onOpenChange={() => setPressConfirmPlayer(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Press</AlertDialogTitle>
+            <AlertDialogTitle>Confirm press</AlertDialogTitle>
             <AlertDialogDescription>
               {pressConfirmPlayer?.name} wants to press for ${nassauGame?.stakes} starting from hole {currentHole}?
             </AlertDialogDescription>
