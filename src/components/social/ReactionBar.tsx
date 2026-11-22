@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 const REACTION_CONFIG: Record<ReactionType, { label: string; icon: typeof DollarSign; color: string }> = {
   pay_up: { label: 'Pay Up', icon: DollarSign, color: 'text-primary bg-primary/10 border-primary/20' },
   cold_blooded: { label: 'Cold', icon: Snowflake, color: 'text-blue-500 bg-blue-500/10 border-blue-500/20' },
-  robbery: { label: 'Robbery', icon: ShieldAlert, color: 'text-[#B42318] bg-[#B42318]/10 border-[#B42318]/20' },
+  robbery: { label: 'Robbery', icon: ShieldAlert, color: 'text-loss bg-loss/10 border-loss/20' },
   press_that: { label: 'Press', icon: ChevronsUp, color: 'text-orange-500 bg-orange-500/10 border-orange-500/20' },
   respect: { label: 'Respect', icon: Trophy, color: 'text-yellow-600 bg-yellow-500/10 border-yellow-500/20' },
   fraud: { label: 'Fraud', icon: Search, color: 'text-purple-500 bg-purple-500/10 border-purple-500/20' },

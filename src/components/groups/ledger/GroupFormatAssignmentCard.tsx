@@ -34,7 +34,7 @@ export function GroupFormatAssignmentCard({
             </div>
             <button
               onClick={() => { hapticLight(); onRemoveAssignment(); }}
-              className="h-11 px-2 text-[14px] font-semibold text-[#B42318]"
+              className="h-11 px-2 text-[14px] font-semibold text-loss"
             >
               Remove
             </button>

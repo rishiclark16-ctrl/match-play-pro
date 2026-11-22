@@ -129,11 +129,11 @@ export default function Groups() {
             <svg aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-[220px] w-[220px] text-white/[0.06]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="1.5">
               <circle cx="100" cy="100" r="30" /><circle cx="100" cy="100" r="52" /><circle cx="100" cy="100" r="74" /><circle cx="100" cy="100" r="96" />
             </svg>
-            <p className="relative text-[13px] font-semibold text-[#CFE3D6]">Your regular game</p>
+            <p className="relative text-[13px] font-semibold text-on-forest-muted">Your regular game</p>
             <h2 className="relative mt-1.5 text-[28px] font-extrabold leading-[1.08] tracking-[-0.03em] text-white">
               Save the foursome.<br /><span className="text-gold">Keep a running tab.</span>
             </h2>
-            <p className="relative mt-2 max-w-[290px] text-[14px] leading-relaxed text-[#CFE3D6]">
+            <p className="relative mt-2 max-w-[290px] text-[14px] leading-relaxed text-on-forest-muted">
               Create a group with your regular golf buddies for faster round setup and a season-long ledger.
             </p>
             <div className="relative mt-5 grid grid-cols-3 gap-2">
@@ -196,7 +196,7 @@ export default function Groups() {
                         aria-label={`Delete ${group.name}`}
                         onClick={(e) => { e.stopPropagation(); handleDelete(group.id); }}
                         disabled={deletingId === group.id}
-                        className="h-11 w-11 rounded-[14px] flex items-center justify-center text-muted-foreground active:bg-[#B42318]/10 active:text-[#B42318]"
+                        className="h-11 w-11 rounded-[14px] flex items-center justify-center text-muted-foreground active:bg-loss/10 active:text-loss"
                       >
                         {deletingId === group.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />

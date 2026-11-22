@@ -37,14 +37,14 @@ function HeroTile({ label, value, sub, hot }: { label: string; value: string | n
         hot ? 'bg-gold text-gold-foreground' : 'bg-white/10 text-white'
       )}
     >
-      <p className={cn('text-[12px] font-semibold leading-none', hot ? 'text-gold-foreground/80' : 'text-[#CFE3D6]')}>
+      <p className={cn('text-[12px] font-semibold leading-none', hot ? 'text-gold-foreground/80' : 'text-on-forest-muted')}>
         {label}
       </p>
       <p className="mt-2 text-[30px] font-extrabold leading-none tracking-[-0.04em] tabular-nums truncate">
         {value}
       </p>
       {sub && (
-        <p className={cn('mt-1.5 text-[12px] font-medium leading-none truncate', hot ? 'text-gold-foreground/80' : 'text-[#CFE3D6]')}>
+        <p className={cn('mt-1.5 text-[12px] font-medium leading-none truncate', hot ? 'text-gold-foreground/80' : 'text-on-forest-muted')}>
           {sub}
         </p>
       )}
@@ -117,7 +117,7 @@ export function HomeLiveHero({ round, playerCount, currentHole, onOpen, onDelete
             onClick={(e) => { e.stopPropagation(); onDelete(round.id); }}
             disabled={isDeleting}
             aria-label="Delete round"
-            className="-mr-1.5 -mt-1.5 h-11 w-11 rounded-[14px] flex items-center justify-center text-[#CFE3D6] active:bg-white/10 disabled:opacity-50"
+            className="-mr-1.5 -mt-1.5 h-11 w-11 rounded-[14px] flex items-center justify-center text-on-forest-muted active:bg-white/10 disabled:opacity-50"
           >
             {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-[18px] w-[18px]" />}
           </motion.button>
@@ -127,7 +127,7 @@ export function HomeLiveHero({ round, playerCount, currentHole, onOpen, onDelete
       <h2 className="relative mt-3 text-[28px] font-extrabold leading-[1.08] tracking-[-0.03em] text-white">
         {round.courseName}
       </h2>
-      <p className="relative mt-1.5 text-[14px] text-[#CFE3D6] truncate">
+      <p className="relative mt-1.5 text-[14px] text-on-forest-muted truncate">
         {names.length > 0 ? names.join(' · ') : 'Stroke play'} · {holes} holes
       </p>
 
@@ -173,7 +173,7 @@ export function HomeWelcomeHero({ firstName, totalRounds }: WelcomeHeroProps) {
       className={heroBase}
     >
       <HeroContours />
-      <p className="relative text-[14px] font-medium text-[#CFE3D6]">{greeting(firstName)}</p>
+      <p className="relative text-[14px] font-medium text-on-forest-muted">{greeting(firstName)}</p>
       <h2 className="relative mt-1.5 text-[30px] font-extrabold leading-[1.05] tracking-[-0.035em] text-white">
         {isNew ? (
           <>Your first round<br /><span className="text-gold">starts here.</span></>
@@ -181,7 +181,7 @@ export function HomeWelcomeHero({ firstName, totalRounds }: WelcomeHeroProps) {
           <>Ready for the<br /><span className="text-gold">next one?</span></>
         )}
       </h2>
-      <p className="relative mt-2 text-[14px] leading-relaxed text-[#CFE3D6] max-w-[290px]">
+      <p className="relative mt-2 text-[14px] leading-relaxed text-on-forest-muted max-w-[290px]">
         Score the card, run the side games and settle up with your group, all in one place.
       </p>
 

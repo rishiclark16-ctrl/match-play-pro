@@ -201,11 +201,11 @@ export function CreateUpcomingSheet({ open, onClose, onCreated }: CreateUpcoming
             <X className="w-4 h-4 text-white" />
           </motion.button>
 
-          <p className="text-[13px] font-semibold text-[#CFE3D6] mb-1">New</p>
+          <p className="text-[13px] font-semibold text-on-forest-muted mb-1">New</p>
           <h2 className="text-[24px] font-extrabold tracking-[-0.02em] text-white leading-tight pr-12">
             Schedule a round
           </h2>
-          <p className="text-[13px] text-[#CFE3D6] mt-1">
+          <p className="text-[13px] text-on-forest-muted mt-1">
             Set up a round and invite friends
           </p>
         </div>

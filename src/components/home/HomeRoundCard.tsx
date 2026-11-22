@@ -108,7 +108,7 @@ export function HomeRoundCard({
               onClick={handleDeleteClick}
               disabled={isDeleting}
               aria-label="Delete round"
-              className="h-11 w-11 rounded-[14px] flex items-center justify-center text-muted-foreground active:bg-muted active:text-[#B42318] disabled:opacity-50"
+              className="h-11 w-11 rounded-[14px] flex items-center justify-center text-muted-foreground active:bg-muted active:text-loss disabled:opacity-50"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-[17px] w-[17px]" />}

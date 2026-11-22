@@ -48,12 +48,12 @@ export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailS
             </div>
           ) : detail ? (
             <>
-              <p className="text-[13px] font-semibold text-[#CFE3D6] mb-1">Round Recap</p>
+              <p className="text-[13px] font-semibold text-on-forest-muted mb-1">Round Recap</p>
               <h2 className="text-[24px] font-extrabold tracking-[-0.02em] text-white leading-tight pr-12 mb-1">
                 {detail.courseName}
               </h2>
               {detail.completedAt && (
-                <p className="text-[13px] text-[#CFE3D6]">
+                <p className="text-[13px] text-on-forest-muted">
                   {new Date(detail.completedAt).toLocaleDateString('en-US', {
                     weekday: 'long', month: 'long', day: 'numeric',
                   })}
@@ -93,7 +93,7 @@ export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailS
               {/* Games played */}
               {detail.games.length > 0 && (
                 <div className="mt-4 pt-3 border-t border-white/10">
-                  <p className="text-[13px] font-semibold text-[#CFE3D6] mb-2">Games</p>
+                  <p className="text-[13px] font-semibold text-on-forest-muted mb-2">Games</p>
                   <div className="flex flex-wrap gap-1.5">
                     {detail.games.map((g: Record<string, unknown>, i: number) => (
                       <span key={`${String(g.type)}-${i}`} className="text-[12px] font-semibold bg-white/10 text-white px-2.5 py-1 rounded-full">

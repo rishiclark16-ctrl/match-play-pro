@@ -75,11 +75,11 @@ export function RoundChatSheet({ round, onClose }: RoundChatSheetProps) {
 
           {round && (
             <>
-              <p className="text-[13px] font-semibold text-[#CFE3D6] mb-1">Upcoming Round</p>
+              <p className="text-[13px] font-semibold text-on-forest-muted mb-1">Upcoming Round</p>
               <h2 className="text-[24px] font-extrabold tracking-[-0.02em] text-white leading-tight pr-12 mb-1">
                 {round.courseName}
               </h2>
-              <div className="flex items-center gap-1.5 text-[13px] text-[#CFE3D6]">
+              <div className="flex items-center gap-1.5 text-[13px] text-on-forest-muted">
                 <Calendar className="w-3.5 h-3.5" />
                 {formatTeeTime(round.teeTime)}
               </div>

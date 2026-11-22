@@ -164,7 +164,7 @@ export default function PublicProfile() {
               <h2 className="text-[26px] font-extrabold leading-tight tracking-[-0.03em] text-white truncate">
                 {profile.full_name ?? 'Unknown'}
               </h2>
-              {memberSince && <p className="mt-0.5 text-[13px] text-[#CFE3D6]">On MATCH since {memberSince}</p>}
+              {memberSince && <p className="mt-0.5 text-[13px] text-on-forest-muted">On MATCH since {memberSince}</p>}
             </div>
           </div>
 
@@ -174,7 +174,7 @@ export default function PublicProfile() {
               <p className="mt-2 text-[32px] font-extrabold leading-none tracking-[-0.04em] tabular-nums">{hcp}</p>
             </div>
             <div className="rounded-[18px] bg-white/10 px-4 py-3">
-              <p className="text-[12px] font-semibold leading-none text-[#CFE3D6]">Rounds played</p>
+              <p className="text-[12px] font-semibold leading-none text-on-forest-muted">Rounds played</p>
               <p className="mt-2 text-[32px] font-extrabold leading-none tracking-[-0.04em] tabular-nums text-white">{roundCount}</p>
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function PublicProfile() {
               </div>
             )}
             {friendStatus === 'pending_sent' && (
-              <div className={cn(actionBase, 'bg-white/10 text-[#CFE3D6]')}>
+              <div className={cn(actionBase, 'bg-white/10 text-on-forest-muted')}>
                 <Clock className="h-5 w-5" />
                 Request sent
               </div>

@@ -8,7 +8,7 @@ export const ledgerSectionLabel = 'text-[13px] font-semibold text-muted-foregrou
 /** Money convention on white: won = Forest, owed = #B42318, even = Ink. */
 export function moneyTone(amount: number): string {
   if (amount > 0.005) return 'text-primary';
-  if (amount < -0.005) return 'text-[#B42318]';
+  if (amount < -0.005) return 'text-loss';
   return 'text-foreground';
 }
 

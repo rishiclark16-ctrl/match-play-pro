@@ -124,7 +124,7 @@ export function PlayerLedgerSheet({
             >
               {isPositive ? '+' : '-'}{formatAmount(player.netBalance)}
             </p>
-            <p className="text-[#CFE3D6] text-[13px] mt-1">
+            <p className="text-on-forest-muted text-[13px] mt-1">
               {player.roundsPlayed} rounds played
             </p>
 
@@ -142,7 +142,7 @@ export function PlayerLedgerSheet({
                 />
               ))}
             </div>
-            <p className="text-[#CFE3D6] text-[12px] mt-1.5">Last 8 rounds</p>
+            <p className="text-on-forest-muted text-[12px] mt-1.5">Last 8 rounds</p>
           </div>
         </div>
 
@@ -183,7 +183,7 @@ export function PlayerLedgerSheet({
                       <span
                         className={cn(
                           'font-extrabold text-[15px] tabular-nums',
-                          h2h.net >= 0 ? 'text-primary' : 'text-[#B42318]'
+                          h2h.net >= 0 ? 'text-primary' : 'text-loss'
                         )}
                       >
                         {h2h.net >= 0 ? '+' : '-'}{formatAmount(h2h.net)}
@@ -245,7 +245,7 @@ export function PlayerLedgerSheet({
                         <span
                           className={cn(
                             'font-extrabold text-[15px] tabular-nums mt-0.5 flex-shrink-0',
-                            entry.amount >= 0 ? 'text-primary' : 'text-[#B42318]'
+                            entry.amount >= 0 ? 'text-primary' : 'text-loss'
                           )}
                         >
                           {entry.amount >= 0 ? '+' : '-'}{formatAmount(entry.amount)}

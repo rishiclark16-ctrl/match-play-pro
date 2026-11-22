@@ -57,7 +57,7 @@ export function UpcomingRoundCard({ round, onPress, currentUserId }: UpcomingRou
         <div className="flex h-[58px] w-[54px] flex-shrink-0 flex-col items-center justify-center rounded-[14px] bg-primary text-primary-foreground">
           {d ? (
             <>
-              <span className="text-[11px] font-semibold leading-none text-[#CFE3D6]">
+              <span className="text-[11px] font-semibold leading-none text-on-forest-muted">
                 {d.toLocaleDateString('en-US', { month: 'short' })}
               </span>
               <span className="mt-1 text-[22px] font-extrabold leading-none tabular-nums">{d.getDate()}</span>

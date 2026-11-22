@@ -72,7 +72,7 @@ export function JoinRoundModal({ open, code, onCodeChange, error, loading, onClo
                 Ask the scorekeeper for the 6-character code on their card.
               </p>
 
-              {error && <p className="mt-3 px-1 text-[14px] font-medium text-[#B42318]">{error}</p>}
+              {error && <p className="mt-3 px-1 text-[14px] font-medium text-loss">{error}</p>}
 
               <motion.button
                 whileTap={{ scale: 0.98 }}

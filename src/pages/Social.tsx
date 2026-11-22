@@ -206,7 +206,7 @@ export default function Social() {
               className="relative h-11 w-11 rounded-[14px] bg-muted text-primary flex items-center justify-center"
             >
               <UserPlus className="h-[18px] w-[18px]" />
-              <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-[#B42318] text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-background">
+              <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-loss text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-background">
                 {pendingRequests.length}
               </span>
             </motion.button>

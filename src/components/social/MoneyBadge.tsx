@@ -13,7 +13,7 @@ export function MoneyBadge({ amount, className }: MoneyBadgeProps) {
       'inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-black tracking-tight',
       positive
         ? 'bg-primary/10 text-primary'
-        : 'bg-[#B42318]/10 text-[#B42318]',
+        : 'bg-loss/10 text-loss',
       className
     )}>
       {positive ? '+' : ''}{amount < 0 ? '-' : ''}${Math.abs(amount).toFixed(0)}

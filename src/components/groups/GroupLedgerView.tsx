@@ -216,7 +216,7 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
                 </div>
               )}
             </div>
-            <p className="text-[13px] text-[#CFE3D6]">
+            <p className="text-[13px] text-on-forest-muted">
               {group.members.length} member{group.members.length !== 1 ? 's' : ''}
               {!loading && oldestEntry && <> · since {formatDate(oldestEntry.createdAt)}</>}
             </p>
@@ -229,20 +229,20 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
               <p
                 className={cn(
                   'mt-2 text-[28px] font-extrabold leading-none tracking-[-0.04em] tabular-nums truncate',
-                  myNet < -0.005 ? 'text-[#B42318]' : 'text-gold-foreground'
+                  myNet < -0.005 ? 'text-loss' : 'text-gold-foreground'
                 )}
               >
                 {loading ? '—' : myNetLabel}
               </p>
             </div>
             <div className="rounded-[18px] bg-white/10 px-3.5 py-3 min-w-0">
-              <p className="text-[12px] font-semibold leading-none text-[#CFE3D6]">Rounds</p>
+              <p className="text-[12px] font-semibold leading-none text-on-forest-muted">Rounds</p>
               <p className="mt-2 text-[28px] font-extrabold leading-none tracking-[-0.04em] tabular-nums text-white">
                 {loading ? '—' : totalRounds}
               </p>
             </div>
             <div className="rounded-[18px] bg-white/10 px-3.5 py-3 min-w-0">
-              <p className="text-[12px] font-semibold leading-none text-[#CFE3D6]">Total pot</p>
+              <p className="text-[12px] font-semibold leading-none text-on-forest-muted">Total pot</p>
               <p className="mt-2 text-[28px] font-extrabold leading-none tracking-[-0.04em] tabular-nums text-white truncate">
                 {loading ? '—' : `$${totalPot.toFixed(0)}`}
               </p>

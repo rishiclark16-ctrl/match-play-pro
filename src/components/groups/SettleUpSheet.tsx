@@ -114,14 +114,14 @@ export function SettleUpSheet({
                   {fromPlayer?.initials ?? '?'}
                 </AvatarFallback>
               </Avatar>
-              <p className="text-[#CFE3D6] text-[13px] font-medium truncate max-w-[72px] text-center">
+              <p className="text-on-forest-muted text-[13px] font-medium truncate max-w-[72px] text-center">
                 {fromPlayer?.name.split(' ')[0] ?? ''}
               </p>
             </div>
 
             <div className="flex items-center gap-1 pb-4">
               <div className="w-6 h-0.5 bg-white/30 rounded-full" />
-              <span className="text-[#CFE3D6] text-[13px]">owes</span>
+              <span className="text-on-forest-muted text-[13px]">owes</span>
               <div className="w-6 h-0.5 bg-white/30 rounded-full" />
             </div>
 
@@ -132,7 +132,7 @@ export function SettleUpSheet({
                   {toPlayer?.initials ?? '?'}
                 </AvatarFallback>
               </Avatar>
-              <p className="text-[#CFE3D6] text-[13px] font-medium truncate max-w-[72px] text-center">
+              <p className="text-on-forest-muted text-[13px] font-medium truncate max-w-[72px] text-center">
                 {toPlayer?.name.split(' ')[0] ?? ''}
               </p>
             </div>
@@ -142,7 +142,7 @@ export function SettleUpSheet({
           <p className="text-center text-4xl font-black tracking-[-0.04em]" style={{ color: '#BEF264' }}>
             {formatAmount(amount)}
           </p>
-          <p className="text-center text-[#CFE3D6] text-[13px] mt-1.5">
+          <p className="text-center text-on-forest-muted text-[13px] mt-1.5">
             Across {roundsCount} round{roundsCount !== 1 ? 's' : ''}
           </p>
         </div>
@@ -171,7 +171,7 @@ export function SettleUpSheet({
                     <span
                       className={cn(
                         'font-extrabold text-[15px] tabular-nums',
-                        total < 0 ? 'text-[#B42318]' : 'text-primary'
+                        total < 0 ? 'text-loss' : 'text-primary'
                       )}
                     >
                       {total >= 0 ? '+' : '-'}{formatAmount(total)}

@@ -75,7 +75,7 @@ export function FriendCard({ friend, onRemove, isRemoving }: FriendCardProps) {
               <span
                 className={cn(
                   'font-semibold tabular-nums',
-                  net > 0 ? 'text-primary' : net < 0 ? 'text-[#B42318]' : 'text-foreground'
+                  net > 0 ? 'text-primary' : net < 0 ? 'text-loss' : 'text-foreground'
                 )}
               >
                 {net > 0 ? `+$${net}` : net < 0 ? `-$${Math.abs(net)}` : 'even'}
@@ -89,7 +89,7 @@ export function FriendCard({ friend, onRemove, isRemoving }: FriendCardProps) {
         onClick={() => setShowConfirm(true)}
         disabled={isRemoving}
         aria-label={`Remove ${friend.fullName || 'friend'}`}
-        className="h-11 w-11 rounded-[14px] flex items-center justify-center text-muted-foreground active:bg-muted active:text-[#B42318] disabled:opacity-40 shrink-0"
+        className="h-11 w-11 rounded-[14px] flex items-center justify-center text-muted-foreground active:bg-muted active:text-loss disabled:opacity-40 shrink-0"
       >
         <UserMinus className="h-[18px] w-[18px]" />
       </motion.button>
@@ -107,7 +107,7 @@ export function FriendCard({ friend, onRemove, isRemoving }: FriendCardProps) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => onRemove(friend.friendshipId)}
-              className="bg-[#B42318] text-white hover:bg-[#B42318]/90"
+              className="bg-loss text-white hover:bg-loss/90"
             >
               Remove
             </AlertDialogAction>

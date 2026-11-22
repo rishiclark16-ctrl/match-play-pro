@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 /** Money on Forest: up = lime, down = light red (5:1 on Forest), even = soft green. */
 function moneyOnForest(n: number) {
-  return n > 0 ? 'text-gold' : n < 0 ? 'text-[#FFB4A8]' : 'text-[#CFE3D6]';
+  return n > 0 ? 'text-gold' : n < 0 ? 'text-[#FFB4A8]' : 'text-on-forest-muted';
 }
 
 function fmt(n: number) {
@@ -43,14 +43,14 @@ export function SeasonLeaderboard() {
   if (entries.length === 0) {
     return (
       <div className={cn(shell, 'p-5')}>
-        <div className="flex items-center gap-2 text-[13px] font-semibold text-[#CFE3D6]">
+        <div className="flex items-center gap-2 text-[13px] font-semibold text-on-forest-muted">
           <Trophy className="h-4 w-4 text-gold" />
           {year} season
         </div>
         <h2 className="mt-2 text-[26px] font-extrabold leading-[1.1] tracking-[-0.02em] text-white">
           The table is <span className="text-gold">wide open.</span>
         </h2>
-        <p className="mt-2 max-w-[290px] text-[14px] leading-relaxed text-[#CFE3D6]">
+        <p className="mt-2 max-w-[290px] text-[14px] leading-relaxed text-on-forest-muted">
           Play money rounds with friends and your season standings show up here.
         </p>
       </div>
@@ -65,7 +65,7 @@ export function SeasonLeaderboard() {
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className={shell}>
       <div className="px-5 pt-5">
-        <div className="flex items-center gap-2 text-[13px] font-semibold text-[#CFE3D6]">
+        <div className="flex items-center gap-2 text-[13px] font-semibold text-on-forest-muted">
           <Trophy className="h-4 w-4 text-gold" />
           {year} season
         </div>
@@ -79,7 +79,7 @@ export function SeasonLeaderboard() {
             </p>
           </div>
           <div className="rounded-[18px] bg-white/10 px-4 py-3">
-            <p className="text-[12px] font-semibold text-[#CFE3D6] leading-none">Rivals</p>
+            <p className="text-[12px] font-semibold text-on-forest-muted leading-none">Rivals</p>
             <p className="mt-2 text-[34px] font-extrabold leading-none tracking-[-0.04em] tabular-nums text-white">{sorted.length}</p>
           </div>
         </div>
@@ -96,7 +96,7 @@ export function SeasonLeaderboard() {
               transition={{ duration: 0.2 }}
             >
               <div className="flex items-center gap-3 rounded-[14px] px-2 py-2">
-                <span className={cn('w-4 text-center text-[13px] font-bold tabular-nums', idx === 0 ? 'text-gold' : 'text-[#CFE3D6]/70')}>
+                <span className={cn('w-4 text-center text-[13px] font-bold tabular-nums', idx === 0 ? 'text-gold' : 'text-on-forest-muted/70')}>
                   {idx + 1}
                 </span>
                 <Avatar className="h-9 w-9 rounded-[12px] flex-shrink-0">
@@ -107,7 +107,7 @@ export function SeasonLeaderboard() {
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <p className="text-[15px] font-semibold text-white truncate leading-tight">{entry.friendName.split(' ')[0]}</p>
-                  <p className="text-[12px] text-[#CFE3D6]">
+                  <p className="text-[12px] text-on-forest-muted">
                     {entry.roundCount} {entry.roundCount === 1 ? 'round' : 'rounds'} together
                   </p>
                 </div>
@@ -124,7 +124,7 @@ export function SeasonLeaderboard() {
         <button
           onClick={() => setExpanded(v => !v)}
           aria-expanded={expanded}
-          className="w-full h-11 flex items-center justify-center gap-1 border-t border-white/10 text-[13px] font-semibold text-[#CFE3D6]"
+          className="w-full h-11 flex items-center justify-center gap-1 border-t border-white/10 text-[13px] font-semibold text-on-forest-muted"
         >
           {expanded ? 'Show less' : `${sorted.length - 3} more`}
           <ChevronDown className={cn('h-4 w-4 transition-transform', expanded && 'rotate-180')} />
