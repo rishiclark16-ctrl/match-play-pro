@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Mic, MicOff, Sparkles, ChevronRight, AlertCircle, RotateCcw } from 'lucide-react';
+import { Mic, MicOff, Sparkles, AlertCircle, RotateCcw, Crown, Check, ArrowUpLeft } from 'lucide-react';
 import { useHouseGame } from '@/hooks/useHouseGame';
 import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
@@ -11,8 +11,9 @@ import { AIBuilderTutorial, shouldShowAIBuilderTutorial } from '@/components/gol
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { SetupHeader } from '@/components/golf/setupUi';
 
-const PLACEHOLDER = `Describe your game however you want.\n\nE.g. "We play Nassau with 2-down auto presses, skins on the back with doubles on par 5s, birdies are worth an extra unit, and we net out at the end."`;
+const PLACEHOLDER = `Describe your game however you want.\n\nE.g. "Nassau with 2-down auto presses, skins on the back, par 5s pay double, birdies are worth a unit."`;
 
 const EXAMPLES = [
   { label: 'Nassau', text: 'Nassau $5 with auto presses when 2 down, birdie earns a unit from everyone' },
@@ -66,7 +67,7 @@ export default function HouseGameBuilder() {
     if (parsing) {
       setParseStepIndex(0);
       parseStepTimer.current = setInterval(() => {
-        setParseStepIndex(i => (i + 1) % PARSE_STEPS.length);
+        setParseStepIndex(i => Math.min(i + 1, PARSE_STEPS.length - 1));
       }, 900);
     } else {
       if (parseStepTimer.current) clearInterval(parseStepTimer.current);
@@ -132,9 +133,10 @@ export default function HouseGameBuilder() {
   };
 
   const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
+  const canBuild = description.trim().length >= 10 && !parsing;
 
   return (
-    <div className="h-screen flex flex-col bg-[#FAFAF7]">
+    <div className="h-screen flex flex-col bg-background">
       <PaywallModal
         open={showPaywall}
         onOpenChange={(open) => {
@@ -149,230 +151,246 @@ export default function HouseGameBuilder() {
         )}
       </AnimatePresence>
 
-      {/* Header */}
-      <header className="flex-shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground bg-[#FAFAF7]">
-        <div className="flex items-center gap-3">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-xl bg-white border border-border/40 flex items-center justify-center"
-          >
-            <ArrowLeft className="w-4 h-4 text-foreground" />
-          </motion.button>
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              {isPersonal ? 'My Formats' : 'House Game'}
-            </p>
-            <h1 className="text-[22px] font-black tracking-[-0.04em] text-foreground leading-none">AI Game Builder</h1>
-          </div>
-          {isPro ? (
-            <div className="ml-auto bg-foreground text-[#BEF264] text-[9px] font-black tracking-[0.1em] px-2 py-1 rounded-lg">
-              PRO
-            </div>
-          ) : (
-            <div className="ml-auto bg-[#BEF264] text-[#0F1F17] text-[9px] font-black tracking-[0.1em] px-2 py-1 rounded-lg">
-              1 FREE
-            </div>
-          )}
-        </div>
-      </header>
+      <SetupHeader
+        onBack={() => navigate(-1)}
+        caption={isPersonal ? 'My Formats' : 'House Game'}
+        title="AI Game Builder"
+        right={
+          <span className="flex-shrink-0 bg-gold text-primary text-[12px] font-bold px-2.5 py-1 rounded-full">
+            {isPro ? 'PRO' : '1 FREE'}
+          </span>
+        }
+      />
 
-      <main className="flex-1 overflow-y-auto px-6 pt-5 pb-nav flex flex-col gap-4">
-        {/* Free tier notice */}
-        {isPersonal && !isPro && (
-          <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 26 }}
-            className="flex items-center gap-2.5 bg-[#BEF264]/20 border border-[#BEF264]/50 rounded-xl px-4 py-3"
-          >
-            <Sparkles className="w-4 h-4 text-foreground flex-shrink-0" />
-            <p className="text-[12px] font-bold text-foreground leading-snug">
-              Free plan: <span className="font-black">1 saved format</span> — upgrade for unlimited
-            </p>
-          </motion.div>
-        )}
-
-        {/* Input section */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
+      <main className="flex-1 overflow-y-auto px-5 pt-2 pb-nav flex flex-col gap-3.5">
+        {/* Hero: the describe-your-game moment */}
+        <motion.section
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ ...spring, delay: 0.05 }}
+          transition={spring}
+          className="bg-primary rounded-[28px] p-5"
         >
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-              Describe your game
-            </p>
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-gold" />
+            <p className="text-[12px] font-semibold text-[#CFE3D6] flex-1">Describe your game</p>
             {description.length > 0 && (
-              <p className="text-[11px] text-muted-foreground">{description.length} chars</p>
+              <p className="text-[12px] font-medium text-[#CFE3D6] tabular-nums">{description.length} chars</p>
             )}
           </div>
-          <div className="relative">
+          <h2 className="text-[26px] font-extrabold tracking-[-0.02em] leading-[1.1] text-white mt-1.5">
+            Tell us how your group plays.
+          </h2>
+          <p className="text-[14px] leading-snug text-[#CFE3D6] mt-2">
+            Bets, presses, junk, handicaps. Plain English is fine.
+          </p>
+
+          <div className="relative mt-4">
             <textarea
               ref={textareaRef}
               value={description}
               onChange={e => { setDescription(e.target.value); setParseError(null); }}
               placeholder={PLACEHOLDER}
-              rows={7}
+              rows={6}
+              readOnly={parsing}
+              aria-label="Describe your game"
               className={cn(
-                'w-full bg-white rounded-2xl shadow-[0_1px_4px_rgba(0,0,0,0.08)] p-4 pr-14 text-[14px] text-foreground placeholder:text-muted-foreground/50 leading-relaxed resize-none border-2 outline-none transition-all',
+                'w-full bg-card rounded-[20px] p-4 pb-16 text-[16px] text-foreground placeholder:text-muted-foreground/70 leading-relaxed resize-none border-2 outline-none focus-visible:outline-none transition-all',
+                parsing && 'opacity-60',
                 isListening
-                  ? 'border-[#BEF264] ring-2 ring-[#BEF264]/30'
+                  ? 'border-gold ring-4 ring-gold/30'
                   : parseError
-                  ? 'border-red-300'
-                  : 'border-transparent focus:border-foreground/20'
+                  ? 'border-destructive/50'
+                  : 'border-transparent focus:border-gold'
               )}
             />
-            {voiceSupported && (
-              <motion.button
-                whileTap={{ scale: 0.88 }}
-                onClick={handleVoice}
-                className={cn(
-                  'absolute right-3 top-3 w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm',
-                  isListening ? 'bg-[#BEF264]' : 'bg-muted'
-                )}
-              >
-                {isListening
-                  ? <MicOff className="w-4 h-4 text-[#0F1F17]" />
-                  : <Mic className="w-4 h-4 text-foreground" />
-                }
-              </motion.button>
-            )}
             {isListening && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="absolute bottom-3 left-4 right-14 flex items-center gap-2"
+                className="absolute bottom-5 left-4 right-20 flex items-center gap-2"
               >
                 <motion.span
                   animate={{ opacity: [1, 0.3, 1] }}
                   transition={{ repeat: Infinity, duration: 1 }}
-                  className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"
+                  className="w-2 h-2 rounded-full bg-destructive flex-shrink-0"
                 />
                 {interimTranscript ? (
-                  <span className="text-[11px] font-medium text-muted-foreground truncate">{interimTranscript}</span>
+                  <span className="text-[13px] font-medium text-muted-foreground truncate">{interimTranscript}</span>
                 ) : (
-                  <span className="text-[11px] font-bold text-red-500">Listening…</span>
+                  <span className="text-[13px] font-semibold text-destructive">Listening…</span>
                 )}
               </motion.div>
             )}
+            {voiceSupported && (
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={handleVoice}
+                disabled={parsing}
+                aria-label={isListening ? 'Stop dictation' : 'Dictate your game'}
+                className={cn(
+                  'absolute right-3 bottom-4 w-12 h-12 rounded-[14px] flex items-center justify-center transition-colors disabled:opacity-40',
+                  isListening ? 'bg-primary' : 'bg-gold'
+                )}
+              >
+                {isListening
+                  ? <MicOff className="w-5 h-5 text-gold" />
+                  : <Mic className="w-5 h-5 text-primary" />}
+              </motion.button>
+            )}
           </div>
-        </motion.div>
+
+          {/* Build / parsing */}
+          <div className="mt-3">
+            <AnimatePresence mode="wait" initial={false}>
+              {parsing ? (
+                <motion.div
+                  key="parsing"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="h-[60px] rounded-[20px] bg-white/10 px-4 flex flex-col justify-center gap-2"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}
+                      className="w-4 h-4 rounded-full border-2 border-gold border-t-transparent flex-shrink-0"
+                    />
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={parseStepIndex}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-[15px] font-semibold text-white"
+                      >
+                        {PARSE_STEPS[parseStepIndex]}
+                      </motion.span>
+                    </AnimatePresence>
+                  </div>
+                  <div className="flex gap-1.5" aria-hidden>
+                    {PARSE_STEPS.map((_, i) => (
+                      <div key={i} className="h-1 flex-1 rounded-full bg-white/15 overflow-hidden">
+                        <motion.div
+                          className="h-full bg-gold rounded-full"
+                          initial={false}
+                          animate={{ scaleX: i <= parseStepIndex ? 1 : 0 }}
+                          style={{ transformOrigin: 'left' }}
+                          transition={{ duration: 0.6, ease: 'easeOut' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.button
+                  key="build"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleParse}
+                  disabled={!canBuild}
+                  className={cn(
+                    'w-full h-[60px] rounded-[20px] text-[16px] font-bold flex items-center justify-center gap-2 transition-colors',
+                    canBuild ? 'bg-gold text-primary' : 'bg-white/10 text-white/50'
+                  )}
+                >
+                  <Sparkles className="w-5 h-5" />
+                  <span>Build my game</span>
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
+          <p className="text-[12px] text-[#CFE3D6] mt-3 leading-snug text-center">
+            AI reads your description and maps it to scoring rules — you review everything before saving
+          </p>
+        </motion.section>
 
         {/* Parse error inline */}
         <AnimatePresence>
           {parseError && (
             <motion.div
-              initial={{ opacity: 0, y: -8, height: 0 }}
-              animate={{ opacity: 1, y: 0, height: 'auto' }}
-              exit={{ opacity: 0, y: -8, height: 0 }}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 -mt-1"
+              className="flex items-center gap-3 bg-[#FEF3F2] border border-[#FECDCA] rounded-[20px] pl-4 pr-2 py-2"
+              role="alert"
             >
-              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-[13px] font-bold text-red-700 leading-snug">{parseError}</p>
-              </div>
+              <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+              <p className="flex-1 text-[14px] font-semibold text-destructive leading-snug py-1">{parseError}</p>
               <button
                 onClick={() => { setParseError(null); handleParse(); }}
-                className="flex items-center gap-1 text-[11px] font-bold text-red-600 flex-shrink-0"
+                className="flex items-center gap-1.5 h-11 px-4 rounded-[14px] bg-card border border-[#FECDCA] text-[14px] font-bold text-destructive flex-shrink-0"
               >
-                <RotateCcw className="w-3 h-3" />
+                <RotateCcw className="w-4 h-4" />
                 Retry
               </button>
             </motion.div>
           )}
         </AnimatePresence>
 
+        {/* Free tier notice */}
+        {isPersonal && !isPro && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={spring}
+            className="flex items-center gap-3 bg-gold-muted rounded-[20px] px-4 py-3"
+          >
+            <Crown className="w-5 h-5 text-primary flex-shrink-0" />
+            <p className="text-[14px] font-medium text-primary leading-snug">
+              Free plan: <span className="font-bold">1 saved format</span> — upgrade for unlimited
+            </p>
+          </motion.div>
+        )}
+
         {/* Example prompts */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ ...spring, delay: 0.1 }}
+          transition={{ ...spring, delay: 0.08 }}
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">Try an example</p>
-          <div className="grid grid-cols-2 gap-2">
-            {EXAMPLES.map((ex) => (
-              <motion.button
-                key={ex.label}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => { setDescription(ex.text); setParseError(null); hapticLight(); }}
-                className="text-left bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-3 py-3 border-2 border-transparent active:border-foreground/20 transition-colors"
-              >
-                <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[#BEF264] bg-foreground px-1.5 py-0.5 rounded-md inline-block mb-1.5">
-                  {ex.label}
-                </span>
-                <p className="text-[12px] text-muted-foreground leading-snug line-clamp-2">
-                  {ex.text}
-                </p>
-              </motion.button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...spring, delay: 0.15 }}
-          className="pt-1"
-        >
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            onClick={handleParse}
-            disabled={description.trim().length < 10 || parsing}
-            className="w-full bg-foreground text-background rounded-2xl h-[54px] font-bold text-[15px] flex items-center justify-center gap-2 disabled:opacity-40 relative overflow-hidden"
-          >
-            <AnimatePresence mode="wait">
-              {parsing ? (
-                <motion.div
-                  key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex items-center gap-3"
+          <p className="text-[13px] font-semibold text-muted-foreground mt-2 mb-2 px-1">Or start from an example</p>
+          <div className="space-y-2">
+            {EXAMPLES.map((ex) => {
+              const active = description === ex.text;
+              return (
+                <motion.button
+                  key={ex.label}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={parsing}
+                  onClick={() => {
+                    setDescription(ex.text); setParseError(null); hapticLight();
+                    textareaRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+                  }}
+                  className={cn(
+                    'w-full text-left bg-card rounded-[20px] border px-4 py-3.5 flex items-center gap-3 transition-colors',
+                    active ? 'border-primary ring-1 ring-primary' : 'border-border'
+                  )}
                 >
-                  {/* Pulsing dots */}
-                  <div className="flex gap-1">
-                    {[0, 1, 2].map(i => (
-                      <motion.span
-                        key={i}
-                        animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
-                        transition={{ repeat: Infinity, duration: 0.9, delay: i * 0.2 }}
-                        className="w-1.5 h-1.5 rounded-full bg-background"
-                      />
-                    ))}
+                  <div className="flex-1 min-w-0">
+                    <span className="inline-block text-[12px] font-bold text-primary bg-gold-muted px-2.5 py-0.5 rounded-full mb-1.5">
+                      {ex.label}
+                    </span>
+                    <p className="text-[14px] text-foreground leading-snug line-clamp-2">{ex.text}</p>
                   </div>
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={parseStepIndex}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.25 }}
-                      className="text-[14px] font-bold"
-                    >
-                      {PARSE_STEPS[parseStepIndex]}
-                    </motion.span>
-                  </AnimatePresence>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="idle"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex items-center gap-2"
-                >
-                  <Sparkles className="w-5 h-5" />
-                  <span>Build My Game</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.button>
-          <p className="text-center text-[11px] text-muted-foreground mt-2 leading-relaxed">
-            AI reads your description and maps it to scoring rules — you review everything before saving
-          </p>
+                  <div className={cn(
+                    'w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0',
+                    active ? 'bg-primary' : 'bg-muted'
+                  )}>
+                    {active
+                      ? <Check className="w-4 h-4 text-white" />
+                      : <ArrowUpLeft className="w-4 h-4 text-foreground" />}
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
         </motion.div>
       </main>
     </div>
