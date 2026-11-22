@@ -259,7 +259,7 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1244 pass, 0 fail** (1244 tests across 61 files). All tests pass. Run with `bun test`. CI splits into two invocations:
+**1244 pass, 0 fail** (1241 across 59 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
 - `bun test src/hooks src/lib src/engine src/components` (1201 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
@@ -465,7 +465,7 @@ Phase P3.1 (v2.5 polish, in progress) — 2026-11-21:
 - **Domain inconsistency (open):** universal-link docs in `useDeepLinks.ts` say `matchgolf.app`, iOS entitlement allows only `matchgolf.dev`, legal links use `matchgolf.info`. Invites therefore use the App Store link, not an https deep link. Pick one canonical domain before relying on universal links.
 - **Supabase outage found 2026-11-21:** project `Fairways` was paused (INACTIVE), so the live app's backend was down. Restored after pausing `Loudcall US` (user's choice) to stay within the free plan's 2-active-project limit. Free projects re-pause after ~1 week idle; upgrading the org to Pro prevents this.
 - **`parse-house-game` deployed (v23)** with `format_nines` (M10). Deployed from the *live* source plus that one line, NOT the repo file: the repo version differs from prod (CORS allowlist, required Bearer header) and that drift was not deployed. Verified live: a Nines description returns `format_nines`. A prompt hint explaining Nines scoring is in the repo but not yet deployed.
-- Remaining: Scorecard/Profile/RoundComplete file splits; reconcile repo vs prod `parse-house-game`.
+- Remaining: Scorecard (714) and Auth (547) file splits; reconcile repo vs prod `parse-house-game`.
 
 Phase P3.2 (money calculation defects, Notion "09.2 Money Calculation Defects") — 2026-11-21:
 - **M1** Nines/Defender/Sixes paid $0: 9 call sites passed `HoleInfo[]` as `holesPlayed`. Now `holeInfo.length` in `GamesSection.tsx`, `useGameResults.ts`, `moneyTracker.ts`, `games/houseGame.ts`.
@@ -482,13 +482,22 @@ Phase P3.2 (money calculation defects, Notion "09.2 Money Calculation Defects") 
 - **Typecheck ratchet:** `scripts/typecheck-ratchet.sh` runs in CI (baseline **196** `tsc` errors (was 220, then 204, 197)). Lower `TS_BASELINE` as errors are fixed; never raise it.
 - New regression tests call the calculators the way the app does (`moneyTracker.callsites.test.ts`) plus randomised zero-sum invariants for Wolf and Skins.
 
-Phase P3.3 (design system v5 "Fairway Day") — 2026-11-21, in progress:
+Phase P3.3 (design system v5 "Fairway Day") — 2026-11-21/22, **complete**:
 - User picked direction 08 "Fairway Day" from 10 light-mode directions (design canvas artifact "MATCH Design Directions"). Rationale: golfers use the app in full sun, so light mode with dark accents, big numerals, 44px+ targets.
 - **Spec: `docs/design/fairway-day.md`** (source of truth for app AND marketing site). Forest `#14532D` primary, lime `#BEF264` highlight (in the `--gold` token slot), ink `#0F1F17`, ground `#FAFAF7`, Sora font, 20px radius. Money: won = Forest, owed = `#B42318`.
 - Foundation commit `e5064d3`: tokens in `src/index.css`, Sora in `index.html` + `tailwind.config.ts`, brand hex literals swapped 1:1 in 105 files (#F0EE3A→#BEF264, #0A0A0A→#0F1F17, #F8F8F6/#F5F5F0→#FAFAF7; arbitrary hex kept so `/opacity` modifiers work).
 - `scripts/design-screens.cjs`: Playwright harness with a mocked Supabase backend + realistic in-progress round (`BASE` env for port; run vite with `--host 127.0.0.1`; needs `.env.local`).
 - 5 agents redesign by area (scoring, round setup + AI builder, results + stats, home + social, shell + account + ui primitives) in separate worktrees; lead merges.
 - The website session (matchgolf.info redesign) was sent the full spec.
+- **All 5 areas merged** into `claude/matchplay-golf-app-2hb6ib` (merge commits 032adab results/stats, 4e19d47 shell/primitives/account, 8ceee3a scoring, fca0036 home/social/groups, 4157077 setup/AI builder). Agents' worktrees were created from old `main`; each fast-forwarded to `fb6aaa3` first.
+- New shared pieces: `src/components/golf/setupUi.tsx` + `setupStyles.ts` (hero card, chips, primary button), `src/components/golf/scorecard/` (ScoreMark, LeaderboardParts), `src/components/golf/results/`, `src/components/stats/` sections, `components/home/HomeHero|HomeActionRow|HomeSections|JoinRoundModal`, `components/profile/ProfileHeader|ProfilePlanCard|TeePreferencePicker|DeleteAccountDialog`, `components/onboarding/OnboardingParts.tsx`, `components/auth/AuthFields.tsx`, `layout/PageHeader.tsx` + `LegalPageLayout.tsx`, `games/money.ts` (`signedMoney()`).
+- New tokens: `loss` (#B42318), `on-forest-muted` (#CFE3D6); `--destructive` = loss red. `.data-label`/`.label-sm` are now sentence case.
+- Bugs fixed during redesign: tee-sheet close crash (NewRound called nonexistent setters); group-tab ledger rendered under the list (z-10→z-20); "Add to group tab" hidden behind results footer; `$-28` money formatting + missing minus signs in Defender/Nines/Sixes/Vegas; share push used nonexistent `round.course_name`; finish overlay said "All 18 holes" on 9-hole rounds; plus-handicap shown for normal handicaps on friend cards; AI builder/edit Save buttons under the bottom nav (BottomNav now hides on `/my-formats/new`, `/my-formats/:id/edit`, `/groups/:id/house-game/new|edit`).
+- e2e selectors updated: `money-tracker.spec.ts` → `getByTestId('money-tracker')`; `ai-game-builder.spec.ts` → `rule-toggle` test id + `data-state`. Still stale (not run in CI): phase02 2.13 `.grid-cols-3 .rounded-2xl p.text-[28px]`, and 2.2 expects Active/Watching/Rounds on a brand-new account (now hidden until the user has rounds).
+- File sizes after: Scorecard 714 (still >500), Auth 547 (>500); RoundComplete 397, Profile 493, Stats 167, Home 293, NewRound 493, HouseGameConfirm 401, Leaderboard 434.
+- Open follow-ups: duplicate ScoreMark (`stats/ScoreMark.tsx` vs `golf/scorecard/ScoreMark.tsx`) should merge into `ui/`; `CollapsibleSection.tsx` may be unused; RoundDashboard, WatchParty, dashboard cards and rarer sheets only got colour/label passes; leaderboard live money says "All even" on hole 1 while skins shows +$14 (pre-existing tracker behaviour, unverified); `pull-to-refresh.tsx` scrollTop check on pages where `main` scrolls.
+- **Screenshot harness gotcha:** never run two vite dev servers against the same `node_modules` (e.g. a symlinked worktree): they share `node_modules/.vite` and corrupt each other's deps cache ("Invalid hook call"/duplicate React, every screen shows the error boundary). Clear `node_modules/.vite` and run one server.
+- Before/after comparison page: artifact "Fairway Day Redesign" (https://claude.ai/artifact/4FxF3oXEPreUVEWH8qM2hm).
 
 Phase P3.4 (TestFlight CI) — 2026-11-21:
 - New `.github/workflows/testflight.yml` (macos-15): on push to `main` (docs/md changes ignored) and manual dispatch → JS deps → unit tests gate → `bun run build` → `npx cap sync ios` → `pod install` → `bundle exec fastlane ci_beta`. Concurrency group `testflight` prevents parallel uploads. Skips with a warning until signing secrets exist. IPA + dSYMs kept 14 days as an artifact.
