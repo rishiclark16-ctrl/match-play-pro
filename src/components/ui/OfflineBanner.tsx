@@ -54,16 +54,20 @@ export function OfflineBanner() {
           exit={{ y: -36, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
           className={[
-            'fixed top-0 inset-x-0 z-50 h-9 flex items-center justify-center',
-            'text-sm font-medium select-none',
+            'fixed top-0 inset-x-0 z-50 h-9 flex items-center justify-center gap-2',
+            'text-[13px] font-semibold select-none',
             isAmber
-              ? 'bg-amber-400 text-amber-950'
-              : 'bg-green-500 text-white',
+              ? 'bg-ink text-white'
+              : 'bg-primary text-primary-foreground',
           ].join(' ')}
           style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
           aria-live="polite"
           role="status"
         >
+          <span
+            aria-hidden
+            className={isAmber ? 'w-2 h-2 rounded-full bg-warning' : 'w-2 h-2 rounded-full bg-gold animate-pulse'}
+          />
           {message}
         </motion.div>
       )}
