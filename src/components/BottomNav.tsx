@@ -22,7 +22,12 @@ export function BottomNav() {
   const shouldHide = HIDDEN_ROUTES.some(route => location.pathname === route) ||
     location.pathname.startsWith('/round/') ||
     location.pathname.startsWith('/watch/') ||
-    location.pathname.endsWith('/house-game/confirm');
+    location.pathname.endsWith('/house-game/confirm') ||
+    // Task screens with their own primary buttons (AI builder, edit rules)
+    location.pathname === '/my-formats/new' ||
+    location.pathname.endsWith('/house-game/new') ||
+    location.pathname.endsWith('/house-game/edit') ||
+    (location.pathname.startsWith('/my-formats/') && location.pathname.endsWith('/edit'));
 
   if (shouldHide) return null;
 
