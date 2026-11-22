@@ -1,14 +1,13 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Users, Trash2, Edit2, Loader2, Crown } from 'lucide-react';
+import { ArrowLeft, Plus, Users, Trash2, Edit2, Loader2, Crown, ChevronRight, Receipt, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useGroups, GolfGroup } from '@/hooks/useGroups';
 import { useSubscription } from '@/hooks/useSubscription';
 import { CreateGroupSheet } from '@/components/groups/CreateGroupSheet';
 import { GroupLedgerView } from '@/components/groups/GroupLedgerView';
-import { PaywallModal, ProBadge } from '@/components/subscription';
+import { PaywallModal } from '@/components/subscription';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
@@ -65,8 +64,9 @@ export default function Groups() {
     return name.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-[#FAFAF7] relative">
+    <div className="h-screen flex flex-col overflow-hidden bg-background relative">
       {/* Group Ledger Overlay */}
       <AnimatePresence>
         {selectedGroup && (
@@ -75,80 +75,90 @@ export default function Groups() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="absolute inset-0 z-10 bg-[#FAFAF7]"
+            className="absolute inset-0 z-20 bg-background"
           >
             <GroupLedgerView group={selectedGroup} onBack={() => setSelectedGroup(null)} />
           </motion.div>
         )}
       </AnimatePresence>
       {/* Fixed Header */}
-      <header className="flex-shrink-0 z-10 px-6 pb-3 pt-safe-content border-b-2 border-foreground">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <header className="flex-shrink-0 z-10 px-5 pb-4 pt-safe-content">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => navigate(-1)}
-              className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+              aria-label="Back"
+              className="h-11 w-11 flex-shrink-0 rounded-[14px] bg-muted text-foreground flex items-center justify-center"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-5 w-5" />
             </motion.button>
-            <div>
-              <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">MATCH Golf</p>
-              <h1 className="text-[22px] font-black tracking-[-0.04em] leading-tight text-foreground">Groups</h1>
-            </div>
+            <h1 className="text-[30px] font-extrabold tracking-[-0.03em] leading-none text-foreground">Groups</h1>
           </div>
-          <Button
-            size="sm"
+          <motion.button
+            whileTap={{ scale: 0.95 }}
             onClick={handleCreateGroup}
-            className={atGroupLimit
-              ? 'border border-gold text-gold bg-transparent hover:bg-gold/10 h-9'
-              : 'bg-foreground text-background h-9 px-4 rounded-2xl font-bold'}
-          >
-            {atGroupLimit ? (
-              <>
-                <Crown className="h-3.5 w-3.5 mr-1" />
-                Upgrade
-              </>
-            ) : (
-              <>
-                <Plus className="h-3.5 w-3.5 mr-1" />
-                New
-              </>
+            className={cn(
+              'h-11 flex-shrink-0 rounded-[14px] pl-3 pr-4 inline-flex items-center gap-1.5 text-[14px] font-bold',
+              atGroupLimit ? 'bg-gold text-gold-foreground' : 'bg-foreground text-background'
             )}
-          </Button>
+          >
+            {atGroupLimit ? <Crown className="h-4 w-4" /> : <Plus className="h-4 w-4" strokeWidth={2.5} />}
+            {atGroupLimit ? 'Upgrade' : 'New group'}
+          </motion.button>
         </div>
+        {!loading && groups.length > 0 && !isPro && maxGroups !== Infinity && (
+          <p className="mt-2 pl-[56px] text-[13px] text-muted-foreground">
+            {groups.length} of {maxGroups} groups on the free plan
+          </p>
+        )}
       </header>
 
       {/* Scrollable Content */}
-      <PullToRefresh onRefresh={handleRefresh} className="flex-1 relative z-10 px-4 pb-nav">
+      <PullToRefresh onRefresh={handleRefresh} className="flex-1 relative z-10 px-5 pb-nav">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-foreground" />
+            <Loader2 className="h-7 w-7 animate-spin text-primary" />
           </div>
         ) : groups.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-2 mt-6 flex flex-col items-center text-center py-12 px-6"
+            className="relative overflow-hidden rounded-[28px] bg-primary p-5 text-primary-foreground"
           >
-            <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mb-4">
-              <Users className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-[13px] font-bold text-foreground mb-1">No groups yet</h3>
-            <p className="text-[12px] text-muted-foreground max-w-[240px] leading-relaxed">
-              Create a group with your regular golf buddies for faster round setup.
+            <svg aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-[220px] w-[220px] text-white/[0.06]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="100" cy="100" r="30" /><circle cx="100" cy="100" r="52" /><circle cx="100" cy="100" r="74" /><circle cx="100" cy="100" r="96" />
+            </svg>
+            <p className="relative text-[13px] font-semibold text-[#CFE3D6]">Your regular game</p>
+            <h2 className="relative mt-1.5 text-[28px] font-extrabold leading-[1.08] tracking-[-0.03em] text-white">
+              Save the foursome.<br /><span className="text-gold">Keep a running tab.</span>
+            </h2>
+            <p className="relative mt-2 max-w-[290px] text-[14px] leading-relaxed text-[#CFE3D6]">
+              Create a group with your regular golf buddies for faster round setup and a season-long ledger.
             </p>
+            <div className="relative mt-5 grid grid-cols-3 gap-2">
+              {[
+                { icon: <Users className="h-[18px] w-[18px]" />, label: 'One-tap setup', hot: true },
+                { icon: <Receipt className="h-[18px] w-[18px]" />, label: 'Running tab' },
+                { icon: <Sparkles className="h-[18px] w-[18px]" />, label: 'House game' },
+              ].map(t => (
+                <div key={t.label} className={cn('min-h-[88px] rounded-[18px] p-3 flex flex-col justify-between gap-4', t.hot ? 'bg-gold text-gold-foreground' : 'bg-white/10 text-white')}>
+                  <span className={cn('h-8 w-8 rounded-[10px] flex items-center justify-center', t.hot ? 'bg-primary/10' : 'bg-white/10')}>{t.icon}</span>
+                  <span className="text-[13px] font-bold leading-tight">{t.label}</span>
+                </div>
+              ))}
+            </div>
             <motion.button
               whileTap={{ scale: 0.98 }}
               onClick={handleCreateGroup}
-              className="bg-foreground text-background rounded-2xl px-6 py-3 font-bold text-sm flex items-center gap-2 mt-5"
+              className="relative mt-4 w-full h-[56px] rounded-[18px] bg-white text-primary text-[16px] font-bold inline-flex items-center justify-center gap-2"
             >
-              <Plus className="h-4 w-4" />
-              Create Your First Group
+              <Plus className="h-5 w-5" strokeWidth={2.5} />
+              Create your first group
             </motion.button>
           </motion.div>
         ) : (
-          <div className="mt-4">
+          <div className="space-y-2">
             <AnimatePresence>
               {groups.map((group, index) => (
                 <motion.div
@@ -158,57 +168,68 @@ export default function Groups() {
                   exit={{ opacity: 0, x: -100 }}
                   transition={{ delay: index * 0.05 }}
                   onClick={() => { hapticLight(); setSelectedGroup(group); }}
-                  className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-4 mb-3 cursor-pointer active:scale-[0.99]"
+                  className="rounded-[20px] border border-border bg-card p-4 cursor-pointer active:scale-[0.99] transition-transform"
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-black text-base tracking-[-0.02em] text-foreground">{group.name}</h3>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <h3 className="text-[17px] font-bold tracking-[-0.02em] text-foreground truncate">{group.name}</h3>
                       {group.description && (
-                        <p className="text-sm text-muted-foreground mt-0.5">{group.description}</p>
+                        <p className="text-[13px] text-muted-foreground mt-0.5 line-clamp-2">{group.description}</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                    <div className="flex items-center -mr-2 -mt-2 flex-shrink-0">
                       <motion.button
                         whileTap={{ scale: 0.9 }}
+                        aria-label={`Edit ${group.name}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           hapticLight();
                           setEditingGroup(group);
                           setShowCreateSheet(true);
                         }}
-                        className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center"
+                        className="h-11 w-11 rounded-[14px] flex items-center justify-center text-muted-foreground active:bg-muted"
                       >
-                        <Edit2 className="h-4 w-4 text-muted-foreground" />
+                        <Edit2 className="h-[17px] w-[17px]" />
                       </motion.button>
                       <motion.button
                         whileTap={{ scale: 0.9 }}
+                        aria-label={`Delete ${group.name}`}
                         onClick={(e) => { e.stopPropagation(); handleDelete(group.id); }}
                         disabled={deletingId === group.id}
-                        className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center text-destructive"
+                        className="h-11 w-11 rounded-[14px] flex items-center justify-center text-muted-foreground active:bg-[#B42318]/10 active:text-[#B42318]"
                       >
                         {deletingId === group.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-[17px] w-[17px]" />
                         )}
                       </motion.button>
                     </div>
                   </div>
 
-                  {/* Members */}
-                  <div className="flex items-center gap-2">
+                  {/* Members + open tab */}
+                  <div className="mt-3 flex items-center gap-2.5">
                     <div className="flex -space-x-2">
                       {group.members.slice(0, 4).map((member) => (
-                        <Avatar key={member.id} className="h-8 w-8 rounded-xl border-2 border-background">
+                        <Avatar key={member.id} className="h-9 w-9 rounded-[12px] ring-2 ring-card">
                           <AvatarImage src={member.avatarUrl || undefined} />
-                          <AvatarFallback className="bg-muted text-foreground text-xs rounded-xl">
+                          <AvatarFallback className="bg-muted text-primary text-[12px] font-bold rounded-[12px]">
                             {getInitials(member.name)}
                           </AvatarFallback>
                         </Avatar>
                       ))}
+                      {group.members.length > 4 && (
+                        <span className="h-9 w-9 rounded-[12px] ring-2 ring-card bg-muted text-[12px] font-bold text-muted-foreground flex items-center justify-center">
+                          +{group.members.length - 4}
+                        </span>
+                      )}
                     </div>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-[13px] text-muted-foreground">
                       {group.members.length} member{group.members.length !== 1 ? 's' : ''}
+                    </span>
+                    <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-muted px-3 h-8 text-[13px] font-semibold text-primary">
+                      Tab
+                      <ChevronRight className="h-4 w-4" />
                     </span>
                   </div>
                 </motion.div>

@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { hapticLight } from '@/lib/haptics';
+import { ledgerSectionLabel } from './ledgerHelpers';
 
 interface GroupFormatAssignmentLike {
   formatId: string;
@@ -19,52 +20,47 @@ export function GroupFormatAssignmentCard({
   onRemoveAssignment,
 }: GroupFormatAssignmentCardProps) {
   return (
-    <div className="mt-4 pb-2">
-      <p className="text-[11px] font-black uppercase tracking-[0.12em] text-muted-foreground mb-2">Group Format</p>
-      <div className="bg-white rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)] border border-border/30">
+    <section className="mt-[18px]">
+      <p className={ledgerSectionLabel}>Group format</p>
+      <div className="rounded-[20px] border border-border bg-card p-3.5 flex items-center gap-3">
+        <div className="h-11 w-11 rounded-[14px] bg-muted text-primary flex items-center justify-center flex-shrink-0">
+          <Sparkles className="h-5 w-5" />
+        </div>
         {groupFormatAssignment ? (
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#BEF264]/15 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-4 h-4 text-foreground" />
-            </div>
+          <>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-foreground truncate">{groupFormatAssignment.format.name}</p>
-              <p className="text-[11px] text-muted-foreground">Shared with group members</p>
+              <p className="text-[15px] font-semibold text-foreground truncate">{groupFormatAssignment.format.name}</p>
+              <p className="text-[13px] text-muted-foreground">Shared with group members</p>
             </div>
-            <div className="flex flex-col gap-1 items-end">
-              <button
-                onClick={() => { hapticLight(); onShowFormatPicker(); }}
-                className="text-[11px] font-bold text-foreground"
-              >
-                Change
-              </button>
-              <button
-                onClick={() => { hapticLight(); onRemoveAssignment(); }}
-                className="text-[11px] text-destructive"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
+            <button
+              onClick={() => { hapticLight(); onRemoveAssignment(); }}
+              className="h-11 px-2 text-[14px] font-semibold text-[#B42318]"
+            >
+              Remove
+            </button>
+            <button
+              onClick={() => { hapticLight(); onShowFormatPicker(); }}
+              className="h-11 rounded-[14px] bg-muted px-3.5 text-[14px] font-semibold text-primary"
+            >
+              Change
+            </button>
+          </>
         ) : (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <Sparkles className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <p className="text-[13px] font-bold text-foreground">No format assigned</p>
-                <p className="text-[11px] text-muted-foreground">Share an AI game with your group</p>
-              </div>
+          <>
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-semibold text-foreground">No format assigned</p>
+              <p className="text-[13px] text-muted-foreground">Share an AI game with your group</p>
             </div>
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={() => { hapticLight(); onShowFormatPicker(); }}
-              className="bg-foreground text-background text-[11px] font-bold px-3 py-1.5 rounded-xl"
+              className="h-11 rounded-[14px] bg-primary px-4 text-[14px] font-bold text-primary-foreground"
             >
               Assign
             </motion.button>
-          </div>
+          </>
         )}
       </div>
-    </div>
+    </section>
   );
 }
