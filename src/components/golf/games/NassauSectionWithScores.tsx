@@ -50,7 +50,7 @@ export function NassauSectionWithScores({
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-0">
         <LiveDot />
-        <span className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
+        <span className="text-[15px] font-semibold text-[#0F1F17]">
           Nassau ${nassauGame.stakes}
         </span>
         {nassauGame.useNet && <NetBadge />}
@@ -70,7 +70,7 @@ export function NassauSectionWithScores({
               layout
               transition={SPRING}
               className={cn(
-                'rounded-xl p-2.5 text-center border',
+                'rounded-[14px] p-2.5 text-center border',
                 isAllSquare
                   ? 'bg-white border-[#E7E9E3]'
                   : 'bg-[#DCFCE7] border-[#14532D]/30',
@@ -86,9 +86,9 @@ export function NassauSectionWithScores({
                 <p className="text-[11px] font-semibold text-[#14532D]">+{segment.margin}</p>
               )}
               {isAllSquare && (
-                <p className="text-[10px] text-[#5A6B61]">All Square</p>
+                <p className="text-[12px] text-[#5A6B61]">All square</p>
               )}
-              <p className="text-[9px] text-[#5A6B61] mt-0.5">
+              <p className="text-[11px] text-[#5A6B61] mt-0.5">
                 {segment.holesPlayed > 0 ? `Thru ${segment.holesPlayed}` : '—'}
               </p>
             </motion.div>
@@ -106,7 +106,7 @@ export function NassauSectionWithScores({
             {holeDots.map((dot, i) => (
               <div key={i} className="flex flex-col items-center gap-0.5">
                 <HoleDot result={dot} />
-                <span className="text-[8px] text-[#B4BDB7]">{i + 1}</span>
+                <span className="text-[10px] text-[#B4BDB7]">{i + 1}</span>
               </div>
             ))}
           </div>
@@ -119,7 +119,7 @@ export function NassauSectionWithScores({
           {round.presses?.map((press, i) => (
             <span
               key={press.id}
-              className="text-[10px] font-semibold px-2 py-0.5 bg-[#ECFCCB] text-[#14532D] rounded-full border border-[#BEF264]"
+              className="text-[12px] font-semibold px-2 py-0.5 bg-[#ECFCCB] text-[#14532D] rounded-full border border-[#BEF264]"
             >
               Press #{i + 1} · h{press.startHole} · ${press.stakes}
             </span>
@@ -133,7 +133,7 @@ export function NassauSectionWithScores({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={SPRING}
-          className="flex items-center justify-between px-3 py-2 bg-[#ECFCCB] rounded-xl border border-[#BEF264]"
+          className="flex items-center justify-between px-3 py-2 bg-[#ECFCCB] rounded-[14px] border border-[#BEF264]"
         >
           <div className="flex items-center gap-2">
             <AlertCircle className="w-3.5 h-3.5 text-[#14532D] shrink-0" />
@@ -143,7 +143,7 @@ export function NassauSectionWithScores({
           </div>
           <Button
             size="sm"
-            className="h-7 text-xs font-bold bg-[#ECFCCB]0 hover:bg-amber-600 text-white border-0 rounded-lg px-3"
+            className="h-7 text-xs font-bold bg-[#ECFCCB]0 hover:bg-amber-600 text-white border-0 rounded-[10px] px-3"
             onClick={() => onPressClick(pressablePlayer.player)}
           >
             Press ${nassauGame.stakes}

@@ -555,7 +555,7 @@ export default function Scorecard() {
           {/* LIVE GAMES section label + Games Section — hide during playoff */}
           {playoffHole === 0 && (round.games?.length > 0 || propBets.length > 0) && (
             <>
-              <p className="text-[12px] font-semibold text-[#5A6B61] px-1 pt-3">Games</p>
+              <div className="pt-3" />
               <GamesSection
                 round={round}
                 players={playersWithScores}

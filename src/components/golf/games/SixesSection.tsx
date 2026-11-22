@@ -3,6 +3,7 @@ import { PlayerWithScores } from '@/types/golf';
 import { SixesResult } from '@/lib/games/sixes';
 import { cn } from '@/lib/utils';
 import { LiveDot, NetBadge } from './shared';
+import { signedMoney } from './money';
 
 export function SixesSection({
   sixesGame,
@@ -18,12 +19,12 @@ export function SixesSection({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <LiveDot />
-          <span className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
+          <span className="text-[15px] font-semibold text-[#0F1F17]">
             Sixes ${sixesGame.stakes}/pt
           </span>
           {sixesGame.useNet && <NetBadge />}
         </div>
-        <span className="text-[10px] text-[#5A6B61]">Thru {sixesResult.holesScored}</span>
+        <span className="text-[12px] text-[#5A6B61]">Thru {sixesResult.holesScored}</span>
       </div>
 
       {/* Segments */}
@@ -35,7 +36,7 @@ export function SixesSection({
           const totalPlayed = seg.team1HolesWon + seg.team2HolesWon + seg.halved;
 
           return (
-            <div key={seg.segmentIndex} className="rounded-xl border border-[#E7E9E3] bg-white p-3">
+            <div key={seg.segmentIndex} className="rounded-[14px] border border-[#E7E9E3] bg-white p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">
                   <Users className="w-3 h-3 text-[#5A6B61]" />
@@ -44,35 +45,35 @@ export function SixesSection({
                   </span>
                 </div>
                 {totalPlayed > 0 && (
-                  <span className="text-[10px] text-[#5A6B61]">{totalPlayed} holes</span>
+                  <span className="text-[12px] text-[#5A6B61]">{totalPlayed} holes</span>
                 )}
               </div>
               <div className="grid grid-cols-3 gap-2 items-center">
                 <div className={cn(
-                  'text-center rounded-lg py-1.5',
+                  'text-center rounded-[10px] py-1.5',
                   isTeam1Winning ? 'bg-[#DCFCE7]' : 'bg-[#FAFAF7]',
                 )}>
-                  <p className="text-[9px] font-bold text-[#5A6B61] truncate px-1">{seg.team1Name}</p>
+                  <p className="text-[11px] font-bold text-[#5A6B61] truncate px-1">{seg.team1Name}</p>
                   <p className={cn(
-                    'text-lg font-black tabular-nums',
+                    'text-lg font-extrabold tabular-nums',
                     isTeam1Winning ? 'text-[#14532D]' : 'text-[#5A6B61]',
                   )}>
                     {seg.team1HolesWon}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] font-bold text-[#B4BDB7]">vs</p>
+                  <p className="text-[12px] font-bold text-[#B4BDB7]">vs</p>
                   {seg.halved > 0 && (
-                    <p className="text-[8px] text-[#5A6B61]">{seg.halved} halved</p>
+                    <p className="text-[10px] text-[#5A6B61]">{seg.halved} halved</p>
                   )}
                 </div>
                 <div className={cn(
-                  'text-center rounded-lg py-1.5',
+                  'text-center rounded-[10px] py-1.5',
                   isTeam2Winning ? 'bg-[#DCFCE7]' : 'bg-[#FAFAF7]',
                 )}>
-                  <p className="text-[9px] font-bold text-[#5A6B61] truncate px-1">{seg.team2Name}</p>
+                  <p className="text-[11px] font-bold text-[#5A6B61] truncate px-1">{seg.team2Name}</p>
                   <p className={cn(
-                    'text-lg font-black tabular-nums',
+                    'text-lg font-extrabold tabular-nums',
                     isTeam2Winning ? 'text-[#14532D]' : 'text-[#5A6B61]',
                   )}>
                     {seg.team2HolesWon}
@@ -89,7 +90,7 @@ export function SixesSection({
         {sixesResult.standings.map((standing, index) => (
           <div
             key={standing.playerId}
-            className="flex items-center gap-3 px-3 py-2 rounded-xl bg-[#FAFAF7]"
+            className="flex items-center gap-3 px-3 py-2 rounded-[14px] bg-[#FAFAF7]"
           >
             <span className="text-[11px] font-bold w-4 text-center text-[#5A6B61]">
               {index + 1}
@@ -98,7 +99,7 @@ export function SixesSection({
               <p className="text-sm font-semibold text-[#0F1F17] truncate">
                 {standing.playerName.split(' ')[0]}
               </p>
-              <p className="text-[10px] text-[#5A6B61]">
+              <p className="text-[12px] text-[#5A6B61]">
                 {standing.segmentsWon} seg · {standing.totalHolesWon} holes
               </p>
             </div>
@@ -110,7 +111,7 @@ export function SixesSection({
                 standing.earnings === 0 && 'text-[#5A6B61]',
               )}
             >
-              {standing.earnings >= 0 ? '+' : ''}${Math.abs(standing.earnings).toFixed(2)}
+              {signedMoney(standing.earnings)}
             </span>
           </div>
         ))}

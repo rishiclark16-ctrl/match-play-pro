@@ -3,6 +3,7 @@ import { PlayerWithScores } from '@/types/golf';
 import { VegasResult } from '@/lib/games/vegas';
 import { cn } from '@/lib/utils';
 import { LiveDot, NetBadge, SPRING } from './shared';
+import { signedMoney } from './money';
 
 export function VegasSection({
   vegasGame,
@@ -23,23 +24,23 @@ export function VegasSection({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <LiveDot />
-          <span className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
+          <span className="text-[15px] font-semibold text-[#0F1F17]">
             Vegas ${vegasGame.stakes}/pt
           </span>
           {vegasGame.useNet && <NetBadge />}
         </div>
-        <span className="text-[10px] text-[#5A6B61]">Thru {vegasResult.holesPlayed}</span>
+        <span className="text-[12px] text-[#5A6B61]">Thru {vegasResult.holesPlayed}</span>
       </div>
 
       {/* Team scores summary */}
       <div className="grid grid-cols-2 gap-2">
         <div className={cn(
-          'rounded-xl p-3 text-center border',
+          'rounded-[14px] p-3 text-center border',
           vegasResult.teamATotal > 0 ? 'bg-[#DCFCE7] border-[#14532D]/30' : 'bg-white border-[#E7E9E3]',
         )}>
           <p className="text-[12px] font-bold text-[#5A6B61] mb-1">{teamAName}</p>
           <p className={cn(
-            'text-lg font-black tabular-nums',
+            'text-lg font-extrabold tabular-nums',
             vegasResult.teamATotal > 0 ? 'text-[#14532D]' : vegasResult.teamATotal < 0 ? 'text-[#B42318]' : 'text-[#5A6B61]',
           )}>
             {vegasResult.teamATotal >= 0 ? '+' : ''}{vegasResult.teamATotal}
@@ -48,16 +49,16 @@ export function VegasSection({
             'text-[11px] font-bold tabular-nums',
             vegasResult.teamAEarnings >= 0 ? 'text-[#14532D]' : 'text-[#B42318]',
           )}>
-            {vegasResult.teamAEarnings >= 0 ? '+' : ''}${Math.abs(vegasResult.teamAEarnings).toFixed(2)}
+            {signedMoney(vegasResult.teamAEarnings)}
           </p>
         </div>
         <div className={cn(
-          'rounded-xl p-3 text-center border',
+          'rounded-[14px] p-3 text-center border',
           vegasResult.teamBTotal > 0 ? 'bg-[#DCFCE7] border-[#14532D]/30' : 'bg-white border-[#E7E9E3]',
         )}>
           <p className="text-[12px] font-bold text-[#5A6B61] mb-1">{teamBName}</p>
           <p className={cn(
-            'text-lg font-black tabular-nums',
+            'text-lg font-extrabold tabular-nums',
             vegasResult.teamBTotal > 0 ? 'text-[#14532D]' : vegasResult.teamBTotal < 0 ? 'text-[#B42318]' : 'text-[#5A6B61]',
           )}>
             {vegasResult.teamBTotal >= 0 ? '+' : ''}{vegasResult.teamBTotal}
@@ -66,7 +67,7 @@ export function VegasSection({
             'text-[11px] font-bold tabular-nums',
             vegasResult.teamBEarnings >= 0 ? 'text-[#14532D]' : 'text-[#B42318]',
           )}>
-            {vegasResult.teamBEarnings >= 0 ? '+' : ''}${Math.abs(vegasResult.teamBEarnings).toFixed(2)}
+            {signedMoney(vegasResult.teamBEarnings)}
           </p>
         </div>
       </div>
@@ -87,23 +88,23 @@ export function VegasSection({
                 <div
                   key={result.holeNumber}
                   className={cn(
-                    'flex flex-col items-center rounded-lg px-2 py-1.5 min-w-[52px] border',
+                    'flex flex-col items-center rounded-[10px] px-2 py-1.5 min-w-[52px] border',
                     tied && 'bg-[#ECFCCB] border-[#BEF264]',
                     teamAWins && 'bg-[#DCFCE7] border-[#14532D]/20',
                     teamBWins && 'bg-blue-50 border-blue-200',
                   )}
                 >
-                  <span className="text-[8px] font-bold text-[#5A6B61]">H{result.holeNumber}</span>
+                  <span className="text-[10px] font-bold text-[#5A6B61]">H{result.holeNumber}</span>
                   <div className="flex items-center gap-1 mt-0.5">
                     <span className={cn(
-                      'text-[11px] font-black tabular-nums',
+                      'text-[11px] font-extrabold tabular-nums',
                       result.teamAFlipped && 'text-[#B42318]',
                     )}>
                       {result.teamAScore}
                     </span>
-                    <span className="text-[8px] text-[#B4BDB7]">vs</span>
+                    <span className="text-[10px] text-[#B4BDB7]">vs</span>
                     <span className={cn(
-                      'text-[11px] font-black tabular-nums',
+                      'text-[11px] font-extrabold tabular-nums',
                       result.teamBFlipped && 'text-[#B42318]',
                     )}>
                       {result.teamBScore}
@@ -123,13 +124,13 @@ export function VegasSection({
                   </div>
                   {!tied && (
                     <span className={cn(
-                      'text-[9px] font-bold',
+                      'text-[11px] font-bold',
                       teamAWins ? 'text-[#14532D]' : 'text-blue-500',
                     )}>
                       {teamAWins ? '+' : ''}{result.pointDiff}
                     </span>
                   )}
-                  {tied && <span className="text-[9px] font-bold text-[#14532D]">→</span>}
+                  {tied && <span className="text-[11px] font-bold text-[#14532D]">→</span>}
                 </div>
               );
             })}

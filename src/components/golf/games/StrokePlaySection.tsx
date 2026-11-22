@@ -10,8 +10,8 @@ export function StrokePlaySection({ players }: { players: PlayerWithScores[] }) 
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-0">
         <LiveDot />
-        <span className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
-          Stroke Play
+        <span className="text-[15px] font-semibold text-[#0F1F17]">
+          Stroke play
         </span>
       </div>
       <div className="space-y-1.5">
@@ -26,7 +26,7 @@ export function StrokePlaySection({ players }: { players: PlayerWithScores[] }) 
               layout
               transition={SPRING}
               className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-xl',
+                'flex items-center gap-3 px-3 py-2 rounded-[14px]',
                 isFirst ? 'bg-[#14532D] text-white' : 'bg-[#FAFAF7]',
               )}
             >
@@ -36,12 +36,12 @@ export function StrokePlaySection({ players }: { players: PlayerWithScores[] }) 
               <span className={cn('text-sm font-semibold flex-1 truncate', isFirst ? 'text-white' : 'text-[#0F1F17]')}>
                 {player.name}
               </span>
-              <span className="text-[10px] text-[#5A6B61] tabular-nums">
+              <span className={cn('text-[12px] tabular-nums', isFirst ? 'text-[#CFE3D6]' : 'text-[#5A6B61]')}>
                 {player.totalStrokes}
               </span>
               <span
                 className={cn(
-                  'text-sm font-black tabular-nums w-8 text-right',
+                  'text-sm font-extrabold tabular-nums w-8 text-right',
                   isFirst && 'text-[#BEF264]',
                   !isFirst && rel < 0 && 'text-[#14532D]',
                   !isFirst && rel > 0 && 'text-[#B42318]',

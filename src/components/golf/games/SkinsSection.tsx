@@ -4,6 +4,7 @@ import { Round } from '@/types/golf';
 import { SkinsResult } from '@/lib/games/skins';
 import { cn } from '@/lib/utils';
 import { LiveDot, NetBadge } from './shared';
+import { signedMoney } from './money';
 
 export function SkinsSection({
   skinsGame,
@@ -23,26 +24,26 @@ export function SkinsSection({
       <div className="flex items-center justify-between mb-0">
         <div className="flex items-center gap-2">
           <LiveDot />
-          <span className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
+          <span className="text-[15px] font-semibold text-[#0F1F17]">
             Skins ${skinsGame.stakes}/hole
           </span>
           {skinsGame.useNet && <NetBadge />}
         </div>
         {skinsResult.carryover > 0 && (
-          <span className="text-[10px] font-bold px-2 py-0.5 bg-[#ECFCCB] text-[#14532D] rounded-full border border-[#BEF264] animate-pulse">
+          <span className="text-[12px] font-semibold px-2 py-0.5 bg-[#BEF264] text-[#14532D] rounded-full">
             {skinsResult.carryover} carrying
           </span>
         )}
       </div>
 
       {/* Current pot highlight */}
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#BEF264]/20 border border-[#BEF264]/60">
-        <DollarSign className="w-4 h-4 text-[#9A9500] shrink-0" />
-        <span className="text-sm font-bold text-[#0F1F17]">
-          Current Pot: ${currentPot}
+      <div className="flex items-center gap-2 px-3 min-h-[44px] rounded-[14px] bg-[#ECFCCB]">
+        <DollarSign className="w-4 h-4 text-[#14532D] shrink-0" />
+        <span className="text-[15px] font-bold text-[#14532D]">
+          Current pot ${currentPot}
         </span>
         {skinsResult.carryover > 0 && (
-          <span className="text-[10px] text-[#14532D] ml-auto font-semibold">
+          <span className="text-[12px] text-[#14532D] ml-auto font-semibold">
             {skinsResult.carryover + 1} skins
           </span>
         )}
@@ -58,7 +59,7 @@ export function SkinsSection({
             return (
               <div
                 key={standing.playerId}
-                className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#FAFAF7]"
+                className="flex items-center justify-between px-3 py-2 rounded-[14px] bg-[#FAFAF7]"
               >
                 <div className="flex items-center gap-2">
                   {isLeader && <Trophy className="w-3.5 h-3.5 text-[#14532D]" />}
@@ -66,20 +67,20 @@ export function SkinsSection({
                     {standing.playerName.split(' ')[0]}
                   </span>
                   {standing.skins > 0 && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#0F1F17] text-white">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#F0F2EC] text-[#0F1F17]">
                       {standing.skins} skin{standing.skins !== 1 ? 's' : ''}
                     </span>
                   )}
                 </div>
                 <span
                   className={cn(
-                    'text-sm font-bold tabular-nums',
+                    'text-[15px] font-bold tabular-nums',
                     standing.earnings > 0 && 'text-[#14532D]',
                     standing.earnings < 0 && 'text-[#B42318]',
                     standing.earnings === 0 && 'text-[#5A6B61]',
                   )}
                 >
-                  {standing.earnings >= 0 ? '+' : ''}${standing.earnings}
+                  {signedMoney(standing.earnings)}
                 </span>
               </div>
             );
@@ -102,19 +103,19 @@ export function SkinsSection({
                 <div
                   key={result.holeNumber}
                   className={cn(
-                    'flex flex-col items-center rounded-lg px-1.5 py-1 min-w-[32px]',
-                    isCarry && 'bg-[#ECFCCB] border border-[#BEF264]',
-                    !isCarry && 'bg-[#DCFCE7] border border-[#14532D]/20',
+                    'flex flex-col items-center justify-center rounded-[10px] px-1.5 py-1 min-w-[40px] min-h-[44px]',
+                    isCarry && 'bg-[#F0F2EC]',
+                    !isCarry && 'bg-[#14532D]',
                   )}
                 >
-                  <span className="text-[8px] font-bold text-[#5A6B61]">H{result.holeNumber}</span>
+                  <span className={cn('text-[11px] font-semibold', isCarry ? 'text-[#5A6B61]' : 'text-[#CFE3D6]')}>{result.holeNumber}</span>
                   {result.value > 1 && (
-                    <span className="text-[8px] font-bold text-[#14532D]">${result.value * skinsGame.stakes}</span>
+                    <span className={cn('text-[11px] font-bold', isCarry ? 'text-[#14532D]' : 'text-[#BEF264]')}>${result.value * skinsGame.stakes}</span>
                   )}
                   <span
                     className={cn(
-                      'text-[9px] font-bold truncate max-w-[36px]',
-                      isCarry ? 'text-[#14532D]' : 'text-[#14532D]',
+                      'text-[11px] font-semibold truncate max-w-[52px]',
+                      isCarry ? 'text-[#5A6B61]' : 'text-white',
                     )}
                   >
                     {isCarry ? '→' : winner?.name?.split(' ')[0] ?? '?'}

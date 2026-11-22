@@ -4,6 +4,7 @@ import { Round, PlayerWithScores } from '@/types/golf';
 import { WolfResult, getWolfForHole } from '@/lib/games/wolf';
 import { cn } from '@/lib/utils';
 import { LiveDot, NetBadge, SPRING } from './shared';
+import { signedMoney } from './money';
 
 export function WolfSection({
   wolfGame,
@@ -24,17 +25,17 @@ export function WolfSection({
       <div className="flex items-center justify-between mb-0">
         <div className="flex items-center gap-2">
           <LiveDot />
-          <span className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
+          <span className="text-[15px] font-semibold text-[#0F1F17]">
             Wolf ${wolfGame.stakes}/pt
           </span>
           {wolfGame.useNet && <NetBadge />}
         </div>
-        <span className="text-[10px] text-[#5A6B61]">Thru {wolfResult.holesPlayed}</span>
+        <span className="text-[12px] text-[#5A6B61]">Thru {wolfResult.holesPlayed}</span>
       </div>
 
       {/* Current wolf */}
       {currentWolf && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0F1F17] text-white">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-[14px] bg-[#0F1F17] text-white">
           <Crown className="w-4 h-4 text-[#14532D] shrink-0" />
           <div className="flex-1">
             <p className="text-[12px] font-semibold text-white/50">
@@ -43,7 +44,7 @@ export function WolfSection({
             <p className="text-sm font-bold">{currentWolf.name}</p>
           </div>
           {wolfResult.carryover > 0 && (
-            <span className="text-[10px] font-bold px-2 py-0.5 bg-[#BEF264] text-[#0F1F17] rounded-full">
+            <span className="text-[12px] font-bold px-2 py-0.5 bg-[#BEF264] text-[#0F1F17] rounded-full">
               {wolfResult.carryover} carry
             </span>
           )}
@@ -52,7 +53,7 @@ export function WolfSection({
 
       {/* Last hole context */}
       {lastHoleResult && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#FAFAF7] text-xs text-[#5A6B61]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-[14px] bg-[#FAFAF7] text-xs text-[#5A6B61]">
           <Dog className="w-3.5 h-3.5 text-[#5A6B61] shrink-0" />
           <span>
             H{lastHoleResult.holeNumber}:
@@ -79,7 +80,7 @@ export function WolfSection({
                 key={standing.playerId}
                 layout
                 transition={SPRING}
-                className="flex items-center gap-3 px-3 py-2 rounded-xl bg-[#FAFAF7]"
+                className="flex items-center gap-3 px-3 py-2 rounded-[14px] bg-[#FAFAF7]"
               >
                 <span className="text-[11px] font-bold w-4 text-center text-[#5A6B61]">
                   {index + 1}
@@ -88,12 +89,12 @@ export function WolfSection({
                   <p className="text-sm font-semibold text-[#0F1F17] truncate">
                     {standing.playerName?.split(' ')[0] ?? standing.playerName}
                     {standing.loneWolfWins > 0 && (
-                      <span className="ml-1 text-[9px] font-bold text-[#14532D]">
+                      <span className="ml-1 text-[11px] font-bold text-[#14532D]">
                         🐺{standing.loneWolfWins}
                       </span>
                     )}
                   </p>
-                  <p className="text-[10px] text-[#5A6B61]">
+                  <p className="text-[12px] text-[#5A6B61]">
                     {standing.totalPoints} pts · Wolf {standing.timesAsWolf}×
                   </p>
                 </div>
@@ -105,7 +106,7 @@ export function WolfSection({
                     standing.earnings === 0 && 'text-[#5A6B61]',
                   )}
                 >
-                  {standing.earnings >= 0 ? '+' : ''}${standing.earnings}
+                  {signedMoney(standing.earnings)}
                 </span>
               </motion.div>
             );

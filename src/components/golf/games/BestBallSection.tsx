@@ -19,11 +19,11 @@ export function BestBallSection({
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-0">
         <LiveDot />
-        <span className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
-          Best Ball
+        <span className="text-[15px] font-semibold text-[#0F1F17]">
+          Best ball
         </span>
         {bestBallGame.useNet && <NetBadge />}
-        <span className="ml-auto text-[10px] text-[#5A6B61]">
+        <span className="ml-auto text-[12px] text-[#5A6B61]">
           Thru {bestBallResult.holesPlayed}
         </span>
       </div>
@@ -52,7 +52,7 @@ export function BestBallSection({
               <p className="text-[12px] font-bold text-[#5A6B61] truncate mb-1">
                 {standing.teamName}
               </p>
-              <p className="text-2xl font-black text-[#0F1F17] tabular-nums">
+              <p className="text-2xl font-extrabold text-[#0F1F17] tabular-nums">
                 {standing.totalScore}
               </p>
               <p
@@ -66,7 +66,7 @@ export function BestBallSection({
                 {formatBestBallStatus(standing.relativeToPar)}
               </p>
               {standing.playerContributions?.length > 0 && (
-                <p className="text-[9px] text-[#5A6B61] mt-1 truncate">
+                <p className="text-[11px] text-[#5A6B61] mt-1 truncate">
                   {standing.playerContributions
                     .slice()
                     .sort((a, b) => b.holesContributed - a.holesContributed)[0]?.playerName?.split(' ')[0]}
@@ -92,12 +92,12 @@ export function BestBallSection({
                 <div
                   key={hw.holeNumber}
                   className={cn(
-                    'flex flex-col items-center rounded-lg px-2 py-1 shrink-0',
+                    'flex flex-col items-center rounded-[10px] px-2 py-1 shrink-0',
                     isPush ? 'bg-[#F0F2EC]' : 'bg-[#DCFCE7]',
                   )}
                 >
-                  <span className="text-[8px] text-[#5A6B61] font-bold">H{hw.holeNumber}</span>
-                  <span className="text-[9px] font-bold text-[#0F1F17] truncate max-w-[36px]">
+                  <span className="text-[10px] text-[#5A6B61] font-bold">H{hw.holeNumber}</span>
+                  <span className="text-[11px] font-bold text-[#0F1F17] truncate max-w-[36px]">
                     {isPush ? 'Push' : winner?.teamName?.split(' ')[0] ?? '?'}
                   </span>
                 </div>
