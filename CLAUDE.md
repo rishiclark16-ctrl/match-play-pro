@@ -479,7 +479,7 @@ Phase P3.2 (money calculation defects, Notion "09.2 Money Calculation Defects") 
 - **M9** New `isPenaltyPropBet()` in `types/betting.ts`; snake debits the recorded player in `settlement.ts` and `moneyTracker.ts`. `PropBetSheet` says "Who 3-putted?" / "X pays $N each".
 - **M10** `format_nines` added to `parse-house-game` VALID_IDS + prompt. `parserParity.test.ts` fails if any catalogue primitive is missing from either list. **Edge function must be redeployed for this to take effect.**
 - **M11** `useOfflineSync` upserts on `player_id,hole_number`; no false "synced" toast; failures → `logger.error` (Sentry).
-- **Typecheck ratchet:** `scripts/typecheck-ratchet.sh` runs in CI (baseline **204** `tsc` errors, was 220). Lower `TS_BASELINE` as errors are fixed; never raise it.
+- **Typecheck ratchet:** `scripts/typecheck-ratchet.sh` runs in CI (baseline **197** `tsc` errors (was 220, then 204)). Lower `TS_BASELINE` as errors are fixed; never raise it.
 - New regression tests call the calculators the way the app does (`moneyTracker.callsites.test.ts`) plus randomised zero-sum invariants for Wolf and Skins.
 
 Phase P3.3 (design system v5 "Fairway Day") — 2026-11-21, in progress:

@@ -43,7 +43,7 @@
     --accent-foreground: 150 35% 9%;
 
     /* Destructive */
-    --destructive: 0 85% 55%;
+    --destructive: 4 77% 40%; /* #B42318 loss red (spec) */
     --destructive-foreground: 0 0% 100%;
 
     /* Success - Bright green for live/active */
