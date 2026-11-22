@@ -27,7 +27,7 @@ export function GroupFormatPickerSheet({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/25 backdrop-blur-[2px] z-40"
+            className="fixed inset-0 bg-[#0F1F17]/30 backdrop-blur-[2px] z-40"
             onClick={onClose}
           />
           <motion.div

@@ -49,7 +49,7 @@ interface MethodConfig {
 const METHODS: MethodConfig[] = [
   { id: 'venmo', label: 'Venmo', emoji: '💸', color: '#3D95CE' },
   { id: 'cashapp', label: 'Cash App', emoji: '💵', color: '#00D64F' },
-  { id: 'cash', label: 'Mark as Cash Paid', emoji: '🤝', color: '#0F1F17' },
+  { id: 'cash', label: 'Mark as paid in cash', emoji: '🤝', color: '#0F1F17' },
 ];
 
 export function SettleUpSheet({
@@ -98,12 +98,12 @@ export function SettleUpSheet({
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <SheetContent
         side="bottom"
-        className="h-[85vh] rounded-t-3xl p-0 overflow-hidden flex flex-col bg-[#FAFAF7]"
+        className="h-[85vh] rounded-t-[28px] p-0 overflow-hidden flex flex-col bg-background"
       >
         {/* Dark Hero */}
-        <div className="bg-[#0F1F17] px-6 pt-6 pb-6 flex-shrink-0">
+        <div className="bg-primary px-6 pt-3 pb-6 flex-shrink-0">
           {/* Drag handle */}
-          <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5" />
+          <div className="w-10 h-1 bg-white/25 rounded-full mx-auto mb-5" />
 
           {/* From → To avatars */}
           <div className="flex items-center justify-center gap-4 mb-5">
@@ -114,14 +114,14 @@ export function SettleUpSheet({
                   {fromPlayer?.initials ?? '?'}
                 </AvatarFallback>
               </Avatar>
-              <p className="text-white/60 text-xs font-medium truncate max-w-[72px] text-center">
+              <p className="text-on-forest-muted text-[13px] font-medium truncate max-w-[72px] text-center">
                 {fromPlayer?.name.split(' ')[0] ?? ''}
               </p>
             </div>
 
             <div className="flex items-center gap-1 pb-4">
               <div className="w-6 h-0.5 bg-white/30 rounded-full" />
-              <span className="text-white/40 text-xs">owes</span>
+              <span className="text-on-forest-muted text-[13px]">owes</span>
               <div className="w-6 h-0.5 bg-white/30 rounded-full" />
             </div>
 
@@ -132,17 +132,17 @@ export function SettleUpSheet({
                   {toPlayer?.initials ?? '?'}
                 </AvatarFallback>
               </Avatar>
-              <p className="text-white/60 text-xs font-medium truncate max-w-[72px] text-center">
+              <p className="text-on-forest-muted text-[13px] font-medium truncate max-w-[72px] text-center">
                 {toPlayer?.name.split(' ')[0] ?? ''}
               </p>
             </div>
           </div>
 
           {/* Big amount */}
-          <p className="text-center text-4xl font-black tracking-[-0.04em]" style={{ color: '#CBFF4D' }}>
+          <p className="text-center text-4xl font-black tracking-[-0.04em]" style={{ color: '#BEF264' }}>
             {formatAmount(amount)}
           </p>
-          <p className="text-center text-white/40 text-xs mt-1.5">
+          <p className="text-center text-on-forest-muted text-[13px] mt-1.5">
             Across {roundsCount} round{roundsCount !== 1 ? 's' : ''}
           </p>
         </div>
@@ -155,23 +155,23 @@ export function SettleUpSheet({
           {/* Breakdown */}
           {gameEntries.length > 0 && (
             <div className="mt-5">
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-black/40 mb-3 px-1">
+              <p className="text-[13px] font-semibold text-muted-foreground mb-2 px-1">
                 Breakdown
               </p>
-              <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+              <div className="bg-card rounded-[20px] border border-border overflow-hidden">
                 {gameEntries.map(([game, total], i) => (
                   <motion.div
                     key={game}
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ ...springTransition, delay: i * 0.05 }}
-                    className="flex items-center justify-between px-4 py-3 border-b border-black/5 last:border-b-0"
+                    className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0"
                   >
                     <p className="font-semibold text-sm text-foreground capitalize">{game}</p>
                     <span
                       className={cn(
-                        'font-black text-sm',
-                        total < 0 ? 'text-[#EF4444]' : 'text-[#22C55E]'
+                        'font-extrabold text-[15px] tabular-nums',
+                        total < 0 ? 'text-loss' : 'text-primary'
                       )}
                     >
                       {total >= 0 ? '+' : '-'}{formatAmount(total)}
@@ -184,7 +184,7 @@ export function SettleUpSheet({
 
           {/* Payment Methods */}
           <div className="mt-5">
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-black/40 mb-3 px-1">
+            <p className="text-[13px] font-semibold text-muted-foreground mb-2 px-1">
               Send via
             </p>
             <div className="flex flex-col gap-3">
@@ -197,7 +197,7 @@ export function SettleUpSheet({
                   whileTap={{ scale: 0.97 }}
                   disabled={loadingMethod !== null}
                   onClick={() => handleMethod(method.id)}
-                  className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-white font-bold text-base disabled:opacity-50"
+                  className="w-full h-[60px] flex items-center gap-4 px-5 rounded-[20px] text-white font-bold text-[16px] disabled:opacity-50"
                   style={{ backgroundColor: method.color }}
                 >
                   <span className="text-xl">{method.emoji}</span>

@@ -44,36 +44,36 @@ export const RoundCard = forwardRef<HTMLDivElement, RoundCardProps>(
 
   return (
     <>
-      <div ref={ref} className="relative rounded-xl overflow-hidden">
+      <div ref={ref} className="relative rounded-[20px] overflow-hidden">
         <motion.div
           whileTap={{ scale: 0.99 }}
           onClick={onClick}
           className={cn(
-            "bg-card rounded-xl p-4 cursor-pointer border transition-all duration-150 group relative overflow-hidden",
-            isActive ? "border-foreground" : "border-border"
+            "bg-card rounded-[20px] p-4 cursor-pointer border border-border transition-all duration-150 group relative overflow-hidden",
+            isActive ? "border-primary/30" : "border-border"
           )}
         >
           {/* Left accent bar for active rounds */}
           {isActive && (
-            <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-success" />
+            <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary" />
           )}
 
           {/* Status flag line */}
           <div className="flex items-center gap-2 mb-2 pl-1">
             <span className={cn(
-              "text-[9px] font-bold uppercase tracking-[0.15em]",
-              isActive ? "text-success" : "text-muted-foreground"
+              "text-[12px] font-semibold",
+              isActive ? "text-primary" : "text-muted-foreground"
             )}>
               {isActive
                 ? currentHole && currentHole > 0
                   ? `Live · Hole ${currentHole}/${round.holes}`
                   : 'Live'
-                : 'Complete'}
+                : 'Final'}
             </span>
             {isActive && <SwingAnimation />}
             <div className={cn(
               "flex-1 h-px opacity-20",
-              isActive ? "bg-success" : "bg-muted-foreground"
+              isActive ? "bg-primary" : "bg-muted-foreground"
             )} />
           </div>
 
@@ -93,7 +93,7 @@ export const RoundCard = forwardRef<HTMLDivElement, RoundCardProps>(
                   whileTap={{ scale: 0.9 }}
                   onClick={handleDeleteClick}
                   disabled={isDeleting}
-                  className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-lg flex items-center justify-center transition-colors touch-manipulation cursor-pointer select-none bg-muted/60 text-muted-foreground active:bg-destructive/10 active:text-destructive"
+                  aria-label="Delete round" className="w-11 h-11 rounded-[14px] flex items-center justify-center transition-colors touch-manipulation cursor-pointer select-none bg-muted/60 text-muted-foreground active:bg-destructive/10 active:text-destructive"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                   {isDeleting ? (
@@ -104,8 +104,8 @@ export const RoundCard = forwardRef<HTMLDivElement, RoundCardProps>(
                 </motion.button>
               )}
 
-              <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
-                <ChevronRight className="w-4 h-4 text-background" strokeWidth={2.5} />
+              <div className="w-9 h-9 rounded-[12px] bg-muted flex items-center justify-center">
+                <ChevronRight className="w-4 h-4 text-primary" strokeWidth={2.5} />
               </div>
             </div>
           </div>
@@ -115,7 +115,7 @@ export const RoundCard = forwardRef<HTMLDivElement, RoundCardProps>(
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent className="rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Round?</AlertDialogTitle>
+            <AlertDialogTitle>Delete round?</AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently delete the round at {round.courseName} and all associated scores. This action cannot be undone.
             </AlertDialogDescription>

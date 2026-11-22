@@ -113,7 +113,7 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
         {!contacts && !loading && !hasConsented && (
           <div className="flex flex-col h-[calc(100%-80px)] overflow-y-auto">
             {/* Permission card */}
-            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-4 p-5 text-center">
+            <div className="bg-card rounded-[20px] border border-border mx-6 mb-4 p-5 text-center">
               <div className="w-14 h-14 rounded-2xl bg-[#BEF264] flex items-center justify-center mx-auto mb-3 text-[#0F1F17]">
                 <Users className="h-7 w-7" />
               </div>
@@ -124,8 +124,8 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
             </div>
 
             {/* How it works card */}
-            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-4 p-5">
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-3">How it works</p>
+            <div className="bg-card rounded-[20px] border border-border mx-6 mb-4 p-5">
+              <p className="text-[13px] font-semibold text-muted-foreground mb-3">How it works</p>
               <ul className="space-y-2.5">
                 <li className="flex gap-2 text-[13px] text-muted-foreground">
                   <span className="shrink-0 font-bold text-[#0F1F17]">1.</span>
@@ -163,7 +163,7 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
 
         {!contacts && !loading && hasConsented && (
           <div className="flex flex-col items-center px-6">
-            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] w-full p-5 text-center mb-4">
+            <div className="bg-card rounded-[20px] border border-border w-full p-5 text-center mb-4">
               <div className="w-14 h-14 rounded-2xl bg-[#BEF264] flex items-center justify-center mx-auto mb-3 text-[#0F1F17]">
                 <Users className="h-7 w-7" />
               </div>
@@ -193,7 +193,7 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
 
         {error && (
           <div className="flex flex-col items-center px-6">
-            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] w-full p-5 text-center mb-4">
+            <div className="bg-card rounded-[20px] border border-border w-full p-5 text-center mb-4">
               <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-3">
                 <AlertCircle className="h-7 w-7 text-destructive" />
               </div>
@@ -215,11 +215,11 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
           <div className="flex flex-col h-[calc(100%-80px)]">
             {/* Summary */}
             <div className="flex gap-3 mb-4 px-6">
-              <div className="flex-1 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-3 text-center">
+              <div className="flex-1 bg-card rounded-[20px] border border-border p-3 text-center">
                 <div className="text-2xl font-black tracking-[-0.04em] text-[#0F1F17]">{contacts.matched.length}</div>
                 <div className="text-[11px] text-muted-foreground">On the app</div>
               </div>
-              <div className="flex-1 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-3 text-center">
+              <div className="flex-1 bg-card rounded-[20px] border border-border p-3 text-center">
                 <div className="text-2xl font-black tracking-[-0.04em] text-[#0F1F17]">{contacts.unmatched.length}</div>
                 <div className="text-[11px] text-muted-foreground">To invite</div>
               </div>
@@ -253,7 +253,7 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           transition={{ delay: index * 0.03 }}
-                          className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-2 px-4 py-3 flex items-center gap-3"
+                          className="bg-card rounded-[20px] border border-border mx-6 mb-2 px-4 py-3 flex items-center gap-3"
                         >
                           <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center font-bold text-foreground shrink-0 overflow-hidden">
                             {contact.avatarUrl ? (
@@ -273,7 +273,7 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
                           </div>
 
                           {contact.isAlreadyFriend ? (
-                            <span className="bg-[#F0FFF4] text-[#22C55E] rounded-full px-2.5 py-0.5 text-[11px] font-bold shrink-0">
+                            <span className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-[11px] font-bold shrink-0">
                               Friends
                             </span>
                           ) : contact.isPendingRequest || recentlySent.has(contact.profileId) ? (
@@ -317,7 +317,7 @@ export function ContactSyncSheet({ open, onClose }: ContactSyncSheetProps) {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           transition={{ delay: index * 0.02 }}
-                          className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-2 px-4 py-3 flex items-center gap-3"
+                          className="bg-card rounded-[20px] border border-border mx-6 mb-2 px-4 py-3 flex items-center gap-3"
                         >
                           <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center font-bold text-foreground shrink-0">
                             <span className="text-[13px]">{getInitials(contact.name)}</span>

@@ -5,6 +5,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSeasonLeaderboard } from '@/hooks/useSeasonLeaderboard';
 import { cn } from '@/lib/utils';
 
+/** Money on Forest: up = lime, down = light red (5:1 on Forest), even = soft green. */
+function moneyOnForest(n: number) {
+  return n > 0 ? 'text-gold' : n < 0 ? 'text-[#FFB4A8]' : 'text-on-forest-muted';
+}
+
+function fmt(n: number) {
+  return `${n > 0 ? '+' : n < 0 ? '-' : ''}$${Math.abs(n).toFixed(0)}`;
+}
+
+const shell = 'relative overflow-hidden rounded-[28px] bg-primary text-primary-foreground';
+
+/** Season standings vs friends: the Social feed's Forest hero card. */
 export function SeasonLeaderboard() {
   const { entries, loading } = useSeasonLeaderboard();
   const [expanded, setExpanded] = useState(false);
@@ -12,18 +24,15 @@ export function SeasonLeaderboard() {
 
   if (loading) {
     return (
-      <div className="bg-[#0F1F17] rounded-2xl p-4">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-4 h-4 rounded bg-white/10 animate-pulse" />
-          <div className="h-2.5 w-28 bg-white/10 rounded animate-pulse" />
-        </div>
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
+      <div className={cn(shell, 'p-5')}>
+        <div className="h-3 w-28 rounded-full bg-white/15 animate-pulse mb-4" />
+        <div className="h-[88px] rounded-[18px] bg-white/10 animate-pulse mb-3" />
+        <div className="space-y-2.5">
+          {[1, 2].map(i => (
             <div key={i} className="flex items-center gap-3">
-              <div className="w-5 h-2.5 bg-white/10 rounded animate-pulse" />
-              <div className="w-8 h-8 rounded-full bg-white/10 animate-pulse" />
-              <div className="flex-1 h-2.5 bg-white/10 rounded animate-pulse" />
-              <div className="w-10 h-2.5 bg-white/10 rounded animate-pulse" />
+              <div className="h-9 w-9 rounded-[12px] bg-white/10 animate-pulse" />
+              <div className="h-3 flex-1 rounded-full bg-white/10 animate-pulse" />
+              <div className="h-3 w-10 rounded-full bg-white/10 animate-pulse" />
             </div>
           ))}
         </div>
@@ -33,15 +42,16 @@ export function SeasonLeaderboard() {
 
   if (entries.length === 0) {
     return (
-      <div className="bg-[#0F1F17] rounded-2xl p-5">
-        <div className="flex items-center gap-2 mb-2">
-          <Trophy className="w-4 h-4 text-[#BEF264]" />
-          <span className="text-[11px] font-black uppercase tracking-[0.14em] text-white/50">
-            {year} Season
-          </span>
+      <div className={cn(shell, 'p-5')}>
+        <div className="flex items-center gap-2 text-[13px] font-semibold text-on-forest-muted">
+          <Trophy className="h-4 w-4 text-gold" />
+          {year} season
         </div>
-        <p className="text-[12px] text-white/30 leading-relaxed">
-          Play money rounds with friends — your standings will appear here.
+        <h2 className="mt-2 text-[26px] font-extrabold leading-[1.1] tracking-[-0.02em] text-white">
+          The table is <span className="text-gold">wide open.</span>
+        </h2>
+        <p className="mt-2 max-w-[290px] text-[14px] leading-relaxed text-on-forest-muted">
+          Play money rounds with friends and your season standings show up here.
         </p>
       </div>
     );
@@ -53,106 +63,71 @@ export function SeasonLeaderboard() {
   const hasMore = sorted.length > 3;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-[#0F1F17] rounded-2xl overflow-hidden"
-    >
-      {/* Header */}
-      <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-[#BEF264] flex-shrink-0" />
-          <span className="text-[11px] font-black uppercase tracking-[0.14em] text-white/50">
-            {year} Season
-          </span>
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className={shell}>
+      <div className="px-5 pt-5">
+        <div className="flex items-center gap-2 text-[13px] font-semibold text-on-forest-muted">
+          <Trophy className="h-4 w-4 text-gold" />
+          {year} season
         </div>
-        {/* Your net summary */}
-        <div className="text-right">
-          <span className={cn(
-            'text-[13px] font-black tabular-nums',
-            totalNet > 0 ? 'text-emerald-400' : totalNet < 0 ? 'text-red-400' : 'text-white/40'
-          )}>
-            {totalNet > 0 ? '+' : ''}{totalNet < 0 ? '-' : ''}${Math.abs(totalNet).toFixed(0)}
-          </span>
-          <p className="text-[9px] text-white/30 font-bold uppercase tracking-[0.08em]">your net</p>
+
+        {/* Your net: the one lime tile */}
+        <div className="mt-3 grid grid-cols-[1.4fr_1fr] gap-2">
+          <div className="rounded-[18px] bg-gold px-4 py-3 text-gold-foreground">
+            <p className="text-[12px] font-semibold text-gold-foreground/80 leading-none">Your net</p>
+            <p className="mt-2 text-[34px] font-extrabold leading-none tracking-[-0.04em] tabular-nums">
+              {totalNet === 0 ? 'Even' : fmt(totalNet)}
+            </p>
+          </div>
+          <div className="rounded-[18px] bg-white/10 px-4 py-3">
+            <p className="text-[12px] font-semibold text-on-forest-muted leading-none">Rivals</p>
+            <p className="mt-2 text-[34px] font-extrabold leading-none tracking-[-0.04em] tabular-nums text-white">{sorted.length}</p>
+          </div>
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="h-px bg-white/5 mx-4" />
-
-      {/* Rows */}
-      <div className="px-4 pt-3 pb-3 space-y-1">
+      <div className="px-3 pt-3 pb-2">
         <AnimatePresence initial={false}>
-          {shown.map((entry, idx) => {
-            const isFirst = idx === 0;
-            const pos = entry.netAmount;
-            const isUp = pos > 0;
-            const isDown = pos < 0;
-
-            return (
-              <motion.div
-                key={entry.friendProfileId}
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className={cn(
-                  'flex items-center gap-3 rounded-xl px-3 py-2.5',
-                  isFirst ? 'bg-[#BEF264]/10' : 'bg-transparent'
-                )}>
-                  {/* Rank */}
-                  <span className={cn(
-                    'text-[11px] font-black w-4 text-center flex-shrink-0',
-                    isFirst ? 'text-[#BEF264]' : 'text-white/25'
-                  )}>
-                    {idx + 1}
-                  </span>
-
-                  {/* Avatar */}
-                  <Avatar className="w-7 h-7 rounded-full flex-shrink-0">
-                    <AvatarImage src={entry.friendAvatar ?? undefined} />
-                    <AvatarFallback className="rounded-full text-[9px] font-black bg-white/10 text-white">
-                      {entry.friendName.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  {/* Name */}
-                  <div className="flex-1 min-w-0">
-                    <p className={cn(
-                      'text-[13px] font-bold truncate leading-none',
-                      isFirst ? 'text-white' : 'text-white/70'
-                    )}>
-                      {entry.friendName.split(' ')[0]}
-                    </p>
-                    <p className="text-[10px] text-white/25 mt-0.5">
-                      {entry.roundCount}r
-                    </p>
-                  </div>
-
-                  {/* Amount */}
-                  <span className={cn(
-                    'text-[14px] font-black tabular-nums flex-shrink-0',
-                    isUp ? 'text-emerald-400' : isDown ? 'text-red-400' : 'text-white/30'
-                  )}>
-                    {isUp ? '+' : isDown ? '-' : ''}${Math.abs(pos).toFixed(0)}
-                  </span>
+          {shown.map((entry, idx) => (
+            <motion.div
+              key={entry.friendProfileId}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex items-center gap-3 rounded-[14px] px-2 py-2">
+                <span className={cn('w-4 text-center text-[13px] font-bold tabular-nums', idx === 0 ? 'text-gold' : 'text-on-forest-muted/70')}>
+                  {idx + 1}
+                </span>
+                <Avatar className="h-9 w-9 rounded-[12px] flex-shrink-0">
+                  <AvatarImage src={entry.friendAvatar ?? undefined} />
+                  <AvatarFallback className="rounded-[12px] bg-white/10 text-[12px] font-bold text-white">
+                    {entry.friendName.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-semibold text-white truncate leading-tight">{entry.friendName.split(' ')[0]}</p>
+                  <p className="text-[12px] text-on-forest-muted">
+                    {entry.roundCount} {entry.roundCount === 1 ? 'round' : 'rounds'} together
+                  </p>
                 </div>
-              </motion.div>
-            );
-          })}
+                <span className={cn('text-[17px] font-extrabold tabular-nums', moneyOnForest(entry.netAmount))}>
+                  {entry.netAmount === 0 ? 'Even' : fmt(entry.netAmount)}
+                </span>
+              </div>
+            </motion.div>
+          ))}
         </AnimatePresence>
       </div>
 
-      {/* Show more / less */}
       {hasMore && (
         <button
           onClick={() => setExpanded(v => !v)}
-          className="w-full flex items-center justify-center gap-1 py-2.5 border-t border-white/5 text-[11px] font-bold text-white/30 hover:text-white/50 transition-colors"
+          aria-expanded={expanded}
+          className="w-full h-11 flex items-center justify-center gap-1 border-t border-white/10 text-[13px] font-semibold text-on-forest-muted"
         >
           {expanded ? 'Show less' : `${sorted.length - 3} more`}
-          <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', expanded && 'rotate-180')} />
+          <ChevronDown className={cn('h-4 w-4 transition-transform', expanded && 'rotate-180')} />
         </button>
       )}
     </motion.div>

@@ -17,12 +17,12 @@ export function GroupSelector({ groups, onSelectGroup, onManageGroups }: GroupSe
   if (groups.length === 0) {
     return (
       <div className="py-4">
-        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-3">Use a Group</p>
+        <p className="text-[13px] font-semibold text-muted-foreground mb-3">Use a group</p>
         <motion.button
           whileTap={{ scale: 0.97 }}
           type="button"
           onClick={onManageGroups}
-          className="flex items-center gap-3 px-4 py-3 rounded-2xl border-2 border-dashed border-border text-sm text-muted-foreground w-full"
+          className="flex items-center gap-3 px-4 py-3 rounded-[20px] border border-dashed border-border-strong text-sm text-muted-foreground w-full"
         >
           <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center">
             <Plus className="h-4 w-4" />
@@ -36,11 +36,11 @@ export function GroupSelector({ groups, onSelectGroup, onManageGroups }: GroupSe
   return (
     <div className="py-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Use a Group</p>
+        <p className="text-[13px] font-semibold text-muted-foreground">Use a group</p>
         <button
           type="button"
           onClick={onManageGroups}
-          className="text-xs text-foreground font-bold"
+          className="h-11 px-2 -my-3 text-[14px] text-primary font-semibold"
         >
           Manage
         </button>
@@ -55,7 +55,7 @@ export function GroupSelector({ groups, onSelectGroup, onManageGroups }: GroupSe
             whileTap={{ scale: 0.97 }}
             type="button"
             onClick={() => onSelectGroup(group)}
-            className="w-full text-left bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] px-4 py-3"
+            className="w-full text-left bg-card rounded-[20px] border border-border px-4 py-3"
           >
             <div className="flex items-center gap-3">
               <div className="flex -space-x-2">

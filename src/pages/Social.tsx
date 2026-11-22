@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Rss, Users, UserPlus, Hash, AtSign, Phone, ScanLine, Contact, Crown, QrCode, ChevronDown, Calendar, Search, Loader2 } from 'lucide-react';
+import { Users, UserPlus, ScanLine, Contact, Crown } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useProfile } from '@/hooks/useProfile';
 import { useFriends, SearchResult } from '@/hooks/useFriends';
 import { useSubscription } from '@/hooks/useSubscription';
 import { FriendCard } from '@/components/friends/FriendCard';
 import { FriendRequestCard } from '@/components/friends/FriendRequestCard';
-import { ShareFriendCode } from '@/components/friends/ShareFriendCode';
-import { FriendCodeQR } from '@/components/friends/FriendCodeQR';
+import { AddFriendPanel, type FriendSearchType } from '@/components/friends/AddFriendPanel';
+import { FriendCodePanel } from '@/components/friends/FriendCodePanel';
 import { QRCodeScanner } from '@/components/friends/QRCodeScanner';
 import { ContactSyncSheet } from '@/components/friends/ContactSyncSheet';
 import { PaywallModal } from '@/components/subscription';
@@ -43,7 +43,7 @@ export default function Social() {
   const initialTab = (searchParams.get('tab') as Tab) || 'feed';
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [searchValue, setSearchValue] = useState('');
-  const [searchType, setSearchType] = useState<'name' | 'code' | 'email' | 'phone'>('name');
+  const [searchType, setSearchType] = useState<FriendSearchType>('name');
   const [isSending, setIsSending] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [contactSyncOpen, setContactSyncOpen] = useState(false);
@@ -187,24 +187,6 @@ export default function Social() {
     setTimeout(() => { handleSendRequest(code); }, 100);
   };
 
-  const getPlaceholder = () => {
-    switch (searchType) {
-      case 'name': return 'Search by name...';
-      case 'email': return 'Enter email...';
-      case 'phone': return 'Enter phone...';
-      default: return 'Enter code...';
-    }
-  };
-
-  const getSearchIcon = () => {
-    switch (searchType) {
-      case 'name': return <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
-      case 'email': return <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
-      case 'phone': return <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
-      default: return <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
-    }
-  };
-
   const tabs: { id: Tab; label: string }[] = [
     { id: 'feed', label: 'Feed' },
     { id: 'upcoming', label: 'Upcoming' },
@@ -212,21 +194,19 @@ export default function Social() {
   ];
 
   const headerContent = (
-    <div className="pt-safe-content pb-3 px-6 border-b-2 border-foreground">
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">MATCH</p>
-          <h1 className="text-[22px] font-black tracking-[-0.04em] leading-tight text-foreground">Social</h1>
-        </div>
+    <div className="pt-safe-content pb-3 px-5">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-[30px] font-extrabold tracking-[-0.03em] leading-none text-foreground">Social</h1>
         <div className="flex items-center gap-2">
           {pendingRequests.length > 0 && (
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setActiveTab('friends')}
-              className="relative w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+              aria-label={`${pendingRequests.length} friend request${pendingRequests.length === 1 ? '' : 's'}`}
+              className="relative h-11 w-11 rounded-[14px] bg-muted text-primary flex items-center justify-center"
             >
-              <UserPlus className="h-4 w-4" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">
+              <UserPlus className="h-[18px] w-[18px]" />
+              <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-loss text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-background">
                 {pendingRequests.length}
               </span>
             </motion.button>
@@ -234,39 +214,45 @@ export default function Social() {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => navigate('/groups')}
-            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+            aria-label="Groups"
+            className="h-11 rounded-[14px] bg-muted text-primary pl-3 pr-3.5 inline-flex items-center gap-1.5 text-[14px] font-semibold"
           >
-            <Users className="h-4 w-4" />
+            <Users className="h-[18px] w-[18px]" />
+            Groups
           </motion.button>
         </div>
       </div>
 
-      {/* Tab switcher — 3 tabs */}
-      <div className="flex gap-0 border-b border-border/0 -mx-6 px-6">
+      {/* Tab switcher: muted segmented control, active = Forest */}
+      <div className="flex gap-1 rounded-[18px] bg-muted p-1">
         {tabs.map(({ id, label }) => (
           <button
             key={id}
             onClick={() => { setActiveTab(id); hapticLight(); }}
+            aria-pressed={activeTab === id}
             className={cn(
-              'flex-1 py-2.5 text-[13px] font-bold transition-colors relative',
-              activeTab === id ? 'text-foreground' : 'text-muted-foreground'
+              'relative flex-1 h-11 rounded-[14px] text-[14px] font-semibold transition-colors',
+              activeTab === id ? 'text-primary-foreground' : 'text-muted-foreground'
             )}
           >
-            {label}
             {activeTab === id && (
-              <motion.div
+              <motion.span
                 layoutId="social-tab-indicator"
-                className="absolute bottom-0 left-4 right-4 h-[2px] bg-foreground rounded-full"
+                className="absolute inset-0 rounded-[14px] bg-primary"
+                transition={{ type: 'spring', stiffness: 400, damping: 34 }}
               />
             )}
+            <span className="relative">{label}</span>
           </button>
         ))}
       </div>
     </div>
   );
 
+  const sectionLabel = 'text-[13px] font-semibold text-muted-foreground';
+
   return (
-    <AppLayout header={headerContent} mainClassName="pb-nav bg-[#FAFAF7]">
+    <AppLayout header={headerContent} mainClassName="pb-nav bg-background">
       <AnimatePresence mode="wait">
         {activeTab === 'feed' && (
           <motion.div
@@ -299,19 +285,15 @@ export default function Social() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
             transition={{ duration: 0.15 }}
-            className="pt-4"
+            className="px-5 pt-2 pb-6 space-y-[18px]"
           >
             {/* Pending Requests */}
             {pendingRequests.length > 0 && (
-              <section className="mb-4">
-                <div className="flex items-center gap-2 px-6 mb-2">
-                  <motion.div
-                    animate={{ opacity: [1, 0.4, 1] }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
-                    className="w-1.5 h-1.5 rounded-full bg-[#22C55E]"
-                  />
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Pending</p>
-                  <span className="text-[11px] font-bold text-muted-foreground ml-auto">{pendingRequests.length}</span>
+              <section>
+                <div className="flex items-center gap-2 px-1 mb-2">
+                  <span className="h-2 w-2 rounded-full bg-primary" />
+                  <p className={sectionLabel}>Pending requests</p>
+                  <span className="ml-auto text-[12px] font-semibold text-muted-foreground">{pendingRequests.length}</span>
                 </div>
                 <div className="space-y-2">
                   {pendingRequests.map((request) => (
@@ -328,175 +310,58 @@ export default function Social() {
             )}
 
             {/* Add Friend */}
-            <section className="mb-4">
-              <div className="flex items-center justify-between px-6 mb-2">
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Add a Friend</p>
-                <div className="flex gap-1.5">
+            <section>
+              <div className="flex items-center justify-between px-1 mb-2">
+                <p className={sectionLabel}>Add a friend</p>
+                <div className="flex gap-1.5 -my-1">
                   <motion.button
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setContactSyncOpen(true)}
-                    className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+                    aria-label="Find friends in contacts"
+                    className="h-11 w-11 rounded-[14px] bg-muted text-primary flex items-center justify-center"
                   >
-                    <Contact className="h-4 w-4" />
+                    <Contact className="h-[18px] w-[18px]" />
                   </motion.button>
                   <motion.button
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setScannerOpen(true)}
-                    className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+                    aria-label="Scan a friend's QR code"
+                    className="h-11 w-11 rounded-[14px] bg-muted text-primary flex items-center justify-center"
                   >
-                    <ScanLine className="h-4 w-4" />
+                    <ScanLine className="h-[18px] w-[18px]" />
                   </motion.button>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5 mx-6">
-                <div className="bg-muted rounded-xl p-1 flex gap-1 mb-4">
-                  {(['name', 'code', 'email', 'phone'] as const).map((type) => (
-                    <button
-                      key={type}
-                      onClick={() => { setSearchType(type); setSearchValue(''); setNameResults([]); }}
-                      className={
-                        searchType === type
-                          ? 'bg-white rounded-lg shadow-sm text-foreground font-bold text-sm py-2 flex-1 text-center'
-                          : 'text-muted-foreground font-medium text-sm py-2 flex-1 text-center'
-                      }
-                    >
-                      {type === 'name' ? 'Name' : type === 'code' ? 'Code' : type === 'email' ? 'Email' : 'Phone'}
-                    </button>
-                  ))}
-                </div>
-                <div className="relative">
-                  {getSearchIcon()}
-                  <input
-                    placeholder={getPlaceholder()}
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(
-                      searchType === 'code' ? e.target.value.toUpperCase() : e.target.value
-                    )}
-                    className={`bg-muted/50 rounded-xl border-0 py-3 px-4 text-sm w-full pl-9 outline-none ${
-                      searchType === 'code' ? 'font-mono uppercase tracking-widest' : ''
-                    }`}
-                    maxLength={searchType === 'code' ? 6 : undefined}
-                    type={searchType === 'email' ? 'email' : searchType === 'phone' ? 'tel' : 'text'}
-                  />
-                  {searchType === 'name' && nameSearching && (
-                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
-                  )}
-                </div>
-
-                {/* Name search results */}
-                {searchType === 'name' && searchValue.trim().length >= 2 && (
-                  <div className="mt-3 space-y-1">
-                    {nameResults.length > 0 ? (
-                      nameResults.map((result) => {
-                        const isFriend = friends.some(f => f.id === result.id);
-                        const isPending = sentRequests.includes(result.id);
-                        return (
-                          <div
-                            key={result.id}
-                            className="flex items-center gap-3 rounded-xl bg-muted/30 px-3 py-2.5"
-                          >
-                            <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-[11px] font-bold text-muted-foreground overflow-hidden flex-shrink-0">
-                              {result.avatarUrl ? (
-                                <img src={result.avatarUrl} className="w-full h-full object-cover" />
-                              ) : (
-                                (result.fullName ?? '?').charAt(0).toUpperCase()
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[13px] font-semibold text-foreground truncate">{result.fullName || 'Unknown'}</p>
-                              {result.handicap != null && (
-                                <p className="text-[11px] text-muted-foreground">{result.handicap} HCP</p>
-                              )}
-                            </div>
-                            {isFriend ? (
-                              <span className="text-[11px] font-bold text-emerald-600 px-3 py-1.5">Friends</span>
-                            ) : isPending ? (
-                              <span className="text-[11px] font-bold text-muted-foreground px-3 py-1.5">Sent</span>
-                            ) : (
-                              <motion.button
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => handleAddByProfile(result.id)}
-                                disabled={addingProfileId === result.id}
-                                className="bg-foreground text-background rounded-lg px-3 py-1.5 text-[11px] font-bold flex items-center gap-1 disabled:opacity-50"
-                              >
-                                <UserPlus className="w-3 h-3" />
-                                {addingProfileId === result.id ? '...' : 'Add'}
-                              </motion.button>
-                            )}
-                          </div>
-                        );
-                      })
-                    ) : !nameSearching ? (
-                      <p className="text-[12px] text-muted-foreground text-center py-3">No users found</p>
-                    ) : null}
-                  </div>
-                )}
-
-                {/* Send button (not shown for name search) */}
-                {searchType !== 'name' && <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleSendRequest()}
-                  disabled={!searchValue.trim() || isSending}
-                  className="bg-foreground text-background rounded-xl px-5 py-3 font-bold text-sm mt-3 w-full flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  {isSending ? 'Sending...' : 'Add Friend'}
-                </motion.button>}
-              </div>
+              <AddFriendPanel
+                searchType={searchType}
+                onSearchTypeChange={(type) => { setSearchType(type); setSearchValue(''); setNameResults([]); }}
+                value={searchValue}
+                onValueChange={setSearchValue}
+                nameResults={nameResults}
+                nameSearching={nameSearching}
+                isFriend={(id) => friends.some(f => f.id === id)}
+                isPending={(id) => sentRequests.includes(id)}
+                addingProfileId={addingProfileId}
+                onAddProfile={handleAddByProfile}
+                isSending={isSending}
+                onSend={() => handleSendRequest()}
+              />
             </section>
 
             {/* Friend Code */}
-            <section className="mb-4">
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => { setShowCode(v => !v); hapticLight(); }}
-                className="w-full flex items-center justify-between bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-4 py-3 mx-0"
-                style={{ marginLeft: 0 }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-foreground flex items-center justify-center flex-shrink-0">
-                    <QrCode className="w-4 h-4 text-[#BEF264]" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-[12px] font-bold text-foreground leading-none">Your Friend Code</p>
-                    <p className="font-mono text-[13px] font-black tracking-[0.2em] text-foreground/60 mt-0.5">
-                      {friendCode || '------'}
-                    </p>
-                  </div>
-                </div>
-                <ChevronDown className={cn('w-4 h-4 text-muted-foreground transition-transform', showCode && 'rotate-180')} />
-              </motion.button>
-
-              <AnimatePresence>
-                {showCode && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5 mt-2">
-                      <div className="font-mono text-3xl font-black tracking-[0.25em] text-foreground text-center py-4 bg-muted/30 rounded-xl mb-3">
-                        {friendCode || '------'}
-                      </div>
-                      {friendCode && <ShareFriendCode friendCode={friendCode} userName={userName} />}
-                      {friendCode && (
-                        <div className="shrink-0 mt-3 flex justify-center">
-                          <FriendCodeQR friendCode={friendCode} />
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </section>
+            <FriendCodePanel
+              friendCode={friendCode}
+              userName={userName}
+              open={showCode}
+              onToggle={() => setShowCode(v => !v)}
+            />
 
             {/* Friends List */}
-            <section className="pb-8">
-              <div className="flex items-center justify-between px-6 mb-2">
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Your Friends</p>
-                <span className="text-[11px] font-bold text-muted-foreground">
-                  {friends.length}{!isPro && maxFriends !== Infinity ? `/${maxFriends}` : ''}
+            <section>
+              <div className="flex items-center justify-between px-1 mb-2">
+                <p className={sectionLabel}>Your friends</p>
+                <span className="text-[12px] font-semibold text-muted-foreground tabular-nums">
+                  {friends.length}{!isPro && maxFriends !== Infinity ? ` of ${maxFriends}` : ''}
                 </span>
               </div>
 
@@ -505,31 +370,46 @@ export default function Social() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   onClick={() => setShowPaywall(true)}
-                  className="bg-[#BEF264]/10 border border-[#BEF264]/40 rounded-2xl mx-6 p-4 flex items-center gap-3 mb-3 w-[calc(100%-3rem)]"
+                  className="mb-2 w-full rounded-[20px] bg-gold-muted border border-gold/60 p-3.5 flex items-center gap-3 text-left"
                 >
-                  <Crown className="w-4 h-4 text-[#A08800] flex-shrink-0" />
-                  <span className="text-sm font-semibold text-foreground flex-1 text-left">Upgrade for unlimited friends</span>
-                  <span className="bg-foreground text-background rounded-xl px-4 py-2 text-sm font-bold">Upgrade</span>
+                  <span className="h-11 w-11 flex-shrink-0 rounded-[14px] bg-gold text-gold-foreground flex items-center justify-center">
+                    <Crown className="h-5 w-5" />
+                  </span>
+                  <span className="flex-1 text-[14px] font-semibold text-foreground">Go Pro for unlimited friends</span>
+                  <span className="h-11 rounded-[14px] bg-primary px-4 inline-flex items-center text-[14px] font-bold text-primary-foreground">Upgrade</span>
                 </motion.button>
               )}
 
               {loading ? (
-                <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 flex items-center justify-center py-12">
-                  <div className="animate-spin h-8 w-8 border-2 border-foreground border-t-transparent rounded-full" />
+                <div className="rounded-[20px] border border-border bg-card flex items-center justify-center py-12">
+                  <div className="h-7 w-7 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 </div>
               ) : friends.length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] mx-6 flex flex-col items-center justify-center py-12 text-center px-6"
+                  className="rounded-[20px] border border-dashed border-border-strong px-6 py-8 text-center"
                 >
-                  <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mb-4">
-                    <Users className="h-8 w-8 text-muted-foreground" />
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-[16px] bg-gold text-gold-foreground">
+                    <Users className="h-6 w-6" />
                   </div>
-                  <h3 className="text-[13px] font-bold text-foreground mb-1">No friends yet</h3>
-                  <p className="text-[12px] text-muted-foreground max-w-[240px] leading-relaxed">
-                    Share your friend code or QR with golf buddies to connect and track each other's rounds.
+                  <h3 className="text-[16px] font-semibold text-foreground">Bring your foursome</h3>
+                  <p className="mx-auto mt-1 max-w-[250px] text-[13px] leading-relaxed text-muted-foreground">
+                    Share your friend code or QR, then follow each other's rounds and settle up in one tap.
                   </p>
+                  {friendCode && (
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => {
+                        setShowCode(true);
+                        hapticLight();
+                        document.getElementById('friend-code-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      className="mt-4 h-11 rounded-[14px] bg-primary px-4 inline-flex items-center gap-1.5 text-[14px] font-semibold text-primary-foreground"
+                    >
+                      Share my code
+                    </motion.button>
+                  )}
                 </motion.div>
               ) : (
                 <div className="space-y-2">

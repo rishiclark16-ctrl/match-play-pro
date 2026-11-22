@@ -176,18 +176,19 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] bg-[#FAFAF7] rounded-t-3xl border-0 p-0 [&>button]:hidden">
+      <SheetContent side="bottom" className="h-[90vh] bg-background rounded-t-[28px] border-0 p-0 [&>button]:hidden">
         {/* Handle */}
         <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 mb-4">
-          <h2 className="text-[20px] font-black tracking-[-0.04em] text-[#0F1F17]">
-            {editingGroup ? 'Edit Group' : 'Create Group'}
+          <h2 className="text-[24px] font-extrabold tracking-[-0.02em] text-foreground">
+            {editingGroup ? 'Edit group' : 'Create group'}
           </h2>
           <button
             onClick={() => onOpenChange(false)}
-            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground"
+            aria-label="Close"
+            className="h-11 w-11 rounded-[14px] bg-muted flex items-center justify-center text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -196,8 +197,8 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
         <div className="overflow-y-auto pb-28" style={{ height: 'calc(100% - 80px)' }}>
           {/* Group Name */}
           <div className="mx-6 mb-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">
-              Group Name
+            <p className="text-[13px] font-semibold text-muted-foreground px-1 mb-2">
+              Group name
             </p>
             <input
               id="groupName"
@@ -210,7 +211,7 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
 
           {/* Description */}
           <div className="mx-6 mb-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">
+            <p className="text-[13px] font-semibold text-muted-foreground px-1 mb-2">
               Description (optional)
             </p>
             <input
@@ -224,11 +225,11 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
 
           {/* Current Members */}
           <div className="mx-6 mb-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">
+            <p className="text-[13px] font-semibold text-muted-foreground px-1 mb-2">
               Members ({members.length})
             </p>
             {members.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]">
+              <div className="bg-card rounded-[20px] border border-border">
                 {members.map((member) => (
                   <div
                     key={member.id}
@@ -264,8 +265,8 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
           {/* Add from Friends */}
           {availableFriends.length > 0 && (
             <div className="mx-6 mb-4">
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-1 mb-2">
-                Add from Friends
+              <p className="text-[13px] font-semibold text-muted-foreground px-1 mb-2">
+                Add from friends
               </p>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {availableFriends.slice(0, 8).map((friend) => (
@@ -275,7 +276,7 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
                     whileTap={{ scale: 0.97 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 28 }}
                     onClick={() => handleAddFriend(friend)}
-                    className="flex flex-col items-center gap-1.5 p-3 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] min-w-[68px]"
+                    className="flex flex-col items-center gap-1.5 p-3 bg-card rounded-[20px] border border-border min-w-[68px]"
                   >
                     <div className="w-9 h-9 rounded-xl bg-muted overflow-hidden flex items-center justify-center">
                       {friend.avatarUrl ? (
@@ -296,8 +297,8 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
           {/* Add Guest */}
           <div className="mx-6 mb-4">
             <div className="flex items-center justify-between px-1 mb-2">
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-                Add Guest (non-app user)
+              <p className="text-[13px] font-semibold text-muted-foreground">
+                Add a guest (not on MATCH)
               </p>
               {!showAddGuest && (
                 <button
@@ -364,18 +365,18 @@ export function CreateGroupSheet({ open, onOpenChange, editingGroup }: CreateGro
         </div>
 
         {/* Save Button */}
-        <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 pt-3 bg-[#FAFAF7]">
+        <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 pt-3 bg-background">
           <motion.button
             whileTap={{ scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             onClick={handleSave}
             disabled={isDisabled}
             className={cn(
-              'bg-foreground text-background rounded-2xl h-[52px] font-bold w-full flex items-center justify-center',
+              'bg-foreground text-background rounded-[20px] h-[60px] text-[16px] font-bold w-full flex items-center justify-center',
               isDisabled && 'opacity-40'
             )}
           >
-            {isSaving ? 'Saving...' : editingGroup ? 'Save Changes' : 'Create Group'}
+            {isSaving ? 'Saving...' : editingGroup ? 'Save changes' : 'Create group'}
           </motion.button>
         </div>
       </SheetContent>
