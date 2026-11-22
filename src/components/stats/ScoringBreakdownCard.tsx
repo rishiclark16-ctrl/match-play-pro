@@ -3,7 +3,7 @@ import { TrendingDown, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { GolfStats, ScoreDistribution } from '@/lib/computeUserStats';
 import { CountUp, StatBar } from './StatsAnimations';
-import { ScoreMark, type ScoreMarkKind } from './ScoreMark';
+import { ScoreMarkShape as ScoreMark, type ScoreMarkKind } from '@/components/ui/score-mark';
 
 const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
 

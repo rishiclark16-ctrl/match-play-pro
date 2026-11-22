@@ -4,7 +4,8 @@ import { Minus, Plus, Check } from 'lucide-react';
 import { PlayerWithScores, formatRelativeToPar } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { hapticLight } from '@/lib/haptics';
-import { ScoreMark, scoreName } from '@/components/golf/scorecard/ScoreMark';
+import { ScoreMark } from '@/components/ui/score-mark';
+import { scoreName } from '@/lib/scoreMarks';
 
 interface PlayerCardProps {
   player: PlayerWithScores;

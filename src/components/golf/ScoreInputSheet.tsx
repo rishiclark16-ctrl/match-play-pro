@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronDown } from 'lucide-react';
 import { getScoreLabel, getScoreColor } from '@/types/golf';
 import { cn } from '@/lib/utils';
-import { ScoreMark } from '@/components/golf/scorecard/ScoreMark';
+import { ScoreMark } from '@/components/ui/score-mark';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 
 interface ScoreInputSheetProps {

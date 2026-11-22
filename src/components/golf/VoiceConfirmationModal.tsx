@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertCircle, Mic, Check, ChevronRight } from 'lucide-react';
 import { ParsedScore, ParseResult } from '@/lib/voiceParser';
 import { getScoreLabel, PlayerWithScores } from '@/types/golf';
-import { ScoreMark } from '@/components/golf/scorecard/ScoreMark';
+import { ScoreMark } from '@/components/ui/score-mark';
 import { ScoreInputSheet } from './ScoreInputSheet';
 import { feedbackVoiceSuccess } from '@/lib/voiceFeedback';
 

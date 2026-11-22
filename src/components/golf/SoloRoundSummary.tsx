@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { calcScoreBreakdown, calcBestHole } from '@/lib/soloStats';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
-import { ScoreMark, type ScoreMarkKind } from '@/components/stats/ScoreMark';
+import { ScoreMarkShape as ScoreMark, type ScoreMarkKind } from '@/components/ui/score-mark';
 import { toParClass } from '@/components/golf/results/resultsFormat';
 
 interface Props {
