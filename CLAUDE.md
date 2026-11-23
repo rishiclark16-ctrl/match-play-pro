@@ -259,7 +259,7 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1244 pass, 0 fail** (1241 across 59 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
+**1252 pass, 0 fail** (1249 across 60 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
 - `bun test src/hooks src/lib src/engine src/components` (1201 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
@@ -465,7 +465,7 @@ Phase P3.1 (v2.5 polish, in progress) — 2026-11-21:
 - **Domain inconsistency (open):** universal-link docs in `useDeepLinks.ts` say `matchgolf.app`, iOS entitlement allows only `matchgolf.dev`, legal links use `matchgolf.info`. Invites therefore use the App Store link, not an https deep link. Pick one canonical domain before relying on universal links.
 - **Supabase outage found 2026-11-21:** project `Fairways` was paused (INACTIVE), so the live app's backend was down. Restored after pausing `Loudcall US` (user's choice) to stay within the free plan's 2-active-project limit. Free projects re-pause after ~1 week idle; upgrading the org to Pro prevents this.
 - **`parse-house-game` deployed (v23)** with `format_nines` (M10). Deployed from the *live* source plus that one line, NOT the repo file: the repo version differs from prod (CORS allowlist, required Bearer header) and that drift was not deployed. Verified live: a Nines description returns `format_nines`. A prompt hint explaining Nines scoring is in the repo but not yet deployed.
-- Remaining: Scorecard (714) and Auth (547) file splits; reconcile repo vs prod `parse-house-game`.
+- **Version is now 3.0 (8)** (P3.5).
 
 Phase P3.2 (money calculation defects, Notion "09.2 Money Calculation Defects") — 2026-11-21:
 - **M1** Nines/Defender/Sixes paid $0: 9 call sites passed `HoleInfo[]` as `holesPlayed`. Now `holeInfo.length` in `GamesSection.tsx`, `useGameResults.ts`, `moneyTracker.ts`, `games/houseGame.ts`.
@@ -479,7 +479,7 @@ Phase P3.2 (money calculation defects, Notion "09.2 Money Calculation Defects") 
 - **M9** New `isPenaltyPropBet()` in `types/betting.ts`; snake debits the recorded player in `settlement.ts` and `moneyTracker.ts`. `PropBetSheet` says "Who 3-putted?" / "X pays $N each".
 - **M10** `format_nines` added to `parse-house-game` VALID_IDS + prompt. `parserParity.test.ts` fails if any catalogue primitive is missing from either list. **Edge function must be redeployed for this to take effect.**
 - **M11** `useOfflineSync` upserts on `player_id,hole_number`; no false "synced" toast; failures → `logger.error` (Sentry).
-- **Typecheck ratchet:** `scripts/typecheck-ratchet.sh` runs in CI (baseline **196** `tsc` errors (was 220, then 204, 197)). Lower `TS_BASELINE` as errors are fixed; never raise it.
+- **Typecheck ratchet:** `scripts/typecheck-ratchet.sh` runs in CI (baseline **157** `tsc` errors (was 220 → 204 → 197 → 196 → 167 → 161 → 157)). Lower `TS_BASELINE` as errors are fixed; never raise it.
 - New regression tests call the calculators the way the app does (`moneyTracker.callsites.test.ts`) plus randomised zero-sum invariants for Wolf and Skins.
 
 Phase P3.3 (design system v5 "Fairway Day") — 2026-11-21/22, **complete**:
@@ -494,8 +494,8 @@ Phase P3.3 (design system v5 "Fairway Day") — 2026-11-21/22, **complete**:
 - New tokens: `loss` (#B42318), `on-forest-muted` (#CFE3D6); `--destructive` = loss red. `.data-label`/`.label-sm` are now sentence case.
 - Bugs fixed during redesign: tee-sheet close crash (NewRound called nonexistent setters); group-tab ledger rendered under the list (z-10→z-20); "Add to group tab" hidden behind results footer; `$-28` money formatting + missing minus signs in Defender/Nines/Sixes/Vegas; share push used nonexistent `round.course_name`; finish overlay said "All 18 holes" on 9-hole rounds; plus-handicap shown for normal handicaps on friend cards; AI builder/edit Save buttons under the bottom nav (BottomNav now hides on `/my-formats/new`, `/my-formats/:id/edit`, `/groups/:id/house-game/new|edit`).
 - e2e selectors updated: `money-tracker.spec.ts` → `getByTestId('money-tracker')`; `ai-game-builder.spec.ts` → `rule-toggle` test id + `data-state`. Still stale (not run in CI): phase02 2.13 `.grid-cols-3 .rounded-2xl p.text-[28px]`, and 2.2 expects Active/Watching/Rounds on a brand-new account (now hidden until the user has rounds).
-- File sizes after: Scorecard 714 (still >500), Auth 547 (>500); RoundComplete 397, Profile 493, Stats 167, Home 293, NewRound 493, HouseGameConfirm 401, Leaderboard 434.
-- Open follow-ups: duplicate ScoreMark (`stats/ScoreMark.tsx` vs `golf/scorecard/ScoreMark.tsx`) should merge into `ui/`; `CollapsibleSection.tsx` may be unused; RoundDashboard, WatchParty, dashboard cards and rarer sheets only got colour/label passes; leaderboard live money says "All even" on hole 1 while skins shows +$14 (pre-existing tracker behaviour, unverified); `pull-to-refresh.tsx` scrollTop check on pages where `main` scrolls.
+- File sizes after: Scorecard 631 (still >500: what remains is prop-wiring to already-extracted components; accepted exception), Auth 442; RoundComplete 397, Profile 493, Stats 167, Home 293, NewRound 493, HouseGameConfirm 401, Leaderboard 434.
+- Done (P3.5): ScoreMark unified in `ui/score-mark.tsx`, CollapsibleSection deleted, live-money mismatch fixed. Open follow-ups: RoundDashboard, WatchParty, dashboard cards and rarer sheets only got colour/label passes; `pull-to-refresh.tsx` scrollTop check on pages where `main` scrolls.
 - **Screenshot harness gotcha:** never run two vite dev servers against the same `node_modules` (e.g. a symlinked worktree): they share `node_modules/.vite` and corrupt each other's deps cache ("Invalid hook call"/duplicate React, every screen shows the error boundary). Clear `node_modules/.vite` and run one server.
 - Before/after comparison page: artifact "Fairway Day Redesign" (https://claude.ai/artifact/4FxF3oXEPreUVEWH8qM2hm).
 
@@ -503,6 +503,21 @@ Phase P3.4 (TestFlight CI) — 2026-11-21:
 - New `.github/workflows/testflight.yml` (macos-15): on push to `main` (docs/md changes ignored) and manual dispatch → JS deps → unit tests gate → `bun run build` → `npx cap sync ios` → `pod install` → `bundle exec fastlane ci_beta`. Concurrency group `testflight` prevents parallel uploads. Skips with a warning until signing secrets exist. IPA + dSYMs kept 14 days as an artifact.
 - New `ci_beta` lane in `ios/App/fastlane/Fastfile`: `setup_ci` temp keychain, App Store Connect **API key** auth (no Apple ID/2FA), imports the Apple Distribution .p12, `get_provisioning_profile`, switches the App target to manual signing for Release **only on the runner** (committed project stays Automatic), build number = max(latest TestFlight build for this version, project build) + 1, `upload_to_testflight`. `TEAM_ID = YPMSN56J9D`.
 - **Secrets the user must add once** (guide: `docs/testflight-ci.md`): `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8_BASE64`, `IOS_DIST_CERT_P12_BASE64`, `IOS_DIST_CERT_PASSWORD` (+ existing `VITE_SUPABASE_PUBLISHABLE_KEY`). Not yet run end-to-end: needs those secrets.
+
+Phase P3.5 (v3.0 release hardening) — 2026-11-22/23:
+- **Version 3.0 (8)** in `project.pbxproj` (was 2.5 (7)); the Fairway Day redesign is a major version.
+- **Scorecard resumes on the current hole**: it always opened on hole 1. New `lib/scorecardProgress.ts` (`resumeHole`, `lastScoredHole`, `liveMoneyThroughHole`, 8 tests) + `hooks/useResumeHole.ts` (moves once per round after data loads).
+- **Live money consistency**: `MoneyTracker` computed only up to the *viewed* hole ("All even" on hole 1 while games showed +$14). Now computes through max(viewed, latest scored hole).
+- **Match-result notifications never fired**: `roundCompletionNotifier` searched for game type `'match_play'`; rounds store `'match'`. Its tests used the same wrong literal. Fixed code + tests.
+- **AI Game Builder voice input never worked**: it passed `onTranscript`/`continuous` options that `useVoiceRecognition` doesn't accept. Now reads the hook's `transcript` and appends each phrase once.
+- **Notifications "Open Settings" did nothing**: `@capacitor/app` has no `openUrl`. Added **`@capacitor/app-launcher@6.0.4`** (native: needs `npx cap sync ios` + `pod install`), mocked in `src/test/setup.ts`.
+- House-game share text printed "Invalid Date" (`round.date` → `round.createdAt`); `calculateMatchPlay` early return now includes `format`.
+- These four bugs were found by triaging TypeScript errors (TS2367 impossible comparison, TS2339 missing property, TS2353 unknown option). Keep doing this as the baseline falls.
+- Refactors: `ui/score-mark.tsx` (`ScoreMarkShape` + `ScoreMark`) with helpers in `lib/scoreMarks.ts`; `golf/scorecard/ScorecardBody.tsx` (Scorecard 714 → 631); `components/auth/GolfCanvas.tsx` (Auth 547 → 442); `CollapsibleSection.tsx` deleted.
+- **`parse-house-game` v24 deployed** = previous live source + Nines disambiguation hint. Verified live: a Nines description returns only `format_nines`, unit $2, full handicaps (no invented front/back-nine rule). **Repo/prod drift remains by design**: the repo file additionally has a CORS allowlist and a required Bearer check that were never deployed or device-tested. Test on a TestFlight build before deploying the repo version.
+- **e2e (Playwright) fixes**: round helpers in phase06/09/10/20/22 tap "With others" first (mode step; broken before the redesign); `mockAuth` dismisses the scorecard voice tutorial (`match-golf-settings`), whose overlay blocked clicks; phase02 2.2/2.13 no longer assume the shared e2e account is empty. Verified: phase02 14/14, money-tracker 2/2, phase09 pass.
+- **e2e note**: several e2e specs create real rounds in the **production** Supabase project under a shared test account (e.g. the leftover "Double Click Test" live round). Consider pointing e2e at a Supabase branch.
+- Running e2e locally: the repo's Playwright expects a browser build that isn't installed in cloud containers; use a temporary config with `launchOptions.executablePath: '/opt/pw-browsers/chromium'`, `webServer: undefined`, `baseURL: http://127.0.0.1:8080` and start vite yourself with `--host 127.0.0.1`.
 
 ## V2 Feature Status
 | Feature | Status | Notes |
