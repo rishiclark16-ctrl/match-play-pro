@@ -17,6 +17,7 @@ interface PlayerData {
 }
 
 interface RoundPlayer {
+  localId?: string;
   name: string;
   handicap: number | undefined;
   manualStrokes: number;
@@ -110,7 +111,13 @@ export function useStartRound({ createRound }: UseStartRoundArgs): UseStartRound
   const [isCreating, setIsCreating] = useState(false);
 
   const startRound = useCallback(async (inputs: StartRoundInputs) => {
-    if (!inputs.selectedCourse || isCreating) return;
+    if (isCreating) return;
+    if (!inputs.selectedCourse) {
+      // Never fail silently: this used to return with no feedback, so "Start round"
+      // looked broken whenever the course step had been skipped.
+      toast.error('Pick a course first');
+      return;
+    }
     setIsCreating(true);
 
     try {
@@ -145,6 +152,7 @@ export function useStartRound({ createRound }: UseStartRoundArgs): UseStartRound
       const roundPlayers: RoundPlayer[] = inputs.players
         .filter(p => p.name.trim())
         .map(p => ({
+          localId: p.id,
           name: p.name.trim(),
           handicap: p.handicap,
           manualStrokes: p.manualStrokes ?? 0,

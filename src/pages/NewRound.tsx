@@ -188,12 +188,17 @@ export default function NewRound() {
       setMode('multi');
       setSelectedPersonalFormatId(preSelectFormatId);
 
-      // Restore form state saved before navigating to the AI builder
+      // Restore form state saved before navigating to the AI builder.
+      // Coming straight from "Start round" after building a game there is no saved
+      // state: no course and no players yet. Start at the course step in that case,
+      // with the format already selected, instead of jumping to the last step where
+      // "Start round" silently did nothing (useStartRound needs a course).
+      let restoredCourse = false;
       try {
         const saved = sessionStorage.getItem('newRoundState');
         if (saved) {
           const s = JSON.parse(saved);
-          if (s.selectedCourse) setSelectedCourse(s.selectedCourse);
+          if (s.selectedCourse) { setSelectedCourse(s.selectedCourse); restoredCourse = true; }
           if (s.courseName) setCourseName(s.courseName);
           if (s.holeCount) setHoleCount(s.holeCount);
           if (s.players?.length) {
@@ -208,8 +213,8 @@ export default function NewRound() {
         }
       } catch { /* ignore parse errors */ }
 
-      // Jump straight to format step
-      setStep('format');
+      // Jump to the format step only when the earlier steps are already filled in.
+      setStep(restoredCourse ? 'format' : 'course');
       // Clear state so back-navigation doesn't re-trigger
       window.history.replaceState({}, '');
     }
