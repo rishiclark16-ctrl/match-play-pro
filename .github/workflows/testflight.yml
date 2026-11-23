@@ -156,6 +156,14 @@ jobs:
         working-directory: ios/App
         run: pod install
 
+      - name: Placeholder for the gitignored Config.xcconfig
+        if: steps.secrets.outputs.ready == 'true'
+        working-directory: ios/App
+        # The project references App/Config.xcconfig as a base configuration, but it is
+        # gitignored (local secrets). REVENUECAT_API_KEY lives in the App target's build
+        # settings, so an empty file is enough here.
+        run: '[ -f App/Config.xcconfig ] || echo "// Generated on CI" > App/Config.xcconfig'
+
       - name: Build, sign and upload (fastlane ci_beta; submits for review when asked)
         if: steps.secrets.outputs.ready == 'true'
         working-directory: ios/App
