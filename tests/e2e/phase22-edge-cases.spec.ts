@@ -63,6 +63,9 @@ test.describe('Phase 22: Edge Cases & Error States', () => {
     await waitForAppReady(page);
 
     // Fill round quickly
+    // New Round opens on the mode step (With others / Solo)
+    await page.getByRole('button', { name: /With others/i }).click();
+    await page.waitForTimeout(300);
     await page.getByText('Add Course Manually').click();
     await page.waitForTimeout(300);
     await page.locator('input[placeholder="Course name"]').fill('Double Click Test');

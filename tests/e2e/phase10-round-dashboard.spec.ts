@@ -9,6 +9,9 @@ async function createRoundAndGetId(page: Page): Promise<string> {
   await page.goto('/new-round');
   await waitForAppReady(page);
 
+  // New Round opens on the mode step (With others / Solo)
+  await page.getByRole('button', { name: /With others/i }).click();
+  await page.waitForTimeout(300);
   await page.getByText('Add Course Manually').click();
   await page.waitForTimeout(400);
   await page.locator('input[placeholder="Course name"]').fill('Dashboard Test');

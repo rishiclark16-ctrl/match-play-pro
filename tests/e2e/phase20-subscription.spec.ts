@@ -17,6 +17,9 @@ test.describe('Phase 20: Subscription & Feature Gating', () => {
     await waitForAppReady(page);
 
     // Go to format step
+    // New Round opens on the mode step (With others / Solo)
+    await page.getByRole('button', { name: /With others/i }).click();
+    await page.waitForTimeout(300);
     await page.getByText('Add Course Manually').click();
     await page.waitForTimeout(400);
     await page.locator('input[placeholder="Course name"]').fill('Pro Test');
