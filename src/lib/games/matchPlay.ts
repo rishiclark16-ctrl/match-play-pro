@@ -355,3 +355,23 @@ export function getMatchPlayStatusColor(result: MatchPlayResult, playerId: strin
   }
   return 'text-danger';
 }
+
+
+/**
+ * Money for a decided fourball match: each player on the losing team pays the
+ * stake, split evenly across the winning team ("$20 a man": in a 2v2 each winner
+ * is +$20 and each loser -$20). A halved or undecided match pays nothing.
+ * Shared by settlement, the live money tracker and the in-round preview.
+ */
+export function fourballTransfers(
+  teams: Team[] | undefined,
+  winnerTeamId: string | null,
+  stakes: number,
+): { from: string; to: string; amount: number }[] {
+  if (!teams || teams.length !== 2 || !winnerTeamId || !(stakes > 0)) return [];
+  const winners = teams.find(t => t.id === winnerTeamId)?.playerIds ?? [];
+  const losers = teams.find(t => t.id !== winnerTeamId)?.playerIds ?? [];
+  if (!winners.length || !losers.length) return [];
+  const share = Math.round((stakes / winners.length) * 100) / 100;
+  return losers.flatMap(from => winners.map(to => ({ from, to, amount: share })));
+}

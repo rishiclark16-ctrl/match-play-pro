@@ -4,7 +4,7 @@ import { PropBet } from '@/types/betting';
 import { calculateSettlement, NetSettlement } from '@/lib/games/settlement';
 import { calculateSkins } from '@/lib/games/skins';
 import { calculateNassau } from '@/lib/games/nassau';
-import { calculateMatchPlay } from '@/lib/games/matchPlay';
+import { calculateMatchPlay, calculateFourballMatchPlay, fourballTransfers } from '@/lib/games/matchPlay';
 import { useGameResults } from '@/hooks/useGameResults';
 
 interface UseSettlementPreviewOptions {
@@ -42,6 +42,7 @@ export function useSettlementPreview({
     let nassauResult;
     let matchPlayWinnerId: string | null = null;
     let matchPlayStakes = 0;
+    let fourballPayments: { from: string; to: string; amount: number }[] = [];
 
     for (const game of round.games || []) {
       if (game.type === 'skins') {
@@ -96,6 +97,11 @@ export function useSettlementPreview({
           }
           if (matchStrokesMap.size === 0) matchStrokesMap = undefined;
         }
+        if (game.matchPlayFormat === 'fourball' && game.matchPlayTeams?.length === 2) {
+          const fb = calculateFourballMatchPlay(scores, playersWithScores, round.holeInfo, matchStrokesMap, round.holes, game.matchPlayTeams);
+          fourballPayments = fourballTransfers(game.matchPlayTeams, fb.winnerId, game.stakes);
+          continue;
+        }
         const matchResult = calculateMatchPlay(
           scores,
           playersWithScores,
@@ -126,6 +132,7 @@ export function useSettlementPreview({
       gameResults?.ninesResult,
       gameResults?.defenderResult,
       gameResults?.sixesResult,
+      fourballPayments,
     );
   }, [round, playersWithScores, scores, propBets, gameResults]);
 }
