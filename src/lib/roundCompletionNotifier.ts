@@ -1,7 +1,7 @@
 import { calculateMatchPlay, calculateFourballMatchPlay, generateMatchPlayHeadline } from './games/matchPlay';
 import { sendPushToProfiles as defaultSendPushToProfiles } from './pushUtils';
 import { supabase as defaultSupabase } from '@/integrations/supabase/client';
-import type { GameConfig, PlayerWithScores } from '@/types/golf';
+import type { GameConfig, PlayerWithScores, Score } from '@/types/golf';
 
 interface NotifyArgs {
   round: {
@@ -13,7 +13,7 @@ interface NotifyArgs {
   };
   userId: string;
   playersWithScores: PlayerWithScores[];
-  roundScores: Array<{ player_id: string; hole_number: number; strokes: number }>;
+  roundScores: Score[];
   /** Persists updated games (e.g. with the resultHeadline) back to Supabase. */
   updateGames: (games: GameConfig[]) => void;
   /** Test injection seam — defaults to the real sendPushToProfiles. */
@@ -39,7 +39,7 @@ export async function sendRoundCompletionNotifications({
 }: NotifyArgs): Promise<void> {
   // Build game result headlines
   const headlines: string[] = [];
-  const matchPlayGame = round.games?.find(g => g.type === 'match_play');
+  const matchPlayGame = round.games?.find(g => g.type === 'match');
 
   if (matchPlayGame) {
     const isFourball = matchPlayGame.matchPlayFormat === 'fourball' && matchPlayGame.matchPlayTeams?.length === 2;
@@ -66,7 +66,7 @@ export async function sendRoundCompletionNotifications({
       if (headline) {
         headlines.push(headline);
         const updatedGames = (round.games || []).map(g =>
-          g.type === 'match_play' ? { ...g, resultHeadline: headline } : g
+          g.type === 'match' ? { ...g, resultHeadline: headline } : g
         );
         updateGames(updatedGames);
       }

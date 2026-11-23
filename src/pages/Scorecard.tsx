@@ -10,6 +10,7 @@ import { LiveLeaderboard } from '@/components/golf/LiveLeaderboard';
 import { ScorecardBanners } from '@/components/golf/ScorecardBanners';
 import { MoneyTracker } from '@/components/golf/MoneyTracker';
 import { useResumeHole } from '@/hooks/useResumeHole';
+import { ScorecardBody } from '@/components/golf/scorecard/ScorecardBody';
 import { PlayoffMode } from '@/components/golf/PlayoffMode';
 import { FinishOptionsOverlay } from '@/components/golf/FinishOptionsOverlay';
 import { ScorecardBottomBar } from '@/components/golf/ScorecardBottomBar';
@@ -481,115 +482,27 @@ export default function Scorecard() {
           scrollBehavior: 'smooth',
         }}
       >
-        <div className="space-y-2">
-          {/* Regular scoring mode */}
-          {playoffHole === 0 && (
-            <>
-              <LayoutGroup>
-                <AnimatePresence mode="popLayout">
-                  {playersWithScores.map((player, index) => {
-                    const holeScore = player.scores.find(s => s.holeNumber === currentHole)?.strokes;
-                    return (
-                      <motion.div
-                        key={player.id}
-                        ref={index === 0 ? playerCardRef : undefined}
-                        layout
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{
-                          layout: { type: 'spring', stiffness: 300, damping: 30 },
-                          opacity: { duration: 0.2 },
-                        }}
-                      >
-                        <PlayerCard
-                          player={player}
-                          currentHoleScore={holeScore}
-                          currentHolePar={currentHoleInfo.par}
-                          currentHoleNumber={currentHole}
-                          isLeading={player.id === leadingPlayerId}
-                          onScoreTap={canEditScores && !player.isGhost ? () => setSelectedPlayerId(player.id) : undefined}
-                          onQuickScore={canEditScores && !player.isGhost ? score => handleQuickScore(player.id, score) : undefined}
-                          showNetScores={true}
-                          voiceHighlight={isListening}
-                          voiceSuccess={voiceSuccessPlayerIds.has(player.id)}
-                          isGhost={player.isGhost}
-                        />
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </LayoutGroup>
-            </>
-          )}
-
-          {/* Live Leaderboard — hide during playoff and for solo rounds (nothing to rank) */}
-          {!isSolo && playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && (
-            <div className="pt-3">
-              <LiveLeaderboard
-                ref={leaderboardRef}
-                players={playersWithScores}
-                useNetScoring={
-                  round.matchPlay || round.games?.some(g => g.useNet) || false
-                }
-                isMatchPlay={round.matchPlay}
-                holeInfo={round.holeInfo}
-                scores={roundScores}
-                matchPlayFormat={round.games?.find(g => g.type === 'match')?.matchPlayFormat}
-                matchPlayTeams={round.games?.find(g => g.type === 'match')?.matchPlayTeams}
-              />
-            </div>
-          )}
-
-          {/* Live Money Tracker */}
-          {playoffHole === 0 && (round.games?.length > 0 || propBets.some(pb => pb.winnerId)) && (
-            <div className="pt-3">
-              <MoneyTracker
-                players={playersWithScores}
-                scores={roundScores}
-                games={round.games || []}
-                holeInfo={round.holeInfo}
-                presses={round.presses || []}
-                currentHole={currentHole}
-                propBets={propBets}
-              />
-            </div>
-          )}
-
-          {/* LIVE GAMES section label + Games Section — hide during playoff */}
-          {playoffHole === 0 && (round.games?.length > 0 || propBets.length > 0) && (
-            <>
-              <div className="pt-3" />
-              <GamesSection
-                round={round}
-                players={playersWithScores}
-                scores={roundScores}
-                currentHole={currentHole}
-                onAddPress={handleManualPress}
-                propBets={propBets}
-              />
-            </>
-          )}
-        </div>
-
-        {/* Voice hint — clean, no emoji */}
-        {playoffHole === 0 && !isSpectator && isSupported && playersWithScores.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="flex items-center justify-center gap-1.5 mt-6"
-          >
-            <Mic className="w-3.5 h-3.5 text-[#5A6B61]" />
-            <p className="text-[13px] text-[#5A6B61] font-medium">
-              {isSolo
-                ? `Say "I made a 4 on ${currentHole}" to score`
-                : <>Say "{(playersWithScores[0]?.name || 'Mike').split(' ')[0]} 5,{' '}
-                    {(playersWithScores[1]?.name || 'Tim').split(' ')[0]} 4" to score</>
-              }
-            </p>
-          </motion.div>
-        )}
+        <ScorecardBody
+          round={round}
+          playersWithScores={playersWithScores}
+          roundScores={roundScores}
+          propBets={propBets}
+          currentHole={currentHole}
+          currentHolePar={currentHoleInfo.par}
+          playoffHole={playoffHole}
+          leadingPlayerId={leadingPlayerId}
+          isSolo={isSolo}
+          isSpectator={isSpectator}
+          canEditScores={canEditScores}
+          isListening={isListening}
+          isSupported={isSupported}
+          voiceSuccessPlayerIds={voiceSuccessPlayerIds}
+          playerCardRef={playerCardRef}
+          leaderboardRef={leaderboardRef}
+          onSelectPlayer={setSelectedPlayerId}
+          onQuickScore={handleQuickScore}
+          onAddPress={handleManualPress}
+        />
       </main>
 
       {/* Finish/Playoff Options Overlay */}
