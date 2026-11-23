@@ -129,8 +129,8 @@ describe('tee choice', () => {
   });
 });
 
-const you: DraftPlayer = { key: 'you', name: 'Rishi C', kind: 'you', profileId: 'me', handicap: 8, saidAs: null, alternatives: [] };
-const guest = (key: string, name: string): DraftPlayer => ({ key, name, kind: 'guest', profileId: null, handicap: null, saidAs: null, alternatives: [] });
+const you: DraftPlayer = { key: 'you', name: 'Rishi C', kind: 'you', profileId: 'me', handicap: 8, saidAs: null, spoken: '', alternatives: [] };
+const guest = (key: string, name: string): DraftPlayer => ({ key, name, kind: 'guest', profileId: null, handicap: null, saidAs: null, spoken: name.split(' ')[0], alternatives: [] });
 const four = [you, guest('p1', 'Jack Turner'), guest('p2', 'Jim Reid'), guest('p3', 'Tim Shaw')];
 let n = 0;
 const gid = () => `g${++n}`;
@@ -309,6 +309,17 @@ describe('buildDraft', () => {
     const t = "I'm not playing, just keeping score for Jack and Jim at Sonoma, skins $2";
     const d = await buildDraft(localParse(t), t, 'local', deps);
     expect(d.issues.some(i => /Keeping score without playing/.test(i.message))).toBe(true);
+  });
+
+  it('Pro games can be dropped to start on a free account', async () => {
+    const t = 'Sonoma with Jack, $10 nassau and $2 skins';
+    const d1 = await buildDraft(localParse(t), t, 'local', deps);
+    expect(d1.needsPro).toEqual(['nassau']);
+    expect(canTeeOff(d1)).toBe(false);
+    const d2 = await buildDraft(localParse(t), t, 'local', deps, { dropGames: ['nassau'] });
+    expect(d2.needsPro).toEqual([]);
+    expect(d2.games.map(g => g.type)).toEqual(['skins']);
+    expect(canTeeOff(d2)).toBe(true);
   });
 
   it('back nine uses holes 10-18', () => {

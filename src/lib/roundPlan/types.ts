@@ -78,6 +78,8 @@ export interface DraftPlayer {
   handicap: number | null;
   /** Name as said, when it differs from the matched friend's name. */
   saidAs: string | null;
+  /** Exactly what was said for this player ("" for the user). Key for review overrides. */
+  spoken: string;
   /** Other friends this name could have meant; the user can switch. */
   alternatives: { profileId: string; name: string; handicap: number | null }[];
 }

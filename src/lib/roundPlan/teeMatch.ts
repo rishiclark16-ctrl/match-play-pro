@@ -108,6 +108,6 @@ export function chooseTee<T extends TeeLike>(tees: T[], said: string | null, pre
     how: 'default',
     note: said
       ? `Couldn't find "${said}", so we picked the ${middle.tee_name} tees${yards(middle)}`
-      : `${middle.tee_name} tees${yards(middle)}. Say a tee next time to pick another`,
+      : `${middle.tee_name} tees${yards(middle)}, from the middle of the card. Tap the tee to change it`,
   };
 }

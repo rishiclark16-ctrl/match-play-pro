@@ -41,6 +41,8 @@ export interface DraftOverrides {
   teeName?: string;
   /** Spoken name (lower-case) -> friend profile id, or null to keep them a guest. */
   friendFor?: Record<string, string | null>;
+  /** Games the user chose to leave out (e.g. Pro games on a free account). */
+  dropGames?: PlanGameType[];
 }
 
 export interface DraftCourse {
@@ -53,6 +55,8 @@ export interface RoundDraft {
   source: PlanSource;
   text: string;
   course: DraftCourse | null;
+  /** The course as said, for the search box when it needs picking. */
+  courseQuery: string | null;
   /** Other courses the user might have meant (shown when picking). */
   courseChoices: CourseCandidate[];
   tee: CourseTee | null;
@@ -124,6 +128,7 @@ export function resolvePlayers(
       profileId: deps.user.profileId,
       handicap: plan.userHandicap ?? deps.user.handicap,
       saidAs: null,
+      spoken: '',
       alternatives: [],
     });
   }
@@ -142,10 +147,10 @@ export function resolvePlayers(
         taken.add(chosen.profileId);
         players.push({
           key, name: chosen.name, kind: 'friend', profileId: chosen.profileId,
-          handicap: p.handicap ?? chosen.handicap, saidAs: said, alternatives: [],
+          handicap: p.handicap ?? chosen.handicap, saidAs: said, spoken: said, alternatives: [],
         });
       } else {
-        players.push({ key, name: displayName(said), kind: 'guest', profileId: null, handicap: p.handicap, saidAs: null, alternatives: [] });
+        players.push({ key, name: displayName(said), kind: 'guest', profileId: null, handicap: p.handicap, saidAs: null, spoken: said, alternatives: [] });
       }
       return;
     }
@@ -156,18 +161,19 @@ export function resolvePlayers(
         key, name: m.friend.name, kind: 'friend', profileId: m.friend.profileId,
         handicap: p.handicap ?? m.friend.handicap,
         saidAs: m.friend.name.toLowerCase().startsWith(said.toLowerCase()) ? null : said,
+        spoken: said,
         alternatives: [],
       });
     } else if (m.kind === 'ambiguous') {
       players.push({
         key, name: displayName(said), kind: 'guest', profileId: null, handicap: p.handicap,
-        saidAs: said, alternatives: m.candidates.map(c => ({ profileId: c.profileId, name: c.name, handicap: c.handicap })),
+        saidAs: said, spoken: said, alternatives: m.candidates.map(c => ({ profileId: c.profileId, name: c.name, handicap: c.handicap })),
       });
       issues.push({ field: 'players', message: `Which ${displayName(said)}? ${m.candidates.map(c => c.name).join(' or ')}` });
     } else {
       players.push({
         key, name: displayName(said), kind: 'guest', profileId: null, handicap: p.handicap,
-        saidAs: null, alternatives: [],
+        saidAs: null, spoken: said, alternatives: [],
       });
       assumptions.push({
         field: 'players',
@@ -266,8 +272,9 @@ export async function buildDraft(
   }
 
   // ── Games ──
+  const dropped = new Set(overrides.dropGames ?? []);
   const g = resolveGames({
-    games: plan.games, players, isPro: deps.isPro, useNet: handicapMode !== 'none', generateId: deps.generateId,
+    games: plan.games.filter(x => !dropped.has(x.type)), players, isPro: deps.isPro, useNet: handicapMode !== 'none', generateId: deps.generateId,
   });
   issues.push(...g.issues);
   assumptions.push(...g.assumptions);
@@ -289,6 +296,7 @@ export async function buildDraft(
     source,
     text,
     course,
+    courseQuery: plan.course.query,
     courseChoices,
     tee,
     teeChoices,

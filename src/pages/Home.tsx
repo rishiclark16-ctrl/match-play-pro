@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AppTutorial } from '@/components/onboarding/AppTutorial';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Eye, Flag } from 'lucide-react';
+import { Eye, Flag } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { RoundListSkeleton } from '@/components/ui/round-list-skeleton';
@@ -22,8 +22,9 @@ import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { NapkinMark } from '@/components/home/HomeRoundCard';
-import { HomeLiveHero, HomeWelcomeHero } from '@/components/home/HomeHero';
+import { HomeLiveHero } from '@/components/home/HomeHero';
 import { HomeActionRow } from '@/components/home/HomeActionRow';
+import { HomeComposer } from '@/components/home/HomeComposer';
 import { HomeStatsStrip, FriendsPlayingNow, RoundListSection } from '@/components/home/HomeSections';
 import { JoinRoundModal } from '@/components/home/JoinRoundModal';
 
@@ -190,20 +191,12 @@ export default function Home() {
             ) : loadingRounds ? (
               <div className="h-[268px] rounded-[28px] bg-primary/90 animate-pulse" aria-hidden="true" />
             ) : (
-              <HomeWelcomeHero firstName={firstName} totalRounds={rounds.length} />
+              // 3.1: with no round live, the front door is "say it and play".
+              <HomeComposer firstName={firstName} />
             )}
 
-            {/* Primary CTA */}
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={() => { hapticLight(); navigate('/new-round'); }}
-              aria-label="Start new round"
-              className="w-full h-[60px] rounded-[20px] bg-foreground text-background flex items-center justify-center gap-2.5 text-[16px] font-bold tracking-[-0.01em] touch-manipulation select-none"
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-            >
-              <Plus className="h-5 w-5" strokeWidth={2.5} />
-              {heroRound ? 'New round' : 'Start a round'}
-            </motion.button>
+            {/* With a round live it stays on top; a new round is one line below it. */}
+            {heroRound && <HomeComposer firstName={firstName} compact />}
 
             {/* Counts only once there's something to count; zeros read as bare */}
             {hasAnyRounds && (
