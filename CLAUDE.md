@@ -260,8 +260,8 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1306 pass, 0 fail** (1303 across 64 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
-- `bun test src/hooks src/lib src/engine src/components` (1303 tests)
+**1310 pass, 0 fail** (1307 across 65 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
+- `bun test src/hooks src/lib src/engine src/components` (1307 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
 **Why split:** module mocks (`vi.mock` and bun's `mock.module`) leak into downstream files when bun's CI scheduler reuses workers. Running pages in their own `bun test` invocation gives them a fresh process and keeps hook/lib tests pristine. Page-test factories must include every named export the page tree imports at module load (e.g., `TIER_LIMITS` from `useSubscription` is read by `PlayersStep`).
@@ -534,6 +534,10 @@ Phase P3.6 (3.1 "say it and play" AI round builder) — 2026-11-23, in progress 
 - **Not supported yet (shown as issues/assumptions, never silent):** scorekeeper not playing (seat 1 is always the creator), junk/prop bets and custom house rules from the sentence, back nine is renumbered 1–9.
 - `useRoundBuilder` loads every friend itself (useFriends pages 20 at a time). Analytics: `ai_round_drafted`, `ai_round_started`.
 - Harness used for screenshots: a mocked-backend Playwright script (scratchpad, not committed) covering Home -> compose -> thinking -> review -> tee sheet -> Tee off (verified the inserted round + players payload).
+- **Money bug fixed: fourball (2v2) team matches never paid.** Settlement, the live tracker and the in-round preview only handled 2-player match play. `fourballTransfers()` in `games/matchPlay.ts` (each loser pays the stake split across winners: +$20/-$20 a man) feeds all three (`fourballMoney.test.ts`). `calculateSettlement` takes it as a new trailing param.
+- **Fourball card overflow fixed** (`LiveLeaderboard.tsx`): team columns lacked `min-w-0`, so long names pushed team B off a phone screen. Players now stack one per line with team initials.
+- **`/play` composer** hides the "Try saying" examples once you start typing.
+- **App Store screenshots 3.1:** `scripts/appstore-capture.cjs` captures real screens (fictional foursome, embargo-safe money: $20 team match + $2 Sixes) against a mocked backend that honours PostgREST eq./in. filters; framed by `matchplay-marketing/appstore/build.mjs` (tokens read from `src/index.css`). Run vite on 127.0.0.1:8080 and pass `CHROMIUM=/opt/pw-browsers/chromium` (the repo pins its own Playwright).
 
 ## V2 Feature Status
 | Feature | Status | Notes |

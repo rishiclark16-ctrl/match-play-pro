@@ -154,8 +154,9 @@ export function PlayComposer({ initialText, lastRoundText, busy, autoListen, onS
               </span>
             </motion.button>
           )}
-          <p className="pt-2 text-[12px] font-semibold text-muted-foreground">Try saying</p>
-          {EXAMPLES.slice(1).map(ex => (
+          {/* Examples help an empty box; once you're typing they're just noise. */}
+          {!text.trim() && <p className="pt-2 text-[12px] font-semibold text-muted-foreground">Try saying</p>}
+          {!text.trim() && EXAMPLES.slice(1).map(ex => (
             <button
               key={ex}
               onClick={() => { hapticLight(); setText(ex); }}
