@@ -226,7 +226,7 @@ export default function RoundComplete() {
     hapticLight();
     const text = buildHouseGameShareText({
       courseName: round.courseName,
-      date: round.date,
+      date: round.createdAt,
       standings: gameResults?.houseGameResult?.standings ?? [],
       junkSummary,
     });

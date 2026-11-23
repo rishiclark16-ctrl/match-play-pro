@@ -86,8 +86,18 @@ export default function HouseGameBuilder() {
     isSupported: voiceSupported,
     error: voiceError,
     interimTranscript,
+    transcript: voiceTranscript,
     reset: resetVoice,
-  } = useVoiceRecognition({ continuous: true, onTranscript: handleVoiceTranscript });
+  } = useVoiceRecognition();
+
+  // The voice hook publishes each finished phrase as `transcript` (it has no
+  // onTranscript callback), so append every new phrase to the description once.
+  const lastVoiceTranscript = useRef<string | null>(null);
+  useEffect(() => {
+    if (!voiceTranscript || voiceTranscript === lastVoiceTranscript.current) return;
+    lastVoiceTranscript.current = voiceTranscript;
+    handleVoiceTranscript(voiceTranscript);
+  }, [voiceTranscript, handleVoiceTranscript]);
 
   // Handle voice errors
   useEffect(() => {

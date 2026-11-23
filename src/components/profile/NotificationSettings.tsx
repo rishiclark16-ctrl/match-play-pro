@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { ExternalLink } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
@@ -72,7 +73,7 @@ export function NotificationSettings({
               onClick={() => {
                 hapticLight();
                 import('@capacitor/core').then(({ Capacitor: Cap }) => {
-                  if (Cap.isNativePlatform()) import('@capacitor/app').then(({ App }) => { App.openUrl({ url: 'app-settings:' }); });
+                  if (Cap.isNativePlatform()) import('@capacitor/app-launcher').then(({ AppLauncher }) => AppLauncher.openUrl({ url: 'app-settings:' })).catch(() => toast.error('Open the Settings app to turn on notifications for MATCH'));
                 });
               }}
               className="h-11 px-1 text-[13px] font-semibold text-primary flex items-center gap-1"

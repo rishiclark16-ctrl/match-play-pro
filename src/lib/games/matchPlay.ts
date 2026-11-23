@@ -45,6 +45,7 @@ export function calculateMatchPlay(
       matchStatus: 'not_started',
       winnerId: null,
       statusText: 'Match Play requires 2 players',
+      format: 'singles',
     };
   }
 
