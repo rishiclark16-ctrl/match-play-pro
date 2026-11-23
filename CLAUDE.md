@@ -525,7 +525,8 @@ Phase P3.5 (v3.0 release hardening) — 2026-11-22/23:
 - **e2e note**: several e2e specs create real rounds in the **production** Supabase project under a shared test account (e.g. the leftover "Double Click Test" live round). Consider pointing e2e at a Supabase branch.
 - Running e2e locally: the repo's Playwright expects a browser build that isn't installed in cloud containers; use a temporary config with `launchOptions.executablePath: '/opt/pw-browsers/chromium'`, `webServer: undefined`, `baseURL: http://127.0.0.1:8080` and start vite yourself with `--host 127.0.0.1`.
 
-Phase P3.6 (3.1 "say it and play" AI round builder) — 2026-11-23, in progress on `claude/matchplay-golf-app-2hb6ib`:
+Phase P3.6 (3.1 "say it and play" AI round builder) — 2026-11-23, merged to `main` (PR #4) with the Mac-free CI fixes:
+- **Version 3.1** (`MARKETING_VERSION`), so the automatic TestFlight build on `main` uploads as 3.1, separate from the 3.0 (9) build awaiting App Store submission.
 - **Bug fixed: Start round after building an AI game did nothing.** `HouseGameConfirm` → `/new-round` with `preSelectFormatId` jumped to the format step with no course; `useStartRound` returned silently without a course. Now starts at the course step with the format selected, and `useStartRound` toasts "Pick a course first".
 - **Bug fixed: fourball match / best ball teams never matched players.** Teams were built from setup-screen ids; `players` rows got DB-generated ids. `useCreateSupabaseRound` now generates player ids client-side and remaps team `playerIds` (`src/lib/remapTeamIds.ts`, tested). Callers pass `localId` per player.
 - **Core workflow is now `/play` (`src/pages/QuickRound.tsx`)**: say/type the round -> review -> Tee off -> `/round/:id`. Home hero is `HomeComposer` (compact variant under a live round); the centre tab is a mic to `/play`; "Set up by hand" still goes to `/new-round`.
