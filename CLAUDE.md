@@ -84,7 +84,8 @@ supabase/
 ```
 /                       Home (round list)
 /auth                   Sign in/up (public)
-/new-round              Create round (course → players → games)
+/play                   Say-it-and-play round builder (3.1 core workflow)
+/new-round              Create round by hand (course → players → games)
 /join                   Join by code
 /round/:id              Scorecard (main scoring view)
 /round/:id/leaderboard  Live leaderboard
@@ -254,13 +255,13 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 ## Supabase Project
 - **Project ID:** `puqgbsxabcyxrbwwoznn`
 - **URL:** `https://puqgbsxabcyxrbwwoznn.supabase.co`
-- **Edge functions:** delete-account, subscription-webhook, sync-subscription, send-push, parse-house-game, golf-course-lookup, redeem-promo, sentry-webhook, speech-to-text, weekly-recap
+- **Edge functions:** delete-account, subscription-webhook, sync-subscription, send-push, parse-house-game, plan-round, golf-course-lookup, redeem-promo, sentry-webhook, speech-to-text, weekly-recap
 - **Migrations:** 22 files in `supabase/migrations/`
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1252 pass, 0 fail** (1249 across 60 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
-- `bun test src/hooks src/lib src/engine src/components` (1201 tests)
+**1306 pass, 0 fail** (1303 across 64 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
+- `bun test src/hooks src/lib src/engine src/components` (1303 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
 **Why split:** module mocks (`vi.mock` and bun's `mock.module`) leak into downstream files when bun's CI scheduler reuses workers. Running pages in their own `bun test` invocation gives them a fresh process and keeps hook/lib tests pristine. Page-test factories must include every named export the page tree imports at module load (e.g., `TIER_LIMITS` from `useSubscription` is read by `PlayersStep`).
@@ -523,6 +524,16 @@ Phase P3.5 (v3.0 release hardening) — 2026-11-22/23:
 - **e2e (Playwright) fixes**: round helpers in phase06/09/10/20/22 tap "With others" first (mode step; broken before the redesign); `mockAuth` dismisses the scorecard voice tutorial (`match-golf-settings`), whose overlay blocked clicks; phase02 2.2/2.13 no longer assume the shared e2e account is empty. Verified: phase02 14/14, money-tracker 2/2, phase09, ai-game-builder + phase06 + phase10 39/39 (game-name tests use `#format-name`, hole nav uses the `Next hole`/`Previous hole` labels, dashboard test waits for the round name). Not run: `ai-builder-comprehensive`/`ai-builder-scoring` (they call the real AI parser on prod and bill the Anthropic key) and the remaining phase specs.
 - **e2e note**: several e2e specs create real rounds in the **production** Supabase project under a shared test account (e.g. the leftover "Double Click Test" live round). Consider pointing e2e at a Supabase branch.
 - Running e2e locally: the repo's Playwright expects a browser build that isn't installed in cloud containers; use a temporary config with `launchOptions.executablePath: '/opt/pw-browsers/chromium'`, `webServer: undefined`, `baseURL: http://127.0.0.1:8080` and start vite yourself with `--host 127.0.0.1`.
+
+Phase P3.6 (3.1 "say it and play" AI round builder) — 2026-11-23, in progress on `claude/matchplay-golf-app-2hb6ib`:
+- **Bug fixed: Start round after building an AI game did nothing.** `HouseGameConfirm` → `/new-round` with `preSelectFormatId` jumped to the format step with no course; `useStartRound` returned silently without a course. Now starts at the course step with the format selected, and `useStartRound` toasts "Pick a course first".
+- **Bug fixed: fourball match / best ball teams never matched players.** Teams were built from setup-screen ids; `players` rows got DB-generated ids. `useCreateSupabaseRound` now generates player ids client-side and remaps team `playerIds` (`src/lib/remapTeamIds.ts`, tested). Callers pass `localId` per player.
+- **Core workflow is now `/play` (`src/pages/QuickRound.tsx`)**: say/type the round -> review -> Tee off -> `/round/:id`. Home hero is `HomeComposer` (compact variant under a live round); the centre tab is a mic to `/play`; "Set up by hand" still goes to `/new-round`.
+- **Engine `src/lib/roundPlan/`** (pure, 55 tests in `roundPlan.test.ts`, `describeRound.test.ts`, `planParity.test.ts`): `types.ts` (RoundPlan: words only, never ids), `names.ts` (friend matching: exact > first name > nickname table > 1 typo; ambiguous = ask), `courseMatch.ts` (query variants + ranking; the course API is literal: "Sonoma Golf Club" finds nothing, "sonoma" finds "Sonoma Gc"), `teeMatch.ts` (tee by name, else colour mapped by length with a note: Sonoma GC tees are I–IV), `games.ts` (player-count gates mirror FormatStep, free = match + skins, max stake $500, teams, Vegas seat order), `localParse.ts` (offline parser + `unsaidAmounts`: an AI amount not in the sentence blocks tee-off), `buildDraft.ts` (draft with `assumptions` and blocking `issues`, review `overrides`), `describeRound.ts` ("Same as last time").
+- **Edge function `plan-round` (deployed v1, verify_jwt on, per-user rate limit 20/min)**: Anthropic SDK 1.12.0, `claude-opus-5-5`, effort low, structured output (`PLAN_SCHEMA`), server-side fallback beta with a plain retry, zod validation. Live check 2026-11-23: 12/12 sentences correct at 2–4 s, including nicknames, "a buck a hole", "I'm a 12", 80% handicaps, junk flagged as unsupported and an ignored prompt injection. Client falls back to `localParse` after 15 s or on any error and says so.
+- **Not supported yet (shown as issues/assumptions, never silent):** scorekeeper not playing (seat 1 is always the creator), junk/prop bets and custom house rules from the sentence, back nine is renumbered 1–9.
+- `useRoundBuilder` loads every friend itself (useFriends pages 20 at a time). Analytics: `ai_round_drafted`, `ai_round_started`.
+- Harness used for screenshots: a mocked-backend Playwright script (scratchpad, not committed) covering Home -> compose -> thinking -> review -> tee sheet -> Tee off (verified the inserted round + players payload).
 
 ## V2 Feature Status
 | Feature | Status | Notes |
