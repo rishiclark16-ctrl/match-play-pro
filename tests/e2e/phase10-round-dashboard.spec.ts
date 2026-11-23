@@ -45,8 +45,7 @@ test.describe('Phase 10: Round Dashboard', () => {
     await page.goto(`/round/${roundId}/dashboard`);
     await waitForAppReady(page);
 
-    // Dashboard should show some round info
-    const bodyText = await page.locator('body').innerText();
-    expect(bodyText.length).toBeGreaterThan(50);
+    // Dashboard should show the round once its data has loaded
+    await expect(page.getByText('Dashboard Test').first()).toBeVisible({ timeout: 15_000 });
   });
 });

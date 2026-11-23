@@ -77,7 +77,7 @@ test.describe('Phase 6: Scorecard', () => {
   // ─── 6.4 Hole navigator advances ──────────────────────────────────────────
   test('6.4 — next hole button advances to hole 2', async ({ page }) => {
     // There should be a right arrow or "Next" button in the hole navigator
-    const nextHoleBtn = page.locator('button').filter({ has: page.locator('svg.lucide-chevron-right') }).first();
+    const nextHoleBtn = page.getByLabel('Next hole');
     if (await nextHoleBtn.isVisible()) {
       await nextHoleBtn.click();
       await page.waitForTimeout(500);
@@ -88,14 +88,14 @@ test.describe('Phase 6: Scorecard', () => {
   // ─── 6.5 Hole navigator goes back ─────────────────────────────────────────
   test('6.5 — previous hole button goes back to hole 1 from hole 2', async ({ page }) => {
     // Go to hole 2 first
-    const nextBtn = page.locator('button').filter({ has: page.locator('svg.lucide-chevron-right') }).first();
+    const nextBtn = page.getByLabel('Next hole');
     if (await nextBtn.isVisible()) {
       await nextBtn.click();
       await page.waitForTimeout(500);
     }
 
     // Go back to hole 1
-    const prevBtn = page.locator('button').filter({ has: page.locator('svg.lucide-chevron-left') }).first();
+    const prevBtn = page.getByLabel('Previous hole');
     if (await prevBtn.isVisible()) {
       await prevBtn.click();
       await page.waitForTimeout(500);

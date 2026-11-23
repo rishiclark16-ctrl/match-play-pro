@@ -254,7 +254,7 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
     await expect(page.getByText('Confirm Rules')).toBeVisible();
 
     // Game name input
-    const nameInput = page.locator('input[type="text"]').first();
+    const nameInput = page.locator('#format-name');
     await expect(nameInput).toBeVisible();
     // Should be auto-filled from the description
     const nameValue = await nameInput.inputValue();
@@ -291,7 +291,7 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
   test('can edit the game name', async ({ page }) => {
     await navigateToConfirm(page);
 
-    const nameInput = page.locator('input[type="text"]').first();
+    const nameInput = page.locator('#format-name');
     await nameInput.clear();
     await nameInput.fill('My Custom Nassau Game');
     await expect(nameInput).toHaveValue('My Custom Nassau Game');
@@ -300,7 +300,7 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
   test('game name has max 40 character limit', async ({ page }) => {
     await navigateToConfirm(page);
 
-    const nameInput = page.locator('input[type="text"]').first();
+    const nameInput = page.locator('#format-name');
     const longName = 'A'.repeat(50);
     await nameInput.clear();
     await nameInput.fill(longName);
@@ -636,7 +636,7 @@ test.describe('AI Game Builder — Full E2E Flow', () => {
     await expect(page.getByText(/Nassau/).first()).toBeVisible();
 
     // Edit the name
-    const nameInput = page.locator('input[type="text"]').first();
+    const nameInput = page.locator('#format-name');
     await nameInput.clear();
     await nameInput.fill('My Nassau Game');
 
