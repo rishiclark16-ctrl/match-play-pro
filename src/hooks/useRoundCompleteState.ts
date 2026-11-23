@@ -8,6 +8,8 @@ import {
 } from '@/lib/games/settlement';
 import {
   calculateMatchPlay,
+  calculateFourballMatchPlay,
+  fourballTransfers,
   MatchPlayResult,
 } from '@/lib/games/matchPlay';
 import {
@@ -233,6 +235,16 @@ export function useRoundCompleteSettlements({
   propBets,
 }: UseRoundCompleteSettlementsArgs): RoundCompleteSettlementsState {
   // Calculate settlements
+  // Fourball (2v2) match: settled per team. The singles path above only handles 2 players.
+  const fourballPayments = useMemo(() => {
+    const game = round?.games?.find(g => g.type === 'match');
+    if (!round || !game || game.matchPlayFormat !== 'fourball' || game.matchPlayTeams?.length !== 2) return [];
+    const strokes = new Map<string, Map<number, number>>();
+    for (const p of playersWithScores) if (p.strokesPerHole) strokes.set(p.id, p.strokesPerHole);
+    const fb = calculateFourballMatchPlay(rawScores, playersWithScores, round.holeInfo, game.useNet !== false && strokes.size ? strokes : undefined, round.holes, game.matchPlayTeams);
+    return fourballTransfers(game.matchPlayTeams, fb.winnerId, game.stakes);
+  }, [round, playersWithScores, rawScores]);
+
   const settlements = useMemo(() => {
     if (!round || playersWithScores.length === 0) return [];
 
@@ -255,8 +267,9 @@ export function useRoundCompleteSettlements({
       gameResults?.ninesResult,
       gameResults?.defenderResult,
       gameResults?.sixesResult,
+      fourballPayments,
     );
-  }, [round, playersWithScores, rawPlayers, gameResults, matchPlayResult, propBets]);
+  }, [round, playersWithScores, rawPlayers, rawScores, gameResults, matchPlayResult, propBets, fourballPayments]);
 
   // Ghost pot: amounts that would flow TO ghost players — real players owe this to the pot
   const ghostPotEntries = useMemo(

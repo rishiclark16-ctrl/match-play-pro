@@ -1,19 +1,20 @@
 import { useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, Users, Plus, BarChart3, User } from 'lucide-react';
+import { Home, Users, Mic, BarChart3, User } from 'lucide-react';
 import { hapticLight } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Home' },
   { to: '/social', icon: Users, label: 'Social' },
-  { to: '/new-round', icon: Plus, label: 'New', isCenter: true },
+  // The centre button opens "say it and play" (3.1); manual setup is one tap from there.
+  { to: '/play', icon: Mic, label: 'Play', isCenter: true },
   { to: '/stats', icon: BarChart3, label: 'Stats' },
   { to: '/profile', icon: User, label: 'Profile' },
 ];
 
 // Routes where bottom nav should be hidden
-const HIDDEN_ROUTES = ['/new-round', '/auth', '/onboarding', '/my-formats/confirm'];
+const HIDDEN_ROUTES = ['/new-round', '/play', '/auth', '/onboarding', '/my-formats/confirm'];
 
 export function BottomNav() {
   const location = useLocation();

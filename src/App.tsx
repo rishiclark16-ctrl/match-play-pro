@@ -21,6 +21,7 @@ import { OfflineBanner } from "@/components/ui/OfflineBanner";
 // Lazy load all pages for better initial load
 const Home = lazy(() => import("./pages/Home"));
 const NewRound = lazy(() => import("./pages/NewRound"));
+const QuickRound = lazy(() => import("./pages/QuickRound"));
 const JoinRound = lazy(() => import("./pages/JoinRound"));
 const Scorecard = lazy(() => import("./pages/Scorecard"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
@@ -129,6 +130,16 @@ function AppContent() {
             <AuthGuard>
               <Suspense fallback={<PageSkeleton variant="default" />}>
                 <NewRound />
+              </Suspense>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/play"
+          element={
+            <AuthGuard>
+              <Suspense fallback={<PageSkeleton variant="default" />}>
+                <QuickRound />
               </Suspense>
             </AuthGuard>
           }

@@ -6,6 +6,7 @@ import { captureException } from '@/lib/sentry';
 import { calculatePlayingHandicap, getStrokesPerHole } from '@/lib/handicapUtils';
 import { sendPushToProfiles } from '@/lib/pushUtils';
 import { capture } from '@/lib/posthog';
+import { remapTeamPlayerIds } from '@/lib/remapTeamIds';
 
 interface CreateRoundInput {
   courseId: string;
@@ -21,7 +22,11 @@ interface CreateRoundInput {
   games: GameConfig[];
   teeSets?: TeeSet[];
   mixedTees?: boolean;
-  players: { name: string; handicap?: number; manualStrokes?: number; teamId?: string; profileId?: string; isGhost?: boolean; teeSetId?: string }[];
+  /**
+   * `localId` is the id the setup screen used for this player. Teams in `games`
+   * reference it; it is swapped for the real player id before saving.
+   */
+  players: { localId?: string; name: string; handicap?: number; manualStrokes?: number; teamId?: string; profileId?: string; isGhost?: boolean; teeSetId?: string }[];
 }
 
 export interface CreateRoundError {
@@ -58,10 +63,15 @@ export function useCreateSupabaseRound() {
     const joinCode = generateJoinCode();
     // Generate round ID client-side to avoid .select().single() RLS issues
     const roundId = crypto.randomUUID();
+    // Player ids are generated here too, so team members can be saved with real ids.
+    const playerIds = input.players.map(() => crypto.randomUUID());
+    const idMap = new Map<string, string>();
+    input.players.forEach((p, i) => { if (p.localId) idMap.set(p.localId, playerIds[i]); });
+    const games = remapTeamPlayerIds(input.games, idMap);
 
     try {
       // Check if any games are stableford
-      const stablefordGame = input.games.find(g => g.type === 'stableford');
+      const stablefordGame = games.find(g => g.type === 'stableford');
       
       // Insert round - no .select() to avoid RLS visibility issues
       const { error: roundError } = await supabase
@@ -81,8 +91,8 @@ export function useCreateSupabaseRound() {
           slope: input.slope || null,
           rating: input.rating || null,
           handicap_mode: input.handicapMode || 'auto',
-          games: input.games as unknown as Json,
-          teams: input.games.find(g => g.type === 'bestball')?.teams as unknown as Json || null,
+          games: games as unknown as Json,
+          teams: games.find(g => g.type === 'bestball')?.teams as unknown as Json || null,
           hole_info: input.holeInfo as unknown as Json,
           tee_sets: input.teeSets as unknown as Json || null,
           mixed_tees: input.mixedTees || false,
@@ -107,6 +117,7 @@ export function useCreateSupabaseRound() {
 
       // Insert players - first player (index 0) is the creator and gets their profile_id set
       const playersToInsert = input.players.map((p, index) => ({
+        id: playerIds[index],
         round_id: roundId,
         name: p.name,
         handicap: p.handicap || null,
@@ -251,7 +262,7 @@ export function useCreateSupabaseRound() {
         rating: input.rating,
         handicapMode: input.handicapMode || 'auto',
         status: 'active',
-        games: input.games,
+        games,
         holeInfo: input.holeInfo,
         joinCode,
         createdAt: new Date(),

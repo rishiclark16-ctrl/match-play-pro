@@ -191,17 +191,20 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
 
     const renderTeamSide = (team: Team, align: 'left' | 'right') => {
       const isLeader = leaderId === team.id;
-      const initials = team.name.replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || 'T';
+      const initials = teamFirstNames(team).split(' & ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'T';
       return (
-        <div className={cn('flex-1 flex items-center gap-3', align === 'right' && 'justify-end')}>
+        // min-w-0: without it the names can't truncate and the card overflows the screen.
+        <div className={cn('flex-1 min-w-0 flex items-center gap-2.5', align === 'right' && 'justify-end')}>
           {align === 'right' && (
             <div className="min-w-0 text-right">
-              <p className="font-semibold text-[15px] text-[#0F1F17] truncate">{team.name}</p>
-              <p className="text-[12px] text-[#5A6B61] truncate">{teamFirstNames(team)}</p>
+              {/* One player per line: "Sam & Jack" doesn't fit beside the score on a phone. */}
+              {teamFirstNames(team).split(' & ').map(n => (
+                <p key={n} className="font-semibold text-[15px] leading-tight text-[#0F1F17] truncate">{n}</p>
+              ))}
             </div>
           )}
-          <div className="relative">
-            <Avatar className={cn('w-12 h-12 border-2', isLeader ? 'border-[#14532D]' : 'border-border')}>
+          <div className="relative flex-shrink-0">
+            <Avatar className={cn('w-11 h-11 border-2', isLeader ? 'border-[#14532D]' : 'border-border')}>
               <AvatarFallback className={cn('font-bold text-lg', isLeader ? 'bg-[#14532D] text-white' : 'bg-[#F0F2EC] text-[#5A6B61]')}>
                 {initials}
               </AvatarFallback>
@@ -214,8 +217,10 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
           </div>
           {align === 'left' && (
             <div className="min-w-0">
-              <p className="font-semibold text-[15px] text-[#0F1F17] truncate">{team.name}</p>
-              <p className="text-[12px] text-[#5A6B61] truncate">{teamFirstNames(team)}</p>
+              {/* One player per line: "Sam & Jack" doesn't fit beside the score on a phone. */}
+              {teamFirstNames(team).split(' & ').map(n => (
+                <p key={n} className="font-semibold text-[15px] leading-tight text-[#0F1F17] truncate">{n}</p>
+              ))}
             </div>
           )}
         </div>
@@ -247,9 +252,9 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-2">
             {renderTeamSide(teamA, 'left')}
-            <div className="flex flex-col items-center px-4">
+            <div className="flex flex-col items-center px-1 flex-shrink-0">
               <div className="font-extrabold text-[26px] leading-none tracking-[-0.02em] text-[#14532D]">
                 {isAllSquare
                   ? 'AS'

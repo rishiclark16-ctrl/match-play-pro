@@ -71,7 +71,8 @@ jobs:
         id: secrets
         run: |
           missing=""
-          for v in ASC_KEY_ID ASC_ISSUER_ID VITE_SUPABASE_PUBLISHABLE_KEY; do
+          # VITE_SUPABASE_PUBLISHABLE_KEY is optional: the public anon key is committed in .env.production.
+          for v in ASC_KEY_ID ASC_ISSUER_ID; do
             if [ -z "${!v}" ]; then missing="$missing $v"; fi
           done
           if [ -z "$ASC_KEY_P8" ] && [ -z "$ASC_KEY_P8_BASE64" ]; then missing="$missing ASC_KEY_P8"; fi
@@ -124,7 +125,16 @@ jobs:
 
       - name: Build web bundle
         if: steps.secrets.outputs.ready == 'true'
-        run: bun run build
+        run: |
+          # Vite lets an exported variable override .env.production even when it is
+          # empty, so drop unset secrets and let the committed production values apply.
+          for v in $(compgen -e | grep '^VITE_'); do
+            if [ -z "${!v}" ]; then unset "$v"; fi
+          done
+          bun run build
+          # Fail fast if the bundle was built without the Supabase key.
+          grep -rlq "puqgbsxabcyxrbwwoznn" dist/assets || { echo "::error::Supabase URL missing from the build"; exit 1; }
+          grep -rlq "eyJhbGciOi" dist/assets || { echo "::error::Supabase publishable key missing from the build"; exit 1; }
 
       - name: Cache CocoaPods
         if: steps.secrets.outputs.ready == 'true'
@@ -145,6 +155,14 @@ jobs:
         if: steps.secrets.outputs.ready == 'true'
         working-directory: ios/App
         run: pod install
+
+      - name: Placeholder for the gitignored Config.xcconfig
+        if: steps.secrets.outputs.ready == 'true'
+        working-directory: ios/App
+        # The project references App/Config.xcconfig as a base configuration, but it is
+        # gitignored (local secrets). REVENUECAT_API_KEY lives in the App target's build
+        # settings, so an empty file is enough here.
+        run: '[ -f App/Config.xcconfig ] || echo "// Generated on CI" > App/Config.xcconfig'
 
       - name: Build, sign and upload (fastlane ci_beta; submits for review when asked)
         if: steps.secrets.outputs.ready == 'true'

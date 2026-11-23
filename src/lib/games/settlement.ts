@@ -31,6 +31,8 @@ export function calculateSettlement(
   ninesResult?: NinesResult,
   defenderResult?: DefenderResult,
   sixesResult?: SixesResult,
+  /** Fourball (2v2) match payments, from fourballTransfers(). */
+  fourballPayments?: { from: string; to: string; amount: number }[],
 ): NetSettlement[] {
   // Build a ledger of who owes whom
   const ledger: Record<string, Record<string, number>> = {};
@@ -79,6 +81,10 @@ export function calculateSettlement(
   }
   
   // Process match play
+  for (const t of fourballPayments ?? []) {
+    if (ledger[t.from] && t.from !== t.to && t.to in ledger[t.from]) ledger[t.from][t.to] += t.amount;
+  }
+
   if (matchPlayWinnerId && matchPlayStakes && players.length === 2) {
     const loserId = players.find(p => p.id !== matchPlayWinnerId)?.id;
     if (loserId) {
