@@ -15,28 +15,25 @@ export function SocialFeedTab() {
   const selectedItem = items.find(i => i.roundId === selectedRoundId);
 
   return (
-    <div className="px-4 pt-4 pb-4 space-y-5">
-      {/* Season standings */}
+    <div className="px-5 pt-2 pb-6 space-y-[18px]">
+      {/* Season standings: the Forest hero */}
       <SeasonLeaderboard />
 
-      {/* Recent rounds section */}
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground mb-3 px-0.5">
-          Recent Rounds
-        </p>
+      <section>
+        <p className="text-[13px] font-semibold text-muted-foreground mb-2 px-1">Recent rounds</p>
 
         {loading ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <FeedItemSkeleton />
             <FeedItemSkeleton />
             <FeedItemSkeleton />
           </div>
         ) : error ? (
-          <div className="text-center py-10 bg-white rounded-2xl">
-            <p className="text-[13px] text-muted-foreground mb-3">{error}</p>
+          <div className="rounded-[20px] border border-border bg-card px-6 py-8 text-center">
+            <p className="text-[14px] text-muted-foreground mb-3">{error}</p>
             <button
               onClick={refetch}
-              className="text-[12px] font-bold text-foreground bg-muted px-4 py-2 rounded-xl"
+              className="h-11 rounded-[14px] bg-muted px-4 text-[14px] font-semibold text-primary"
             >
               Try again
             </button>
@@ -45,18 +42,18 @@ export function SocialFeedTab() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-12 px-6 bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+            className="rounded-[20px] border border-dashed border-border-strong px-6 py-8 text-center"
           >
-            <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
-              <Flag className="w-8 h-8 text-muted-foreground" />
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-[16px] bg-muted text-primary">
+              <Flag className="h-6 w-6" />
             </div>
-            <h3 className="text-[13px] font-bold text-foreground mb-1">No rounds yet</h3>
-            <p className="text-[12px] text-muted-foreground leading-relaxed max-w-[220px] mx-auto">
-              Completed rounds from you and your friends will show up here.
+            <h3 className="text-[16px] font-semibold text-foreground">No rounds yet</h3>
+            <p className="mx-auto mt-1 max-w-[250px] text-[13px] leading-relaxed text-muted-foreground">
+              Finished rounds from you and your friends show up here, with the winner and the money.
             </p>
           </motion.div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <AnimatePresence>
               {items.map((item, i) => (
                 <motion.div
@@ -75,7 +72,7 @@ export function SocialFeedTab() {
             </AnimatePresence>
           </div>
         )}
-      </div>
+      </section>
 
       <RoundDetailSheet
         roundId={selectedRoundId}

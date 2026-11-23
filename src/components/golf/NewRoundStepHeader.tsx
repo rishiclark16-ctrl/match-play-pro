@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, type LucideIcon } from 'lucide-react';
+import { type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { BackButton } from './setupUi';
 
 interface NewRoundStepHeaderProps<TStep extends string> {
   steps: TStep[];
@@ -12,8 +13,9 @@ interface NewRoundStepHeaderProps<TStep extends string> {
 }
 
 /**
- * Fixed step-progress header for the New Round flow.
- * Renders: back button, "Step N of M" caption, current step title, and a segmented progress bar.
+ * Fixed step-progress header for the New Round flow (Fairway Day).
+ * Back button, current step title with "Step N of M", and a segmented Forest progress bar.
+ * The step's big headline lives in the Forest hero card inside each step.
  */
 export function NewRoundStepHeader<TStep extends string>({
   steps,
@@ -24,44 +26,31 @@ export function NewRoundStepHeader<TStep extends string>({
   const currentStepIndex = steps.indexOf(step);
 
   return (
-    <header className="flex-shrink-0 relative z-10 px-6 pb-3 pt-safe-content border-b-2 border-foreground">
-      <div className="flex items-center gap-3">
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={onBack}
-          className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </motion.button>
-
-        <div className="flex-1">
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-            Step {currentStepIndex + 1} of {steps.length}
-          </p>
-          <h1 className="text-[22px] font-black tracking-[-0.04em] leading-tight text-foreground">
+    <header className="flex-shrink-0 relative z-10 bg-background px-5 pb-3 pt-safe-content">
+      <div className="flex items-center gap-3 min-h-[44px]">
+        <BackButton onClick={onBack} label={currentStepIndex > 0 ? 'Previous step' : 'Close'} />
+        <div className="flex-1 min-w-0">
+          <h1 className="text-[20px] font-extrabold tracking-[-0.02em] leading-tight text-foreground truncate">
             {stepConfig[step].title}
           </h1>
         </div>
+        <p className="text-[13px] font-semibold text-muted-foreground tabular-nums flex-shrink-0">
+          Step {currentStepIndex + 1} of {steps.length}
+        </p>
       </div>
 
-      {/* Progress Bar */}
-      <div className="flex gap-[3px] mt-2">
+      {/* Progress */}
+      <div className="flex gap-1.5 mt-3" aria-hidden>
         {steps.map((s, i) => (
-          <motion.div
-            key={s}
-            className={cn(
-              'h-[3px] flex-1 rounded-full',
-              i < currentStepIndex
-                ? 'bg-foreground'
-                : i === currentStepIndex
-                  ? 'bg-foreground/35'
-                  : 'bg-border'
-            )}
-            initial={i < currentStepIndex ? { scaleX: 0 } : false}
-            animate={i < currentStepIndex ? { scaleX: 1 } : {}}
-            style={{ transformOrigin: 'left' }}
-            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-          />
+          <div key={s} className="h-1 flex-1 rounded-full bg-border overflow-hidden">
+            <motion.div
+              className={cn('h-full rounded-full', i <= currentStepIndex ? 'bg-primary' : 'bg-transparent')}
+              initial={false}
+              animate={{ scaleX: i <= currentStepIndex ? 1 : 0 }}
+              style={{ transformOrigin: 'left' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            />
+          </div>
         ))}
       </div>
     </header>

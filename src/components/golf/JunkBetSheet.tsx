@@ -153,7 +153,7 @@ export function JunkBetSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={spring}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-[#F8F8F6] rounded-t-3xl pb-safe"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-[#FAFAF7] rounded-t-3xl pb-safe"
           >
             {/* Drag handle */}
             <div className="w-10 h-1 rounded-full bg-muted mx-auto mt-3 mb-4" />
@@ -162,7 +162,7 @@ export function JunkBetSheet({
             <div className="flex items-center justify-between px-6 pb-4">
               <div>
                 <h2 className="text-[20px] font-black tracking-[-0.04em] text-foreground">Any Junk?</h2>
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
                   Hole {currentHole} · Par {par}
                 </p>
               </div>
@@ -178,7 +178,7 @@ export function JunkBetSheet({
               {/* Logged bets for this hole */}
               {holeBets.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Logged</p>
+                  <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">Logged</p>
                   {holeBets.map(bet => {
                     const winner = players.find(p => p.id === bet.winnerId);
                     return (
@@ -188,7 +188,7 @@ export function JunkBetSheet({
                           <div>
                             <p className="text-[13px] font-bold text-foreground">{getPropBetLabel(bet.type)}</p>
                             {winner && (
-                              <p className="text-[11px] text-[#22C55E] font-bold">
+                              <p className="text-[11px] text-[#14532D] font-bold">
                                 {winner.name.split(' ')[0]} +${bet.stakes}
                               </p>
                             )}
@@ -196,9 +196,9 @@ export function JunkBetSheet({
                         </div>
                         <button
                           onClick={() => handleDelete(bet.id)}
-                          className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center"
+                          className="w-8 h-8 rounded-lg bg-[#FEF3F2] flex items-center justify-center"
                         >
-                          <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                          <Trash2 className="w-3.5 h-3.5 text-[#B42318]" />
                         </button>
                       </div>
                     );
@@ -208,7 +208,7 @@ export function JunkBetSheet({
 
               {/* Bet type selector / winner selector */}
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
+                <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground mb-2">
                   {pending ? 'Who won it?' : 'What happened?'}
                 </p>
 

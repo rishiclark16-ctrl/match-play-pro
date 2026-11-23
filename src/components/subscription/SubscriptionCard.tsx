@@ -29,30 +29,30 @@ export function SubscriptionCard({
       onClick={onSelect}
       disabled={disabled}
       className={cn(
-        'relative flex flex-col items-center p-4 rounded-2xl border-2 transition-all text-center bg-white',
+        'relative flex flex-col items-center p-4 rounded-[20px] transition-all text-center bg-card',
         selected
-          ? 'border-foreground shadow-[0_0_0_2px_#0A0A0A]'
-          : 'border-border',
+          ? 'border-2 border-primary'
+          : 'border border-border m-px',
         disabled && 'opacity-50 cursor-not-allowed'
       )}
     >
       {/* Badge */}
       {badge && (
-        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-[#F0EE3A] text-[#0A0A0A] text-[10px] font-black rounded-full px-2 py-0.5 whitespace-nowrap">
+        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gold text-gold-foreground text-[11px] font-bold rounded-full px-2 py-0.5 whitespace-nowrap">
           {badge}
         </span>
       )}
 
       {/* Selected indicator */}
       {selected && (
-        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-foreground flex items-center justify-center">
+        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
           <Check className="w-3 h-3 text-white" />
         </div>
       )}
 
       {/* Content */}
-      <span className="font-black text-[16px] tracking-[-0.02em] text-foreground mb-1">{title}</span>
-      <span className="font-black text-[22px] text-foreground">{price}</span>
+      <span className="font-semibold text-[14px] text-muted-foreground mb-1">{title}</span>
+      <span className="font-extrabold text-[24px] tracking-[-0.02em] text-foreground tabular-nums">{price}</span>
       <span className="text-[12px] text-muted-foreground">/{period}</span>
     </motion.button>
   );

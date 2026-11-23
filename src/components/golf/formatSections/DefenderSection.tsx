@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Lock, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -9,6 +9,12 @@ import {
   iconBoxClass,
   iconClass,
   springTransition,
+  gameDetailPanel,
+  stakeRow,
+  stakeCurrency,
+  stakeInput,
+  stakeSuffix,
+  ruleNote,
 } from '../formatStepStyles';
 import { ProLabel } from './ProLabel';
 
@@ -40,20 +46,19 @@ export function DefenderSection({
       className={cn(
         gameCardBase,
         defenderEnabled && allowed && gameCardSelected,
-        !allowed && 'opacity-60'
+        !allowed && 'opacity-70'
       )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {!allowed && <Lock className="w-4 h-4 text-muted-foreground" />}
           <div className={iconBoxClass(defenderEnabled && allowed, !allowed)}>
             <Shield className={iconClass(defenderEnabled && allowed, !allowed)} />
           </div>
           <div>
-            <p className="font-bold text-sm text-foreground flex items-center gap-2">
+            <p className="font-semibold text-[16px] text-foreground flex items-center gap-2">
               Defender{!allowed && <ProLabel />}
             </p>
-            <p className="text-[12px] text-muted-foreground mt-0.5">1 vs. field · rotating defender</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">1 vs. field · rotating defender</p>
           </div>
         </div>
         <Switch
@@ -69,20 +74,20 @@ export function DefenderSection({
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           transition={springTransition}
-          className="pt-3 mt-3 border-t border-border/50 space-y-3"
+          className={gameDetailPanel}
           onClick={e => e.stopPropagation()}
         >
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-muted-foreground">$</span>
+          <div className={stakeRow}>
+            <span className={stakeCurrency}>$</span>
             <Input
               type="number" placeholder="1" value={defenderStakes}
               onChange={e => onDefenderStakesChange(e.target.value)}
-              className="w-24 text-center font-mono bg-muted/50 rounded-xl border-0 py-2.5 text-sm"
+              className={stakeInput}
               min={1}
             />
-            <span className="text-sm text-muted-foreground">per point</span>
+            <span className={stakeSuffix}>per point</span>
           </div>
-          <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg font-mono">
+          <div className={ruleNote}>
             Defend: +3 win · +1 tie · Attackers: +1/+2 each
           </div>
         </motion.div>

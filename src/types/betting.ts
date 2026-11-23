@@ -74,6 +74,14 @@ export function getPropBetLabel(type: PropBet['type']): string {
   return template?.label || 'Custom Bet';
 }
 
+/**
+ * Penalty bets (e.g. snake): the player recorded on the bet is the one who PAYS everyone else.
+ * The stored field is still called `winnerId` for schema compatibility (Notion 09.2 M9).
+ */
+export function isPenaltyPropBet(type: PropBet['type']): boolean {
+  return PROP_BET_TEMPLATES.find(t => t.type === type)?.category === 'negative';
+}
+
 export function getPropBetIcon(type: PropBet['type']): string {
   const template = PROP_BET_TEMPLATES.find(t => t.type === type);
   return template?.icon || '🎲';

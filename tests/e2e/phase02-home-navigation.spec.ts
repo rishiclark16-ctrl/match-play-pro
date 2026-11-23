@@ -21,10 +21,10 @@ test.describe('Phase 2: Home & Navigation', () => {
   });
 
   // ─── 2.2 Stats row visible ─────────────────────────────────────────────────
-  test('2.2 — stats row shows Active / Watching / Rounds cards', async ({ page }) => {
-    await expect(page.getByText('Active')).toBeVisible();
-    await expect(page.getByText('Watching')).toBeVisible();
-    await expect(page.getByText('Rounds', { exact: true }).first()).toBeVisible();
+  test('2.2 — home opens on a hero card: the live round, or a welcome', async ({ page }) => {
+    // Fairway Day: the forest hero shows the user's live round when there is one,
+    // otherwise a greeting. (The shared e2e account may have a live round left over.)
+    await expect(page.getByText(/Good (morning|afternoon|evening)|Live now/).first()).toBeVisible();
   });
 
   // ─── 2.3 New Round CTA ─────────────────────────────────────────────────────
@@ -115,11 +115,8 @@ test.describe('Phase 2: Home & Navigation', () => {
   });
 
   // ─── 2.13 Empty state for new user ──────────────────────────────────────────────
-  test('2.13 — home shows zero counts for new user', async ({ page }) => {
-    // Our test user has no rounds, so counts should be 0
-    const statsCards = page.locator('.grid-cols-3 .rounded-2xl');
-    const firstCardNum = statsCards.first().locator('p.text-\\[28px\\]');
-    await expect(firstCardNum).toHaveText('0');
+  test('2.13 — home always offers a way to start a round', async ({ page }) => {
+    await expect(page.getByLabel('Start new round')).toBeVisible();
   });
 
   // ─── 2.14 Join modal close ──────────────────────────────────────────────────────

@@ -33,14 +33,14 @@ export function DashboardMoney({ settlements, players }: DashboardMoneyProps) {
 
   return (
     <div className="px-4 pb-6 space-y-4">
-      <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground mb-3">
+      <h3 className="text-[12px] font-bold tracking-[0.1em] text-muted-foreground mb-3">
         Money
       </h3>
 
       {/* Net positions bar chart */}
       <div className="bg-white rounded-2xl border border-border/40 shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
-          <DollarSign className="w-4 h-4 text-emerald-500" />
+          <DollarSign className="w-4 h-4 text-[#14532D]" />
           <span className="text-[13px] font-bold">Net Positions</span>
         </div>
 
@@ -54,7 +54,7 @@ export function DashboardMoney({ settlements, players }: DashboardMoneyProps) {
                   <span className="text-[12px] font-medium">{p.name}</span>
                   <span className={cn(
                     'text-[13px] font-bold',
-                    isPositive ? 'text-emerald-600' : 'text-red-500'
+                    isPositive ? 'text-[#14532D]' : 'text-[#B42318]'
                   )}>
                     {isPositive ? '+' : '-'}${Math.abs(p.net).toFixed(2)}
                   </span>
@@ -63,7 +63,7 @@ export function DashboardMoney({ settlements, players }: DashboardMoneyProps) {
                   <div
                     className={cn(
                       'h-full rounded-full transition-all',
-                      isPositive ? 'bg-emerald-400' : 'bg-red-400'
+                      isPositive ? 'bg-emerald-400' : 'bg-[#B42318]'
                     )}
                     style={{ width: `${Math.max(pct, 2)}%` }}
                   />
@@ -86,7 +86,7 @@ export function DashboardMoney({ settlements, players }: DashboardMoneyProps) {
               <span className="text-[12px] font-medium flex-1">{s.fromPlayerName}</span>
               <div className="flex items-center gap-2 mx-3">
                 <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-[13px] font-bold text-emerald-600">${s.amount.toFixed(2)}</span>
+                <span className="text-[13px] font-bold text-[#14532D]">${s.amount.toFixed(2)}</span>
                 <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
               </div>
               <span className="text-[12px] font-medium flex-1 text-right">{s.toPlayerName}</span>

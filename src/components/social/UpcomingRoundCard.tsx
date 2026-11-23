@@ -44,99 +44,107 @@ export function UpcomingRoundCard({ round, onPress, currentUserId }: UpcomingRou
     : false;
 
   const relative = teeTimeRelative(round.teeTime);
+  const d = round.teeTime ? new Date(round.teeTime) : null;
 
   return (
     <motion.button
       whileTap={{ scale: 0.985 }}
       onClick={onPress}
-      className="w-full text-left bg-white rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.07),0_0_0_1px_rgba(0,0,0,0.03)] border-l-[3px] border-l-emerald-500"
+      className="w-full text-left rounded-[20px] border border-border bg-card p-4"
     >
-      <div className="p-4">
-        {/* Tee time — hero element */}
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-            <span className="text-[15px] font-black tracking-[-0.02em] text-foreground">
-              {formatTeeTime(round.teeTime)}
-            </span>
-          </div>
-          {relative && (
-            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-md flex-shrink-0">
-              {relative}
-            </span>
+      <div className="flex items-start gap-3">
+        {/* Date block */}
+        <div className="flex h-[58px] w-[54px] flex-shrink-0 flex-col items-center justify-center rounded-[14px] bg-primary text-primary-foreground">
+          {d ? (
+            <>
+              <span className="text-[11px] font-semibold leading-none text-on-forest-muted">
+                {d.toLocaleDateString('en-US', { month: 'short' })}
+              </span>
+              <span className="mt-1 text-[22px] font-extrabold leading-none tabular-nums">{d.getDate()}</span>
+            </>
+          ) : (
+            <Calendar className="h-5 w-5" />
           )}
         </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[13px] font-semibold text-muted-foreground truncate">{formatTeeTime(round.teeTime)}</span>
+            {relative && (
+              <span className="flex-shrink-0 rounded-full bg-gold px-2.5 py-[3px] text-[12px] font-semibold text-gold-foreground">
+                {relative}
+              </span>
+            )}
+          </div>
+          <h3 className="mt-1 text-[17px] font-bold leading-tight tracking-[-0.02em] text-foreground">
+            {round.courseName}
+          </h3>
+        </div>
+      </div>
 
-        {/* Course name */}
-        <h3 className="text-[17px] font-black tracking-[-0.03em] text-foreground leading-tight mb-3 ml-6">
-          {round.courseName}
-        </h3>
+      {/* Player chips */}
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {shownNames.map((name, i) => {
+          const pid = round.participantIds[i];
+          const isClickable = !!pid && pid !== currentUserId;
+          const chipClass = cn(
+            'rounded-full px-2.5 py-1 text-[12px] font-semibold',
+            currentUserId && pid === currentUserId ? 'bg-gold text-gold-foreground' : 'bg-muted text-foreground'
+          );
 
-        {/* Player chips */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {shownNames.map((name, i) => {
-            const pid = round.participantIds[i];
-            const isClickable = !!pid && pid !== currentUserId;
-            const chipClass = cn(
-              'text-[11px] font-bold border px-2.5 py-1 rounded-lg',
-              currentUserId && pid === currentUserId
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-foreground'
-                : 'bg-[#F8F8F6] border-border/60 text-foreground'
-            );
-
-            if (isClickable) {
-              return (
-                <button
-                  key={pid}
-                  onClick={(e) => { e.stopPropagation(); navigate(`/profile/${pid}`); }}
-                  className={cn(chipClass, 'active:opacity-70 transition-opacity')}
-                >
-                  {name}
-                </button>
-              );
-            }
-
+          if (isClickable) {
             return (
-              <span key={pid ?? `name-${i}`} className={chipClass}>
+              <span
+                key={pid}
+                role="link"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); navigate(`/profile/${pid}`); }}
+                className={cn(chipClass, 'active:opacity-70 transition-opacity')}
+              >
                 {name}
               </span>
             );
-          })}
-          {overflowCount > 0 && (
-            <span className="text-[11px] font-bold bg-muted text-muted-foreground px-2.5 py-1 rounded-lg">
-              +{overflowCount}
+          }
+
+          return (
+            <span key={pid ?? `name-${i}`} className={chipClass}>
+              {name}
+            </span>
+          );
+        })}
+        {overflowCount > 0 && (
+          <span className="rounded-full bg-muted px-2.5 py-1 text-[12px] font-semibold text-muted-foreground">
+            +{overflowCount}
+          </span>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <Avatar className="h-6 w-6 rounded-full flex-shrink-0">
+            <AvatarImage src={round.creatorAvatar ?? undefined} />
+            <AvatarFallback className="rounded-full bg-muted text-[10px] font-bold text-primary">
+              {round.creatorName.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-[13px] text-muted-foreground truncate">
+            <span className="font-semibold text-foreground">{round.creatorName.split(' ')[0]}</span>
+            {' set it up'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {userInvolved && (
+            <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary">
+              <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+              You're in
             </span>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-2.5 border-t border-border/40">
-          <div className="flex items-center gap-2">
-            <Avatar className="w-5 h-5 rounded-full flex-shrink-0">
-              <AvatarImage src={round.creatorAvatar ?? undefined} />
-              <AvatarFallback className="rounded-full text-[8px] font-black bg-muted">
-                {round.creatorName.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-[11px] text-muted-foreground">
-              <span className="font-bold text-foreground">{round.creatorName.split(' ')[0]}</span>
-              {' created'}
+          {round.messageCount > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[12px] font-semibold text-muted-foreground">
+              <MessageCircle className="h-3.5 w-3.5" />
+              {round.messageCount}
             </span>
-          </div>
-          <div className="flex items-center gap-2">
-            {userInvolved && (
-              <div className="flex items-center gap-1 text-emerald-600">
-                <Check className="w-3 h-3" />
-                <span className="text-[10px] font-bold">You're in</span>
-              </div>
-            )}
-            {round.messageCount > 0 && (
-              <div className="flex items-center gap-1 bg-muted rounded-lg px-2 py-1">
-                <MessageCircle className="w-3 h-3 text-muted-foreground" />
-                <span className="text-[10px] font-black text-muted-foreground">{round.messageCount}</span>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </motion.button>

@@ -31,11 +31,11 @@ export function QuickAddFriends({
   if (friends.length === 0) {
     return (
       <div className="py-4">
-        <p className="label-sm mb-3">Quick Add Friends</p>
+        <p className="text-[13px] font-semibold text-muted-foreground mb-3">Quick add friends</p>
         <button
           type="button"
           onClick={onOpenFriends}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-border text-sm text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary-light transition-all w-full"
+          className="flex items-center gap-3 px-4 py-3 rounded-[14px] border border-dashed border-border-strong text-sm text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary-light transition-all w-full"
         >
           <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
             <Plus className="h-4 w-4" />
@@ -48,7 +48,7 @@ export function QuickAddFriends({
 
   return (
     <div className="py-4">
-      <p className="label-sm mb-3">Quick Add Friends</p>
+      <p className="text-[13px] font-semibold text-muted-foreground mb-3">Quick add friends</p>
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {availableFriends.slice(0, 6).map((friend) => (
           <button
@@ -84,7 +84,7 @@ export function QuickAddFriends({
         <button
           type="button"
           onClick={onOpenFriends}
-          className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border-2 border-dashed border-border min-w-[80px] hover:border-primary hover:bg-primary-light transition-all"
+          className="flex flex-col items-center justify-center gap-2 p-3 rounded-[14px] border border-dashed border-border-strong min-w-[80px] hover:border-primary hover:bg-primary-light transition-all"
         >
           <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
             <Users className="h-5 w-5 text-muted-foreground" />

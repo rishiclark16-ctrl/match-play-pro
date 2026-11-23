@@ -9,6 +9,15 @@ import {
   iconBoxClass,
   iconClass,
   springTransition,
+  gameDetailPanel,
+  stakeRow,
+  stakeCurrency,
+  stakeInput,
+  stakeSuffix,
+  teamBoxA,
+  teamBoxB,
+  teamLabelA,
+  teamLabelB,
 } from './formatStepStyles';
 
 interface PlayerRef {
@@ -61,8 +70,8 @@ export function MatchPlaySection({
             <Swords className={iconClass(matchPlay)} />
           </div>
           <div>
-            <p className="font-bold text-sm text-foreground">Match Play</p>
-            <p className="text-[12px] text-muted-foreground mt-0.5">Hole-by-hole competition</p>
+            <p className="font-semibold text-[16px] text-foreground">Match Play</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">Hole-by-hole competition</p>
           </div>
         </div>
         <Switch checked={matchPlay} onCheckedChange={onMatchPlayChange} onClick={e => e.stopPropagation()} />
@@ -74,39 +83,39 @@ export function MatchPlaySection({
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
           transition={springTransition}
-          className="pt-3 mt-3 border-t border-border/50 space-y-3"
+          className={gameDetailPanel}
           onClick={e => e.stopPropagation()}
         >
           {/* Format picker — show when 3-4 players */}
           {playerCount >= 3 && playerCount <= 4 && (
             <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Format</p>
+              <p className="text-[13px] font-semibold text-muted-foreground">Format</p>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => onMatchPlayFormatChange('singles')}
                   className={cn(
-                    'p-2.5 rounded-xl border text-center transition-colors',
+                    'p-3 min-h-[56px] rounded-[14px] border text-center transition-colors',
                     matchPlayFormat === 'singles'
-                      ? 'border-foreground bg-foreground text-background'
-                      : 'border-border bg-muted/50 text-foreground'
+                      ? 'border-primary bg-primary text-white'
+                      : 'border-transparent bg-muted text-foreground'
                   )}
                 >
-                  <p className="text-xs font-bold">Singles</p>
-                  <p className="text-[10px] text-inherit opacity-60 mt-0.5">1v1 head-to-head</p>
+                  <p className="text-[14px] font-bold">Singles</p>
+                  <p className="text-[12px] text-inherit opacity-75 mt-0.5">1v1 head-to-head</p>
                 </button>
                 <button
                   type="button"
                   onClick={() => onMatchPlayFormatChange('fourball')}
                   className={cn(
-                    'p-2.5 rounded-xl border text-center transition-colors',
+                    'p-3 min-h-[56px] rounded-[14px] border text-center transition-colors',
                     matchPlayFormat === 'fourball'
-                      ? 'border-foreground bg-foreground text-background'
-                      : 'border-border bg-muted/50 text-foreground'
+                      ? 'border-primary bg-primary text-white'
+                      : 'border-transparent bg-muted text-foreground'
                   )}
                 >
-                  <p className="text-xs font-bold">Fourball</p>
-                  <p className="text-[10px] text-inherit opacity-60 mt-0.5">Best ball per team</p>
+                  <p className="text-[14px] font-bold">Fourball</p>
+                  <p className="text-[12px] text-inherit opacity-75 mt-0.5">Best ball per team</p>
                 </button>
               </div>
             </div>
@@ -115,10 +124,10 @@ export function MatchPlaySection({
           {/* Team assignment — fourball with 3-4 players */}
           {matchPlayFormat === 'fourball' && playerCount >= 3 && (
             <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Teams</p>
+              <p className="text-[13px] font-semibold text-muted-foreground">Teams · tap to switch</p>
               <div className="grid grid-cols-2 gap-2">
-                <div className="p-3 rounded-xl bg-[#22C55E]/10 border border-[#22C55E]/30 space-y-1.5">
-                  <p className="text-[10px] font-semibold text-[#22C55E] uppercase tracking-wide">Team A</p>
+                <div className={cn(teamBoxA, 'space-y-1')}>
+                  <p className={teamLabelA}>Team A</p>
                   {validPlayers.map(p => {
                     const isOnA = matchPlayTeamA.includes(p.id);
                     const isOnB = matchPlayTeamB.includes(p.id);
@@ -135,8 +144,8 @@ export function MatchPlaySection({
                           }
                         }}
                         className={cn(
-                          'w-full text-left text-sm font-medium px-2 py-1 rounded-lg transition-colors',
-                          isOnA ? 'bg-[#22C55E]/20 text-foreground' : 'text-muted-foreground'
+                          'w-full text-left text-[14px] font-semibold px-2.5 min-h-[40px] rounded-[10px] transition-colors',
+                          isOnA ? 'bg-primary text-white' : 'text-muted-foreground'
                         )}
                       >
                         {p.name.split(' ')[0]}
@@ -144,8 +153,8 @@ export function MatchPlaySection({
                     );
                   })}
                 </div>
-                <div className="p-3 rounded-xl bg-foreground/5 border border-foreground/20 space-y-1.5">
-                  <p className="text-[10px] font-semibold text-foreground/60 uppercase tracking-wide">Team B</p>
+                <div className={cn(teamBoxB, 'space-y-1')}>
+                  <p className={teamLabelB}>Team B</p>
                   {validPlayers.map(p => {
                     const isOnA = matchPlayTeamA.includes(p.id);
                     const isOnB = matchPlayTeamB.includes(p.id);
@@ -162,8 +171,8 @@ export function MatchPlaySection({
                           }
                         }}
                         className={cn(
-                          'w-full text-left text-sm font-medium px-2 py-1 rounded-lg transition-colors',
-                          isOnB ? 'bg-foreground/10 text-foreground' : 'text-muted-foreground'
+                          'w-full text-left text-[14px] font-semibold px-2.5 min-h-[40px] rounded-[10px] transition-colors',
+                          isOnB ? 'bg-card text-foreground border border-border' : 'text-muted-foreground'
                         )}
                       >
                         {p.name.split(' ')[0]}
@@ -175,17 +184,17 @@ export function MatchPlaySection({
             </div>
           )}
 
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-muted-foreground">$</span>
+          <div className={stakeRow}>
+            <span className={stakeCurrency}>$</span>
             <Input
               type="number"
               placeholder="0"
               value={stakes}
               onChange={e => onStakesChange(e.target.value)}
-              className="w-24 text-center font-mono bg-muted/50 rounded-xl border-0 py-2.5 text-sm"
+              className={stakeInput}
               min={0}
             />
-            <span className="text-sm text-muted-foreground">per match</span>
+            <span className={stakeSuffix}>per match</span>
           </div>
         </motion.div>
       )}

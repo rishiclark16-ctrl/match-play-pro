@@ -59,23 +59,23 @@ export function TeeSelector({ isOpen, courseDetails, onSelectTee, onClose }: Tee
       transition={{ delay: index * 0.04 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => onSelectTee(tee.tee_name, gender)}
-      className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-4 py-3.5 flex items-center gap-3 mb-2 w-full text-left"
+      className="bg-card rounded-[20px] border border-border min-h-[68px] px-4 py-3 flex items-center gap-3 mb-2 w-full text-left"
     >
-      {/* Tee color dot */}
-      <div className={cn('w-3 h-3 rounded-full flex-shrink-0', getTeeDotColor(tee.tee_name))} />
+      <div className={cn('w-4 h-4 rounded-full flex-shrink-0 ring-2 ring-white shadow-[0_0_0_1px_#E7E9E3]', getTeeDotColor(tee.tee_name))} />
 
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-sm text-foreground">{tee.tee_name}</p>
-        <p className="font-mono text-sm text-muted-foreground">
-          {tee.total_yards.toLocaleString()} yds • Par {tee.par_total}
+        <p className="font-semibold text-[16px] text-foreground">{tee.tee_name}</p>
+        <p className="text-[13px] text-muted-foreground tabular-nums">
+          {tee.total_yards.toLocaleString()} yds · Par {tee.par_total}
         </p>
       </div>
 
       <div className="text-right flex-shrink-0">
-        <p className="text-sm font-bold text-foreground">{tee.course_rating} / {tee.slope_rating}</p>
+        <p className="text-[16px] font-extrabold tracking-[-0.01em] text-foreground tabular-nums">{tee.course_rating} / {tee.slope_rating}</p>
+        <p className="text-[12px] text-muted-foreground">rating / slope</p>
       </div>
 
-      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+      <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
     </motion.button>
   );
 
@@ -86,7 +86,7 @@ export function TeeSelector({ isOpen, courseDetails, onSelectTee, onClose }: Tee
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center"
+          className="fixed inset-0 z-50 bg-[#0F1F17]/50 flex items-end sm:items-center justify-center"
           onClick={onClose}
         >
           <motion.div
@@ -95,34 +95,35 @@ export function TeeSelector({ isOpen, courseDetails, onSelectTee, onClose }: Tee
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#F8F8F6] rounded-t-3xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-2xl"
+            className="bg-background rounded-t-[28px] w-full max-w-md max-h-[82vh] overflow-hidden"
           >
             {/* Handle */}
-            <div className="w-10 h-1 bg-muted-foreground/25 rounded-full mx-auto mt-3 mb-1" />
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mt-3 mb-1" />
 
             {/* Header */}
-            <div className="px-5 py-4 border-b border-border/50 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-black tracking-[-0.03em]">Select Tees</h3>
-                <p className="text-sm text-muted-foreground">{courseDetails.course_name}</p>
+            <div className="px-5 pt-3 pb-4 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="text-[24px] font-extrabold tracking-[-0.02em] leading-tight text-foreground">Choose your tees</h3>
+                <p className="text-[14px] text-muted-foreground truncate">{courseDetails.course_name}</p>
               </div>
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
-                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center"
+                aria-label="Close"
+                className="w-11 h-11 rounded-[14px] bg-muted flex items-center justify-center flex-shrink-0"
               >
                 <X className="w-4 h-4" />
               </motion.button>
             </div>
 
             {/* Tee Options */}
-            <div className="px-5 py-4 overflow-y-auto max-h-[60vh]">
+            <div className="px-5 pb-4 overflow-y-auto max-h-[60vh]">
               {/* Male Tees */}
               {maleTees.length > 0 && (
                 <div className="mb-2">
                   {hasBothGenders && (
-                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
-                      Men's Tees
+                    <p className="text-[13px] font-semibold text-muted-foreground mb-2 px-1">
+                      Men's tees
                     </p>
                   )}
                   {maleTees.map((tee, index) => renderTeeOption(tee, 'male', index))}
@@ -133,8 +134,8 @@ export function TeeSelector({ isOpen, courseDetails, onSelectTee, onClose }: Tee
               {femaleTees.length > 0 && (
                 <div className="mb-2">
                   {hasBothGenders && (
-                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
-                      Women's Tees
+                    <p className="text-[13px] font-semibold text-muted-foreground mb-2 mt-2 px-1">
+                      Women's tees
                     </p>
                   )}
                   {femaleTees.map((tee, index) => renderTeeOption(tee, 'female', index))}
@@ -149,12 +150,7 @@ export function TeeSelector({ isOpen, courseDetails, onSelectTee, onClose }: Tee
               )}
             </div>
 
-            {/* Rating Legend */}
-            <div className="px-5 py-4 border-t border-border/50">
-              <p className="text-xs text-muted-foreground text-center font-mono">
-                Course Rating / Slope shown on the right
-              </p>
-            </div>
+            <div className="h-[max(1rem,env(safe-area-inset-bottom))]" />
           </motion.div>
         </motion.div>
       )}

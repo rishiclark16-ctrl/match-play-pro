@@ -161,11 +161,11 @@ export function AvatarUpload({
           type="button"
           onClick={handleClick}
           disabled={isUploading}
-          className="relative group focus:outline-none rounded-2xl"
+          className="relative group rounded-[20px] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
         >
-          <Avatar className={cn(sizeClasses[size], 'shadow-lg rounded-2xl')}>
-            <AvatarImage src={displayUrl || undefined} alt={fullName || 'Profile'} className="rounded-2xl object-cover" />
-            <AvatarFallback className="text-xl font-semibold bg-primary text-primary-foreground rounded-2xl">
+          <Avatar className={cn(sizeClasses[size], 'rounded-[20px]')}>
+            <AvatarImage src={displayUrl || undefined} alt={fullName || 'Profile'} className="rounded-[20px] object-cover" />
+            <AvatarFallback className="text-[26px] font-extrabold tracking-[-0.02em] bg-white/15 text-white rounded-[20px]">
               {getInitials(fullName)}
             </AvatarFallback>
           </Avatar>
@@ -173,7 +173,7 @@ export function AvatarUpload({
           {/* Overlay */}
           <div
             className={cn(
-              'absolute inset-0 rounded-2xl flex items-center justify-center transition-all',
+              'absolute inset-0 rounded-[20px] flex items-center justify-center transition-all',
               'bg-black/0 group-hover:bg-black/40',
               isUploading && 'bg-black/40'
             )}
@@ -202,7 +202,7 @@ export function AvatarUpload({
         {/* Camera badge */}
         <div
           className={cn(
-            'absolute bottom-0 right-0 rounded-full bg-primary text-primary-foreground p-1.5 shadow-md',
+            'absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-ink text-white ring-2 ring-white pointer-events-none',
             'flex items-center justify-center'
           )}
         >
@@ -225,7 +225,7 @@ export function AvatarUpload({
             <p className="text-white font-bold text-sm">Move and Scale</p>
             <button
               onClick={handleCropSave}
-              className="flex items-center gap-1.5 text-[#F0EE3A] active:text-[#F0EE3A]/50 text-sm font-bold py-2 px-1"
+              className="flex items-center gap-1.5 text-[#BEF264] active:text-[#BEF264]/50 text-sm font-bold py-2 px-1"
             >
               <Check className="w-5 h-5" />
               Choose

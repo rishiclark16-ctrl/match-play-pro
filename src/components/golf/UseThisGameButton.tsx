@@ -15,12 +15,12 @@ export function UseThisGameButton({ onUse, isPro, onPaywall }: UseThisGameButton
         e.stopPropagation();
         if (isPro) { onUse(); } else { onPaywall(); }
       }}
-      className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#F0EE3A] text-[#0A0A0A] text-[12px] font-black mt-2"
+      className="w-full h-11 flex items-center justify-center gap-1.5 rounded-[14px] bg-gold text-primary text-[14px] font-bold mt-3"
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
-      {!isPro && <Crown className="w-3 h-3" />}
-      <Sparkles className="w-3 h-3" />
-      <span>Use This Game</span>
+      {!isPro && <Crown className="w-4 h-4" />}
+      <Sparkles className="w-4 h-4" />
+      <span>Use this game</span>
     </motion.button>
   );
 }

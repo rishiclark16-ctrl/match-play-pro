@@ -17,11 +17,11 @@ export function PropBetsSection({
       <div className="flex items-center justify-between mb-0">
         <div className="flex items-center gap-2">
           <LiveDot />
-          <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-            Side Bets
+          <span className="text-[15px] font-semibold text-[#0F1F17]">
+            Side bets
           </span>
         </div>
-        <span className="text-[10px] text-slate-400">{propBetsSummary.totalBets} won</span>
+        <span className="text-[12px] text-[#5A6B61]">{propBetsSummary.totalBets} won</span>
       </div>
       <div className="space-y-1.5">
         {players.map(player => {
@@ -30,10 +30,10 @@ export function PropBetsSection({
           return (
             <div
               key={player.id}
-              className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50"
+              className="flex items-center justify-between px-3 py-2 rounded-[14px] bg-[#FAFAF7]"
             >
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-[#0A0A0A]">
+                <span className="text-sm font-medium text-[#0F1F17]">
                   {player.name?.split(' ')[0] ?? player.name}
                 </span>
                 <div className="flex gap-0.5">
@@ -43,11 +43,11 @@ export function PropBetsSection({
                     </span>
                   ))}
                   {stats.types.length > 4 && (
-                    <span className="text-[10px] text-slate-400">+{stats.types.length - 4}</span>
+                    <span className="text-[12px] text-[#5A6B61]">+{stats.types.length - 4}</span>
                   )}
                 </div>
               </div>
-              <span className="text-sm font-bold text-[#22C55E]">+${stats.earnings}</span>
+              <span className="text-sm font-bold text-[#14532D]">+${stats.earnings}</span>
             </div>
           );
         })}

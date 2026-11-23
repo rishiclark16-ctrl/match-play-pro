@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { isSoloRound } from '@/lib/soloRound';
-import { ArrowLeft, RefreshCw, Trophy, Target, TrendingUp, TrendingDown, Minus, Medal, Award, Sparkles } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Target, Sparkles } from 'lucide-react';
 import { useRounds } from '@/hooks/useRounds';
 import { useSupabaseRound } from '@/hooks/useSupabaseRound';
-import { formatRelativeToPar, getScoreColor, PlayerWithScores } from '@/types/golf';
+import { PlayerWithScores } from '@/types/golf';
 import {
   calculatePlayingHandicap,
   getStrokesPerHole,
@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ConnectionStatus } from '@/components/golf/ConnectionStatus';
 import { hapticLight } from '@/lib/haptics';
+import { LeaderHeroCard, StandingRow, RoundMixCard } from '@/components/golf/scorecard/LeaderboardParts';
 
 export default function Leaderboard() {
   const { id } = useParams<{ id: string }>();
@@ -227,207 +228,54 @@ export default function Leaderboard() {
 
   if (!round) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-8 text-center mx-6">
-          <h2 className="text-[22px] font-black tracking-[-0.04em] mb-4">Round not found</h2>
+      <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center">
+        <div className="bg-white rounded-[20px] border border-[#E7E9E3] p-8 text-center mx-5">
+          <h2 className="text-[26px] font-extrabold tracking-[-0.02em] text-[#0F1F17] mb-4">Round not found</h2>
           <Button
             onClick={() => navigate('/')}
-            className="bg-foreground text-background rounded-2xl font-bold"
+            className="bg-[#0F1F17] text-white rounded-[20px] font-bold h-14 px-8 text-base"
           >
-            Go Home
+            Go home
           </Button>
         </div>
       </div>
     );
   }
 
-  const getPositionBadge = (rank: number) => {
-    if (rank === 0) {
-      return (
-        <div className="w-9 h-9 rounded-xl bg-[#F0EE3A] flex items-center justify-center">
-          <Trophy className="w-4 h-4 text-[#0A0A0A]" />
-        </div>
-      );
-    }
-    if (rank === 1) {
-      return (
-        <div className="w-9 h-9 rounded-xl bg-[#E5E7EB] flex items-center justify-center">
-          <Medal className="w-4 h-4 text-[#374151]" />
-        </div>
-      );
-    }
-    if (rank === 2) {
-      return (
-        <div className="w-9 h-9 rounded-xl bg-[#FED7AA] flex items-center justify-center">
-          <Award className="w-4 h-4 text-[#92400E]" />
-        </div>
-      );
-    }
-    return (
-      <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
-        <span className="text-sm font-black text-muted-foreground">{rank + 1}</span>
-      </div>
-    );
+  const isNet = viewMode === 'net' && hasHandicaps;
+  const relOf = (p: PlayerWithScores) => (isNet ? (p.netRelativeToPar ?? p.totalRelativeToPar) : p.totalRelativeToPar);
+  const scoreOf = (p: PlayerWithScores) => (isNet ? (p.totalNetStrokes ?? p.totalStrokes) : p.totalStrokes);
+  const started = sortedPlayers.filter(p => p.holesPlayed > 0);
+  const leaders = started.length > 0 ? started.filter(p => relOf(p) === relOf(started[0])) : [];
+  const positionOf = (p: PlayerWithScores) => {
+    if (p.holesPlayed === 0) return '–';
+    const first = started.findIndex(q => relOf(q) === relOf(p));
+    const tied = started.filter(q => relOf(q) === relOf(p)).length > 1;
+    return `${tied ? 'T' : ''}${first + 1}`;
   };
-
-  const getScoreTrend = (relativeToPar: number) => {
-    if (relativeToPar < 0) {
-      return <TrendingDown className="w-4 h-4 text-[#22C55E]" />;
-    }
-    if (relativeToPar > 0) {
-      return <TrendingUp className="w-4 h-4 text-[#EF4444]" />;
-    }
-    return <Minus className="w-4 h-4 text-muted-foreground" />;
-  };
-
-  const getPlayerCard = (player: PlayerWithScores, rank: number) => {
-    const displayScore = viewMode === 'net' && hasHandicaps
-      ? (player.totalNetStrokes ?? player.totalStrokes)
-      : player.totalStrokes;
-    const parForHolesPlayed = player.scores.reduce((sum, s) => {
-      const hole = round.holeInfo.find(h => h.number === s.holeNumber);
-      return sum + (hole?.par || 4);
-    }, 0);
-    const relativeToPar = viewMode === 'net' && hasHandicaps
-      ? (player.netRelativeToPar ?? player.totalRelativeToPar)
-      : player.totalRelativeToPar;
-
-    const isLeader = rank === 0 && player.holesPlayed > 0;
-
-    return (
-      <motion.div
-        key={player.id}
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: rank * 0.06, type: 'spring', stiffness: 300, damping: 28 }}
-        className={cn(
-          "bg-white rounded-2xl px-4 py-3.5 mb-2",
-          isLeader
-            ? "shadow-[0_0_0_2px_rgba(34,197,94,0.35),0_4px_16px_rgba(34,197,94,0.1)]"
-            : "shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]"
-        )}
-      >
-        <div className="flex items-center gap-3">
-          {/* Position Badge */}
-          {getPositionBadge(rank)}
-
-          {/* Player Info */}
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-sm text-foreground truncate">{player.name}</p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[11px] font-medium text-muted-foreground">
-                {player.holesPlayed > 0 ? `Thru ${player.holesPlayed}` : 'Not started'}
-              </span>
-              {player.playingHandicap !== undefined && viewMode === 'net' && (
-                <span className="text-[10px] font-bold text-muted-foreground">
-                  · NET
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Score Display */}
-          <div className="flex items-center gap-2">
-            {player.holesPlayed > 0 && getScoreTrend(relativeToPar)}
-            <div className="text-right">
-              <p className={cn(
-                "font-black text-xl tabular-nums",
-                relativeToPar < 0 && "text-[#22C55E]",
-                relativeToPar > 0 && "text-[#EF4444]",
-                relativeToPar === 0 && "text-foreground"
-              )}>
-                {player.holesPlayed > 0 ? displayScore : '–'}
-              </p>
-              {player.holesPlayed > 0 && (
-                <p className={cn(
-                  "text-[10px] font-bold tabular-nums",
-                  relativeToPar < 0 && "text-[#22C55E]",
-                  relativeToPar > 0 && "text-[#EF4444]",
-                  relativeToPar === 0 && "text-muted-foreground"
-                )}>
-                  {formatRelativeToPar(relativeToPar)}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Leader stats grid */}
-        {isLeader && player.scores.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 mx-0 mt-2 mb-0 -mx-4 -mb-3.5 rounded-t-none">
-            <div className="grid grid-cols-4 gap-0 divide-x divide-border">
-              {/* Birdies */}
-              <div className="flex flex-col items-center py-1">
-                <TrendingDown className="w-3.5 h-3.5 text-[#22C55E]" />
-                <span className="font-black text-lg text-[#22C55E]">
-                  {player.scores.filter(s => {
-                    const hole = round.holeInfo.find(h => h.number === s.holeNumber);
-                    return hole && s.strokes < hole.par;
-                  }).length}
-                </span>
-                <span className="text-[9px] font-bold uppercase tracking-[0.06em] text-muted-foreground mt-0.5">Birdies</span>
-              </div>
-              {/* Pars */}
-              <div className="flex flex-col items-center py-1">
-                <Minus className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="font-black text-lg text-foreground">
-                  {player.scores.filter(s => {
-                    const hole = round.holeInfo.find(h => h.number === s.holeNumber);
-                    return hole && s.strokes === hole.par;
-                  }).length}
-                </span>
-                <span className="text-[9px] font-bold uppercase tracking-[0.06em] text-muted-foreground mt-0.5">Pars</span>
-              </div>
-              {/* Bogeys */}
-              <div className="flex flex-col items-center py-1">
-                <TrendingUp className="w-3.5 h-3.5 text-[#D97706]" />
-                <span className="font-black text-lg text-[#D97706]">
-                  {player.scores.filter(s => {
-                    const hole = round.holeInfo.find(h => h.number === s.holeNumber);
-                    return hole && s.strokes === hole.par + 1;
-                  }).length}
-                </span>
-                <span className="text-[9px] font-bold uppercase tracking-[0.06em] text-muted-foreground mt-0.5">Bogeys</span>
-              </div>
-              {/* Doubles */}
-              <div className="flex flex-col items-center py-1">
-                <TrendingUp className="w-3.5 h-3.5 text-[#EF4444]" />
-                <span className="font-black text-lg text-[#EF4444]">
-                  {player.scores.filter(s => {
-                    const hole = round.holeInfo.find(h => h.number === s.holeNumber);
-                    return hole && s.strokes >= hole.par + 2;
-                  }).length}
-                </span>
-                <span className="text-[9px] font-bold uppercase tracking-[0.06em] text-muted-foreground mt-0.5">Doubles</span>
-              </div>
-            </div>
-          </div>
-        )}
-      </motion.div>
-    );
-  };
+  const iconButton = 'w-11 h-11 rounded-[14px] bg-white border border-[#E7E9E3] flex items-center justify-center shrink-0 touch-manipulation active:bg-[#F0F2EC]';
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background">
+    <div className="h-screen flex flex-col overflow-hidden bg-[#FAFAF7]">
       {/* Fixed Header */}
-      <header className="flex-shrink-0 px-6 pb-3 pt-safe-content border-b-2 border-foreground">
-        <div className="flex items-center gap-3">
+      <header className="flex-shrink-0 px-3.5 pb-2 pt-safe-content">
+        <div className="flex items-center gap-2">
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => {
               hapticLight();
               navigate(`/round/${round.id}`);
             }}
-            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+            className={iconButton}
             aria-label="Back to scorecard"
           >
-            <ArrowLeft className="w-4 h-4 text-foreground" />
+            <ArrowLeft className="w-5 h-5 text-[#0F1F17]" />
           </motion.button>
 
-          <div className="flex-1 min-w-0">
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground truncate">{round.courseName}</p>
+          <div className="flex-1 min-w-0 pl-1">
+            <p className="text-[12px] font-medium text-[#5A6B61] truncate leading-tight">{round.courseName}</p>
             <div className="flex items-center gap-2">
-              <h1 className="text-[22px] font-black tracking-[-0.04em] text-foreground leading-tight">Leaderboard</h1>
+              <h1 className="text-[26px] font-extrabold tracking-[-0.02em] text-[#0F1F17] leading-tight">Leaderboard</h1>
               <ConnectionStatus isOnline={isOnline} />
             </div>
           </div>
@@ -435,58 +283,77 @@ export default function Leaderboard() {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={handleRefresh}
-            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+            className={iconButton}
             aria-label="Refresh"
           >
-            <RefreshCw className={cn("w-4 h-4 text-foreground", isRefreshing && "animate-spin")} />
+            <RefreshCw className={cn('w-5 h-5 text-[#0F1F17]', isRefreshing && 'animate-spin')} />
           </motion.button>
         </div>
       </header>
 
-      {/* View Mode Toggle */}
-      {hasHandicaps && (
-        <div className="relative bg-muted rounded-xl p-1 flex gap-1 mx-6 mb-4 mt-3">
-          {(['gross', 'net'] as const).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => {
-                hapticLight();
-                setViewMode(mode);
-              }}
-              className="relative flex-1 py-2 text-sm text-center z-10"
-            >
-              {viewMode === mode && (
-                <motion.div
-                  layoutId="leaderboard-mode"
-                  className="absolute inset-0 bg-white rounded-lg shadow-sm"
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                />
-              )}
-              <span className={cn(
-                "relative z-10 font-bold",
-                viewMode === mode ? "text-foreground" : "text-muted-foreground font-medium"
-              )}>
-                {mode.charAt(0).toUpperCase() + mode.slice(1)}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Scrollable Content */}
-      <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-6 pb-nav" style={{ WebkitOverflowScrolling: 'touch' }}>
-        {/* Loading state */}
+      <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-3.5 pb-nav" style={{ WebkitOverflowScrolling: 'touch' }}>
         {supabaseLoading && playersWithScores.length === 0 ? (
           <div className="space-y-2 pt-2">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-muted/50 rounded-2xl h-14 animate-pulse mb-2" />
+              <div key={i} className="bg-[#F0F2EC] rounded-[20px] h-16 animate-pulse" />
             ))}
           </div>
         ) : (
-          <>
+          <div className="space-y-2 pt-1 pb-4">
+            {leaders.length > 0 && (
+              <LeaderHeroCard
+                leaders={leaders}
+                relativeToPar={relOf(leaders[0])}
+                displayScore={scoreOf(leaders[0])}
+                holeInfo={round.holeInfo}
+                isNet={isNet}
+              />
+            )}
+
+            {/* Gross / net toggle: muted pill, active = Forest */}
+            {hasHandicaps && (
+              <div className="bg-[#F0F2EC] rounded-full p-1 flex gap-1 !mt-3.5" role="tablist" aria-label="Scoring">
+                {(['gross', 'net'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    role="tab"
+                    aria-selected={viewMode === mode}
+                    onClick={() => {
+                      hapticLight();
+                      setViewMode(mode);
+                    }}
+                    className="relative flex-1 h-11 text-[15px] text-center"
+                  >
+                    {viewMode === mode && (
+                      <motion.div
+                        layoutId="leaderboard-mode"
+                        className="absolute inset-0 bg-[#14532D] rounded-full"
+                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    <span className={cn('relative z-10 font-semibold', viewMode === mode ? 'text-white' : 'text-[#5A6B61]')}>
+                      {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Rankings */}
-            <div className="pt-2">
-              {sortedPlayers.map((player, index) => getPlayerCard(player, index))}
+            <div className="space-y-2 !mt-3.5">
+              {sortedPlayers.map((player, index) => (
+                <StandingRow
+                  key={player.id}
+                  player={player}
+                  position={positionOf(player)}
+                  isLeader={leaders.some(l => l.id === player.id)}
+                  relativeToPar={relOf(player)}
+                  displayScore={scoreOf(player)}
+                  isNet={isNet}
+                  index={index}
+                />
+              ))}
             </div>
 
             {/* Match Play Status */}
@@ -495,17 +362,17 @@ export default function Leaderboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 mb-2"
+                className="bg-white rounded-[20px] border border-[#E7E9E3] p-4 !mt-3.5"
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <Target className="w-4 h-4 text-foreground" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">Match Play</p>
+                  <Target className="w-4 h-4 text-[#5A6B61]" />
+                  <p className="text-[12px] font-semibold text-[#5A6B61]">Match play</p>
                 </div>
-                <p className="font-black text-lg text-foreground">
+                <p className="font-extrabold text-[22px] tracking-[-0.02em] text-[#14532D]">
                   {matchPlayStatus.status}
                 </p>
                 {matchPlayStatus.holesPlayed > 0 && (
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-[13px] text-[#5A6B61] mt-0.5">
                     Thru {matchPlayStatus.holesPlayed} · {matchPlayStatus.holesRemaining} to play
                   </p>
                 )}
@@ -514,36 +381,9 @@ export default function Leaderboard() {
 
             {/* Round Statistics */}
             {stats && stats.total > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 mx-0 mt-2 mb-2"
-              >
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-3">Round Statistics</p>
-                <div className="grid grid-cols-4 gap-0 divide-x divide-border">
-                  <div className="flex flex-col items-center py-1">
-                    <TrendingDown className="w-3.5 h-3.5 text-[#22C55E]" />
-                    <span className="font-black text-lg text-[#22C55E]">{stats.birdiesOrBetter}</span>
-                    <span className="text-[9px] font-bold uppercase tracking-[0.06em] text-muted-foreground mt-0.5">Birdies</span>
-                  </div>
-                  <div className="flex flex-col items-center py-1">
-                    <Minus className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="font-black text-lg text-foreground">{stats.pars}</span>
-                    <span className="text-[9px] font-bold uppercase tracking-[0.06em] text-muted-foreground mt-0.5">Pars</span>
-                  </div>
-                  <div className="flex flex-col items-center py-1">
-                    <TrendingUp className="w-3.5 h-3.5 text-[#D97706]" />
-                    <span className="font-black text-lg text-[#D97706]">{stats.bogeys}</span>
-                    <span className="text-[9px] font-bold uppercase tracking-[0.06em] text-muted-foreground mt-0.5">Bogeys</span>
-                  </div>
-                  <div className="flex flex-col items-center py-1">
-                    <TrendingUp className="w-3.5 h-3.5 text-[#EF4444]" />
-                    <span className="font-black text-lg text-[#EF4444]">{stats.doubles}</span>
-                    <span className="text-[9px] font-bold uppercase tracking-[0.06em] text-muted-foreground mt-0.5">Doubles</span>
-                  </div>
-                </div>
-              </motion.div>
+              <div className="!mt-3.5">
+                <RoundMixCard birdies={stats.birdiesOrBetter} pars={stats.pars} bogeys={stats.bogeys} doubles={stats.doubles} />
+              </div>
             )}
 
             {/* Custom House Game Rules */}
@@ -556,28 +396,28 @@ export default function Leaderboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.45 }}
-                  className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden mt-2 mb-2"
+                  className="bg-white rounded-[20px] border border-[#E7E9E3] overflow-hidden !mt-3.5"
                 >
-                  <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
-                    <div className="w-5 h-5 rounded-md bg-[#F0EE3A] flex items-center justify-center">
-                      <Sparkles className="w-3 h-3 text-[#0A0A0A]" />
+                  <div className="flex items-center gap-2 px-4 py-3 border-b border-[#E7E9E3]">
+                    <div className="w-6 h-6 rounded-[8px] bg-[#ECFCCB] flex items-center justify-center">
+                      <Sparkles className="w-3.5 h-3.5 text-[#14532D]" />
                     </div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground">Custom Rules</p>
-                    <span className="ml-auto text-[10px] font-bold text-muted-foreground">Settle manually</span>
+                    <p className="text-[15px] font-semibold text-[#0F1F17]">Custom rules</p>
+                    <span className="ml-auto text-[12px] font-medium text-[#5A6B61]">Settle manually</span>
                   </div>
                   {customRules.map((rule) => {
                     const label = rule.label ?? rule.id.replace('custom_', '').replace(/_/g, ' ');
                     const desc = rule.description ?? '';
                     const val = rule.value;
                     return (
-                      <div key={rule.id} className="px-4 py-3 border-b border-border/10 last:border-b-0">
+                      <div key={rule.id} className="px-4 py-3 border-b border-[#E7E9E3] last:border-b-0">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <span className="text-[13px] font-semibold text-foreground block">{label}</span>
-                            {desc && <span className="text-[11px] text-muted-foreground leading-snug">{desc}</span>}
+                            <span className="text-[14px] font-semibold text-[#0F1F17] block">{label}</span>
+                            {desc && <span className="text-[12px] text-[#5A6B61] leading-snug">{desc}</span>}
                           </div>
                           {val != null && (
-                            <span className="text-[12px] font-black text-foreground flex-shrink-0">${val}</span>
+                            <span className="text-[14px] font-bold text-[#0F1F17] flex-shrink-0">${val}</span>
                           )}
                         </div>
                       </div>
@@ -586,7 +426,7 @@ export default function Leaderboard() {
                 </motion.div>
               );
             })()}
-          </>
+          </div>
         )}
       </main>
     </div>

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Loader2 } from 'lucide-react';
+import { fdPrimaryCta } from './setupStyles';
 
 type Step = 'mode' | 'course' | 'players' | 'format';
 type RoundMode = 'solo' | 'multi';
@@ -40,11 +41,11 @@ export function NewRoundBottomCta({
   if (step === 'mode') return null;
 
   const isSoloCourse = mode === 'solo' && step === 'course';
-  const buttonClass = 'w-full bg-foreground text-background rounded-2xl h-[52px] font-bold text-[15px] flex items-center justify-center gap-2';
+  const buttonClass = fdPrimaryCta;
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-20 border-t border-[rgba(0,0,0,0.06)] bg-background px-6 py-4"
+      className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-background/95 backdrop-blur-sm px-5 pt-3"
       style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
     >
       {isSoloCourse ? (
@@ -59,10 +60,10 @@ export function NewRoundBottomCta({
           {isCreating ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Starting Solo Round...
+              Starting solo round…
             </>
           ) : (
-            'Start Solo Round'
+            'Start solo round'
           )}
         </motion.button>
       ) : !isFinalStep ? (
@@ -89,10 +90,10 @@ export function NewRoundBottomCta({
           {isCreating ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Creating Round...
+              Creating round…
             </>
           ) : (
-            'Start Round'
+            'Start round'
           )}
         </motion.button>
       )}

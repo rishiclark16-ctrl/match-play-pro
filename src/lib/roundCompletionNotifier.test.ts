@@ -101,7 +101,7 @@ describe('sendRoundCompletionNotifications', () => {
       buildPlayer({ id: 'p2', name: 'Rishi Clark', profileId: 'user-rishi' }),
     ];
     const games = [
-      { id: 'mp', type: 'match_play', stakes: 10, matchPlayFormat: 'singles' },
+      { id: 'mp', type: 'match', stakes: 10, matchPlayFormat: 'singles' },
     ] as unknown as GameConfig[];
     const updateGames = vi.fn();
 
@@ -133,7 +133,7 @@ describe('sendRoundCompletionNotifications', () => {
     ];
     const games = [
       {
-        id: 'mp', type: 'match_play', stakes: 10, matchPlayFormat: 'fourball',
+        id: 'mp', type: 'match', stakes: 10, matchPlayFormat: 'fourball',
         matchPlayTeams: [
           { id: 'tA', name: 'Team A', playerIds: ['p1', 'p2'], color: 'blue' },
           { id: 'tB', name: 'Team B', playerIds: ['p3', 'p4'], color: 'red' },
@@ -166,7 +166,7 @@ describe('sendRoundCompletionNotifications', () => {
       buildPlayer({ id: 'p2', name: 'Rishi', profileId: 'user-rishi' }),
     ];
     const games = [
-      { id: 'mp', type: 'match_play', stakes: 10, matchPlayFormat: 'singles' },
+      { id: 'mp', type: 'match', stakes: 10, matchPlayFormat: 'singles' },
     ] as unknown as GameConfig[];
     friendshipsResult = {
       data: [
@@ -201,7 +201,7 @@ describe('sendRoundCompletionNotifications', () => {
       buildPlayer({ id: 'p2', name: 'Rishi', profileId: 'user-rishi' }),
     ];
     const games = [
-      { id: 'mp', type: 'match_play', stakes: 10, matchPlayFormat: 'singles' },
+      { id: 'mp', type: 'match', stakes: 10, matchPlayFormat: 'singles' },
     ] as unknown as GameConfig[];
     friendshipsResult = {
       data: [{ user_id: 'user-rishi', friend_id: 'profile-andrew' }],
@@ -226,7 +226,7 @@ describe('sendRoundCompletionNotifications', () => {
       buildPlayer({ id: 'p2', name: 'Rishi', profileId: 'user-rishi' }),
     ];
     const games = [
-      { id: 'mp', type: 'match_play', stakes: 10, matchPlayFormat: 'singles' },
+      { id: 'mp', type: 'match', stakes: 10, matchPlayFormat: 'singles' },
     ] as unknown as GameConfig[];
     supabaseShouldThrow = true;
 

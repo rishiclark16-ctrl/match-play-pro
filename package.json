@@ -30,9 +30,11 @@
   "dependencies": {
     "@capacitor-community/apple-sign-in": "^6.0.0",
     "@capacitor-community/contacts": "^6.0.0",
+    "@capacitor-community/in-app-review": "6.0.0",
     "@capacitor-community/keep-awake": "^5.0.1",
     "@capacitor/android": "^6.2.1",
     "@capacitor/app": "^6.0.3",
+    "@capacitor/app-launcher": "6.0.4",
     "@capacitor/cli": "^6.2.1",
     "@capacitor/core": "^6.2.1",
     "@capacitor/haptics": "^6.0.3",

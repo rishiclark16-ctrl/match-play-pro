@@ -33,7 +33,7 @@ export function CommentsSection({ roundId }: CommentsSectionProps) {
 
   return (
     <div className="mt-4">
-      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-3">
+      <p className="text-[13px] font-semibold text-muted-foreground mb-3">
         Comments {comments.length > 0 && `(${comments.length})`}
       </p>
 
@@ -109,7 +109,7 @@ export function CommentsSection({ roundId }: CommentsSectionProps) {
           disabled={!draft.trim() || submitting}
           className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center disabled:opacity-40 flex-shrink-0"
         >
-          <Send className="w-4 h-4 text-[#F0EE3A]" />
+          <Send className="w-4 h-4 text-[#BEF264]" />
         </motion.button>
       </div>
     </div>

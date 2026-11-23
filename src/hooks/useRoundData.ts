@@ -68,6 +68,7 @@ export function useRoundData(roundId: string | undefined): UseRoundDataResult {
           rating: roundData.rating ?? undefined,
           status: roundData.status as 'active' | 'complete',
           createdAt: new Date(roundData.created_at || ''),
+          createdBy: roundData.created_by ?? null,
           joinCode: roundData.join_code,
           games: (roundData.games as unknown as GameConfig[]) || [],
           presses: [],

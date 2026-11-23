@@ -3,7 +3,7 @@ import { ChevronRight, Sparkles, Pencil } from 'lucide-react';
 import { hapticLight } from '@/lib/haptics';
 import { summarizeConfig, buildScoringConfig } from '@/lib/houseGame/engine';
 import type { HouseGame } from '@/types/houseGame';
-import { ledgerSpringTransition } from './ledgerHelpers';
+import { ledgerSpringTransition, ledgerSectionLabel } from './ledgerHelpers';
 
 interface HouseGameCardProps {
   houseGame: HouseGame | null;
@@ -19,18 +19,18 @@ export function HouseGameCard({ houseGame, isPro, onEdit, onCreate, onShowPaywal
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...ledgerSpringTransition, delay: 0.1 }}
-      className="mt-4"
+      className="mt-[18px]"
     >
-      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-black/40 mb-3 px-1">
-        House Game
+      <p className={ledgerSectionLabel}>
+        House game
       </p>
       {houseGame ? (
-        <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
+        <div className="rounded-[20px] border border-border bg-card p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-4 h-4 text-[#F0EE3A] flex-shrink-0" style={{ filter: 'drop-shadow(0 0 4px #F0EE3A88)' }} />
-                <span className="text-[13px] font-black text-foreground truncate">{houseGame.name}</span>
+                <span className="h-7 w-7 flex-shrink-0 rounded-[10px] bg-gold flex items-center justify-center"><Sparkles className="w-4 h-4 text-gold-foreground" /></span>
+                <span className="text-[16px] font-semibold text-foreground truncate">{houseGame.name}</span>
               </div>
               {(() => {
                 const config = buildScoringConfig(houseGame.activePrimitives);
@@ -38,7 +38,7 @@ export function HouseGameCard({ houseGame, isPro, onEdit, onCreate, onShowPaywal
                 return lines.length > 0 ? (
                   <ul className="space-y-0.5">
                     {lines.map((line) => (
-                      <li key={line} className="text-[12px] text-muted-foreground flex items-center gap-1.5">
+                      <li key={line} className="text-[13px] text-muted-foreground flex items-center gap-1.5">
                         <span className="w-1 h-1 rounded-full bg-muted-foreground/50 flex-shrink-0" />
                         {line}
                       </li>
@@ -55,9 +55,10 @@ export function HouseGameCard({ houseGame, isPro, onEdit, onCreate, onShowPaywal
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => { hapticLight(); onEdit(); }}
-              className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center flex-shrink-0"
+              aria-label="Edit house game"
+              className="-mr-1 -mt-1 h-11 w-11 rounded-[14px] bg-muted text-primary flex items-center justify-center flex-shrink-0"
             >
-              <Pencil className="w-4 h-4 text-foreground" />
+              <Pencil className="w-4 h-4" />
             </motion.button>
           </div>
         </div>
@@ -69,17 +70,17 @@ export function HouseGameCard({ houseGame, isPro, onEdit, onCreate, onShowPaywal
             if (!isPro) { onShowPaywall(); return; }
             onCreate();
           }}
-          className="w-full bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 flex items-center gap-3 text-left"
+          className="w-full rounded-[20px] border border-border bg-card p-3.5 flex items-center gap-3 text-left"
         >
-          <div className="w-10 h-10 rounded-xl bg-[#F0EE3A] flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-5 h-5 text-[#0A0A0A]" />
+          <div className="h-11 w-11 rounded-[14px] bg-gold flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-5 h-5 text-gold-foreground" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-bold text-foreground">Build Your House Game</p>
-            <p className="text-[12px] text-muted-foreground">Describe your Saturday game in plain English</p>
+            <p className="text-[15px] font-semibold text-foreground">Build your house game</p>
+            <p className="text-[13px] text-muted-foreground">Describe your Saturday game in plain English</p>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
-            <span className="text-[9px] font-black bg-foreground text-[#F0EE3A] px-1.5 py-0.5 rounded-md">PRO</span>
+            <span className="text-[11px] font-bold bg-gold text-gold-foreground px-2 py-0.5 rounded-full">Pro</span>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </div>
         </motion.button>

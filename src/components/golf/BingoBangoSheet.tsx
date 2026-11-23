@@ -80,7 +80,7 @@ export function BingoBangoSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-            className="fixed inset-x-0 bottom-0 z-50 bg-[#F8F8F6] rounded-t-3xl"
+            className="fixed inset-x-0 bottom-0 z-50 bg-[#FAFAF7] rounded-t-3xl"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <div className="w-10 h-1 bg-muted-foreground/25 rounded-full mx-auto mt-3 mb-4" />
@@ -114,7 +114,7 @@ export function BingoBangoSheet({
                   : players.filter(p => !p.isGhost);
                 return (
                 <div key={key}>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
+                  <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground mb-2">
                     {label} — {description}
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -131,7 +131,7 @@ export function BingoBangoSheet({
                           className={cn(
                             'px-3.5 py-2 rounded-xl text-[13px] font-bold border transition-colors',
                             selected
-                              ? 'bg-[#F0EE3A] border-[#D4D200] text-[#0A0A0A]'
+                              ? 'bg-[#BEF264] border-[#D4D200] text-[#0F1F17]'
                               : 'bg-white border-border text-foreground'
                           )}
                         >
@@ -159,7 +159,7 @@ export function BingoBangoSheet({
 
             {/* Validation error */}
             {validationError && (
-              <p className="px-5 pb-2 text-[12px] font-medium text-[#EF4444]">
+              <p className="px-5 pb-2 text-[12px] font-medium text-[#B42318]">
                 {validationError}
               </p>
             )}

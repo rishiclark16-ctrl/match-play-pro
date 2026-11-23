@@ -12,8 +12,8 @@ export function MoneyBadge({ amount, className }: MoneyBadgeProps) {
     <span className={cn(
       'inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-black tracking-tight',
       positive
-        ? 'bg-emerald-100 text-emerald-700'
-        : 'bg-red-100 text-red-600',
+        ? 'bg-primary/10 text-primary'
+        : 'bg-loss/10 text-loss',
       className
     )}>
       {positive ? '+' : ''}{amount < 0 ? '-' : ''}${Math.abs(amount).toFixed(0)}

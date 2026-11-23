@@ -23,7 +23,7 @@ export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailS
     <Sheet open={!!roundId} onOpenChange={(open) => { if (!open) onClose(); }}>
       <SheetContent
         side="bottom"
-        className="[&>button]:hidden rounded-t-3xl p-0 max-h-[92vh] overflow-y-auto bg-[#F8F8F6]"
+        className="[&>button]:hidden rounded-t-3xl p-0 max-h-[92vh] overflow-y-auto bg-[#FAFAF7]"
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-0">
@@ -31,14 +31,14 @@ export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailS
         </div>
 
         {/* Dark hero header */}
-        <div className="bg-[#0A0A0A] mx-4 mt-3 rounded-2xl p-5 relative overflow-hidden">
+        <div className="bg-primary mx-4 mt-3 rounded-[28px] p-5 relative overflow-hidden">
           {/* Close button */}
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center"
+            aria-label="Close" className="absolute top-3 right-3 w-11 h-11 rounded-[14px] bg-white/10 flex items-center justify-center"
           >
-            <X className="w-3.5 h-3.5 text-white/70" />
+            <X className="w-4 h-4 text-white" />
           </motion.button>
 
           {loading ? (
@@ -48,12 +48,12 @@ export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailS
             </div>
           ) : detail ? (
             <>
-              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/40 mb-1">Round Recap</p>
-              <h2 className="text-[20px] font-black tracking-[-0.03em] text-white leading-tight pr-10 mb-1">
+              <p className="text-[13px] font-semibold text-on-forest-muted mb-1">Round Recap</p>
+              <h2 className="text-[24px] font-extrabold tracking-[-0.02em] text-white leading-tight pr-12 mb-1">
                 {detail.courseName}
               </h2>
               {detail.completedAt && (
-                <p className="text-[11px] text-white/40 font-medium">
+                <p className="text-[13px] text-on-forest-muted">
                   {new Date(detail.completedAt).toLocaleDateString('en-US', {
                     weekday: 'long', month: 'long', day: 'numeric',
                   })}
@@ -73,7 +73,7 @@ export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailS
                           whileTap: { scale: 0.95 },
                           onClick: () => { onClose(); navigate(`/profile/${p.profileId}`); },
                         } : {})}
-                        className={`flex items-center gap-1.5 bg-white/[0.08] rounded-xl px-2.5 py-1.5 ${isClickable ? 'cursor-pointer active:bg-white/[0.14] transition-colors' : ''}`}
+                        className={`flex items-center gap-1.5 bg-white/10 rounded-full px-2.5 py-1.5 ${isClickable ? 'cursor-pointer active:bg-white/[0.14] transition-colors' : ''}`}
                       >
                         <Avatar className="w-5 h-5 rounded-full flex-shrink-0">
                           <AvatarImage src={p.avatarUrl ?? undefined} />
@@ -81,7 +81,7 @@ export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailS
                             {p.name.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-[11px] font-bold text-white/80">
+                        <span className="text-[13px] font-semibold text-white">
                           {p.name.split(' ')[0]}
                         </span>
                       </Wrapper>
@@ -93,10 +93,10 @@ export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailS
               {/* Games played */}
               {detail.games.length > 0 && (
                 <div className="mt-4 pt-3 border-t border-white/10">
-                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white/30 mb-2">Games</p>
+                  <p className="text-[13px] font-semibold text-on-forest-muted mb-2">Games</p>
                   <div className="flex flex-wrap gap-1.5">
                     {detail.games.map((g: Record<string, unknown>, i: number) => (
-                      <span key={`${String(g.type)}-${i}`} className="text-[11px] font-bold bg-white/[0.08] text-white/70 px-2.5 py-1 rounded-lg">
+                      <span key={`${String(g.type)}-${i}`} className="text-[12px] font-semibold bg-white/10 text-white px-2.5 py-1 rounded-full">
                         {formatGameType(g.type as string)}
                         {g.amount ? ` · $${g.amount}` : ''}
                       </span>
@@ -113,7 +113,7 @@ export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailS
         {/* Reactions */}
         {roundId && detail && (
           <div className="px-4 pt-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">Reactions</p>
+            <p className="text-[13px] font-semibold text-muted-foreground mb-2">Reactions</p>
             <div className="bg-white rounded-2xl p-3">
               <ReactionBar roundId={roundId} />
             </div>
@@ -123,7 +123,7 @@ export function RoundDetailSheet({ roundId, creatorName, onClose }: RoundDetailS
         {/* Scorecard */}
         {detail && detail.scores.length > 0 && (
           <div className="px-4 pt-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">Scorecard</p>
+            <p className="text-[13px] font-semibold text-muted-foreground mb-2">Scorecard</p>
             <div className="bg-white rounded-2xl p-3 overflow-hidden">
               <ScorecardGrid detail={detail} />
             </div>

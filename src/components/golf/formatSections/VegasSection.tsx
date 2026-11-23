@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Lock, Dice3 } from 'lucide-react';
+import { Dice3 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -10,6 +10,14 @@ import {
   iconBoxClass,
   iconClass,
   springTransition,
+  gameDetailPanel,
+  stakeRow,
+  stakeCurrency,
+  stakeInput,
+  stakeSuffix,
+  optionRow,
+  optionCheckbox,
+  ruleNote,
 } from '../formatStepStyles';
 import { ProLabel } from './ProLabel';
 
@@ -43,20 +51,19 @@ export function VegasSection({
       className={cn(
         gameCardBase,
         vegasEnabled && allowed && gameCardSelected,
-        !allowed && 'opacity-60'
+        !allowed && 'opacity-70'
       )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {!allowed && <Lock className="w-4 h-4 text-muted-foreground" />}
           <div className={iconBoxClass(vegasEnabled && allowed, !allowed)}>
             <Dice3 className={iconClass(vegasEnabled && allowed, !allowed)} />
           </div>
           <div>
-            <p className="font-bold text-sm text-foreground flex items-center gap-2">
+            <p className="font-semibold text-[16px] text-foreground flex items-center gap-2">
               Vegas{!allowed && <ProLabel />}
             </p>
-            <p className="text-[12px] text-muted-foreground mt-0.5">2v2 paired scores · flips & doubles</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">2v2 paired scores · flips & doubles</p>
           </div>
         </div>
         <Switch
@@ -72,28 +79,28 @@ export function VegasSection({
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           transition={springTransition}
-          className="pt-3 mt-3 border-t border-border/50 space-y-3"
+          className={gameDetailPanel}
           onClick={e => e.stopPropagation()}
         >
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-muted-foreground">$</span>
+          <div className={stakeRow}>
+            <span className={stakeCurrency}>$</span>
             <Input
               type="number" placeholder="1" value={vegasStakes}
               onChange={e => onVegasStakesChange(e.target.value)}
-              className="w-24 text-center font-mono bg-muted/50 rounded-xl border-0 py-2.5 text-sm"
+              className={stakeInput}
               min={1}
             />
-            <span className="text-sm text-muted-foreground">per point</span>
+            <span className={stakeSuffix}>per point</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className={optionRow}>
             <Checkbox
               id="vegascarryover" checked={vegasCarryover}
-              className="w-4 h-4 rounded border-border"
+              className={optionCheckbox}
               onCheckedChange={checked => onVegasCarryoverChange(checked === true)}
             />
             <label htmlFor="vegascarryover">Ties carry over (multiply next hole)</label>
           </div>
-          <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg font-mono">
+          <div className={ruleNote}>
             Birdie flip · Eagle flip+2× · 10+ high digit first
           </div>
         </motion.div>

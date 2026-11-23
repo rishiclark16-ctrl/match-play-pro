@@ -13,6 +13,8 @@
 3. End the response with the literal line:
    `claude md and documentation updated`
 
+Do **not** update the Notion "MATCH — Documentation" site; the user has opted out (the workspace is at its free block limit). `CLAUDE.md` is the record.
+
 If a task does not require any doc change, still print the confirmation line so it's clear the doc check happened.
 
 ---
@@ -257,7 +259,7 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1204 pass, 0 fail** (1204 tests across 52 files). All tests pass. Run with `bun test`. CI splits into two invocations:
+**1252 pass, 0 fail** (1249 across 60 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
 - `bun test src/hooks src/lib src/engine src/components` (1201 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
@@ -449,6 +451,74 @@ Phase P2.2 + P2.2b (bundle profiling + on-demand QR) complete:
 - **GitHub secret `VITE_SUPABASE_PUBLISHABLE_KEY`** still needs to be added to the repo's Actions secrets so CI builds succeed. (Repo Settings → Secrets and variables → Actions → New repository secret.) The publishable key is the same anon key used in `.env`.
 
 ---
+
+Phase P3.1 (v2.5 polish, in progress) — 2026-11-21:
+- `index.html` CSP `connect-src` now allows `https://us-assets.i.posthog.com` — PostHog's remote config fetch was being blocked on every page load.
+- New `src/lib/houseGame/suggestFormatName.ts` (7 tests): AI Game Builder confirm screen pre-fills a name built from the detected formats (e.g. `$5 Nassau + Presses`) instead of a truncated description.
+- `HouseGameConfirm.tsx` header now reads `N of M selected` (low-confidence rules start unchecked), so it no longer looks like it contradicts "Found M rules".
+- Local screenshot harness: `vite --host 127.0.0.1` (the `::` host in `vite.config.ts` fails in IPv4-only containers) plus a `.env.local` (gitignored) holding the Supabase URL and publishable key.
+- **Money defects M1–M11 (Notion 09.2) all fixed** — see Phase P3.2 below.
+- **Paywall** (`PaywallModal.tsx` + new `paywallCopy.ts`, 5 tests): plan cards with price now sit in the sticky footer beside the CTA (price/features were previously hidden behind the footer, an App Review 3.1.2 risk). Feature list leads with the AI Game Builder and is test-checked against `TIER_LIMITS`. Savings computed and rounded down (47%, was a hardcoded 48%). Headline adapts to the triggering feature.
+- **App Store review prompt**: `@capacitor-community/in-app-review@6.0.0`; policy in `src/lib/reviewPrompt.ts` (3+ completed rounds on this device, finished up money, not solo, 120-day cooldown); `useReviewPrompt` on RoundComplete. Mocked in `src/test/setup.ts`. **Requires `npx cap sync ios` + `pod install` on the Mac before archiving.**
+- **Invite your group** row on Home (`components/home/InviteFriendsRow.tsx`, `lib/inviteFriends.ts`): shares App Store link (`id6758272932`) + friend code; PostHog event `invite_shared`.
+- **Version bumped to 2.5 (7)** in `project.pbxproj`.
+- **Domain inconsistency (open):** universal-link docs in `useDeepLinks.ts` say `matchgolf.app`, iOS entitlement allows only `matchgolf.dev`, legal links use `matchgolf.info`. Invites therefore use the App Store link, not an https deep link. Pick one canonical domain before relying on universal links.
+- **Supabase outage found 2026-11-21:** project `Fairways` was paused (INACTIVE), so the live app's backend was down. Restored after pausing `Loudcall US` (user's choice) to stay within the free plan's 2-active-project limit. Free projects re-pause after ~1 week idle; upgrading the org to Pro prevents this.
+- **`parse-house-game` deployed (v23)** with `format_nines` (M10). Deployed from the *live* source plus that one line, NOT the repo file: the repo version differs from prod (CORS allowlist, required Bearer header) and that drift was not deployed. Verified live: a Nines description returns `format_nines`. A prompt hint explaining Nines scoring is in the repo but not yet deployed.
+- **Version is now 3.0 (8)** (P3.5).
+
+Phase P3.2 (money calculation defects, Notion "09.2 Money Calculation Defects") — 2026-11-21:
+- **M1** Nines/Defender/Sixes paid $0: 9 call sites passed `HoleInfo[]` as `holesPlayed`. Now `holeInfo.length` in `GamesSection.tsx`, `useGameResults.ts`, `moneyTracker.ts`, `games/houseGame.ts`.
+- **M2** Vegas scored ≤1 hole: carryover boolean was passed as `holesPlayed`. Net strokes + carryover flag now passed in the right positions.
+- **M3** Live tracker halved Vegas. `teamXEarnings` is $ per player; tracker no longer divides by 2.
+- **M4** Match play = **flat stake on the match** (product decision). Live tracker credits the current leader once; `useRoundCompleteState` uses the match game's own `stakes` (same source as the preview).
+- **M5** `useSettlementPreview` now calls `useGameResults` and passes Wolf/Vegas/Nines/Defender/Sixes/house game to `calculateSettlement`. Return type fixed to `NetSettlement[]`.
+- **M6** Wolf zero-sum: largest-remainder split of lone-wolf hunter shares; 3-player partnered (2-v-1) holes charge the lone hunter both winners' share.
+- **M7** Skins: players pay only for skins awarded; unresolved carryover/ties are **refunded** (product decision). Old C-4 tests asserted the leak and were updated.
+- **M8** New `src/lib/buildLedgerEntries.ts`: guest balances go to the **round host** (`rounds.created_by` → new `Round.createdBy`); refused with a named error if the host isn't playing.
+- **M9** New `isPenaltyPropBet()` in `types/betting.ts`; snake debits the recorded player in `settlement.ts` and `moneyTracker.ts`. `PropBetSheet` says "Who 3-putted?" / "X pays $N each".
+- **M10** `format_nines` added to `parse-house-game` VALID_IDS + prompt. `parserParity.test.ts` fails if any catalogue primitive is missing from either list. **Edge function must be redeployed for this to take effect.**
+- **M11** `useOfflineSync` upserts on `player_id,hole_number`; no false "synced" toast; failures → `logger.error` (Sentry).
+- **Typecheck ratchet:** `scripts/typecheck-ratchet.sh` runs in CI (baseline **157** `tsc` errors (was 220 → 204 → 197 → 196 → 167 → 161 → 157)). Lower `TS_BASELINE` as errors are fixed; never raise it.
+- New regression tests call the calculators the way the app does (`moneyTracker.callsites.test.ts`) plus randomised zero-sum invariants for Wolf and Skins.
+
+Phase P3.3 (design system v5 "Fairway Day") — 2026-11-21/22, **complete**:
+- User picked direction 08 "Fairway Day" from 10 light-mode directions (design canvas artifact "MATCH Design Directions"). Rationale: golfers use the app in full sun, so light mode with dark accents, big numerals, 44px+ targets.
+- **Spec: `docs/design/fairway-day.md`** (source of truth for app AND marketing site). Forest `#14532D` primary, lime `#BEF264` highlight (in the `--gold` token slot), ink `#0F1F17`, ground `#FAFAF7`, Sora font, 20px radius. Money: won = Forest, owed = `#B42318`.
+- Foundation commit `e5064d3`: tokens in `src/index.css`, Sora in `index.html` + `tailwind.config.ts`, brand hex literals swapped 1:1 in 105 files (#F0EE3A→#BEF264, #0A0A0A→#0F1F17, #F8F8F6/#F5F5F0→#FAFAF7; arbitrary hex kept so `/opacity` modifiers work).
+- `scripts/design-screens.cjs`: Playwright harness with a mocked Supabase backend + realistic in-progress round (`BASE` env for port; run vite with `--host 127.0.0.1`; needs `.env.local`).
+- 5 agents redesign by area (scoring, round setup + AI builder, results + stats, home + social, shell + account + ui primitives) in separate worktrees; lead merges.
+- The website session (matchgolf.info redesign) was sent the full spec.
+- **All 5 areas merged** into `claude/matchplay-golf-app-2hb6ib` (merge commits 032adab results/stats, 4e19d47 shell/primitives/account, 8ceee3a scoring, fca0036 home/social/groups, 4157077 setup/AI builder). Agents' worktrees were created from old `main`; each fast-forwarded to `fb6aaa3` first.
+- New shared pieces: `src/components/golf/setupUi.tsx` + `setupStyles.ts` (hero card, chips, primary button), `src/components/golf/scorecard/` (ScoreMark, LeaderboardParts), `src/components/golf/results/`, `src/components/stats/` sections, `components/home/HomeHero|HomeActionRow|HomeSections|JoinRoundModal`, `components/profile/ProfileHeader|ProfilePlanCard|TeePreferencePicker|DeleteAccountDialog`, `components/onboarding/OnboardingParts.tsx`, `components/auth/AuthFields.tsx`, `layout/PageHeader.tsx` + `LegalPageLayout.tsx`, `games/money.ts` (`signedMoney()`).
+- New tokens: `loss` (#B42318), `on-forest-muted` (#CFE3D6); `--destructive` = loss red. `.data-label`/`.label-sm` are now sentence case.
+- Bugs fixed during redesign: tee-sheet close crash (NewRound called nonexistent setters); group-tab ledger rendered under the list (z-10→z-20); "Add to group tab" hidden behind results footer; `$-28` money formatting + missing minus signs in Defender/Nines/Sixes/Vegas; share push used nonexistent `round.course_name`; finish overlay said "All 18 holes" on 9-hole rounds; plus-handicap shown for normal handicaps on friend cards; AI builder/edit Save buttons under the bottom nav (BottomNav now hides on `/my-formats/new`, `/my-formats/:id/edit`, `/groups/:id/house-game/new|edit`).
+- e2e selectors updated: `money-tracker.spec.ts` → `getByTestId('money-tracker')`; `ai-game-builder.spec.ts` → `rule-toggle` test id + `data-state`. Still stale (not run in CI): phase02 2.13 `.grid-cols-3 .rounded-2xl p.text-[28px]`, and 2.2 expects Active/Watching/Rounds on a brand-new account (now hidden until the user has rounds).
+- File sizes after: Scorecard 631 (still >500: what remains is prop-wiring to already-extracted components; accepted exception), Auth 442; RoundComplete 397, Profile 493, Stats 167, Home 293, NewRound 493, HouseGameConfirm 401, Leaderboard 434.
+- Done (P3.5): ScoreMark unified in `ui/score-mark.tsx`, CollapsibleSection deleted, live-money mismatch fixed. Open follow-ups: RoundDashboard, WatchParty, dashboard cards and rarer sheets only got colour/label passes; `pull-to-refresh.tsx` scrollTop check on pages where `main` scrolls.
+- **Screenshot harness gotcha:** never run two vite dev servers against the same `node_modules` (e.g. a symlinked worktree): they share `node_modules/.vite` and corrupt each other's deps cache ("Invalid hook call"/duplicate React, every screen shows the error boundary). Clear `node_modules/.vite` and run one server.
+- Before/after comparison page: artifact "Fairway Day Redesign" (https://claude.ai/artifact/4FxF3oXEPreUVEWH8qM2hm).
+
+Phase P3.4 (TestFlight CI) — 2026-11-21:
+- New `.github/workflows/testflight.yml` (macos-15): on push to `main` (docs/md changes ignored) and manual dispatch → JS deps → unit tests gate → `bun run build` → `npx cap sync ios` → `pod install` → `bundle exec fastlane ci_beta`. Concurrency group `testflight` prevents parallel uploads. Skips with a warning until signing secrets exist. IPA + dSYMs kept 14 days as an artifact.
+- New `ci_beta` lane in `ios/App/fastlane/Fastfile`: `setup_ci` temp keychain, App Store Connect **API key** auth (no Apple ID/2FA), imports the Apple Distribution .p12, `get_provisioning_profile`, switches the App target to manual signing for Release **only on the runner** (committed project stays Automatic), build number = max(latest TestFlight build for this version, project build) + 1, `upload_to_testflight`. `TEAM_ID = YPMSN56J9D`.
+- **P3.4b (no-Mac releases, 2026-11-23):** `ci_beta` now uses **cloud-managed signing** by default: automatic signing, plus `-allowProvisioningUpdates -authenticationKeyPath/ID/IssuerID` passed to both archive and export (`xcargs` + `export_xcargs`), with `export_options: { signingStyle: automatic }`. No `.p12` is needed. The manual `.p12` path is kept as a fallback when `IOS_DIST_CERT_P12_BASE64` is set. Optional App Store submission: `SUBMIT_FOR_REVIEW=true` makes the lane wait for processing, then run `upload_to_app_store` with `skip_binary_upload`, `skip_screenshots`, "What's New" = `RELEASE_NOTES`, `submit_for_review`, `automatic_release` (default true) and precheck off. The workflow_dispatch inputs are `changelog`, `submit_for_review`, `release_notes` and `automatic_release`, so Claude can trigger a TestFlight build or a full review submission with `mcp__github__actions_run_trigger` (workflow `testflight.yml`, ref `main`).
+- **Secrets the user must add once** (browser-only guide: `docs/testflight-ci.md`): `ASC_KEY_ID`, `ASC_ISSUER_ID`, and `ASC_KEY_P8` (the .p8 text pasted as-is; `ASC_KEY_P8_BASE64` is also accepted). The API key **must have the Admin role**, for cloud-managed certs. `VITE_SUPABASE_PUBLISHABLE_KEY` already exists. Not yet run end-to-end: needs those secrets. Each release still needs a `MARKETING_VERSION` bump, and App Store metadata/screenshots must already be in App Store Connect (CI only sets "What's New").
+
+Phase P3.5 (v3.0 release hardening) — 2026-11-22/23:
+- **Version 3.0 (8)** in `project.pbxproj` (was 2.5 (7)); the Fairway Day redesign is a major version.
+- **Scorecard resumes on the current hole**: it always opened on hole 1. New `lib/scorecardProgress.ts` (`resumeHole`, `lastScoredHole`, `liveMoneyThroughHole`, 8 tests) + `hooks/useResumeHole.ts` (moves once per round after data loads).
+- **Live money consistency**: `MoneyTracker` computed only up to the *viewed* hole ("All even" on hole 1 while games showed +$14). Now computes through max(viewed, latest scored hole).
+- **Match-result notifications never fired**: `roundCompletionNotifier` searched for game type `'match_play'`; rounds store `'match'`. Its tests used the same wrong literal. Fixed code + tests.
+- **AI Game Builder voice input never worked**: it passed `onTranscript`/`continuous` options that `useVoiceRecognition` doesn't accept. Now reads the hook's `transcript` and appends each phrase once.
+- **Notifications "Open Settings" did nothing**: `@capacitor/app` has no `openUrl`. Added **`@capacitor/app-launcher@6.0.4`** (native: needs `npx cap sync ios` + `pod install`), mocked in `src/test/setup.ts`.
+- House-game share text printed "Invalid Date" (`round.date` → `round.createdAt`); `calculateMatchPlay` early return now includes `format`.
+- These four bugs were found by triaging TypeScript errors (TS2367 impossible comparison, TS2339 missing property, TS2353 unknown option). Keep doing this as the baseline falls.
+- Refactors: `ui/score-mark.tsx` (`ScoreMarkShape` + `ScoreMark`) with helpers in `lib/scoreMarks.ts`; `golf/scorecard/ScorecardBody.tsx` (Scorecard 714 → 631); `components/auth/GolfCanvas.tsx` (Auth 547 → 442); `CollapsibleSection.tsx` deleted.
+- **`parse-house-game` v24 deployed** = previous live source + Nines disambiguation hint. Verified live: a Nines description returns only `format_nines`, unit $2, full handicaps (no invented front/back-nine rule). **Repo/prod drift remains by design**: the repo file additionally has a CORS allowlist and a required Bearer check that were never deployed or device-tested. Test on a TestFlight build before deploying the repo version.
+- **e2e (Playwright) fixes**: round helpers in phase06/09/10/20/22 tap "With others" first (mode step; broken before the redesign); `mockAuth` dismisses the scorecard voice tutorial (`match-golf-settings`), whose overlay blocked clicks; phase02 2.2/2.13 no longer assume the shared e2e account is empty. Verified: phase02 14/14, money-tracker 2/2, phase09, ai-game-builder + phase06 + phase10 39/39 (game-name tests use `#format-name`, hole nav uses the `Next hole`/`Previous hole` labels, dashboard test waits for the round name). Not run: `ai-builder-comprehensive`/`ai-builder-scoring` (they call the real AI parser on prod and bill the Anthropic key) and the remaining phase specs.
+- **e2e note**: several e2e specs create real rounds in the **production** Supabase project under a shared test account (e.g. the leftover "Double Click Test" live round). Consider pointing e2e at a Supabase branch.
+- Running e2e locally: the repo's Playwright expects a browser build that isn't installed in cloud containers; use a temporary config with `launchOptions.executablePath: '/opt/pw-browsers/chromium'`, `webServer: undefined`, `baseURL: http://127.0.0.1:8080` and start vite yourself with `--host 127.0.0.1`.
 
 ## V2 Feature Status
 | Feature | Status | Notes |

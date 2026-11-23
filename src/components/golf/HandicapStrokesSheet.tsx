@@ -56,7 +56,7 @@ export function HandicapStrokesSheet({
     <Sheet open={open} onOpenChange={onClose}>
       <SheetContent
         side="bottom"
-        className="h-[88vh] bg-[#F8F8F6] rounded-t-3xl p-0 border-0 [&>button]:hidden"
+        className="h-[88vh] bg-[#FAFAF7] rounded-t-3xl p-0 border-0 [&>button]:hidden"
       >
         {/* Drag handle */}
         <div className="w-10 h-1 rounded-full bg-muted mx-auto mt-3 mb-4" />
@@ -67,7 +67,7 @@ export function HandicapStrokesSheet({
             <h2 className="text-[20px] font-black tracking-[-0.04em] text-foreground leading-none">
               Stroke Allocation
             </h2>
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mt-0.5">
+            <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground mt-0.5">
               By hole · stroke index
             </p>
           </div>
@@ -106,7 +106,7 @@ export function HandicapStrokesSheet({
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.06, type: 'spring', stiffness: 300, damping: 28 }}
-                      className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden"
+                      className="bg-white rounded-[20px] border border-[#E7E9E3] overflow-hidden"
                     >
                       {/* Player header */}
                       <div className="flex items-center gap-3 px-4 py-3 border-b border-border/50">
@@ -122,8 +122,8 @@ export function HandicapStrokesSheet({
                             }
                           </p>
                         </div>
-                        <div className="bg-[#F0EE3A] rounded-lg px-2.5 py-1">
-                          <span className="text-[13px] font-black text-[#0A0A0A]">
+                        <div className="bg-[#BEF264] rounded-lg px-2.5 py-1">
+                          <span className="text-[13px] font-black text-[#0F1F17]">
                             +{playingHcp}
                           </span>
                         </div>
@@ -131,7 +131,7 @@ export function HandicapStrokesSheet({
 
                       {/* Stroke holes list */}
                       <div className="px-4 py-3">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
+                        <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground mb-2">
                           Receives a stroke on:
                         </p>
                         <div className="flex flex-wrap gap-1.5">
@@ -141,7 +141,7 @@ export function HandicapStrokesSheet({
                             return (
                               <div
                                 key={holeNum}
-                                className="flex flex-col items-center bg-[#0A0A0A] rounded-lg px-2.5 py-1.5 min-w-[36px]"
+                                className="flex flex-col items-center bg-[#0F1F17] rounded-lg px-2.5 py-1.5 min-w-[36px]"
                               >
                                 <span className="text-[13px] font-black text-white leading-none">
                                   {holeNum}
@@ -152,7 +152,7 @@ export function HandicapStrokesSheet({
                                   </span>
                                 )}
                                 {extraStrokes > 1 && (
-                                  <span className="text-[8px] font-black text-[#F0EE3A] leading-none">
+                                  <span className="text-[8px] font-black text-[#BEF264] leading-none">
                                     ×{extraStrokes}
                                   </span>
                                 )}
@@ -171,14 +171,14 @@ export function HandicapStrokesSheet({
 
               {/* Full hole grid — who gets a stroke where */}
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-3">
+                <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground mb-3">
                   Hole-by-hole grid
                 </p>
-                <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
+                <div className="bg-white rounded-[20px] border border-[#E7E9E3] overflow-hidden">
                   {/* Column headers: player names */}
                   <div className="grid border-b border-border/50" style={{ gridTemplateColumns: `64px repeat(${activePlayers.length}, 1fr)` }}>
                     <div className="px-3 py-2">
-                      <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Hole</span>
+                      <span className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">Hole</span>
                     </div>
                     {activePlayers.map((player, i) => {
                       const colors = avatarColors[i % avatarColors.length];
@@ -231,7 +231,7 @@ export function HandicapStrokesSheet({
                                   {Array.from({ length: Math.min(strokes, 2) }).map((_, i) => (
                                     <div
                                       key={i}
-                                      className="w-2 h-2 rounded-full bg-[#F0EE3A] border border-[#0A0A0A]/20"
+                                      className="w-2 h-2 rounded-full bg-[#BEF264] border border-[#0F1F17]/20"
                                     />
                                   ))}
                                   {strokes > 2 && (

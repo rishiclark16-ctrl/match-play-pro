@@ -8,6 +8,7 @@ import {
   getPendingCount
 } from '@/lib/offlineDb';
 import { hapticSuccess, hapticWarning } from '@/lib/haptics';
+import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
 
 // Extended ServiceWorkerRegistration with Background Sync APIs (not in standard TS types)
@@ -135,7 +136,8 @@ export function useOfflineSync(): UseOfflineSyncReturn {
         return;
       }
 
-      // Group scores by round and player for efficient upsert
+      let syncedCount = 0;
+      let lastError: unknown = null;
       for (const score of unsyncedScores) {
         try {
           const { error } = await supabase
@@ -148,15 +150,16 @@ export function useOfflineSync(): UseOfflineSyncReturn {
                 strokes: score.strokes,
               },
               {
-                onConflict: 'round_id,player_id,hole_number',
+                onConflict: 'player_id,hole_number', // the only unique constraint on scores (Notion 09.2 M11)
               }
             );
 
-          if (!error) {
-            await markScoreSynced(score.id);
-          }
-        } catch {
-          // Individual score sync failed - will retry later
+          if (error) throw error;
+          await markScoreSynced(score.id);
+          syncedCount++;
+        } catch (err) {
+          // Individual score sync failed - stays queued, will retry later
+          lastError = err;
         }
       }
 
@@ -164,8 +167,18 @@ export function useOfflineSync(): UseOfflineSyncReturn {
       await cleanupSyncedScores();
       await updatePendingCount();
 
-      hapticSuccess();
-      toast.success('Scores synced successfully');
+      if (lastError) {
+        logger.error('[OfflineSync] score sync failed', lastError);
+        hapticWarning();
+        toast.error(
+          syncedCount > 0
+            ? `Synced ${syncedCount} of ${unsyncedScores.length} scores — will retry the rest`
+            : 'Scores not synced yet — will retry'
+        );
+      } else {
+        hapticSuccess();
+        toast.success('Scores synced successfully');
+      }
     } catch {
       hapticWarning();
       toast.error('Failed to sync some scores');
@@ -194,14 +207,15 @@ export function useOfflineSync(): UseOfflineSyncReturn {
               strokes,
             },
             {
-              onConflict: 'round_id,player_id,hole_number',
+              onConflict: 'player_id,hole_number', // the only unique constraint on scores (Notion 09.2 M11)
             }
           );
 
         if (error) throw error;
         return;
-      } catch {
+      } catch (err) {
         // Online save failed - queue for offline sync
+        logger.error('[OfflineSync] direct score save failed, queueing', err);
       }
     }
 

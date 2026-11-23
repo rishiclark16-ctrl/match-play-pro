@@ -1,52 +1,50 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Home, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
-      <motion.div 
+    <div className="min-h-screen bg-background flex flex-col justify-center px-5 pt-safe-content pb-10">
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center space-y-6 max-w-sm"
+        className="w-full max-w-sm mx-auto space-y-3"
       >
-        {/* Golf-themed 404 */}
-        <div className="space-y-2">
-          <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-            <span className="text-4xl">⛳</span>
+        {/* Forest hero card holds the headline */}
+        <div className="bg-primary rounded-[28px] p-6 text-white">
+          <div className="flex items-center justify-between">
+            <span className="text-[13px] font-semibold text-on-forest-muted">Hole not found</span>
+            <span className="text-[28px] leading-none" aria-hidden>⛳</span>
           </div>
-          <h1 className="text-6xl font-bold text-primary tabular-nums">404</h1>
-        </div>
-        
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold text-foreground">
+          <p className="mt-4 text-[64px] font-extrabold tracking-[-0.04em] leading-none tabular-nums">
+            4<span className="text-gold">0</span>4
+          </p>
+          <h1 className="mt-4 text-[26px] font-extrabold tracking-[-0.02em] leading-tight">
             Lost in the rough
-          </h2>
-          <p className="text-muted-foreground">
+          </h1>
+          <p className="mt-1.5 text-[14px] text-on-forest-muted leading-relaxed">
             We couldn't find the page you're looking for. Let's get you back on the fairway.
           </p>
         </div>
 
-        <div className="space-y-3 pt-2">
-          <motion.div whileTap={{ scale: 0.98 }}>
-            <Button asChild className="w-full py-6 text-lg font-semibold rounded-xl">
-              <Link to="/">
-                <Home className="w-5 h-5 mr-2" />
-                Back to Home
-              </Link>
-            </Button>
-          </motion.div>
-          
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            onClick={() => window.history.back()}
-            className="w-full py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2"
+        <motion.div whileTap={{ scale: 0.98 }}>
+          <Link
+            to="/"
+            className="w-full h-[60px] rounded-[20px] bg-ink text-ink-foreground text-[16px] font-bold flex items-center justify-center gap-2"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Go Back
-          </motion.button>
-        </div>
+            <Home className="w-5 h-5" />
+            Back to Home
+          </Link>
+        </motion.div>
+
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={() => window.history.back()}
+          className="w-full h-12 rounded-[20px] text-[14px] font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Go Back
+        </motion.button>
       </motion.div>
     </div>
   );

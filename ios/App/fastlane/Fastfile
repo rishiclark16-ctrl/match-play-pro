@@ -1,12 +1,17 @@
 # MATCH Golf - Fastlane Configuration
 # https://docs.fastlane.tools
 
+require "base64"
+require "tmpdir"
+require "shellwords"
+
 default_platform(:ios)
 
 # Constants
 APP_IDENTIFIER = "dev.matchgolf.app"
 SCHEME = "App"
 WORKSPACE = "App.xcworkspace"
+TEAM_ID = "YPMSN56J9D" # Apple Developer team (matches DEVELOPMENT_TEAM in project.pbxproj)
 
 platform :ios do
 
@@ -163,6 +168,159 @@ platform :ios do
       type: "appstore",
       readonly: true
     )
+  end
+
+  # ==========================================
+  # CI BETA - GitHub Actions -> TestFlight / App Store (no Mac, no Apple ID login)
+  # ==========================================
+  # CI lane: builds, signs and uploads to TestFlight, and optionally submits the
+  # build for App Store review. Runs on a GitHub macOS runner; no Mac of your own.
+  #
+  # Required env (GitHub secrets): ASC_KEY_ID, ASC_ISSUER_ID, and ASC_KEY_P8 (the .p8
+  # file's text) or ASC_KEY_P8_BASE64.
+  # The key must have the Admin role so Xcode can use Apple's cloud-managed
+  # distribution certificate (nothing to export from a Mac Keychain).
+  #
+  # Optional env:
+  #   IOS_DIST_CERT_P12_BASE64 + IOS_DIST_CERT_PASSWORD  use your own .p12 instead of cloud signing
+  #   TESTFLIGHT_CHANGELOG   "What to Test" text for TestFlight
+  #   SUBMIT_FOR_REVIEW      "true" waits for processing, then submits this build for App Store review
+  #   RELEASE_NOTES          App Store "What's New" text (required when submitting)
+  #   AUTOMATIC_RELEASE      "false" holds the approved version until you release it in App Store Connect
+  desc "CI: build, sign (cloud-managed) and upload to TestFlight; optionally submit for review"
+  lane :ci_beta do
+    setup_ci # temporary keychain
+
+    # The .p8 can be stored as-is (ASC_KEY_P8, the file's text pasted into a GitHub
+    # secret) or base64-encoded (ASC_KEY_P8_BASE64).
+    key_p8 = ENV["ASC_KEY_P8"].to_s.strip
+    key_p8 = Base64.decode64(ENV.fetch("ASC_KEY_P8_BASE64")) if key_p8.empty?
+    UI.user_error!("App Store Connect key is not a .p8 private key") unless key_p8.include?("PRIVATE KEY")
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_content: key_p8,
+      is_key_content_base64: false,
+      in_house: false
+    )
+
+    submit = ENV["SUBMIT_FOR_REVIEW"].to_s.downcase == "true"
+    release_notes = ENV["RELEASE_NOTES"].to_s.strip
+    if submit && release_notes.empty?
+      UI.user_error!("SUBMIT_FOR_REVIEW is true but RELEASE_NOTES is empty. App Store review needs \"What's New\" text.")
+    end
+
+    version = get_version_number(xcodeproj: "App.xcodeproj", target: "App")
+    latest = latest_testflight_build_number(api_key: api_key, app_identifier: APP_IDENTIFIER, version: version, initial_build_number: 0)
+    current = get_build_number(xcodeproj: "App.xcodeproj").to_i
+    next_build = [latest.to_i, current].max + 1
+    increment_build_number(xcodeproj: "App.xcodeproj", build_number: next_build.to_s)
+
+    if ENV["IOS_DIST_CERT_P12_BASE64"].to_s.empty?
+      # Cloud-managed signing: Xcode signs with automatic signing, authorised by the
+      # API key. The distribution certificate lives with Apple; profiles are
+      # created or refreshed on demand.
+      key_path = File.join(Dir.tmpdir, "AuthKey_#{ENV.fetch('ASC_KEY_ID')}.p8")
+      File.write(key_path, key_p8)
+      auth_args = [
+        "-allowProvisioningUpdates",
+        "-authenticationKeyPath #{key_path.shellescape}",
+        "-authenticationKeyID #{ENV.fetch('ASC_KEY_ID').shellescape}",
+        "-authenticationKeyIssuerID #{ENV.fetch('ASC_ISSUER_ID').shellescape}"
+      ].join(" ")
+
+      update_code_signing_settings(
+        path: "App.xcodeproj",
+        targets: ["App"],
+        use_automatic_signing: true,
+        team_id: TEAM_ID,
+        build_configurations: ["Release"]
+      )
+
+      build_app(
+        workspace: WORKSPACE,
+        scheme: SCHEME,
+        configuration: "Release",
+        export_method: "app-store",
+        export_options: { signingStyle: "automatic", teamID: TEAM_ID },
+        xcargs: auth_args,
+        export_xcargs: auth_args,
+        skip_profile_detection: true,
+        output_directory: "./build",
+        output_name: "MatchGolf.ipa",
+        clean: true
+      )
+    else
+      # Manual signing with an exported Apple Distribution .p12.
+      cert_path = File.join(Dir.tmpdir, "dist_cert.p12")
+      File.binwrite(cert_path, Base64.decode64(ENV.fetch("IOS_DIST_CERT_P12_BASE64")))
+      import_certificate(
+        certificate_path: cert_path,
+        certificate_password: ENV.fetch("IOS_DIST_CERT_PASSWORD"),
+        keychain_name: ENV["MATCH_KEYCHAIN_NAME"] || "fastlane_tmp_keychain",
+        keychain_password: ENV["MATCH_KEYCHAIN_PASSWORD"] || ""
+      )
+
+      get_provisioning_profile(
+        api_key: api_key,
+        app_identifier: APP_IDENTIFIER,
+        team_id: TEAM_ID,
+        force: false,
+        readonly: false
+      )
+      profile_name = lane_context[SharedValues::SIGH_NAME]
+
+      update_code_signing_settings(
+        path: "App.xcodeproj",
+        targets: ["App"],
+        use_automatic_signing: false,
+        team_id: TEAM_ID,
+        code_sign_identity: "Apple Distribution",
+        profile_name: profile_name,
+        build_configurations: ["Release"]
+      )
+
+      build_app(
+        workspace: WORKSPACE,
+        scheme: SCHEME,
+        configuration: "Release",
+        export_method: "app-store",
+        export_options: { provisioningProfiles: { APP_IDENTIFIER => profile_name } },
+        output_directory: "./build",
+        output_name: "MatchGolf.ipa",
+        clean: true
+      )
+    end
+
+    upload_to_testflight(
+      api_key: api_key,
+      # A review submission needs the build processed first; a plain beta doesn't.
+      skip_waiting_for_build_processing: !submit,
+      notify_external_testers: false,
+      changelog: ENV["TESTFLIGHT_CHANGELOG"]
+    )
+    UI.success("MATCH Golf #{version} (#{next_build}) uploaded to TestFlight")
+
+    if submit
+      upload_to_app_store(
+        api_key: api_key,
+        app_identifier: APP_IDENTIFIER,
+        app_version: version,
+        build_number: next_build.to_s,
+        platform: "ios",
+        skip_binary_upload: true,
+        skip_screenshots: true,
+        skip_metadata: false,
+        release_notes: { "default" => release_notes, "en-US" => release_notes },
+        submit_for_review: true,
+        automatic_release: ENV["AUTOMATIC_RELEASE"].to_s.downcase != "false",
+        force: true, # no HTML preview / confirmation prompt on CI
+        run_precheck_before_submit: false,
+        submission_information: { export_compliance_uses_encryption: false }
+      )
+      UI.success("MATCH Golf #{version} (#{next_build}) submitted for App Store review")
+    end
   end
 
   # ==========================================

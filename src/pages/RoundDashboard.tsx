@@ -186,7 +186,7 @@ export default function RoundDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F8F6]">
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAF7]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -194,7 +194,7 @@ export default function RoundDashboard() {
 
   if (!round) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F8F6] px-6">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAFAF7] px-6">
         <p className="text-muted-foreground mb-4">Round not found</p>
         <button onClick={() => navigate('/')} className="text-sm font-medium underline">
           Back to Home
@@ -204,9 +204,9 @@ export default function RoundDashboard() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#F8F8F6] overflow-hidden">
+    <div className="h-screen flex flex-col bg-[#FAFAF7] overflow-hidden">
       {/* Header — respects iOS safe area (pt-safe-content = 59px for Dynamic Island) */}
-      <div className="flex-shrink-0 bg-[#F8F8F6]/95 backdrop-blur-md border-b border-border/30 pt-safe-content">
+      <div className="flex-shrink-0 bg-[#FAFAF7]/95 backdrop-blur-md border-b border-border/30 pt-safe-content">
         <div className="flex items-center px-4 py-3">
           <button
             onClick={() => navigate(-1)}

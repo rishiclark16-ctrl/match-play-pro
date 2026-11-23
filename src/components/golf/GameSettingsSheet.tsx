@@ -116,7 +116,7 @@ export function GameSettingsSheet({
         </SheetTrigger>
       )}
 
-      <SheetContent side="bottom" className="h-[85vh] bg-[#F8F8F6] rounded-t-3xl p-0 border-0 [&>button]:hidden">
+      <SheetContent side="bottom" className="h-[85vh] bg-[#FAFAF7] rounded-t-3xl p-0 border-0 [&>button]:hidden">
         {/* Drag handle */}
         <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
 
@@ -153,7 +153,7 @@ export function GameSettingsSheet({
                     updateGame('skins', null);
                   }
                 }}
-                className="data-[state=checked]:bg-[#22C55E]"
+                className="data-[state=checked]:bg-[#14532D]"
               />
             </div>
 
@@ -226,7 +226,7 @@ export function GameSettingsSheet({
                       updateGame('nassau', null);
                     }
                   }}
-                  className="data-[state=checked]:bg-[#22C55E]"
+                  className="data-[state=checked]:bg-[#14532D]"
                 />
               </div>
 
@@ -299,7 +299,7 @@ export function GameSettingsSheet({
                     updateGame('stableford', null);
                   }
                 }}
-                className="data-[state=checked]:bg-[#22C55E]"
+                className="data-[state=checked]:bg-[#14532D]"
               />
             </div>
 
@@ -362,7 +362,7 @@ export function GameSettingsSheet({
                       updateGame('bestball', null);
                     }
                   }}
-                  className="data-[state=checked]:bg-[#22C55E]"
+                  className="data-[state=checked]:bg-[#14532D]"
                 />
               </div>
 
@@ -418,7 +418,7 @@ export function GameSettingsSheet({
                       updateGame('wolf', null);
                     }
                   }}
-                  className="data-[state=checked]:bg-[#22C55E]"
+                  className="data-[state=checked]:bg-[#14532D]"
                 />
               </div>
 

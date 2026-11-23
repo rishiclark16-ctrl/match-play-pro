@@ -755,3 +755,34 @@ describe('calculateWolfStandings — floating-point accumulation', () => {
     });
   });
 });
+
+describe('zero-sum invariant (Notion 09.2 M6)', () => {
+  it('carried lone-wolf pot of 16 across 3 hunters still sums to zero', () => {
+    const results: WolfHoleResult[] = [
+      { holeNumber: 3, wolfId: 'p1', partnerId: null, isBlindWolf: false, winningTeam: 'wolf', points: 16 },
+    ];
+    const standings = calculateWolfStandings(results, fourPlayers, 1);
+    expect(standings.reduce((a, s) => a + s.totalPoints, 0)).toBe(0);
+    expect(standings.find(s => s.playerId === 'p1')!.totalPoints).toBe(16);
+    // 16 split 6/5/5 — whole points, nothing destroyed
+    expect(standings.filter(s => s.playerId !== 'p1').map(s => s.totalPoints).sort((a, b) => a - b)).toEqual([-6, -5, -5]);
+  });
+
+  it('sums to zero over randomised rounds (3 and 4 players)', () => {
+    let seed = 11;
+    const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (const ps of [fourPlayers, fourPlayers.slice(0, 3)]) {
+      for (let t = 0; t < 200; t++) {
+        const results: WolfHoleResult[] = Array.from({ length: 18 }, (_, i) => {
+          const wolf = ps[i % ps.length].id;
+          const lone = rand() > 0.5;
+          const partner = lone ? null : ps.find(p => p.id !== wolf)!.id;
+          const outcome = (['wolf', 'hunters', 'push'] as const)[Math.floor(rand() * 3)];
+          return { holeNumber: i + 1, wolfId: wolf, partnerId: partner, isBlindWolf: false, winningTeam: outcome, points: lone ? 4 * (1 + Math.floor(rand() * 5)) : 2 * (1 + Math.floor(rand() * 3)) };
+        });
+        const st = calculateWolfStandings(results, ps, 3);
+        expect(Math.round(st.reduce((a, s) => a + s.earnings, 0) * 100)).toBe(0);
+      }
+    }
+  });
+});

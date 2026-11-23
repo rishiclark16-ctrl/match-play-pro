@@ -312,7 +312,7 @@ export function calculateHouseGame(
   // ── Vegas ─────────────────────────────────────────────────────────────────
   let vegasResult: VegasResult | undefined;
   if (config.vegas && players.length >= 4) {
-    vegasResult = calculateVegas(scores, players, holeInfo, config.unitValue, scoredHoles.length, strokesMap);
+    vegasResult = calculateVegas(scores, players, holeInfo, config.unitValue, holeInfo.length, strokesMap);
     // Vegas earnings: team-based
     if (vegasResult.holeResults.length > 0) {
       const teamAIds = [players[0].id, players[1].id];
@@ -327,7 +327,7 @@ export function calculateHouseGame(
   // ── Nines (5-3-1) ────────────────────────────────────────────────────────
   let ninesResult: NinesResult | undefined;
   if (config.nines && players.length === 3) {
-    ninesResult = calculateNines(scores, players, holeInfo, config.unitValue, strokesMap);
+    ninesResult = calculateNines(scores, players, holeInfo.length, config.unitValue, strokesMap);
     for (const standing of ninesResult.standings) {
       playerEarnings[standing.playerId] = (playerEarnings[standing.playerId] ?? 0) + standing.earnings;
     }
@@ -336,7 +336,7 @@ export function calculateHouseGame(
   // ── Defender ─────────────────────────────────────────────────────────────
   let defenderResult: DefenderResult | undefined;
   if (config.defender && (players.length === 3 || players.length === 4)) {
-    defenderResult = calculateDefender(scores, players, holeInfo, config.unitValue, strokesMap);
+    defenderResult = calculateDefender(scores, players, holeInfo.length, config.unitValue, strokesMap);
     for (const standing of defenderResult.standings) {
       playerEarnings[standing.playerId] = (playerEarnings[standing.playerId] ?? 0) + standing.earnings;
     }
@@ -345,7 +345,7 @@ export function calculateHouseGame(
   // ── Sixes (Round Robin) ──────────────────────────────────────────────────
   let sixesResult: SixesResult | undefined;
   if (config.sixes && players.length === 4) {
-    sixesResult = calculateSixes(scores, players, holeInfo, config.unitValue, strokesMap);
+    sixesResult = calculateSixes(scores, players, holeInfo.length, config.unitValue, strokesMap);
     for (const standing of sixesResult.standings) {
       playerEarnings[standing.playerId] = (playerEarnings[standing.playerId] ?? 0) + standing.earnings;
     }

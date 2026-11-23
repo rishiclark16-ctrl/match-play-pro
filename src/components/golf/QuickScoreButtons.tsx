@@ -76,9 +76,9 @@ export function QuickScoreButtons({
   const getScoreTextColor = () => {
     if (currentScore === undefined) return 'text-muted-foreground';
     const diff = currentScore - par;
-    if (diff <= -1) return 'text-[#15803D]';
-    if (diff === 0) return 'text-[#0A0A0A]';
-    if (diff === 1) return 'text-[#92400E]';
+    if (diff <= -1) return 'text-[#14532D]';
+    if (diff === 0) return 'text-[#0F1F17]';
+    if (diff === 1) return 'text-[#14532D]';
     return 'text-[#991B1B]';
   };
 

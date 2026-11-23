@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Loader2, Trash2, Users, ChevronRight, Check } from 'lucide-react';
+import { formatGameType } from '@/lib/formatGameType';
 import type { Round } from '@/types/golf';
 
 interface HomeRoundCardProps {
@@ -14,10 +14,10 @@ interface HomeRoundCardProps {
 }
 
 /**
- * "Direction B" round card used on the Home page rounds list.
- * Renders a dark card for active rounds (with a live LED + progress bar),
- * and a white card for completed/historic rounds. Solo rounds get a "Solo"
- * pill in place of game tags.
+ * Round row used in the Home lists (and RoundsList). Fairway Day: white,
+ * radius 20, hairline border. Live rounds carry a Forest "Live" chip and a
+ * thin progress bar; finished rounds a muted "Done" chip. Solo rounds get a
+ * "Solo" chip in place of game tags.
  */
 export function HomeRoundCard({
   round,
@@ -39,7 +39,7 @@ export function HomeRoundCard({
         return '';
       })
     : [];
-  // Solo round detection at the card level — a round with exactly 1 player
+  // Solo round detection at the card level: a round with exactly 1 player
   // and no betting games is a solo/stats-only round.
   const isSolo = (playerCount ?? 0) === 1 && games.length === 0;
 
@@ -51,137 +51,100 @@ export function HomeRoundCard({
     onDelete?.(round.id);
   };
 
+  const tags = isSolo ? ['Solo'] : games.filter(Boolean).map(formatGameType);
+
   return (
     <motion.div
       whileTap={{ scale: 0.99 }}
       onClick={onClick}
-      className={cn(
-        'rounded-2xl p-[18px] cursor-pointer relative overflow-hidden',
-        isActive
-          ? 'bg-[#0A0A0A] shadow-[0_4px_24px_rgba(0,0,0,0.35)]'
-          : 'bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]'
-      )}
+      className="relative cursor-pointer rounded-[20px] border border-border bg-card px-4 py-3.5 select-none"
+      style={{ WebkitTapHighlightColor: 'transparent' }}
     >
-      {/* Top row: course name + status pill */}
-      <div className="flex items-start justify-between mb-2">
-        <h3 className={cn(
-          'text-[17px] tracking-[-0.03em] leading-snug flex-1 pr-3',
-          isActive ? 'font-black text-white' : 'font-bold text-foreground'
-        )}>
-          {round.courseName}
-        </h3>
-        <div className="flex items-center gap-2 shrink-0">
-          {isActive ? (
-            <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#F0EE3A]">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F0EE3A] opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F0EE3A]" />
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-1.5">
+            {isActive ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 h-6 text-[12px] font-semibold text-primary-foreground">
+                <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+                Live
               </span>
-              LIVE
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-gold-muted px-2.5 h-6 text-[12px] font-semibold text-primary">
+                <Check className="h-3 w-3" strokeWidth={3} />
+                Final
+              </span>
+            )}
+            <span className="text-[12px] text-muted-foreground truncate">
+              {isActive && currentHole ? `Thru ${currentHole} of ${holesTotal}` : `${holesTotal} holes`}
             </span>
-          ) : (
-            <span className="text-[11px] font-semibold px-[10px] py-1 rounded-full bg-[#F3F4F6] text-[#6B7280]">
-              Done
-            </span>
+          </div>
+          <h3 className="text-[16px] font-semibold leading-snug tracking-[-0.01em] text-foreground truncate">
+            {round.courseName}
+          </h3>
+          {(!!playerCount || tags.length > 0) && (
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              {!!playerCount && (
+                <span className="inline-flex items-center gap-1 text-[12px] text-muted-foreground mr-1">
+                  <Users className="h-3.5 w-3.5" />
+                  {playerCount} {playerCount === 1 ? 'player' : 'players'}
+                </span>
+              )}
+              {tags.map((g, i) => (
+                <span
+                  key={`${g}-${i}`}
+                  className="rounded-full bg-muted px-2.5 py-[3px] text-[12px] font-medium text-foreground/80"
+                >
+                  {g}
+                </span>
+              ))}
+            </div>
           )}
-          {onDelete && (
+        </div>
+
+        <div className="flex items-center shrink-0 -mr-2 -my-1">
+          {onDelete ? (
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={handleDeleteClick}
               disabled={isDeleting}
               aria-label="Delete round"
-              className={cn(
-                'w-7 h-7 rounded-lg flex items-center justify-center',
-                isActive
-                  ? 'bg-white/10 text-white/50 active:text-white'
-                  : 'bg-muted/70 text-muted-foreground active:text-destructive'
-              )}
+              className="h-11 w-11 rounded-[14px] flex items-center justify-center text-muted-foreground active:bg-muted active:text-loss disabled:opacity-50"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              {isDeleting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-              )}
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-[17px] w-[17px]" />}
             </motion.button>
+          ) : (
+            <ChevronRight className="mx-3 my-3.5 h-4 w-4 text-muted-foreground" />
           )}
         </div>
       </div>
 
-      {/* Meta row */}
-      <div className="flex items-center gap-3 mb-2.5">
-        {playerCount && (
-          <span className={cn(
-            'flex items-center gap-1 text-[12px]',
-            isActive ? 'text-white/60' : 'text-[#6B7280]'
-          )}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            <strong className={cn('font-semibold', isActive ? 'text-white/80' : 'text-[#374151]')}>{playerCount}</strong> {playerCount === 1 ? 'player' : 'players'}
-          </span>
-        )}
-        <span className={cn('text-[12px]', isActive ? 'text-white/60' : 'text-[#6B7280]')}>
-          {round.holes} holes
-        </span>
-      </div>
-
-      {/* Game tags — or "Solo" pill for solo rounds */}
-      {isSolo ? (
-        <div className="flex flex-wrap gap-1.5 mb-2.5">
-          <span
-            className={cn(
-              'text-[11px] font-medium px-[9px] py-[3px] rounded-[6px] uppercase tracking-wide',
-              isActive
-                ? 'bg-white/10 text-white/50'
-                : 'bg-[#F3F4F6] text-[#374151]'
-            )}
-          >
-            Solo
-          </span>
-        </div>
-      ) : games.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-2.5">
-          {games.map((g, i) => (
-            <span
-              key={`${g}-${i}`}
-              className={cn(
-                'text-[11px] font-medium px-[9px] py-[3px] rounded-[6px] uppercase tracking-wide',
-                isActive
-                  ? 'bg-white/10 text-white/50'
-                  : 'bg-[#F3F4F6] text-[#374151]'
-              )}
-            >
-              {g}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Progress bar for live rounds */}
-      {isActive && currentHole && currentHole > 0 && (
-        <div className="flex items-center gap-2 mt-1">
-          <div className="flex-1 h-[4px] bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#F0EE3A] rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(progress * 100, 100)}%` }}
-            />
-          </div>
-          <span className="text-[11px] font-semibold text-white/60 whitespace-nowrap">
-            Hole {currentHole}/{holesTotal}
-          </span>
+      {isActive && !!currentHole && currentHole > 0 && (
+        <div className="mt-3 h-1 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-500"
+            style={{ width: `${Math.min(progress * 100, 100)}%` }}
+          />
         </div>
       )}
     </motion.div>
   );
 }
 
-/** Short uppercase section label, optionally with a live indicator dot. */
-export function HomeSectionLabel({ children, live }: { children: React.ReactNode; live?: boolean }) {
+/** Sentence-case section label with optional live dot and count. */
+export function HomeSectionLabel({ children, live, count }: { children: React.ReactNode; live?: boolean; count?: number }) {
   return (
-    <div className="flex items-center gap-2 px-1 mb-2.5">
+    <div className="flex items-center gap-2 px-1 mb-2">
       {live && (
-        <span className="w-[6px] h-[6px] rounded-full bg-[#22C55E] shadow-[0_0_0_3px_rgba(34,197,94,0.15)] flex-shrink-0" />
+        <span className="relative flex h-2 w-2 flex-shrink-0">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/40" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+        </span>
       )}
-      <span className="text-[11px] font-semibold text-[#888] uppercase tracking-[0.08em]">{children}</span>
+      <span className="text-[13px] font-semibold text-muted-foreground">{children}</span>
+      {count !== undefined && count > 0 && (
+        <span className="ml-auto text-[12px] font-semibold text-muted-foreground tabular-nums">{count}</span>
+      )}
     </div>
   );
 }

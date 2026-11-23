@@ -29,6 +29,8 @@ export async function mockAuth(page: Page) {
     localStorage.setItem(storageKey, JSON.stringify(session));
     // Dismiss AI Builder tutorial so it doesn't block tests
     localStorage.setItem('ai_builder_tutorial_seen_v1', '1');
+    // Dismiss the scorecard voice tutorial overlay, which otherwise covers the money tracker
+    localStorage.setItem('match-golf-settings', JSON.stringify({ tutorialDismissed: true, tutorialViewCount: 9 }));
   }, fakeSession);
 }
 

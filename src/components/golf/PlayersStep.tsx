@@ -13,6 +13,9 @@ import { MixedTeesSheet, getTeeVisual } from '@/components/golf/MixedTeesSheet';
 import { GolfCourseDetails } from '@/hooks/useGolfCourseSearch';
 import { hapticLight } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
+import { ChipGroup, HeroCard, HeroTile } from './setupUi';
+import { fdCard } from './setupStyles';
 
 interface PlayerData {
   id: string;
@@ -95,47 +98,45 @@ export function PlayersStep({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="pt-4"
+      className="pt-2"
     >
-      {/* Handicap Mode Toggle */}
-      <div className="bg-muted rounded-xl p-1 flex gap-1 mb-5">
-        {(['auto', 'manual'] as const).map((mode) => (
-          <motion.button
-            key={mode}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => onHandicapModeChange(mode)}
-            className={cn(
-              'flex-1 text-center text-sm py-2.5 rounded-lg font-medium transition-all',
-              handicapMode === mode
-                ? 'bg-foreground text-background font-bold'
-                : 'text-muted-foreground'
-            )}
-          >
-            {mode === 'auto' ? 'Use Handicap Index' : 'Manual Strokes'}
-          </motion.button>
-        ))}
+      <HeroCard
+        eyebrow="Players"
+        title="Who's playing?"
+        body={validPlayers.length < 2 ? 'Add at least 2 players. Handicaps decide who gets shots.' : 'Handicaps decide who gets shots on which holes.'}
+      >
+        <div className="grid grid-cols-3 gap-2 mt-4">
+          <HeroTile hot value={validPlayers.length} label={validPlayers.length === 1 ? 'Player' : 'Players'} />
+          <HeroTile value={maxPlayers} label="Max" />
+          <HeroTile value={handicapMode === 'auto' ? 'Index' : 'Manual'} label="Strokes" />
+        </div>
+      </HeroCard>
+
+      {/* Handicap mode */}
+      <div className={cn(fdCard, 'mt-3.5 p-3')}>
+        <p className="text-[13px] font-semibold text-muted-foreground mb-2 px-1">Strokes from</p>
+        <ChipGroup
+          ariaLabel="Handicap mode"
+          options={[
+            { value: 'auto' as const, label: 'Handicap index' },
+            { value: 'manual' as const, label: 'Manual strokes' },
+          ]}
+          value={handicapMode}
+          onChange={onHandicapModeChange}
+        />
       </div>
 
       {/* Mixed Tees Toggle */}
-      <div className="bg-white rounded-2xl border border-border/40 px-4 py-3 mb-4 flex items-center justify-between">
+      <div className={cn(fdCard, 'mt-2 mb-3.5 px-4 py-3 min-h-[64px] flex items-center justify-between gap-3')}>
         <div>
-          <p className="text-[13px] font-bold text-foreground">Mixed Tees</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Different tees per player with adjusted handicaps</p>
+          <p className="text-[16px] font-semibold text-foreground">Mixed tees</p>
+          <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">Different tees per player, handicaps adjusted</p>
         </div>
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => { hapticLight(); onMixedTeesChange(!mixedTees); }}
-          className={cn(
-            'w-12 h-7 rounded-full transition-colors flex-shrink-0',
-            mixedTees ? 'bg-foreground' : 'bg-muted'
-          )}
-        >
-          <motion.div
-            animate={{ x: mixedTees ? 20 : 2 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="w-5 h-5 rounded-full bg-white shadow-sm mt-1"
-          />
-        </motion.button>
+        <Switch
+          checked={mixedTees}
+          onCheckedChange={(v) => { hapticLight(); onMixedTeesChange(v); }}
+          aria-label="Mixed tees"
+        />
       </div>
 
       {/* Configure Tees — only for manual courses (no API tee data) */}
@@ -145,7 +146,7 @@ export function PlayersStep({
           animate={{ opacity: 1, y: 0 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => { hapticLight(); setShowTeesSheet(true); }}
-          className="w-full bg-white border border-border/40 rounded-2xl px-4 py-3 flex items-center justify-between mb-4"
+          className={cn(fdCard, 'w-full min-h-[56px] px-4 py-3 flex items-center justify-between mb-3.5')}
         >
           <div className="flex items-center gap-3">
             <div className="flex gap-1">
@@ -157,8 +158,8 @@ export function PlayersStep({
                 : <div className="w-3 h-3 rounded-full bg-muted" />
               }
             </div>
-            <span className="text-[13px] font-bold text-foreground">
-              {roundTeeSets.length === 0 ? 'Configure Tees' : `${roundTeeSets.length} tee${roundTeeSets.length !== 1 ? 's' : ''} configured`}
+            <span className="text-[15px] font-semibold text-foreground">
+              {roundTeeSets.length === 0 ? 'Configure tees' : `${roundTeeSets.length} tee${roundTeeSets.length !== 1 ? 's' : ''} configured`}
             </span>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -170,17 +171,17 @@ export function PlayersStep({
         <motion.div
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white border border-border/40 rounded-2xl px-4 py-3 mb-4"
+          className={cn(fdCard, 'px-4 py-3 mb-3.5')}
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground mb-2.5">Course Tees</p>
+          <p className="text-[13px] font-semibold text-muted-foreground mb-2.5">Course tees</p>
           <div className="flex flex-wrap gap-2">
             {roundTeeSets.map(t => {
               const v = getTeeVisual(t.name);
               return (
-                <div key={t.id} className="flex items-center gap-1.5 bg-muted/40 rounded-lg px-2.5 py-1.5">
+                <div key={t.id} className="flex items-center gap-1.5 bg-muted rounded-full px-3 py-1.5">
                   <div className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', v.dot)} />
-                  <span className="text-[11px] font-bold text-foreground">{t.name}</span>
-                  <span className="text-[10px] text-muted-foreground">{t.slope}/{t.courseRating}</span>
+                  <span className="text-[13px] font-semibold text-foreground">{t.name}</span>
+                  <span className="text-[12px] text-muted-foreground tabular-nums">{t.slope}/{t.courseRating}</span>
                 </div>
               );
             })}
@@ -211,7 +212,7 @@ export function PlayersStep({
             />
             {/* Per-player tee selector */}
             {mixedTees && roundTeeSets.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-1.5 mb-3 pl-1">
+              <div className="flex flex-wrap gap-2 -mt-1 mb-3 px-1">
                 {roundTeeSets.map(tee => {
                   const selected = playerTeeIds.get(player.id) === tee.id;
                   const visual = getTeeVisual(tee.name);
@@ -224,16 +225,16 @@ export function PlayersStep({
                         onUpdatePlayerTee(player.id, selected ? undefined : tee.id);
                       }}
                       className={cn(
-                        'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold border transition-all',
+                        'flex items-center gap-1.5 px-3.5 h-10 rounded-full text-[13px] font-semibold transition-colors',
                         selected
-                          ? 'bg-[#0A0A0A] border-[#0A0A0A] text-white'
-                          : 'bg-white border-border/60 text-foreground'
+                          ? 'bg-primary text-white'
+                          : 'bg-muted text-foreground'
                       )}
                     >
                       <div className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', visual.dot)} />
                       <span>{tee.name}</span>
                       {hasApiTees && (
-                        <span className={cn('text-[10px] font-normal', selected ? 'text-white/60' : 'text-muted-foreground')}>
+                        <span className={cn('text-[12px] font-normal tabular-nums', selected ? 'text-[#CFE3D6]' : 'text-muted-foreground')}>
                           {tee.slope}/{tee.courseRating}
                         </span>
                       )}
@@ -251,22 +252,21 @@ export function PlayersStep({
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={handleAddPlayer}
-          className={cn(
-            'border-2 border-dashed rounded-2xl py-4 w-full flex items-center justify-center gap-2 mb-2 text-sm font-semibold',
-            canAdd
-              ? 'border-border text-muted-foreground'
-              : 'border-[#F0EE3A]/40 text-[#A08800]'
-          )}
+          className="w-full min-h-[56px] rounded-[20px] border-2 border-dashed border-border flex items-center justify-center gap-2 mb-2 text-[15px] font-semibold text-foreground"
         >
           {canAdd ? (
             <>
-              <Plus className="w-4 h-4" />
-              Add Player ({maxPlayers - players.length} remaining)
+              <span className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
+                <Plus className="w-4 h-4 text-white" />
+              </span>
+              Add Player
+              <span className="text-muted-foreground font-medium">· {maxPlayers - players.length} left</span>
             </>
           ) : (
             <>
-              <Crown className="w-4 h-4" />
+              <Crown className="w-4 h-4 text-primary" />
               Upgrade for more players
+              <ProBadge size="sm" variant="default" />
             </>
           )}
         </motion.button>
@@ -279,7 +279,7 @@ export function PlayersStep({
           animate={{ opacity: 1, y: 0 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setShowPaywall(true)}
-          className="border-2 border-dashed border-[#F0EE3A]/40 rounded-2xl py-4 w-full flex items-center justify-center gap-2 mb-2 text-sm font-semibold text-[#A08800]"
+          className="w-full min-h-[56px] rounded-[20px] bg-gold-muted flex items-center justify-center gap-2 mb-2 text-[15px] font-semibold text-primary"
         >
           <Crown className="w-4 h-4" />
           <span>Upgrade to Pro for up to 8 players</span>
@@ -288,16 +288,16 @@ export function PlayersStep({
       )}
 
       {validPlayers.length < 2 && (
-        <p className="text-sm text-muted-foreground text-center py-2">
+        <p className="text-[13px] text-muted-foreground text-center py-2">
           Add at least 2 players to continue
         </p>
       )}
 
       {/* Strokes Summary for Manual Mode */}
       {handicapMode === 'manual' && validPlayers.length >= 2 && (
-        <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-4 mb-2">
-          <p className="text-sm font-semibold mb-2">Strokes Summary</p>
-          <div className="space-y-1 text-sm text-muted-foreground">
+        <div className={cn(fdCard, 'p-4 mb-2')}>
+          <p className="text-[13px] font-semibold text-muted-foreground mb-2">Strokes summary</p>
+          <div className="space-y-1.5 text-[14px] text-muted-foreground">
             {(() => {
               const minStrokes = Math.min(...validPlayers.map(p => p.manualStrokes ?? 0));
               return validPlayers.map((p, i) => {
@@ -327,7 +327,7 @@ export function PlayersStep({
       )}
 
       {/* Group Selector */}
-      <div className="mt-5">
+      <div className="mt-6">
         <GroupSelector
           groups={groups}
           onSelectGroup={onSelectGroup}

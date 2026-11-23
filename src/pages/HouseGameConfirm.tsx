@@ -1,12 +1,17 @@
 import { useState, useCallback, useMemo } from 'react';
+import { suggestFormatName } from '@/lib/houseGame/suggestFormatName';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, Sparkles, AlertTriangle, ArrowRight, Flag } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useHouseGame } from '@/hooks/useHouseGame';
 import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
 import { ParsedPrimitive, ActivePrimitive, HouseGamePrimitive, isCustomPrimitive } from '@/types/houseGame';
 import { PRIMITIVE_MAP, PRIMITIVES_BY_CATEGORY, CATEGORY_LABELS, CATEGORY_ORDER } from '@/lib/houseGame/primitives';
 import { PrimitiveRow, CategorySection, CustomPrimitiveRow } from '@/components/golf/HouseGamePrimitives';
+import { ConfirmHero, InfeasibleList, NoticeCard, SavedSheet } from '@/components/golf/HouseGameConfirmParts';
+import { CtaFooter, SetupHeader } from '@/components/golf/setupUi';
+import { fdPrimaryCta } from '@/components/golf/setupStyles';
+import { cn } from '@/lib/utils';
 import { validateConfig, buildConfig } from '@/engine/HouseGameEngine';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { toast } from 'sonner';
@@ -42,13 +47,9 @@ export default function HouseGameConfirm() {
   const [savedFormatId, setSavedFormatId] = useState<string | null>(null);
 
   // Game name — auto-generated from description, user can edit
-  const [gameName, setGameName] = useState<string>(() => {
-    if (!description) return 'My Format';
-    const firstSentence = description.split(/[.!?]/)[0].trim();
-    return firstSentence.length > 0 && firstSentence.length <= 30
-      ? firstSentence
-      : description.slice(0, 28).trim() + (description.length > 28 ? '…' : '');
-  });
+  const [gameName, setGameName] = useState<string>(() =>
+    suggestFormatName(parsedPrimitives, description, isPersonal ? 'My Format' : 'House Game'),
+  );
 
   // Initialize checked set from parsed results.
   // high/medium confidence → auto-checked; low confidence → starts unchecked (user must opt in).
@@ -199,194 +200,98 @@ export default function HouseGameConfirm() {
 
   const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
   const defaultName = isPersonal ? 'My Format' : 'House Game';
+  const selectableCount = parsedPrimitives.filter(p => !p.infeasible).length;
+  const label = 'text-[13px] font-semibold text-muted-foreground px-1';
+
+  const saveButtonInner = saving ? (
+    <motion.div
+      animate={{ rotate: 360 }}
+      transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+      className="w-5 h-5 rounded-full border-2 border-current border-t-transparent"
+    />
+  ) : null;
 
   return (
-    <div className="h-screen flex flex-col bg-[#F8F8F6] relative">
-      {/* Header */}
-      <header className="flex-shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground">
-        <div className="flex items-center gap-3">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
-          >
-            <ArrowLeft className="w-4 h-4 text-foreground" />
-          </motion.button>
-          <div className="flex-1 min-w-0">
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              {isPersonal ? 'My Format' : 'House Game'} · {checkedIds.size} rule{checkedIds.size !== 1 ? 's' : ''}
-            </p>
-            <h1 className="text-[22px] font-black tracking-[-0.04em] text-foreground leading-none">Confirm Rules</h1>
-          </div>
+    <div className="h-screen flex flex-col bg-background relative">
+      <SetupHeader
+        onBack={() => navigate(-1)}
+        caption={`${isPersonal ? 'My Format' : 'House Game'} · ${checkedIds.size} of ${selectableCount} rules on`}
+        title="Confirm Rules"
+        right={
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={handleSave}
             disabled={checkedIds.size === 0 || saving}
-            className="ml-auto bg-foreground text-background rounded-xl px-4 py-2 font-bold text-[13px] flex items-center gap-1.5 disabled:opacity-40 flex-shrink-0"
+            className="h-11 px-4 rounded-[14px] bg-primary text-white font-bold text-[14px] flex items-center gap-1.5 disabled:opacity-40 flex-shrink-0"
           >
-            {saving ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                className="w-4 h-4 rounded-full border-2 border-background border-t-transparent"
-              />
-            ) : (
-              <>
-                <Check className="w-4 h-4" />
-                <span>Save</span>
-              </>
-            )}
+            {saveButtonInner ?? (<><Check className="w-4 h-4" /><span>Save</span></>)}
           </motion.button>
-        </div>
-      </header>
+        }
+      />
 
-      <main className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5 pb-6">
+      <main className="flex-1 overflow-y-auto px-5 pt-2 pb-36 flex flex-col gap-3.5">
+        <ConfirmHero
+          description={description}
+          foundCount={aiFoundPrimitives.length + customPrimitives.length}
+          checkedCount={checkedIds.size}
+          infeasibleCount={infeasiblePrimitives.length}
+          parsedPrimitives={parsedPrimitives}
+          onRefine={() =>
+            navigate(
+              isPersonal ? '/my-formats/new' : `/groups/${groupId}/house-game/new`,
+              { state: { prefillDescription: description } }
+            )
+          }
+        />
 
-        {/* Game name field */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...spring, delay: 0.03 }}
-        >
-          <label className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground block mb-1.5">
-            {isPersonal ? 'Format Name' : 'Game Name'}
+        {/* Name */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.03 }}>
+          <label htmlFor="format-name" className={cn(label, 'block mb-1.5')}>
+            {isPersonal ? 'Format name' : 'Game name'}
           </label>
           <input
+            id="format-name"
             type="text"
             value={gameName}
             onChange={e => setGameName(e.target.value)}
             maxLength={40}
             placeholder={defaultName}
-            className="w-full bg-white border-2 border-foreground/20 focus:border-foreground rounded-xl px-4 py-3 text-[15px] font-bold text-foreground placeholder:text-muted-foreground/50 outline-none transition-colors"
+            className="w-full h-14 bg-card border border-border focus:border-primary rounded-[20px] px-4 text-[17px] font-bold text-foreground placeholder:text-muted-foreground/60 outline-none focus-visible:outline-none transition-colors"
           />
         </motion.div>
 
-        {/* Stub feature warnings */}
         {configWarnings.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...spring, delay: 0.035 }}
-            className="bg-[#FFF3CD] border border-[#F0BB3A] rounded-2xl px-4 py-3"
+          <NoticeCard
+            title={configWarnings.length === 1
+              ? 'One selected rule has limited support'
+              : `${configWarnings.length} selected rules have limited support`}
           >
-            <div className="flex items-start gap-2 mb-1.5">
-              <AlertTriangle className="w-4 h-4 text-[#B45309] flex-shrink-0 mt-0.5" />
-              <p className="text-[#7D4E0F] font-bold text-[13px]">
-                {configWarnings.length === 1
-                  ? 'One selected rule has limited support'
-                  : `${configWarnings.length} selected rules have limited support`}
-              </p>
-            </div>
-            <ul className="space-y-1 ml-6">
+            <ul className="space-y-1 mt-1 ml-4">
               {configWarnings.map((w) => (
-                <li key={w} className="text-[#7D4E0F]/80 text-[12px] leading-snug list-disc">
-                  {w}
-                </li>
+                <li key={w} className="text-[#7C4A03]/80 text-[13px] leading-snug list-disc">{w}</li>
               ))}
             </ul>
-          </motion.div>
+          </NoticeCard>
         )}
 
-        {/* 0-match warning */}
         {parsedPrimitives.length === 0 && description && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...spring, delay: 0.04 }}
-            className="bg-[#FFF3CD] border border-[#F0BB3A] rounded-2xl px-4 py-3"
-          >
-            <p className="text-[#7D4E0F] font-bold text-[13px]">
-              We couldn't identify any rules from that description.
-            </p>
-            <p className="text-[#7D4E0F]/70 text-[12px] mt-0.5 leading-snug">
+          <NoticeCard title="We couldn't identify any rules from that description.">
+            <p className="text-[#7C4A03]/80 text-[13px] mt-0.5 leading-snug">
               Try being more specific, or select rules manually from the categories below.
             </p>
-          </motion.div>
+          </NoticeCard>
         )}
 
-        {/* AI summary card */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...spring, delay: 0.05 }}
-        >
-          <div className="bg-[#0A0A0A] rounded-2xl p-4">
-            <div className="flex items-start gap-3">
-              <Sparkles className="w-5 h-5 text-[#F0EE3A] flex-shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-bold text-[13px] leading-snug">
-                  Found {aiFoundPrimitives.length + customPrimitives.length} rule{(aiFoundPrimitives.length + customPrimitives.length) !== 1 ? 's' : ''} in your description
-                  {infeasiblePrimitives.length > 0 && (
-                    <span className="text-[#F0BB3A]"> · {infeasiblePrimitives.length} can't be created</span>
-                  )}
-                </p>
-                {aiFoundPrimitives.length > 0 && (
-                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                    {(() => {
-                      const high = parsedPrimitives.filter(p => p.confidence === 'high').length;
-                      const medium = parsedPrimitives.filter(p => p.confidence === 'medium').length;
-                      const low = parsedPrimitives.filter(p => p.confidence === 'low').length;
-                      return (
-                        <>
-                          {high > 0 && (
-                            <span className="flex items-center gap-1 text-[10px] font-bold text-[#4ADE80] bg-[#4ADE80]/15 px-2 py-0.5 rounded-full">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80]" />
-                              {high} high
-                            </span>
-                          )}
-                          {medium > 0 && (
-                            <span className="flex items-center gap-1 text-[10px] font-bold text-[#FCD34D] bg-[#FCD34D]/15 px-2 py-0.5 rounded-full">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#FCD34D]" />
-                              {medium} medium
-                            </span>
-                          )}
-                          {low > 0 && (
-                            <span className="flex items-center gap-1 text-[10px] font-bold text-[#FB923C] bg-[#FB923C]/15 px-2 py-0.5 rounded-full">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#FB923C]" />
-                              {low} low
-                            </span>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                )}
-                <p className="text-white/40 text-[11px] mt-1.5 leading-relaxed line-clamp-2">
-                  "{description}"
-                </p>
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={() =>
-              navigate(
-                isPersonal ? '/my-formats/new' : `/groups/${groupId}/house-game/new`,
-                { state: { prefillDescription: description } }
-              )
-            }
-            className="mt-2 text-[12px] text-muted-foreground font-bold"
-          >
-            ← Refine description
-          </button>
-        </motion.div>
-
-        {/* AI found section */}
         {aiFoundPrimitives.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...spring, delay: 0.1 }}
-          >
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
-              Here's what we found
-            </p>
+          <section>
+            <p className={cn(label, 'mt-2 mb-2')}>Here's what we found</p>
             <div className="space-y-2">
               {aiFoundPrimitives.map((p, i) => (
                 <motion.div
                   key={p.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 28, delay: 0.1 + i * 0.05 }}
+                  transition={{ ...spring, delay: 0.08 + i * 0.05 }}
                 >
                   <PrimitiveRow
                     primitive={p}
@@ -399,104 +304,41 @@ export default function HouseGameConfirm() {
                 </motion.div>
               ))}
             </div>
-          </motion.div>
+          </section>
         )}
 
-        {/* AI-created custom rules */}
         {customPrimitives.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...spring, delay: 0.12 }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-                AI-Created Rules
-              </p>
-              <span className="text-[9px] font-black text-[#0A0A0A] bg-[#F0EE3A] px-1.5 py-0.5 rounded-md">
-                NEW
-              </span>
+          <section>
+            <div className="flex items-center gap-2 mt-2 mb-1 px-1">
+              <p className="text-[13px] font-semibold text-muted-foreground">AI-Created Rules</p>
+              <span className="text-[11px] font-bold text-primary bg-gold px-2 py-0.5 rounded-full">New</span>
             </div>
-            <p className="text-[11px] text-muted-foreground mb-2 leading-snug">
-              These rules aren't in our standard library — they'll be saved as reminders and shown at settlement.
+            <p className="text-[13px] text-muted-foreground mb-2 leading-snug px-1">
+              Not in our standard library. Saved as reminders and shown at settlement.
             </p>
             <div className="space-y-2">
-              {customPrimitives.map((p, i) => (
-                <motion.div
+              {customPrimitives.map(p => (
+                <CustomPrimitiveRow
                   key={p.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 28, delay: 0.12 + i * 0.05 }}
-                >
-                  <CustomPrimitiveRow
-                    primitive={p}
-                    checked={checkedIds.has(p.id)}
-                    onToggle={() => handleToggle(p.id)}
-                  />
-                </motion.div>
+                  primitive={p}
+                  checked={checkedIds.has(p.id)}
+                  onToggle={() => handleToggle(p.id)}
+                />
               ))}
             </div>
-          </motion.div>
+          </section>
         )}
 
-        {/* Rules that cannot be created */}
         {infeasiblePrimitives.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...spring, delay: 0.14 }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-                Can't Be Created
-              </p>
-              <span className="text-[9px] font-black text-[#7D4E0F] bg-[#FEF3C7] px-1.5 py-0.5 rounded-md">
-                {infeasiblePrimitives.length}
-              </span>
-            </div>
-            <div className="bg-[#FFF9E6] border border-[#F0BB3A] rounded-2xl px-4 py-3 mb-2">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-[#B45309] flex-shrink-0 mt-0.5" />
-                <p className="text-[12px] text-[#7D4E0F] leading-snug">
-                  The following rules can't be tracked in the app. You'll need to handle these manually with your group.
-                </p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              {infeasiblePrimitives.map((p, i) => (
-                <motion.div
-                  key={p.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 28, delay: 0.14 + i * 0.05 }}
-                  className="rounded-xl px-4 py-3 border border-[#F0BB3A] bg-[#FFF9E6]"
-                >
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="w-3.5 h-3.5 text-[#B45309] flex-shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-bold text-[#7D4E0F]">
-                        {p.label ?? p.id.replace('custom_', '').replace(/_/g, ' ')}
-                      </p>
-                      {p.description && (
-                        <p className="text-[11px] text-[#7D4E0F]/70 leading-snug mt-0.5">{p.description}</p>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+          <section>
+            <p className={cn(label, 'mt-2 mb-2')}>Can't be created · {infeasiblePrimitives.length}</p>
+            <InfeasibleList items={infeasiblePrimitives} />
+          </section>
         )}
 
-        {/* Add more section */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...spring, delay: 0.15 }}
-        >
-          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
-            Want to add anything?
-          </p>
+        <section>
+          <p className={cn(label, 'mt-2')}>Want to add anything?</p>
+          <p className="text-[13px] text-muted-foreground mb-2 px-1">Browse every rule MATCH can track.</p>
           <div className="space-y-2">
             {CATEGORY_ORDER.map(catId => {
               const prims = PRIMITIVES_BY_CATEGORY[catId];
@@ -516,115 +358,42 @@ export default function HouseGameConfirm() {
               );
             })}
           </div>
-        </motion.div>
+        </section>
       </main>
 
+      <CtaFooter>
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={handleSave}
+          disabled={checkedIds.size === 0 || saving}
+          className={fdPrimaryCta}
+        >
+          {saveButtonInner ?? (
+            <>
+              <Check className="w-5 h-5 text-gold" />
+              <span>{isPersonal ? 'Save format' : 'Save house game'} · {checkedIds.size} rule{checkedIds.size !== 1 ? 's' : ''}</span>
+            </>
+          )}
+        </motion.button>
+      </CtaFooter>
 
-      {/* Step 3: Success overlay — appears after saving */}
       <AnimatePresence>
         {savedFormatId && (
-          <motion.div
-            key="success-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-[#0A0A0A]/60 backdrop-blur-sm flex items-end z-50"
-          >
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-              className="w-full bg-[#0A0A0A] rounded-t-[32px] px-6 pt-6 pb-[40px]"
-            >
-              {/* Drag handle */}
-              <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-7" />
-
-              {/* Check circle with ring animation */}
-              <div className="flex justify-center mb-5">
-                <div className="relative">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 }}
-                    className="w-20 h-20 rounded-full bg-[#F0EE3A] flex items-center justify-center"
-                  >
-                    <Check className="w-9 h-9 text-[#0A0A0A] stroke-[3]" />
-                  </motion.div>
-                  <motion.div
-                    initial={{ scale: 0.6, opacity: 0.6 }}
-                    animate={{ scale: 1.5, opacity: 0 }}
-                    transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
-                    className="absolute inset-0 rounded-full border-2 border-[#F0EE3A]"
-                  />
-                </div>
-              </div>
-
-              {/* Title */}
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.18 }}
-                className="text-center mb-1"
-              >
-                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#F0EE3A] mb-1">
-                  {isPersonal ? 'Format Created' : 'House Game Set'}
-                </p>
-                <h2 className="text-[28px] font-black tracking-[-0.04em] text-white leading-none">
-                  {gameName || (isPersonal ? 'My Format' : 'House Game')}
-                </h2>
-                <p className="text-white/50 text-[13px] mt-2 leading-snug">
-                  {checkedIds.size} rule{checkedIds.size !== 1 ? 's' : ''} ready to play
-                </p>
-              </motion.div>
-
-              {/* Divider */}
-              <motion.div
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ delay: 0.28, duration: 0.4 }}
-                className="h-px bg-white/10 my-5"
-              />
-
-              {/* CTAs */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="flex flex-col gap-3"
-              >
-                {/* Primary: Start a Round */}
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => {
-                    if (isPersonal && savedFormatId !== 'group') {
-                      navigate('/new-round', {
-                        state: { preSelectFormatId: savedFormatId },
-                        replace: true,
-                      });
-                    } else {
-                      // Group house game — just go to new round
-                      navigate('/new-round', { replace: true });
-                    }
-                  }}
-                  className="w-full h-[58px] bg-[#F0EE3A] rounded-2xl flex items-center justify-center gap-3 font-black text-[16px] text-[#0A0A0A] tracking-[-0.02em]"
-                >
-                  <Flag className="w-5 h-5" />
-                  <span>Start a Round Now</span>
-                  <ArrowRight className="w-4 h-4 ml-auto" />
-                </motion.button>
-
-                {/* Secondary: Done / back */}
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => navigate(returnTo ?? '/', { replace: true })}
-                  className="w-full h-[50px] rounded-2xl flex items-center justify-center font-bold text-[14px] text-white/50"
-                >
-                  {returnTo ? 'Back to New Round' : 'Done'}
-                </motion.button>
-              </motion.div>
-            </motion.div>
-          </motion.div>
+          <SavedSheet
+            isPersonal={isPersonal}
+            name={gameName || defaultName}
+            ruleCount={checkedIds.size}
+            doneLabel={returnTo ? 'Back to New Round' : 'Done'}
+            onStartRound={() => {
+              if (isPersonal && savedFormatId !== 'group') {
+                navigate('/new-round', { state: { preSelectFormatId: savedFormatId }, replace: true });
+              } else {
+                // Group house game — just go to new round
+                navigate('/new-round', { replace: true });
+              }
+            }}
+            onDone={() => navigate(returnTo ?? '/', { replace: true })}
+          />
         )}
       </AnimatePresence>
     </div>

@@ -254,7 +254,7 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
     await expect(page.getByText('Confirm Rules')).toBeVisible();
 
     // Game name input
-    const nameInput = page.locator('input[type="text"]').first();
+    const nameInput = page.locator('#format-name');
     await expect(nameInput).toBeVisible();
     // Should be auto-filled from the description
     const nameValue = await nameInput.inputValue();
@@ -291,7 +291,7 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
   test('can edit the game name', async ({ page }) => {
     await navigateToConfirm(page);
 
-    const nameInput = page.locator('input[type="text"]').first();
+    const nameInput = page.locator('#format-name');
     await nameInput.clear();
     await nameInput.fill('My Custom Nassau Game');
     await expect(nameInput).toHaveValue('My Custom Nassau Game');
@@ -300,7 +300,7 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
   test('game name has max 40 character limit', async ({ page }) => {
     await navigateToConfirm(page);
 
-    const nameInput = page.locator('input[type="text"]').first();
+    const nameInput = page.locator('#format-name');
     const longName = 'A'.repeat(50);
     await nameInput.clear();
     await nameInput.fill(longName);
@@ -323,7 +323,7 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
 
     // Find the first checkbox-like toggle in the "Here's what we found" section
     // Each PrimitiveRow has a button with a Check icon as its first child
-    const firstRuleToggle = page.locator('.rounded-xl button').first();
+    const firstRuleToggle = page.getByTestId('rule-toggle').first();
     await firstRuleToggle.click();
 
     // Count should decrease
@@ -344,15 +344,15 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
     // Our mock has carryover_skins as low confidence — starts unchecked.
     // Scroll down to find it — it's the one with an unchecked toggle (border-border, no bg-foreground)
     // The "Here's what we found" section has all rules; the unchecked one has a lighter toggle
-    const allToggleButtons = page.locator('main .rounded-xl .rounded-md.border-2');
+    const allToggleButtons = page.getByTestId('rule-toggle');
     const count = await allToggleButtons.count();
 
     // Find and click the first unchecked toggle (one without bg-foreground)
     for (let i = 0; i < count; i++) {
       const toggle = allToggleButtons.nth(i);
       await toggle.scrollIntoViewIfNeeded();
-      const classes = await toggle.getAttribute('class') ?? '';
-      if (!classes.includes('bg-foreground')) {
+      const state = await toggle.getAttribute('data-state');
+      if (state === 'unchecked') {
         await toggle.click();
         // Count should increase
         await page.waitForTimeout(300);
@@ -464,7 +464,7 @@ test.describe('AI Game Builder — Step 2: Confirm', () => {
       if (count === 0) break;
 
       // Find a checked toggle (has bg-foreground class) and click it
-      const checkedToggle = page.locator('.rounded-xl button.rounded-md.bg-foreground').first();
+      const checkedToggle = page.locator('[data-testid="rule-toggle"][data-state="checked"]').first();
       if (await checkedToggle.isVisible().catch(() => false)) {
         await checkedToggle.click();
         await page.waitForTimeout(200);
@@ -636,7 +636,7 @@ test.describe('AI Game Builder — Full E2E Flow', () => {
     await expect(page.getByText(/Nassau/).first()).toBeVisible();
 
     // Edit the name
-    const nameInput = page.locator('input[type="text"]').first();
+    const nameInput = page.locator('#format-name');
     await nameInput.clear();
     await nameInput.fill('My Nassau Game');
 

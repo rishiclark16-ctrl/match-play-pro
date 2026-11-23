@@ -196,26 +196,26 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
         <div className={cn('flex-1 flex items-center gap-3', align === 'right' && 'justify-end')}>
           {align === 'right' && (
             <div className="min-w-0 text-right">
-              <p className="font-bold text-sm text-foreground truncate">{team.name}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{teamFirstNames(team)}</p>
+              <p className="font-semibold text-[15px] text-[#0F1F17] truncate">{team.name}</p>
+              <p className="text-[12px] text-[#5A6B61] truncate">{teamFirstNames(team)}</p>
             </div>
           )}
           <div className="relative">
-            <Avatar className={cn('w-12 h-12 border-2', isLeader ? 'border-[#22C55E] ring-2 ring-[#22C55E]/30' : 'border-border')}>
-              <AvatarFallback className={cn('font-bold text-lg', isLeader ? 'bg-[#22C55E] text-white' : 'bg-muted text-muted-foreground')}>
+            <Avatar className={cn('w-12 h-12 border-2', isLeader ? 'border-[#14532D]' : 'border-border')}>
+              <AvatarFallback className={cn('font-bold text-lg', isLeader ? 'bg-[#14532D] text-white' : 'bg-[#F0F2EC] text-[#5A6B61]')}>
                 {initials}
               </AvatarFallback>
             </Avatar>
             {isLeader && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#F0EE3A] flex items-center justify-center">
-                <Crown className="w-3 h-3 text-[#0A0A0A]" />
+              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#BEF264] border-2 border-white flex items-center justify-center">
+                <Crown className="w-2.5 h-2.5 text-[#14532D]" />
               </div>
             )}
           </div>
           {align === 'left' && (
             <div className="min-w-0">
-              <p className="font-bold text-sm text-foreground truncate">{team.name}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{teamFirstNames(team)}</p>
+              <p className="font-semibold text-[15px] text-[#0F1F17] truncate">{team.name}</p>
+              <p className="text-[12px] text-[#5A6B61] truncate">{teamFirstNames(team)}</p>
             </div>
           )}
         </div>
@@ -228,37 +228,37 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-        className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]"
+        className={CARD}
       >
         <div className="px-4 py-3">
           <div className="flex items-center justify-center gap-2 mb-3">
-            <Swords className="w-4 h-4 text-muted-foreground" />
-            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">
-              Fourball Match Play
+            <Swords className="w-4 h-4 text-[#5A6B61]" />
+            <span className="text-[12px] font-semibold text-[#5A6B61]">
+              Fourball match play
             </span>
             {isDormie && (
-              <span className="bg-[#FEF2F2] text-[#EF4444] text-[10px] font-bold px-2 py-0.5 rounded-full">DORMIE</span>
+              <span className="bg-[#0F1F17] text-white text-[11px] font-semibold px-2 py-0.5 rounded-full">Dormie</span>
             )}
             {isAllSquare && !isOver && (
-              <span className="bg-[#FFFBEB] text-[#D97706] text-[10px] font-bold px-2 py-0.5 rounded-full">TIED</span>
+              <span className="bg-[#F0F2EC] text-[#0F1F17] text-[11px] font-semibold px-2 py-0.5 rounded-full">All square</span>
             )}
             {isOver && (
-              <span className="bg-muted text-muted-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">MATCH OVER</span>
+              <span className="bg-[#F0F2EC] text-[#5A6B61] text-[11px] font-semibold px-2 py-0.5 rounded-full">Match over</span>
             )}
           </div>
 
           <div className="flex items-center justify-between gap-4">
             {renderTeamSide(teamA, 'left')}
             <div className="flex flex-col items-center px-4">
-              <div className="font-black text-xl text-foreground">
+              <div className="font-extrabold text-[26px] leading-none tracking-[-0.02em] text-[#14532D]">
                 {isAllSquare
                   ? 'AS'
                   : isOver && fourballResult.winMargin
                     ? fourballResult.winMargin
-                    : `${fourballResult.holesUp} UP`}
+                    : `${fourballResult.holesUp} up`}
               </div>
-              <p className="text-[10px] text-muted-foreground font-medium">
-                Thru {fourballResult.holesPlayed} • {fourballResult.holesRemaining} to play
+              <p className="text-[12px] text-[#5A6B61] font-medium mt-1 whitespace-nowrap">
+                Thru {fourballResult.holesPlayed} · {fourballResult.holesRemaining} to play
               </p>
             </div>
             {renderTeamSide(teamB, 'right')}
@@ -278,28 +278,28 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-        className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]"
+        className={CARD}
       >
         <div className="px-4 py-3">
           {/* Match Play Header */}
           <div className="flex items-center justify-center gap-2 mb-3">
-            <Swords className="w-4 h-4 text-muted-foreground" />
-            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">
-              Match Play
+            <Swords className="w-4 h-4 text-[#5A6B61]" />
+            <span className="text-[12px] font-semibold text-[#5A6B61]">
+              Match play
             </span>
             {matchPlayStatus.isDormie && (
-              <span className="bg-[#FEF2F2] text-[#EF4444] text-[10px] font-bold px-2 py-0.5 rounded-full">
-                DORMIE
+              <span className="bg-[#0F1F17] text-white text-[11px] font-semibold px-2 py-0.5 rounded-full">
+                Dormie
               </span>
             )}
             {matchPlayStatus.isAllSquare && !matchPlayStatus.matchOver && (
-              <span className="bg-[#FFFBEB] text-[#D97706] text-[10px] font-bold px-2 py-0.5 rounded-full">
-                TIED
+              <span className="bg-[#F0F2EC] text-[#0F1F17] text-[11px] font-semibold px-2 py-0.5 rounded-full">
+                All square
               </span>
             )}
             {matchPlayStatus.matchOver && (
-              <span className="bg-muted text-muted-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
-                MATCH OVER
+              <span className="bg-[#F0F2EC] text-[#5A6B61] text-[11px] font-semibold px-2 py-0.5 rounded-full">
+                Match over
               </span>
             )}
           </div>
@@ -312,32 +312,32 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
                 <Avatar className={cn(
                   "w-12 h-12 border-2",
                   matchPlayStatus.leaderId === player1.id
-                    ? "border-[#22C55E] ring-2 ring-[#22C55E]/30"
+                    ? "border-[#14532D]"
                     : "border-border"
                 )}>
                   <AvatarImage src={player1.avatarUrl} />
                   <AvatarFallback className={cn(
                     "font-bold text-lg",
                     matchPlayStatus.leaderId === player1.id
-                      ? "bg-[#22C55E] text-white"
-                      : "bg-muted text-muted-foreground"
+                      ? "bg-[#14532D] text-white"
+                      : "bg-[#F0F2EC] text-[#5A6B61]"
                   )}>
                     {getInitials(player1.name)}
                   </AvatarFallback>
                 </Avatar>
                 {matchPlayStatus.leaderId === player1.id && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#F0EE3A] flex items-center justify-center">
-                    <Crown className="w-3 h-3 text-[#0A0A0A]" />
+                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#BEF264] border-2 border-white flex items-center justify-center">
+                    <Crown className="w-2.5 h-2.5 text-[#14532D]" />
                   </div>
                 )}
               </div>
               <div className="min-w-0">
-                <p className="font-bold text-sm text-foreground truncate">{(player1.name || 'Player').split(' ')[0]}</p>
+                <p className="font-semibold text-[15px] text-[#0F1F17] truncate">{(player1.name || 'Player').split(' ')[0]}</p>
                 <p className={cn(
-                  "text-xs font-black tabular-nums",
+                  "text-[13px] font-bold tabular-nums",
                   (() => {
                     const s = useNetScoring && player1.netRelativeToPar !== undefined ? player1.netRelativeToPar : player1.totalRelativeToPar;
-                    return s < 0 ? "text-[#22C55E]" : s === 0 ? "text-foreground" : "text-[#EF4444]";
+                    return toParColor(s);
                   })()
                 )}>
                   {formatRelativeToPar(useNetScoring && player1.netRelativeToPar !== undefined
@@ -349,28 +349,28 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
 
             {/* Match Status */}
             <div className="flex flex-col items-center px-4">
-              <div className="font-black text-xl text-foreground">
+              <div className="font-extrabold text-[26px] leading-none tracking-[-0.02em] text-[#14532D]">
                 {matchPlayStatus.isAllSquare
                   ? 'AS'
                   : matchPlayStatus.matchOver
                     ? formatMatchPlayScore(matchPlayStatus, true)
-                    : `${matchPlayStatus.holesUp} UP`
+                    : `${matchPlayStatus.holesUp} up`
                 }
               </div>
-              <p className="text-[10px] text-muted-foreground font-medium">
-                Thru {player1.holesPlayed} • {matchPlayStatus.holesRemaining} to play
+              <p className="text-[12px] text-[#5A6B61] font-medium mt-1 whitespace-nowrap">
+                Thru {player1.holesPlayed} · {matchPlayStatus.holesRemaining} to play
               </p>
             </div>
 
             {/* Player 2 */}
             <div className="flex-1 flex items-center justify-end gap-3">
               <div className="min-w-0 text-right">
-                <p className="font-bold text-sm text-foreground truncate">{(player2.name || 'Player').split(' ')[0]}</p>
+                <p className="font-semibold text-[15px] text-[#0F1F17] truncate">{(player2.name || 'Player').split(' ')[0]}</p>
                 <p className={cn(
-                  "text-xs font-black tabular-nums",
+                  "text-[13px] font-bold tabular-nums",
                   (() => {
                     const s = useNetScoring && player2.netRelativeToPar !== undefined ? player2.netRelativeToPar : player2.totalRelativeToPar;
-                    return s < 0 ? "text-[#22C55E]" : s === 0 ? "text-foreground" : "text-[#EF4444]";
+                    return toParColor(s);
                   })()
                 )}>
                   {formatRelativeToPar(useNetScoring && player2.netRelativeToPar !== undefined
@@ -382,22 +382,22 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
                 <Avatar className={cn(
                   "w-12 h-12 border-2",
                   matchPlayStatus.leaderId === player2.id
-                    ? "border-[#22C55E] ring-2 ring-[#22C55E]/30"
+                    ? "border-[#14532D]"
                     : "border-border"
                 )}>
                   <AvatarImage src={player2.avatarUrl} />
                   <AvatarFallback className={cn(
                     "font-bold text-lg",
                     matchPlayStatus.leaderId === player2.id
-                      ? "bg-[#22C55E] text-white"
-                      : "bg-muted text-muted-foreground"
+                      ? "bg-[#14532D] text-white"
+                      : "bg-[#F0F2EC] text-[#5A6B61]"
                   )}>
                     {getInitials(player2.name)}
                   </AvatarFallback>
                 </Avatar>
                 {matchPlayStatus.leaderId === player2.id && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#F0EE3A] flex items-center justify-center">
-                    <Crown className="w-3 h-3 text-[#0A0A0A]" />
+                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#BEF264] border-2 border-white flex items-center justify-center">
+                    <Crown className="w-2.5 h-2.5 text-[#14532D]" />
                   </div>
                 )}
               </div>
@@ -408,26 +408,10 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
     );
   }
 
-  // Standard stroke play leaderboard
-  const leader = sortedPlayers[0];
-  const leaderScore = useNetScoring && leader.netRelativeToPar !== undefined
-    ? leader.netRelativeToPar
-    : leader.totalRelativeToPar;
-
-  // Check for ties
-  const isTied = sortedPlayers.length > 1 && (
-    (useNetScoring && sortedPlayers[1].netRelativeToPar !== undefined
-      ? sortedPlayers[1].netRelativeToPar
-      : sortedPlayers[1].totalRelativeToPar) === leaderScore
-  );
-
-  // Get all tied leaders
-  const tiedLeaders = sortedPlayers.filter(p => {
-    const score = useNetScoring && p.netRelativeToPar !== undefined
-      ? p.netRelativeToPar
-      : p.totalRelativeToPar;
-    return score === leaderScore;
-  });
+  // Standard stroke play standings
+  const scoreOf = (p: PlayerWithScores) =>
+    useNetScoring && p.netRelativeToPar !== undefined ? p.netRelativeToPar : p.totalRelativeToPar;
+  const leaderScore = scoreOf(sortedPlayers[0]);
 
   return (
     <motion.div
@@ -435,150 +419,52 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-      className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]"
+      className={CARD}
     >
-      {/* Leader Section */}
-      <div className="px-4 py-3 border-b border-border/50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              {isTied ? (
-                <div className="flex -space-x-2">
-                  {tiedLeaders.slice(0, 3).map((p, i) => (
-                    <Avatar
-                      key={p.id}
-                      className={cn(
-                        "w-10 h-10 border-2 border-background ring-2 ring-[#22C55E]/30",
-                        i > 0 && "relative"
-                      )}
-                      style={{ zIndex: 3 - i }}
-                    >
-                      <AvatarImage src={p.avatarUrl} />
-                      <AvatarFallback className="bg-muted text-muted-foreground font-bold text-sm">
-                        {getInitials(p.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                  ))}
-                </div>
-              ) : (
-                <Avatar className="w-12 h-12 border-2 border-[#22C55E] ring-2 ring-[#22C55E]/30">
-                  <AvatarImage src={leader.avatarUrl} />
-                  <AvatarFallback className="bg-muted text-muted-foreground font-bold text-lg">
-                    {getInitials(leader.name)}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#F0EE3A] flex items-center justify-center">
-                <Crown className="w-3 h-3 text-[#0A0A0A]" />
-              </div>
-            </div>
-
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                {isTied ? (
-                  <p className="font-black text-base text-foreground truncate">
-                    {tiedLeaders.map(p => (p.name || 'Player').split(' ')[0]).join(' & ')}
-                  </p>
-                ) : (
-                  <p className="font-black text-base text-foreground truncate">{leader.name}</p>
-                )}
-                {isTied && (
-                  <span className="bg-[#FFFBEB] text-[#D97706] text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    TIED
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {isTied ? 'Leading' : 'Leader'} • Thru {leader.holesPlayed}
-                {useNetScoring && ' (Net)'}
-              </p>
-            </div>
-          </div>
-
-          {/* Leader Score Display */}
-          <div className={cn(
-            "text-3xl font-black tabular-nums",
-            leaderScore < 0 && "text-[#22C55E]",
-            leaderScore === 0 && "text-foreground",
-            leaderScore > 0 && "text-[#EF4444]"
-          )}>
-            {formatRelativeToPar(leaderScore)}
-          </div>
-        </div>
+      <div className="px-4 pt-3.5 pb-1 flex items-center justify-between">
+        <span className="text-[12px] font-semibold text-[#5A6B61]">Standings</span>
+        {useNetScoring && (
+          <span className="rounded-full bg-[#F0F2EC] px-2 py-0.5 text-[11px] font-semibold text-[#5A6B61]">Net</span>
+        )}
       </div>
-
-      {/* Mini Standings - show other players if more than 2 */}
-      {sortedPlayers.length > 2 && (
-        <div>
-          {sortedPlayers.slice(isTied ? tiedLeaders.length : 1).map((player, index) => {
-            const score = useNetScoring && player.netRelativeToPar !== undefined
-              ? player.netRelativeToPar
-              : player.totalRelativeToPar;
-            const diff = score - leaderScore;
-            const position = (isTied ? tiedLeaders.length : 1) + index + 1;
-
-            return (
-              <div
-                key={player.id}
-                className="px-4 py-1.5 flex items-center gap-2"
-              >
-                <span className="text-[11px] font-bold text-muted-foreground w-5">
-                  {position}.
-                </span>
-                <Avatar className="w-6 h-6 border border-border">
-                  <AvatarImage src={player.avatarUrl} />
-                  <AvatarFallback className="bg-muted text-muted-foreground text-[10px] font-bold">
-                    {getInitials(player.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium text-foreground truncate flex-1">
+      <ol className="pb-1.5">
+        {sortedPlayers.map((player, index) => {
+          const score = scoreOf(player);
+          const back = score - leaderScore;
+          // Tie-aware position: share the position of the first player on the same score
+          const firstIdx = sortedPlayers.findIndex(p => scoreOf(p) === score);
+          const tied = sortedPlayers.filter(p => scoreOf(p) === score).length > 1;
+          const isLeader = back === 0;
+          return (
+            <li key={player.id} className={cn('px-4 py-2 flex items-center gap-3', index > 0 && 'border-t border-[#E7E9E3]')}>
+              <span className={cn(
+                'w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold tabular-nums shrink-0',
+                isLeader ? 'bg-[#14532D] text-white' : 'bg-[#F0F2EC] text-[#5A6B61]'
+              )}>
+                {tied ? `T${firstIdx + 1}` : firstIdx + 1}
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[15px] font-semibold text-[#0F1F17] truncate leading-tight">
                   {(player.name || 'Player').split(' ')[0]}
-                </span>
-                <span className="text-sm font-black tabular-nums text-muted-foreground">
-                  {diff === 0 ? 'E' : `+${diff}`}
-                </span>
+                </p>
+                <p className="text-[12px] font-medium text-[#5A6B61] tabular-nums leading-tight mt-0.5">
+                  Thru {player.holesPlayed}{back > 0 ? ` · ${back} back` : ''}
+                </p>
               </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* 2 player head-to-head (stroke play) */}
-      {sortedPlayers.length === 2 && !isMatchPlay && (
-        <div className="px-4 py-1.5 flex items-center gap-2">
-          <span className="text-[11px] font-bold text-muted-foreground w-5">2.</span>
-          <Avatar className="w-6 h-6 border border-border">
-            <AvatarImage src={sortedPlayers[1].avatarUrl} />
-            <AvatarFallback className="bg-muted text-muted-foreground text-[10px] font-bold">
-              {getInitials(sortedPlayers[1].name)}
-            </AvatarFallback>
-          </Avatar>
-          <span className="text-sm font-medium text-foreground truncate flex-1">
-            {(sortedPlayers[1].name || 'Player').split(' ')[0]}
-          </span>
-          {(() => {
-            const score2 = useNetScoring && sortedPlayers[1].netRelativeToPar !== undefined
-              ? sortedPlayers[1].netRelativeToPar
-              : sortedPlayers[1].totalRelativeToPar;
-            const diff = score2 - leaderScore;
-
-            return (
-              <div className="flex items-center gap-2">
-                <span className={cn(
-                  "text-sm font-black tabular-nums text-muted-foreground",
-                )}>
-                  {diff === 0 ? 'E' : `+${diff}`}
-                </span>
-                {!isTied && (
-                  <span className="text-xs text-muted-foreground">
-                    ({diff > 0 ? '+' : ''}{diff} back)
-                  </span>
-                )}
-              </div>
-            );
-          })()}
-        </div>
-      )}
+              <span className={cn('text-[20px] font-extrabold tabular-nums', toParColor(score))}>
+                {formatRelativeToPar(score)}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
     </motion.div>
   );
 });
+
+const CARD = 'bg-white rounded-[20px] border border-[#E7E9E3]';
+
+/** Under par reads Forest; even and over stay Ink (red is reserved for money owed). */
+function toParColor(score: number): string {
+  return score < 0 ? 'text-[#14532D]' : 'text-[#0F1F17]';
+}

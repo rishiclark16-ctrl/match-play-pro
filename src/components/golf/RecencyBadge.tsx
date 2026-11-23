@@ -23,6 +23,6 @@ export function RecencyBadge({ lastUpdatedAt }: RecencyBadgeProps) {
   }
 
   return (
-    <span className="text-[11px] text-gray-400 leading-none">{text}</span>
+    <span className="text-[12px] text-muted-foreground leading-none">{text}</span>
   );
 }

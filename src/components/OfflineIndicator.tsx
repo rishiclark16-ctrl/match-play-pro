@@ -35,12 +35,12 @@ export function OfflineIndicator({
       onClick={onSyncClick}
       disabled={!isOnline || isSyncing}
       className={cn(
-        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold transition-colors",
-        !isOnline 
-          ? "bg-warning/20 text-warning border border-warning/30" 
+        "flex items-center gap-1.5 h-9 px-3 rounded-full text-xs font-semibold transition-colors",
+        !isOnline
+          ? "bg-ink text-white"
           : isSyncing
-            ? "bg-primary/20 text-primary border border-primary/30"
-            : "bg-muted text-muted-foreground border border-border hover:bg-muted/80"
+            ? "bg-primary/10 text-primary"
+            : "bg-muted text-foreground hover:bg-border"
       )}
     >
       {!isOnline ? (
@@ -48,7 +48,7 @@ export function OfflineIndicator({
           <WifiOff className="w-3.5 h-3.5" />
           <span>Offline</span>
           {pendingCount > 0 && (
-            <span className="bg-warning text-warning-foreground px-1.5 py-0.5 rounded-full text-[10px]">
+            <span className="bg-gold text-gold-foreground px-1.5 py-0.5 rounded-full text-[10px] font-bold">
               {pendingCount}
             </span>
           )}
@@ -118,11 +118,11 @@ export function OfflineIndicatorCompact({
       animate={{ opacity: 1, scale: 1 }}
       className={cn(
         "flex items-center justify-center w-6 h-6 rounded-full",
-        !isOnline 
-          ? "bg-warning/20 text-warning" 
+        !isOnline
+          ? "bg-ink text-white"
           : isSyncing
-            ? "bg-primary/20 text-primary"
-            : "bg-muted text-muted-foreground"
+            ? "bg-primary/10 text-primary"
+            : "bg-muted text-foreground"
       )}
     >
       {!isOnline ? (

@@ -1,136 +1,119 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Plus, Sparkles, Globe, Lock, ChevronRight } from 'lucide-react';
+import { Plus, Sparkles, Globe, Lock, ChevronRight } from 'lucide-react';
 import { usePersonalGameFormats } from '@/hooks/usePersonalGameFormats';
+import { buildConfig, summarizeScoringConfig } from '@/engine/HouseGameEngine';
+import { Switch } from '@/components/ui/switch';
+import { HeroCard, HeroTile, SetupHeader } from '@/components/golf/setupUi';
 import { hapticLight } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 
 export default function MyFormatsList() {
   const navigate = useNavigate();
   const { formats, loading, togglePublic } = usePersonalGameFormats();
+  const build = () => { hapticLight(); navigate('/my-formats/new'); };
+  const publicCount = formats.filter(f => f.isPublic).length;
 
   return (
-    <div className="h-screen flex flex-col bg-[#F8F8F6]">
-      {/* Header */}
-      <header className="flex-shrink-0 px-6 pt-safe-content pb-3 border-b-2 border-foreground">
-        <div className="flex items-center gap-3">
+    <div className="h-screen flex flex-col bg-background">
+      <SetupHeader
+        onBack={() => navigate(-1)}
+        caption="AI Games"
+        title="My Formats"
+        right={
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"
+            onClick={build}
+            aria-label="Build a new format"
+            className="w-11 h-11 rounded-[14px] bg-primary flex items-center justify-center flex-shrink-0"
           >
-            <ArrowLeft className="w-4 h-4 text-foreground" />
+            <Plus className="w-5 h-5 text-white" />
           </motion.button>
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">AI Games</p>
-            <h1 className="text-[22px] font-black tracking-[-0.04em] text-foreground leading-none">My Formats</h1>
-          </div>
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => { hapticLight(); navigate('/my-formats/new'); }}
-            className="ml-auto w-9 h-9 rounded-xl bg-foreground flex items-center justify-center"
-          >
-            <Plus className="w-4 h-4 text-background" />
-          </motion.button>
-        </div>
-      </header>
+        }
+      />
 
-      <main className="flex-1 overflow-y-auto px-6 pt-5 pb-nav">
+      <main className="flex-1 overflow-y-auto px-5 pt-2 pb-nav">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-              className="w-6 h-6 rounded-full border-2 border-foreground border-t-transparent"
+              className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent"
             />
           </div>
-        ) : formats.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-16 text-center"
-          >
-            <div className="w-16 h-16 rounded-2xl bg-[#F0EE3A]/20 flex items-center justify-center mb-4">
-              <Sparkles className="w-8 h-8 text-foreground" />
-            </div>
-            <h2 className="text-[20px] font-black tracking-[-0.03em] mb-2">No formats yet</h2>
-            <p className="text-[14px] text-muted-foreground mb-6 max-w-[260px] leading-relaxed">
-              Describe your Saturday game in plain English and AI builds the ruleset.
-            </p>
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => { hapticLight(); navigate('/my-formats/new'); }}
-              className="bg-foreground text-background rounded-2xl px-6 h-[48px] font-bold text-[14px] flex items-center gap-2"
-            >
-              <Sparkles className="w-4 h-4" />
-              Build Your First Format
-            </motion.button>
-          </motion.div>
         ) : (
-          <AnimatePresence>
-            {formats.map((fmt, i) => (
-              <motion.div
-                key={fmt.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04, type: 'spring', stiffness: 300, damping: 28 }}
-                className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] border border-border/30 p-4 mb-3"
+          <>
+            <HeroCard
+              eyebrow={<span className="inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-gold" /> AI Game Builder</span>}
+              title={formats.length === 0 ? 'No formats yet' : 'Your games, ready to load'}
+              body={formats.length === 0
+                ? 'Describe your Saturday game in plain English and AI builds the ruleset.'
+                : 'Load any of these in the Games step when you start a round.'}
+            >
+              {formats.length > 0 && (
+                <div className="grid grid-cols-2 gap-2 mt-4">
+                  <HeroTile hot value={formats.length} label={formats.length === 1 ? 'Format' : 'Formats'} />
+                  <HeroTile value={publicCount} label="Shared with groups" />
+                </div>
+              )}
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={build}
+                className="mt-4 w-full h-[56px] rounded-[20px] bg-gold text-primary text-[16px] font-bold flex items-center justify-center gap-2"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#F0EE3A]/15 flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="w-5 h-5 text-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-black text-[15px] text-foreground truncate">{fmt.name}</p>
-                      <span className={cn(
-                        'text-[9px] font-black px-1.5 py-0.5 rounded-md flex-shrink-0',
-                        fmt.isPublic
-                          ? 'bg-[#22C55E]/15 text-[#22C55E]'
-                          : 'bg-muted text-muted-foreground'
-                      )}>
-                        {fmt.isPublic ? 'PUBLIC' : 'PRIVATE'}
-                      </span>
+                <Sparkles className="w-5 h-5" />
+                {formats.length === 0 ? 'Build Your First Format' : 'Build a new format'}
+              </motion.button>
+            </HeroCard>
+
+            {formats.length > 0 && (
+              <p className="text-[13px] font-semibold text-muted-foreground mt-6 mb-2 px-1">Saved formats</p>
+            )}
+            <AnimatePresence>
+              {formats.map((fmt, i) => {
+                const summary = summarizeScoringConfig(buildConfig(fmt.activePrimitives), 2).join(' · ');
+                return (
+                  <motion.div
+                    key={fmt.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04, type: 'spring', stiffness: 300, damping: 28 }}
+                    className="bg-card rounded-[20px] border border-border mb-2 overflow-hidden"
+                  >
+                    <motion.button
+                      whileTap={{ scale: 0.99 }}
+                      onClick={() => { hapticLight(); navigate(`/my-formats/${fmt.id}/edit`); }}
+                      className="w-full flex items-center gap-3 p-4 text-left"
+                    >
+                      <div className="w-11 h-11 rounded-[14px] bg-gold-muted flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-[16px] text-foreground truncate">{fmt.name}</p>
+                        <p className="text-[13px] text-muted-foreground truncate mt-0.5">{summary || fmt.description}</p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                    </motion.button>
+                    <div className="flex items-center justify-between gap-3 px-4 min-h-[52px] border-t border-border">
+                      <div className="flex items-center gap-2">
+                        {fmt.isPublic
+                          ? <Globe className="w-4 h-4 text-primary" />
+                          : <Lock className="w-4 h-4 text-muted-foreground" />}
+                        <span className={cn('text-[13px] font-semibold', fmt.isPublic ? 'text-primary' : 'text-muted-foreground')}>
+                          {fmt.isPublic ? 'Visible to group members' : 'Private'}
+                        </span>
+                      </div>
+                      <Switch
+                        checked={fmt.isPublic ?? false}
+                        aria-label={`Share ${fmt.name} with groups`}
+                        onCheckedChange={(v) => { hapticLight(); togglePublic(fmt.id, v); }}
+                      />
                     </div>
-                    <p className="text-[12px] text-muted-foreground truncate mt-0.5">{fmt.description}</p>
-                  </div>
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => { hapticLight(); navigate(`/my-formats/${fmt.id}/edit`); }}
-                    className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center flex-shrink-0"
-                  >
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </motion.button>
-                </div>
-                {/* Public toggle */}
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/20">
-                  <div className="flex items-center gap-1.5">
-                    {fmt.isPublic
-                      ? <Globe className="w-3.5 h-3.5 text-[#22C55E]" />
-                      : <Lock className="w-3.5 h-3.5 text-muted-foreground" />}
-                    <span className="text-[11px] font-bold text-muted-foreground">
-                      {fmt.isPublic ? 'Visible to group members' : 'Private'}
-                    </span>
-                  </div>
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => { hapticLight(); togglePublic(fmt.id, !fmt.isPublic); }}
-                    className={cn(
-                      'w-10 h-6 rounded-full transition-colors flex-shrink-0',
-                      fmt.isPublic ? 'bg-foreground' : 'bg-muted'
-                    )}
-                  >
-                    <motion.div
-                      animate={{ x: fmt.isPublic ? 16 : 2 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                      className="w-4 h-4 rounded-full bg-white shadow-sm mt-1"
-                    />
-                  </motion.button>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </>
         )}
       </main>
     </div>

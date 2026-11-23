@@ -31,7 +31,7 @@ export function DashboardWolfCard({ standings }: DashboardWolfCardProps) {
                 <span className="text-[10px] text-muted-foreground">{s.totalPoints} pts</span>
                 <span className="text-[10px] text-muted-foreground">{s.timesAsWolf}x wolf</span>
                 {s.loneWolfWins > 0 && (
-                  <span className="text-[10px] text-amber-600">{s.loneWolfWins} lone</span>
+                  <span className="text-[10px] text-[#14532D]">{s.loneWolfWins} lone</span>
                 )}
                 {s.blindWolfWins > 0 && (
                   <span className="text-[10px] text-purple-600">{s.blindWolfWins} blind</span>
@@ -40,7 +40,7 @@ export function DashboardWolfCard({ standings }: DashboardWolfCardProps) {
             </div>
             <span className={cn(
               'text-[13px] font-bold',
-              s.earnings > 0 ? 'text-emerald-600' : s.earnings < 0 ? 'text-red-500' : 'text-muted-foreground'
+              s.earnings > 0 ? 'text-[#14532D]' : s.earnings < 0 ? 'text-[#B42318]' : 'text-muted-foreground'
             )}>
               {s.earnings > 0 ? '+' : ''}{s.earnings !== 0 ? `$${Math.abs(s.earnings).toFixed(0)}` : '-'}
             </span>

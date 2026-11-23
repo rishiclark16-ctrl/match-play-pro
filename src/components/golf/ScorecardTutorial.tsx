@@ -237,8 +237,8 @@ export function ScorecardTutorial({
                   className="bg-white rounded-3xl overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.16)]"
                 >
                   {/* Icon / illustration area */}
-                  <div className="bg-[#F8F8F6] p-8 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-2xl bg-[#F0EE3A] flex items-center justify-center text-[#0A0A0A]">
+                  <div className="bg-[#FAFAF7] p-8 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-2xl bg-[#BEF264] flex items-center justify-center text-[#0F1F17]">
                       {currentStepData.icon}
                     </div>
                   </div>

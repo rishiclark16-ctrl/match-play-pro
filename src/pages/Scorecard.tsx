@@ -9,6 +9,8 @@ import { HoleSummary } from '@/components/golf/HoleSummary';
 import { LiveLeaderboard } from '@/components/golf/LiveLeaderboard';
 import { ScorecardBanners } from '@/components/golf/ScorecardBanners';
 import { MoneyTracker } from '@/components/golf/MoneyTracker';
+import { useResumeHole } from '@/hooks/useResumeHole';
+import { ScorecardBody } from '@/components/golf/scorecard/ScorecardBody';
 import { PlayoffMode } from '@/components/golf/PlayoffMode';
 import { FinishOptionsOverlay } from '@/components/golf/FinishOptionsOverlay';
 import { ScorecardBottomBar } from '@/components/golf/ScorecardBottomBar';
@@ -17,6 +19,7 @@ import { ScorecardModals } from '@/components/golf/ScorecardModals';
 import { HandicapStrokesSheet } from '@/components/golf/HandicapStrokesSheet';
 import { ScorecardTutorial } from '@/components/golf/ScorecardTutorial';
 import { BingoBangoSheet } from '@/components/golf/BingoBangoSheet';
+import { PropBetSheet } from '@/components/golf/PropBetSheet';
 import { useRounds } from '@/hooks/useRounds';
 import { useSupabaseRound } from '@/hooks/useSupabaseRound';
 import { useKeepAwake } from '@/hooks/useKeepAwake';
@@ -158,6 +161,9 @@ export default function Scorecard() {
 
   // Use appropriate players list
   const playersWithScores: PlayerWithScores[] = useSupabaseData ? supabasePlayersWithScores : localPlayersWithScores;
+
+  // Re-opening mid-round lands on the hole the group is on, not hole 1
+  useResumeHole({ roundId: round?.id, totalHoles: round?.holes, players: playersWithScores, scores: roundScores, loading: supabaseLoading, setCurrentHole });
 
   // Detect solo rounds (1 real player, 0 games) so we can strip the multiplayer UI.
   const isSolo = useMemo(
@@ -395,7 +401,7 @@ export default function Scorecard() {
   if (!round) return <ScorecardNotFound onGoHome={() => navigate('/')} />;
 
   return (
-    <div className="bg-[#F8F8F6] h-screen flex flex-col overflow-hidden relative">
+    <div className="bg-[#FAFAF7] h-screen flex flex-col overflow-hidden relative">
       <ScorecardBanners
         isSpectator={isSpectator}
         isScorekeeper={isScorekeeper}
@@ -419,6 +425,12 @@ export default function Scorecard() {
         onRemoveScorekeeper={removeScorekeeper}
         onUpdateGames={handleUpdateGames}
         isSolo={isSolo}
+        completedHoles={completedHoles}
+        onNavigateToLeaderboard={() => navigate(`/round/${round.id}/leaderboard`)}
+        sideBets={!isSolo && !isSpectator && playoffHole === 0 ? (
+          <PropBetSheet roundId={round.id} players={playersWithScores} currentHole={currentHole}
+            holeInfo={round.holeInfo} propBets={propBets} onPropBetAdded={addPropBet} onPropBetUpdated={updatePropBet} />
+        ) : undefined}
       />
 
       {/* Hole Navigator — hide during playoff */}
@@ -427,26 +439,23 @@ export default function Scorecard() {
           className="flex-shrink-0"
           style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
         >
-          <div className="relative">
-            <HoleNavigator
-              ref={holeNavRef}
+          <HoleNavigator
+            ref={holeNavRef}
+            currentHole={currentHole}
+            totalHoles={round.holes}
+            holeInfo={currentHoleInfo}
+            onPrevious={() => setCurrentHole(h => Math.max(1, h - 1))}
+            onNext={() => setCurrentHole(h => Math.min(round.holes, h + 1))}
+          >
+            <HoleSummary
+              round={round}
+              players={playersWithScores}
+              scores={roundScores}
               currentHole={currentHole}
-              totalHoles={round.holes}
-              holeInfo={currentHoleInfo}
-              onPrevious={() => setCurrentHole(h => Math.max(1, h - 1))}
-              onNext={() => setCurrentHole(h => Math.min(round.holes, h + 1))}
+              currentHoleInfo={currentHoleInfo}
+              onShowStrokes={() => setShowHandicapSheet(true)}
             />
-            {/* Stroke allocation button — only when handicaps are active */}
-            {playersWithScores.some(p => p.strokesPerHole && Array.from(p.strokesPerHole.values()).some(s => s > 0)) && (
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setShowHandicapSheet(true)}
-                className="absolute right-14 top-1/2 -translate-y-1/2 bg-[#F0EE3A] rounded-lg px-2 py-1 flex items-center gap-1"
-              >
-                <span className="text-[10px] font-black text-[#0A0A0A] tracking-[0.05em]">HCP</span>
-              </motion.button>
-            )}
-          </div>
+          </HoleNavigator>
         </div>
       )}
 
@@ -467,140 +476,33 @@ export default function Scorecard() {
 
       {/* Scrollable Content Area */}
       <main
-        className="flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain relative z-10 px-4 pt-2 pb-48"
+        className="flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain relative z-10 px-3.5 pt-1 pb-40"
         style={{
           WebkitOverflowScrolling: 'touch',
           scrollBehavior: 'smooth',
         }}
       >
-        {/* Live Leaderboard — hide during playoff and for solo rounds (nothing to rank) */}
-        {!isSolo && playoffHole === 0 && playersWithScores.some(p => p.holesPlayed > 0) && (
-          <div className="mb-4">
-            <LiveLeaderboard
-              ref={leaderboardRef}
-              players={playersWithScores}
-              useNetScoring={
-                round.matchPlay || round.games?.some(g => g.useNet) || false
-              }
-              isMatchPlay={round.matchPlay}
-              holeInfo={round.holeInfo}
-              scores={roundScores}
-              matchPlayFormat={round.games?.find(g => g.type === 'match')?.matchPlayFormat}
-              matchPlayTeams={round.games?.find(g => g.type === 'match')?.matchPlayTeams}
-            />
-          </div>
-        )}
-
-        {/* Live Money Tracker */}
-        {playoffHole === 0 && (round.games?.length > 0 || propBets.some(pb => pb.winnerId)) && (
-          <div className="mb-4">
-            <MoneyTracker
-              players={playersWithScores}
-              scores={roundScores}
-              games={round.games || []}
-              holeInfo={round.holeInfo}
-              presses={round.presses || []}
-              currentHole={currentHole}
-              propBets={propBets}
-            />
-          </div>
-        )}
-
-        <div className="space-y-4 mt-3">
-          {/* Hole Summary — hide during playoff */}
-          {playoffHole === 0 &&
-            (round.games?.length > 0 || playersWithScores.some(p => p.handicap !== undefined)) && (
-              <HoleSummary
-                round={round}
-                players={playersWithScores}
-                scores={roundScores}
-                currentHole={currentHole}
-                currentHoleInfo={currentHoleInfo}
-              />
-            )}
-
-          {/* Regular scoring mode */}
-          {playoffHole === 0 && (
-            <>
-              {/* PLAYERS section label */}
-              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1">
-                Players
-              </p>
-
-              <LayoutGroup>
-                <AnimatePresence mode="popLayout">
-                  {playersWithScores.map((player, index) => {
-                    const holeScore = player.scores.find(s => s.holeNumber === currentHole)?.strokes;
-                    return (
-                      <motion.div
-                        key={player.id}
-                        ref={index === 0 ? playerCardRef : undefined}
-                        layout
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{
-                          layout: { type: 'spring', stiffness: 300, damping: 30 },
-                          opacity: { duration: 0.2 },
-                        }}
-                      >
-                        <PlayerCard
-                          player={player}
-                          currentHoleScore={holeScore}
-                          currentHolePar={currentHoleInfo.par}
-                          currentHoleNumber={currentHole}
-                          isLeading={player.id === leadingPlayerId}
-                          onScoreTap={canEditScores && !player.isGhost ? () => setSelectedPlayerId(player.id) : undefined}
-                          onQuickScore={canEditScores && !player.isGhost ? score => handleQuickScore(player.id, score) : undefined}
-                          showNetScores={true}
-                          voiceHighlight={isListening}
-                          voiceSuccess={voiceSuccessPlayerIds.has(player.id)}
-                          isGhost={player.isGhost}
-                        />
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </LayoutGroup>
-            </>
-          )}
-
-          {/* LIVE GAMES section label + Games Section — hide during playoff */}
-          {playoffHole === 0 && (round.games?.length > 0 || propBets.length > 0) && (
-            <>
-              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1 mt-2">
-                Live Games
-              </p>
-              <GamesSection
-                round={round}
-                players={playersWithScores}
-                scores={roundScores}
-                currentHole={currentHole}
-                onAddPress={handleManualPress}
-                propBets={propBets}
-              />
-            </>
-          )}
-        </div>
-
-        {/* Voice hint — clean, no emoji */}
-        {playoffHole === 0 && !isSpectator && isSupported && playersWithScores.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="flex items-center justify-center gap-1.5 mt-6"
-          >
-            <Mic className="w-3 h-3 text-muted-foreground/50" />
-            <p className="text-xs text-muted-foreground/60 font-medium">
-              {isSolo
-                ? `Say "I made a 4 on ${currentHole}" to score`
-                : <>Say "{(playersWithScores[0]?.name || 'Mike').split(' ')[0]} 5,{' '}
-                    {(playersWithScores[1]?.name || 'Tim').split(' ')[0]} 4" to score</>
-              }
-            </p>
-          </motion.div>
-        )}
+        <ScorecardBody
+          round={round}
+          playersWithScores={playersWithScores}
+          roundScores={roundScores}
+          propBets={propBets}
+          currentHole={currentHole}
+          currentHolePar={currentHoleInfo.par}
+          playoffHole={playoffHole}
+          leadingPlayerId={leadingPlayerId}
+          isSolo={isSolo}
+          isSpectator={isSpectator}
+          canEditScores={canEditScores}
+          isListening={isListening}
+          isSupported={isSupported}
+          voiceSuccessPlayerIds={voiceSuccessPlayerIds}
+          playerCardRef={playerCardRef}
+          leaderboardRef={leaderboardRef}
+          onSelectPlayer={setSelectedPlayerId}
+          onQuickScore={handleQuickScore}
+          onAddPress={handleManualPress}
+        />
       </main>
 
       {/* Finish/Playoff Options Overlay */}
@@ -623,7 +525,6 @@ export default function Scorecard() {
         players={playersWithScores}
         currentHole={currentHole}
         holeInfo={round.holeInfo}
-        completedHoles={completedHoles}
         totalHoles={round.holes}
         playoffHole={playoffHole}
         canFinish={canFinish || false}
@@ -642,14 +543,10 @@ export default function Scorecard() {
         autoAdvanceCountdown={autoAdvanceCountdown}
         allCurrentHoleScored={allCurrentHoleScored}
         voiceButtonRef={voiceButtonRef}
-        onNavigateToLeaderboard={() => navigate(`/round/${round.id}/leaderboard`)}
         onVoicePress={handleVoicePress}
         onShowFinishOptions={() => setShowFinishOptions(true)}
         onFinishRound={handleFinishRound}
         onNextHole={advanceToNextHole}
-        onPropBetAdded={addPropBet}
-        onPropBetUpdated={updatePropBet}
-        onShowShare={() => setShowShareModal(true)}
         isSolo={isSolo}
       />
 

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { checkAutoPress } from '@/lib/games/nassau';
 import { sendPushToProfiles } from '@/lib/pushUtils';
-import type { Press, PlayerWithScores, GameConfig } from '@/types/golf';
+import type { Press, PlayerWithScores, GameConfig, Score } from '@/types/golf';
 
 interface UseNassauAutoPressArgs {
   round: {
@@ -11,7 +11,7 @@ interface UseNassauAutoPressArgs {
     games?: GameConfig[];
     presses?: Press[];
   } | null;
-  roundScores: Array<{ player_id: string; hole_number: number; strokes: number }>;
+  roundScores: Score[];
   playersWithScores: PlayerWithScores[];
   onAddPress: (press: Press) => void;
 }

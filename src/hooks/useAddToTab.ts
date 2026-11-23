@@ -4,6 +4,7 @@ import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { sendPushToProfiles } from '@/lib/pushUtils';
 import { Player, Round } from '@/types/golf';
 import { NetSettlement } from '@/lib/games/settlement';
+import { buildLedgerEntries } from '@/lib/buildLedgerEntries';
 
 interface LedgerEntry {
   profileId: string;
@@ -56,31 +57,24 @@ export function useAddToTab({
     setAddingToTab(true);
     hapticLight();
     try {
-      // Build per-player net amounts from settlements
-      const netByPlayer = new Map<string, number>();
-      settlements.forEach(s => {
-        netByPlayer.set(s.fromPlayerId, (netByPlayer.get(s.fromPlayerId) ?? 0) - s.amount);
-        netByPlayer.set(s.toPlayerId, (netByPlayer.get(s.toPlayerId) ?? 0) + s.amount);
-      });
-
-      const entries = rawPlayers
-        .filter(p => p.profileId)
-        .map(p => ({
-          profileId: p.profileId!,
-          amount: netByPlayer.get(p.id) ?? 0,
-          gameBreakdown: { round: netByPlayer.get(p.id) ?? 0 },
-        }));
-
-      if (entries.length === 0) {
-        toast.error('No linked profiles — players must have accounts to add to tab');
+      // Guests' balances go to the round's host so the tab always sums to zero (Notion 09.2 M8).
+      const built = buildLedgerEntries(settlements, rawPlayers, round.createdBy);
+      if (!built.ok) {
+        hapticError();
+        toast.error(built.error);
         return;
       }
+      const { entries, guestNames } = built;
 
       await syncRoundToLedger(id, groupId, entries);
       hapticSuccess();
       setAddedToGroupId(groupId);
       setShowGroupPicker(false);
-      toast.success('Round added to group tab!');
+      toast.success(
+        guestNames.length > 0
+          ? `Round added to group tab — ${guestNames.join(', ')}'s balance is on the host`
+          : 'Round added to group tab!'
+      );
       // Notify players with negative net amounts (they owe money)
       const owingProfileIds = entries
         .filter(e => e.amount < 0)

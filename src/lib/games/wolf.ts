@@ -248,10 +248,12 @@ export function calculateWolfStandings(
         if (wolf) wolf.totalPoints += result.points / 2;
         if (partner) partner.totalPoints += result.points / 2;
 
-        // Hunters lose
+        // Hunters lose. In 3-player Wolf a partnered hole is 2-v-1, so the lone hunter
+        // covers both winners: hunter share = (2 × points/2) / hunterSize keeps it zero-sum.
+        const hunterShareW = result.points / (players.length - 2);
         standings.forEach(s => {
           if (s.playerId !== result.wolfId && s.playerId !== result.partnerId) {
-            s.totalPoints -= result.points / 2;
+            s.totalPoints -= hunterShareW;
           }
         });
       }
@@ -279,25 +281,38 @@ export function calculateWolfStandings(
         if (wolf) wolf.totalPoints -= result.points / 2;
         if (partner) partner.totalPoints -= result.points / 2;
 
-        // Hunters win
+        // Hunters win (same zero-sum split as above)
+        const hunterShareH = result.points / (players.length - 2);
         standings.forEach(s => {
           if (s.playerId !== result.wolfId && s.playerId !== result.partnerId) {
-            s.totalPoints += result.points / 2;
+            s.totalPoints += hunterShareH;
           }
         });
       }
     }
   });
 
-  // Apply accumulated lone-wolf hunter points divided by hunter count,
-  // then snap to the nearest integer to eliminate any residual floating-point error.
+  // Apply accumulated lone-wolf hunter points divided by hunter count.
+  // Shares are whole points; any remainder is distributed with a largest-remainder pass
+  // so the hunters' total equals exactly what the wolf won or lost (Notion 09.2 M6).
   const hunterCount = players.length - 1; // 2 for 3-player, 3 for 4-player
-  standings.forEach(s => {
+  const shares = standings.map(s => {
     const raw = rawLoneWolfHunterPoints.get(s.playerId) ?? 0;
-    if (raw !== 0) {
-      s.totalPoints += Math.round(raw / hunterCount);
-    }
+    const exact = raw / hunterCount;
+    return { s, raw, base: Math.floor(exact), frac: exact - Math.floor(exact) };
   });
+  // Every lone-wolf hole adds ±points to each of the hunterCount hunters, so the sum of raw
+  // values is hunterCount × (what the wolf lost), and target is always a whole number.
+  const target = Math.round(shares.reduce((sum, x) => sum + x.raw, 0) / hunterCount);
+  let remainder = target - shares.reduce((sum, x) => sum + x.base, 0);
+  // Largest fractional part first; ties broken by seat order for determinism.
+  shares
+    .map((x, i) => ({ x, i }))
+    .sort((a, b) => b.x.frac - a.x.frac || a.i - b.i)
+    .forEach(({ x }) => {
+      if (remainder > 0 && x.frac > 0) { x.base += 1; remainder -= 1; }
+    });
+  shares.forEach(x => { if (x.raw !== 0 || x.base !== 0) x.s.totalPoints += x.base; });
 
   // Calculate earnings
   standings.forEach(s => {

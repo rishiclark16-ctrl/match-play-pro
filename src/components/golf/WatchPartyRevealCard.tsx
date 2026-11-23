@@ -79,7 +79,7 @@ export function WatchPartyRevealCard({ roundId }: WatchPartyRevealCardProps) {
       </div>
 
       {/* Stats */}
-      <p className="text-[13px] text-gray-500 mb-3">
+      <p className="text-[13px] text-[#5A6B61] mb-3">
         {stats.spectatorCount} {stats.spectatorCount === 1 ? 'friend' : 'friends'} watched &middot; {stats.messageCount} {stats.messageCount === 1 ? 'message' : 'messages'}
       </p>
 
@@ -90,7 +90,7 @@ export function WatchPartyRevealCard({ roundId }: WatchPartyRevealCardProps) {
             "{stats.firstMessageBody}"
           </p>
           {stats.firstMessageAuthor && (
-            <p className="text-[11px] text-gray-400 mt-1">
+            <p className="text-[11px] text-[#5A6B61] mt-1">
               — {stats.firstMessageAuthor}
             </p>
           )}

@@ -31,12 +31,12 @@ interface BettingBreakdownSheetProps {
 }
 
 const GAME_CONFIG = [
-  { key: 'skins', label: 'Skins', icon: Target, color: 'text-amber-500', bgColor: 'bg-amber-500/20' },
+  { key: 'skins', label: 'Skins', icon: Target, color: 'text-amber-500', bgColor: 'bg-[#ECFCCB]0/20' },
   { key: 'nassau', label: 'Nassau', icon: Flag, color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
   { key: 'match', label: 'Match Play', icon: Swords, color: 'text-orange-500', bgColor: 'bg-orange-500/20' },
   { key: 'wolf', label: 'Wolf', icon: Users, color: 'text-purple-500', bgColor: 'bg-purple-500/20' },
   { key: 'houseGame', label: 'House Game', icon: Sparkles, color: 'text-pink-500', bgColor: 'bg-pink-500/20' },
-  { key: 'propBets', label: 'Side Bets', icon: Trophy, color: 'text-emerald-500', bgColor: 'bg-emerald-500/20' },
+  { key: 'propBets', label: 'Side Bets', icon: Trophy, color: 'text-[#14532D]', bgColor: 'bg-[#ECFCCB]0/20' },
 ] as const;
 
 export function BettingBreakdownSheet({
@@ -75,7 +75,7 @@ export function BettingBreakdownSheet({
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetContent
         side="bottom"
-        className="h-[85vh] bg-[#F8F8F6] rounded-t-3xl p-0 border-0 [&>button]:hidden"
+        className="h-[85vh] bg-[#FAFAF7] rounded-t-3xl p-0 border-0 [&>button]:hidden"
       >
         {/* Drag handle */}
         <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
@@ -112,7 +112,7 @@ export function BettingBreakdownSheet({
                   <span className={cn(
                     "w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold",
                     index === 0 && player.currentBalance > 0
-                      ? "bg-[#22C55E] text-white"
+                      ? "bg-[#14532D] text-white"
                       : "bg-background/50 text-current"
                   )}>
                     {index + 1}
@@ -136,11 +136,11 @@ export function BettingBreakdownSheet({
                 {/* Total Balance Card */}
                 <div className="mx-6">
                   <div className={cn(
-                    "bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] p-4",
+                    "bg-white rounded-[20px] border border-[#E7E9E3] p-4",
                   )}>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                        <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground">
                           Total Balance
                         </p>
                         <p className={cn(
@@ -155,15 +155,15 @@ export function BettingBreakdownSheet({
                       <div className={cn(
                         "w-14 h-14 rounded-2xl flex items-center justify-center",
                         activePlayer.currentBalance > 0
-                          ? "bg-[#22C55E]/15"
+                          ? "bg-[#14532D]/15"
                           : activePlayer.currentBalance < 0
-                          ? "bg-[#EF4444]/15"
+                          ? "bg-[#B42318]/15"
                           : "bg-muted"
                       )}>
                         {activePlayer.currentBalance > 0 ? (
-                          <TrendingUp className="w-7 h-7 text-[#22C55E]" />
+                          <TrendingUp className="w-7 h-7 text-[#14532D]" />
                         ) : activePlayer.currentBalance < 0 ? (
-                          <TrendingDown className="w-7 h-7 text-[#EF4444]" />
+                          <TrendingDown className="w-7 h-7 text-[#B42318]" />
                         ) : (
                           <Sparkles className="w-7 h-7 text-muted-foreground" />
                         )}
@@ -174,7 +174,7 @@ export function BettingBreakdownSheet({
 
                 {/* Game Breakdown */}
                 <div className="space-y-2">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-6">
+                  <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground px-6">
                     By Game
                   </p>
 
@@ -205,8 +205,8 @@ export function BettingBreakdownSheet({
                               "font-black tabular-nums text-[14px]",
                               hasValue
                                 ? value > 0
-                                  ? "text-[#22C55E]"
-                                  : "text-[#EF4444]"
+                                  ? "text-[#14532D]"
+                                  : "text-[#B42318]"
                                 : "text-muted-foreground"
                             )}>
                               {hasValue ? formatMoney(value) : '--'}
@@ -222,7 +222,7 @@ export function BettingBreakdownSheet({
                                 transition={{ delay: 0.2, duration: 0.4, ease: "easeOut" }}
                                 className={cn(
                                   "h-full rounded-full",
-                                  value > 0 ? "bg-[#22C55E]" : "bg-[#EF4444]"
+                                  value > 0 ? "bg-[#14532D]" : "bg-[#B42318]"
                                 )}
                               />
                             </div>
@@ -235,7 +235,7 @@ export function BettingBreakdownSheet({
 
                 {/* Standings Summary */}
                 <div className="space-y-2">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-6">
+                  <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground px-6">
                     All Players
                   </p>
 
@@ -250,7 +250,7 @@ export function BettingBreakdownSheet({
                         className={cn(
                           "px-4 py-2.5 flex items-center justify-between cursor-pointer transition-all",
                           player.playerId === activePlayerId
-                            ? "bg-[#F0EE3A]/20"
+                            ? "bg-[#BEF264]/20"
                             : ""
                         )}
                       >
@@ -258,7 +258,7 @@ export function BettingBreakdownSheet({
                           <span className={cn(
                             "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
                             index === 0 && player.currentBalance > 0
-                              ? "bg-[#22C55E] text-white"
+                              ? "bg-[#14532D] text-white"
                               : "bg-muted text-muted-foreground"
                           )}>
                             {index + 1}
@@ -270,9 +270,9 @@ export function BettingBreakdownSheet({
                         <span className={cn(
                           "font-black tabular-nums text-[14px]",
                           player.currentBalance > 0
-                            ? "text-[#22C55E]"
+                            ? "text-[#14532D]"
                             : player.currentBalance < 0
-                            ? "text-[#EF4444]"
+                            ? "text-[#B42318]"
                             : "text-muted-foreground"
                         )}>
                           {player.currentBalance === 0 ? 'E' : formatMoney(player.currentBalance)}

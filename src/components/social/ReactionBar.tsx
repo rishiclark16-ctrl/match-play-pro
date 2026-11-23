@@ -6,9 +6,9 @@ import { hapticLight } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 
 const REACTION_CONFIG: Record<ReactionType, { label: string; icon: typeof DollarSign; color: string }> = {
-  pay_up: { label: 'Pay Up', icon: DollarSign, color: 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20' },
+  pay_up: { label: 'Pay Up', icon: DollarSign, color: 'text-primary bg-primary/10 border-primary/20' },
   cold_blooded: { label: 'Cold', icon: Snowflake, color: 'text-blue-500 bg-blue-500/10 border-blue-500/20' },
-  robbery: { label: 'Robbery', icon: ShieldAlert, color: 'text-red-500 bg-red-500/10 border-red-500/20' },
+  robbery: { label: 'Robbery', icon: ShieldAlert, color: 'text-loss bg-loss/10 border-loss/20' },
   press_that: { label: 'Press', icon: ChevronsUp, color: 'text-orange-500 bg-orange-500/10 border-orange-500/20' },
   respect: { label: 'Respect', icon: Trophy, color: 'text-yellow-600 bg-yellow-500/10 border-yellow-500/20' },
   fraud: { label: 'Fraud', icon: Search, color: 'text-purple-500 bg-purple-500/10 border-purple-500/20' },

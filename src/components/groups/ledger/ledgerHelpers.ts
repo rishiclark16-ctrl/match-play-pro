@@ -2,6 +2,16 @@ import { PlayerBalance } from '@/hooks/useGroupLedger';
 
 export const ledgerSpringTransition = { type: 'spring', stiffness: 300, damping: 28 } as const;
 
+/** Fairway Day sentence-case section label. */
+export const ledgerSectionLabel = 'text-[13px] font-semibold text-muted-foreground mb-2 px-1';
+
+/** Money convention on white: won = Forest, owed = #B42318, even = Ink. */
+export function moneyTone(amount: number): string {
+  if (amount > 0.005) return 'text-primary';
+  if (amount < -0.005) return 'text-loss';
+  return 'text-foreground';
+}
+
 export function formatAmount(amount: number): string {
   const abs = Math.abs(amount);
   return `$${abs.toFixed(2).replace(/\.00$/, '')}`;

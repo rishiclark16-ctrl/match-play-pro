@@ -31,9 +31,9 @@ export function SwingAnimation() {
           {/* Arms */}
           <line x1="18" y1="14" x2="26" y2="18" stroke="white" strokeWidth="1.8" strokeLinecap="round" opacity="0.9"/>
           {/* Club shaft */}
-          <line x1="26" y1="18" x2="32" y2="26" stroke="#F0EE3A" strokeWidth="1.4" strokeLinecap="round"/>
+          <line x1="26" y1="18" x2="32" y2="26" stroke="#BEF264" strokeWidth="1.4" strokeLinecap="round"/>
           {/* Club head */}
-          <circle cx="32" cy="27" r="1.5" fill="#F0EE3A"/>
+          <circle cx="32" cy="27" r="1.5" fill="#BEF264"/>
         </motion.g>
       </svg>
     </div>

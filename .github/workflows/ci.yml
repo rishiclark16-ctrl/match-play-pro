@@ -36,6 +36,9 @@ jobs:
       - name: Lint (src only)
         run: bunx eslint src --max-warnings 50
 
+      - name: Typecheck (ratchet — error count may only go down)
+        run: ./scripts/typecheck-ratchet.sh
+
       - name: Unit tests (hooks/lib/engine/components)
         # Page tests are run separately because their module mocks leak
         # into the same worker process under bun's CI scheduler.

@@ -101,14 +101,14 @@ export function ManageScorekeepersSheet({
 
       <SheetContent
         side="bottom"
-        className="bg-[#F8F8F6] rounded-t-3xl p-0 border-0 shadow-none focus:outline-none [&>button]:hidden"
+        className="bg-[#FAFAF7] rounded-t-3xl p-0 border-0 shadow-none focus:outline-none [&>button]:hidden"
       >
         {/* Handle */}
         <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4 mt-3" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pb-4">
-          <h2 className="text-[20px] font-black tracking-[-0.04em] text-[#0A0A0A]">
+          <h2 className="text-[20px] font-black tracking-[-0.04em] text-[#0F1F17]">
             Manage Scorekeepers
           </h2>
           <motion.button
@@ -121,7 +121,7 @@ export function ManageScorekeepersSheet({
         </div>
 
         {/* Section label */}
-        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground px-6 mb-3">
+        <p className="text-[12px] font-bold tracking-[0.08em] text-muted-foreground px-6 mb-3">
           Players ({scorekeeperIds.length}/{MAX_ADDITIONAL_SCOREKEEPERS} additional scorekeepers)
         </p>
 
@@ -147,7 +147,7 @@ export function ManageScorekeepersSheet({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05, type: 'spring', stiffness: 300, damping: 28 }}
-                    className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mb-2 px-4 py-3 flex items-center justify-between"
+                    className="bg-white rounded-[20px] border border-[#E7E9E3] mx-6 mb-2 px-4 py-3 flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
                       <Avatar className="w-10 h-10 rounded-xl overflow-hidden bg-muted">
@@ -159,7 +159,7 @@ export function ManageScorekeepersSheet({
                         <span className="font-semibold text-foreground">{player.name}</span>
                         <div className="mt-0.5">
                           {isScorekeeper ? (
-                            <span className="bg-[#F0EE3A] text-[#0A0A0A] rounded-full px-2.5 py-0.5 text-[11px] font-bold">
+                            <span className="bg-[#BEF264] text-[#0F1F17] rounded-full px-2.5 py-0.5 text-[11px] font-bold">
                               Scorekeeper
                             </span>
                           ) : (
@@ -196,7 +196,7 @@ export function ManageScorekeepersSheet({
           </div>
 
           {/* Info note */}
-          <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] mx-6 mt-3 p-4 flex items-start gap-3">
+          <div className="bg-white rounded-[20px] border border-[#E7E9E3] mx-6 mt-3 p-4 flex items-start gap-3">
             <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center shrink-0">
               <Info className="w-4 h-4 text-muted-foreground" />
             </div>

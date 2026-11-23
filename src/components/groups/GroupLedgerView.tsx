@@ -17,8 +17,10 @@ import { GroupFormatPickerSheet } from './GroupFormatPickerSheet';
 import { hapticLight, hapticSuccess, hapticError } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { sendPushToProfiles } from '@/lib/pushUtils';
+import { cn } from '@/lib/utils';
 import {
   computeMinimumSettlements,
+  formatAmount,
   formatDate,
   ledgerSpringTransition,
 } from './ledger/ledgerHelpers';
@@ -160,85 +162,150 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
     setShowPlayerSheet(true);
   };
 
+  const me = balances.find(b => b.profileId === user?.id);
+  const myNet = me?.netBalance ?? 0;
+  const myNetLabel = Math.abs(myNet) < 0.005 ? 'Even' : `${myNet > 0 ? '+' : '-'}${formatAmount(myNet)}`;
+
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-[#F8F8F6] relative">
+    <div className="h-full flex flex-col overflow-hidden bg-background relative">
       {/* Header */}
-      <header className="flex-shrink-0 px-4 pb-3 pt-safe-content border-b border-black/10">
+      <header className="flex-shrink-0 px-5 pb-3 pt-safe-content">
         <div className="flex items-center gap-3">
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={onBack}
-            className="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center"
+            aria-label="Back to groups"
+            className="h-11 w-11 flex-shrink-0 rounded-[14px] bg-muted text-foreground flex items-center justify-center"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-5 w-5" />
           </motion.button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-[20px] font-black tracking-[-0.04em] leading-tight text-foreground truncate">
+            <p className="text-[13px] font-semibold text-muted-foreground leading-none">Group tab</p>
+            <h1 className="mt-1 text-[24px] font-extrabold tracking-[-0.03em] leading-tight text-foreground truncate">
               {group.name}
             </h1>
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-[0.15em] bg-black text-white rounded-full px-2.5 py-1">
-            Season
-          </span>
         </div>
       </header>
 
       {/* Scrollable Content */}
       <div
-        className="flex-1 overflow-y-auto overscroll-y-contain px-4 pb-nav"
+        className="flex-1 overflow-y-auto overscroll-y-contain px-5 pb-nav"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        {/* Dark Hero Card */}
+        {/* Forest hero */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={ledgerSpringTransition}
-          className="mt-4 bg-[#0A0A0A] rounded-3xl p-5 text-white"
+          className="mt-1 relative overflow-hidden rounded-[28px] bg-primary p-5 text-primary-foreground"
         >
-          {/* Avatar Stack */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex -space-x-3">
+          <div className="flex items-center gap-3">
+            <div className="flex -space-x-2.5">
               {group.members.slice(0, 5).map((member) => (
-                <Avatar key={member.id} className="h-10 w-10 rounded-xl border-2 border-[#0A0A0A]">
+                <Avatar key={member.id} className="h-10 w-10 rounded-[12px] ring-2 ring-primary">
                   <AvatarImage src={member.avatarUrl || undefined} />
-                  <AvatarFallback className="bg-white/20 text-white text-xs rounded-xl font-bold">
+                  <AvatarFallback className="bg-white/15 text-white text-[12px] rounded-[12px] font-bold">
                     {member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                   </AvatarFallback>
                 </Avatar>
               ))}
               {group.members.length > 5 && (
-                <div className="h-10 w-10 rounded-xl border-2 border-[#0A0A0A] bg-white/20 flex items-center justify-center text-white text-xs font-bold">
+                <div className="h-10 w-10 rounded-[12px] ring-2 ring-primary bg-white/15 flex items-center justify-center text-white text-[12px] font-bold">
                   +{group.members.length - 5}
                 </div>
               )}
             </div>
-            <p className="text-white/60 text-xs">
+            <p className="text-[13px] text-on-forest-muted">
               {group.members.length} member{group.members.length !== 1 ? 's' : ''}
+              {!loading && oldestEntry && <> · since {formatDate(oldestEntry.createdAt)}</>}
             </p>
           </div>
 
-          {/* Season Stats */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white/10 rounded-2xl p-3">
-              <p className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Rounds</p>
-              <p className="text-white text-xl font-black">
+          <div className="mt-4 grid grid-cols-[1.3fr_1fr_1fr] gap-2">
+            {/* The one lime tile: where you stand */}
+            <div className="rounded-[18px] bg-gold px-3.5 py-3 text-gold-foreground min-w-0">
+              <p className="text-[12px] font-semibold leading-none text-gold-foreground/80">Your tab</p>
+              <p
+                className={cn(
+                  'mt-2 text-[28px] font-extrabold leading-none tracking-[-0.04em] tabular-nums truncate',
+                  myNet < -0.005 ? 'text-loss' : 'text-gold-foreground'
+                )}
+              >
+                {loading ? '—' : myNetLabel}
+              </p>
+            </div>
+            <div className="rounded-[18px] bg-white/10 px-3.5 py-3 min-w-0">
+              <p className="text-[12px] font-semibold leading-none text-on-forest-muted">Rounds</p>
+              <p className="mt-2 text-[28px] font-extrabold leading-none tracking-[-0.04em] tabular-nums text-white">
                 {loading ? '—' : totalRounds}
               </p>
             </div>
-            <div className="bg-white/10 rounded-2xl p-3">
-              <p className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Total Pot</p>
-              <p className="text-white text-xl font-black">
+            <div className="rounded-[18px] bg-white/10 px-3.5 py-3 min-w-0">
+              <p className="text-[12px] font-semibold leading-none text-on-forest-muted">Total pot</p>
+              <p className="mt-2 text-[28px] font-extrabold leading-none tracking-[-0.04em] tabular-nums text-white truncate">
                 {loading ? '—' : `$${totalPot.toFixed(0)}`}
-              </p>
-            </div>
-            <div className="bg-white/10 rounded-2xl p-3">
-              <p className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Since</p>
-              <p className="text-white text-xl font-black">
-                {loading ? '—' : (oldestEntry ? formatDate(oldestEntry.createdAt) : '—')}
               </p>
             </div>
           </div>
         </motion.div>
+
+        {/* Settle Up All Banner */}
+        <AnimatePresence>
+          {!loading && negativePlayers.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={ledgerSpringTransition}
+              className="mt-3 rounded-[20px] border border-border bg-card p-3.5 pl-4 flex items-center justify-between gap-3"
+            >
+              <div className="min-w-0">
+                <p className="text-[15px] font-semibold text-foreground">Settle up all</p>
+                <p className="text-[13px] text-muted-foreground truncate">
+                  {negativePlayers.map(p => p.name.split(' ')[0]).join(', ')} owe{negativePlayers.length === 1 ? 's' : ''}
+                </p>
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { hapticLight(); setShowSettleAllConfirm(true); }}
+                className="h-11 flex-shrink-0 rounded-[14px] bg-foreground px-4 text-[14px] font-bold text-background"
+              >
+                Settle all
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* All Settled Up state */}
+        <AnimatePresence>
+          {allSettledUp && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={ledgerSpringTransition}
+              className="mt-3 rounded-[20px] bg-gold-muted p-3.5 flex items-center gap-3"
+            >
+              <div className="h-11 w-11 rounded-[14px] bg-primary flex items-center justify-center flex-shrink-0">
+                <Check className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
+              </div>
+              <div>
+                <p className="text-[15px] font-semibold text-primary">All square</p>
+                <p className="text-[13px] text-primary/75">Everyone's balance is zeroed out</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Running Tab */}
+        <RunningTabList
+          loading={loading}
+          balances={balances}
+          currentUserId={user?.id}
+          onPlayerTap={handlePlayerTap}
+          onSettle={handleSettle}
+        />
 
         {/* House Game Section */}
         {!houseLoading && (
@@ -271,63 +338,6 @@ export function GroupLedgerView({ group, onBack }: GroupLedgerViewProps) {
             />
           </>
         )}
-
-        {/* Running Tab */}
-        <RunningTabList
-          loading={loading}
-          balances={balances}
-          currentUserId={user?.id}
-          onPlayerTap={handlePlayerTap}
-          onSettle={handleSettle}
-        />
-
-        {/* All Settled Up state */}
-        <AnimatePresence>
-          {allSettledUp && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={ledgerSpringTransition}
-              className="mt-4 bg-[#F0FFF4] border border-[#22C55E]/30 rounded-2xl p-4 flex items-center gap-3"
-            >
-              <div className="w-8 h-8 rounded-full bg-[#22C55E] flex items-center justify-center flex-shrink-0">
-                <Check className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <p className="text-[#15803D] font-bold text-sm">All settled up</p>
-                <p className="text-[#15803D]/60 text-xs mt-0.5">Everyone's balances are zeroed out</p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Settle Up All Banner */}
-        <AnimatePresence>
-          {!loading && negativePlayers.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={ledgerSpringTransition}
-              className="mt-4 bg-[#0A0A0A] rounded-2xl p-4 flex items-center justify-between"
-            >
-              <div>
-                <p className="text-white font-bold text-sm">Settle Up All</p>
-                <p className="text-white/50 text-xs mt-0.5">
-                  {negativePlayers.map(p => p.name.split(' ')[0]).join(', ')} owe{negativePlayers.length === 1 ? 's' : ''}
-                </p>
-              </div>
-              <motion.button
-                whileTap={{ scale: 0.92 }}
-                onClick={() => { hapticLight(); setShowSettleAllConfirm(true); }}
-                className="bg-[#CBFF4D] text-black text-sm font-black rounded-xl px-4 py-2.5"
-              >
-                Settle All
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Recent Rounds */}
         {!loading && roundsGrouped.length > 0 && (

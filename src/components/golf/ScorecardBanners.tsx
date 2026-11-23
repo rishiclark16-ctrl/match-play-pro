@@ -39,11 +39,11 @@ export function ScorecardBanners({
       )}
 
       {showPreferredLies && (
-        <div className="flex-shrink-0 bg-[#F0EE3A] px-4 py-2 flex items-center justify-between">
-          <span className="text-[12px] font-bold text-[#0A0A0A]">Preferred lies in effect</span>
+        <div className="flex-shrink-0 bg-[#BEF264] px-4 py-2 flex items-center justify-between">
+          <span className="text-[12px] font-bold text-[#0F1F17]">Preferred lies in effect</span>
           <button
             onClick={onDismissPreferredLies}
-            className="text-[11px] font-bold text-[#0A0A0A]/60 ml-4"
+            className="text-[11px] font-bold text-[#0F1F17]/60 ml-4"
           >
             Dismiss
           </button>

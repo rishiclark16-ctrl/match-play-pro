@@ -28,7 +28,7 @@ export function ScorecardGrid({ detail }: ScorecardGridProps) {
 
   const renderTable = (holes: number[], label: string) => (
     <div className="mb-3">
-      <p className="text-[9px] font-black uppercase tracking-[0.1em] text-muted-foreground/50 mb-1">{label}</p>
+      <p className="text-[12px] font-semibold text-muted-foreground mb-1">{label}</p>
       <table className="w-full text-[11px] border-separate border-spacing-0">
         <thead>
           <tr>

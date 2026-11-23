@@ -1,12 +1,14 @@
 import { motion } from 'framer-motion';
-import { DollarSign, ArrowRight, Check, X, RotateCcw } from 'lucide-react';
+import { Check, RotateCcw, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { CollapsibleSection } from './CollapsibleSection';
-import { TrackedSettlement, SettlementStats } from '@/hooks/useSettlementTracking';
+import { TrackedSettlement, useSettlementTracking } from '@/hooks/useSettlementTracking';
 import { hapticSuccess, hapticLight } from '@/lib/haptics';
 import { toast } from 'sonner';
+import { CollapsibleResults, InitialBadge, Pill, ResultsCard } from './results/resultsUi';
+import { firstName, formatMoney, MONEY_EVEN, MONEY_OWED, MONEY_WON } from './results/resultsFormat';
+
+type SettlementStats = ReturnType<typeof useSettlementTracking>['stats'];
 
 interface SettlementsSectionProps {
   trackedSettlements: TrackedSettlement[];
@@ -16,6 +18,10 @@ interface SettlementsSectionProps {
   markAsPaid: (settlement: TrackedSettlement) => void;
   markAsForgiven: (settlement: TrackedSettlement) => void;
   markAsPending: (settlement: TrackedSettlement) => void;
+  /** Viewer's player id, so their own rows read "You pay" / "pays you". */
+  myPlayerId?: string;
+  /** Rendered under the rows (e.g. "Add to group tab"). */
+  footer?: React.ReactNode;
 }
 
 export function SettlementsSection({
@@ -26,156 +32,136 @@ export function SettlementsSection({
   markAsPaid,
   markAsForgiven,
   markAsPending,
+  myPlayerId,
+  footer,
 }: SettlementsSectionProps) {
   if (trackedSettlements.length === 0) return null;
 
+  const allSettled = settlementStats.pending === 0;
+
   return (
-    <CollapsibleSection
-      title="Settlements"
-      icon={DollarSign}
+    <CollapsibleResults
+      title="Settle up"
       isOpen={isOpen}
       onToggle={onToggle}
-      count={settlementStats.pending > 0 ? settlementStats.pending : undefined}
-      badge={
-        settlementStats.pending === 0 ? (
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-success/20 text-success uppercase">
-            All Settled
-          </span>
-        ) : undefined
+      summary={
+        allSettled ? (
+          <Pill tone="lime">
+            <Check className="w-3 h-3" strokeWidth={3} />
+            All settled
+          </Pill>
+        ) : (
+          <Pill tone="muted">
+            {settlementStats.pending} to settle · {formatMoney(settlementStats.pendingAmount, { signed: false })}
+          </Pill>
+        )
       }
     >
-      {/* Settlement Stats Summary */}
-      {trackedSettlements.length > 1 && (
-        <div className="flex items-center justify-between p-2 mb-2 rounded-lg bg-primary/5 border border-primary/10">
-          <div className="flex items-center gap-3 text-xs">
-            <span className="text-muted-foreground">
-              <span className="font-semibold text-foreground">{settlementStats.paid}</span> paid
-            </span>
-            {settlementStats.pending > 0 && (
-              <span className="text-muted-foreground">
-                <span className="font-semibold text-warning">{settlementStats.pending}</span>{' '}
-                pending
-              </span>
-            )}
-            {settlementStats.forgiven > 0 && (
-              <span className="text-muted-foreground">
-                <span className="font-semibold text-muted-foreground">
-                  {settlementStats.forgiven}
-                </span>{' '}
-                forgiven
-              </span>
-            )}
-          </div>
-          {settlementStats.pendingAmount > 0 && (
-            <span className="text-xs font-semibold text-warning">
-              ${settlementStats.pendingAmount.toFixed(0)} remaining
-            </span>
-          )}
-        </div>
-      )}
+      {trackedSettlements.map((s) => {
+        const iPay = !!myPlayerId && s.fromPlayerId === myPlayerId;
+        const iGet = !!myPlayerId && s.toPlayerId === myPlayerId;
+        const from = iPay ? 'You' : firstName(s.fromPlayerName);
+        const to = iGet ? 'you' : firstName(s.toPlayerName);
+        const verb = iPay ? 'pay' : 'pays';
+        const pending = s.status === 'pending';
 
-      {/* Settlement Items */}
-      {trackedSettlements.map((s, i) => (
-        <motion.div
-          key={i}
-          layout
-          className={cn(
-            'bg-white rounded-2xl px-4 py-3.5 mb-2 transition-all',
-            s.status === 'paid' && 'bg-[#F0FFF4]',
-            s.status === 'forgiven' && 'opacity-70',
-            s.status === 'pending' && 'shadow-[0_1px_3px_rgba(0,0,0,0.06)]'
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <span
-                className={cn(
-                  'font-semibold text-foreground',
-                  s.status !== 'pending' && 'text-muted-foreground'
-                )}
-              >
-                {s.fromPlayerName.split(' ')[0]}
-              </span>
-              <ArrowRight className="w-4 h-4 text-[#F0EE3A] flex-shrink-0" />
-              <span
-                className={cn(
-                  'font-semibold text-foreground',
-                  s.status !== 'pending' && 'text-muted-foreground'
-                )}
-              >
-                {s.toPlayerName.split(' ')[0]}
-              </span>
-            </div>
-            <span
-              className={cn(
-                'font-black tabular-nums text-xl',
-                s.status === 'paid' && 'text-[#22C55E]',
-                s.status === 'forgiven' && 'text-muted-foreground line-through',
-                s.status === 'pending' && 'text-[#EF4444]'
-              )}
-            >
-              ${s.amount.toFixed(0)}
-            </span>
-          </div>
+        return (
+          <motion.div key={`${s.fromPlayerId}-${s.toPlayerId}`} layout>
+            <ResultsCard className={cn('p-4', s.status === 'forgiven' && 'opacity-70')}>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center -space-x-2 shrink-0" aria-hidden>
+                  <InitialBadge name={s.fromPlayerName} tone={iPay ? 'forest' : 'muted'} />
+                  <span className="w-5 h-5 rounded-full bg-card border border-border flex items-center justify-center z-10">
+                    <ArrowRight className="w-3 h-3 text-foreground" strokeWidth={2.6} />
+                  </span>
+                  <InitialBadge name={s.toPlayerName} tone={iGet ? 'forest' : 'muted'} />
+                </div>
 
-          {/* Status & Actions */}
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
-            {s.status === 'pending' ? (
-              <div className="flex items-center gap-2">
-                <button
-                  className="bg-[#F0FFF4] border border-[#22C55E] text-[#22C55E] text-sm font-bold rounded-xl px-3 py-1.5"
-                  onClick={() => {
-                    hapticSuccess();
-                    markAsPaid(s);
-                    toast.success('Marked as paid!');
-                  }}
-                >
-                  <Check className="w-3 h-3 inline mr-1" />
-                  Paid
-                </button>
-                <button
-                  className="text-muted-foreground text-sm font-medium border border-border rounded-xl px-3 py-1.5"
-                  onClick={() => {
-                    hapticLight();
-                    markAsForgiven(s);
-                    toast.info('Settlement forgiven');
-                  }}
-                >
-                  <X className="w-3 h-3 inline mr-1" />
-                  Forgive
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[16px] font-semibold text-foreground leading-snug truncate">
+                    {from} <span className="font-normal text-muted-foreground">{verb}</span> {to}
+                  </p>
+                  <p
+                    className={cn(
+                      'text-[12px] font-medium mt-0.5',
+                      s.status === 'paid' ? 'text-[#14532D]' : 'text-muted-foreground',
+                    )}
+                  >
+                    {s.status === 'paid' && (
+                      <>
+                        <Check className="w-3 h-3 inline -mt-0.5 mr-1" strokeWidth={3} />
+                        Paid{s.paidAt ? ` · ${format(s.paidAt, 'MMM d')}` : ''}
+                      </>
+                    )}
+                    {s.status === 'forgiven' && 'Forgiven'}
+                    {pending && 'Not paid yet'}
+                  </p>
+                </div>
+
                 <span
                   className={cn(
-                    'text-[11px] font-semibold text-muted-foreground flex items-center gap-1',
-                    s.status === 'paid' && 'text-[#22C55E]'
+                    'text-[26px] font-extrabold tabular-nums tracking-[-0.02em] shrink-0',
+                    !pending
+                      ? 'text-muted-foreground'
+                      : iPay
+                      ? MONEY_OWED
+                      : iGet
+                      ? MONEY_WON
+                      : MONEY_EVEN,
+                    s.status === 'forgiven' && 'line-through',
                   )}
                 >
-                  {s.status === 'paid' && <Check className="w-3 h-3" />}
-                  {s.status === 'paid' ? 'Paid' : 'Forgiven'}
-                  {s.paidAt && (
-                    <span className="text-muted-foreground ml-1">
-                      • {format(s.paidAt, 'MMM d')}
-                    </span>
-                  )}
+                  {formatMoney(s.amount, { signed: false })}
                 </span>
-                <button
-                  className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground"
-                  onClick={() => {
-                    hapticLight();
-                    markAsPending(s);
-                    toast.info('Reset to pending');
-                  }}
-                >
-                  <RotateCcw className="w-3 h-3" />
-                </button>
               </div>
-            )}
-          </div>
-        </motion.div>
-      ))}
-    </CollapsibleSection>
+
+              {pending ? (
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    className="h-11 rounded-[14px] bg-primary text-primary-foreground text-[14px] font-semibold flex items-center justify-center gap-1.5"
+                    onClick={() => {
+                      hapticSuccess();
+                      markAsPaid(s);
+                      toast.success('Marked as paid!');
+                    }}
+                  >
+                    <Check className="w-4 h-4" strokeWidth={2.6} />
+                    Mark paid
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    className="h-11 rounded-[14px] bg-muted text-foreground text-[14px] font-semibold"
+                    onClick={() => {
+                      hapticLight();
+                      markAsForgiven(s);
+                      toast.info('Settlement forgiven');
+                    }}
+                  >
+                    Forgive
+                  </motion.button>
+                </div>
+              ) : (
+                <div className="flex justify-end mt-2">
+                  <button
+                    className="h-11 px-3 -mr-2 -mb-2 rounded-[14px] text-[13px] font-semibold text-muted-foreground flex items-center gap-1.5 active:bg-muted"
+                    aria-label="Reset to not paid"
+                    onClick={() => {
+                      hapticLight();
+                      markAsPending(s);
+                      toast.info('Reset to pending');
+                    }}
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Undo
+                  </button>
+                </div>
+              )}
+            </ResultsCard>
+          </motion.div>
+        );
+      })}
+      {footer}
+    </CollapsibleResults>
   );
 }

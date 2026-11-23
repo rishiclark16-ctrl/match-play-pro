@@ -5,6 +5,7 @@ import { TrendingUp, TrendingDown, Flame, Sparkles, ChevronRight } from 'lucide-
 import { PlayerWithScores, GameConfig, HoleInfo, Score, Press } from '@/types/golf';
 import { PropBet } from '@/types/betting';
 import { calculateLiveMoney, formatMoney, getMoneyColor } from '@/lib/games/moneyTracker';
+import { liveMoneyThroughHole } from '@/lib/scorecardProgress';
 import { BettingBreakdownSheet } from './BettingBreakdownSheet';
 import { cn } from '@/lib/utils';
 
@@ -38,15 +39,20 @@ export function MoneyTracker({
 
     if (!hasGames && !hasPropBetWinners) return null;
 
-    // Get previous hole's money state for comparison
-    const previousMoney = currentHole > 1
+    // Live money is the round's money right now, through the latest scored hole,
+    // not just up to the hole being viewed (otherwise reviewing hole 1 showed
+    // "All even" while the games below showed real winnings).
+    const throughHole = liveMoneyThroughHole(scores, currentHole, holeInfo.length || 18);
+
+    // Previous hole's money state, for the per-hole change arrows
+    const previousMoney = throughHole > 1
       ? new Map(
-          calculateLiveMoney(players, scores, games, holeInfo, presses, currentHole - 1, undefined, propBets)
+          calculateLiveMoney(players, scores, games, holeInfo, presses, throughHole - 1, undefined, propBets)
             .players.map(p => [p.playerId, p.currentBalance])
         )
       : undefined;
 
-    return calculateLiveMoney(players, scores, games, holeInfo, presses, currentHole, previousMoney, propBets);
+    return calculateLiveMoney(players, scores, games, holeInfo, presses, throughHole, previousMoney, propBets);
   }, [players, scores, games, holeInfo, presses, currentHole, propBets]);
 
   // Prepare breakdown data for the sheet - must be before early return
@@ -90,16 +96,17 @@ export function MoneyTracker({
 
   return (
     <motion.div
+      data-testid="money-tracker"
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-      className="bg-[#0A0A0A] rounded-2xl overflow-hidden"
+      className="bg-white rounded-[20px] border border-[#E7E9E3] overflow-hidden"
     >
       {/* Header row */}
-      <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+      <div className="px-4 pt-3.5 pb-1 flex items-center justify-between min-h-[40px]">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-black uppercase tracking-[0.12em] text-white/60">
-            Live Money
+          <span className="text-[12px] font-semibold text-[#5A6B61]">
+            Live money
           </span>
         </div>
 
@@ -112,10 +119,10 @@ export function MoneyTracker({
               animate={{ scale: 1, rotate: 0 }}
               exit={{ scale: 0, opacity: 0 }}
               className={cn(
-                "flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold",
+                "flex items-center gap-1 px-2 py-1 rounded-full text-[12px] font-semibold",
                 currentMoney.biggestSwing.amount > 0
-                  ? "bg-[#F0EE3A]/15 text-[#F0EE3A]"
-                  : "bg-[#EF4444]/15 text-[#EF4444]"
+                  ? "bg-[#ECFCCB] text-[#14532D]"
+                  : "bg-[#FEF3F2] text-[#B42318]"
               )}
             >
               {currentMoney.biggestSwing.amount > 0 ? (
@@ -132,17 +139,17 @@ export function MoneyTracker({
       </div>
 
       {/* Player Money Grid */}
-      <div className="space-y-0 pb-1">
+      <div className="pb-1">
         {currentMoney.players.map((player, index) => {
           const isLeader = index === 0 && player.currentBalance > 0;
           const isLast = index === currentMoney.players.length - 1 && player.currentBalance < 0;
 
           const balanceColor =
             player.currentBalance > 0
-              ? '#F0EE3A'
+              ? '#14532D'
               : player.currentBalance < 0
-              ? '#EF4444'
-              : '#ffffff';
+              ? '#B42318'
+              : '#0F1F17';
 
           return (
             <motion.button
@@ -154,23 +161,21 @@ export function MoneyTracker({
               whileTap={{ scale: 0.98 }}
               onClick={() => handlePlayerClick(player.playerId)}
               className={cn(
-                "w-full px-3 py-2.5 flex items-center gap-3 mx-1 mb-1 rounded-xl cursor-pointer touch-manipulation",
-                isLeader && "bg-white/[0.06]",
-                isLast && "bg-white/[0.03]",
-                !isLeader && !isLast && "bg-white/[0.03]"
+                "w-full px-4 min-h-[52px] py-2 flex items-center gap-3 cursor-pointer touch-manipulation active:bg-[#F0F2EC]",
+                index > 0 && "border-t border-[#E7E9E3]",
               )}
-              style={{ WebkitTapHighlightColor: 'transparent', width: 'calc(100% - 8px)' }}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               {/* Position circle */}
               <span className={cn(
-                "w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0",
-                isLeader ? "bg-[#F0EE3A] text-[#0A0A0A]" : "bg-white/10 text-white/40"
+                "w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold shrink-0 tabular-nums",
+                isLeader ? "bg-[#14532D] text-white" : "bg-[#F0F2EC] text-[#5A6B61]"
               )}>
                 {index + 1}
               </span>
 
               {/* Player name */}
-              <span className="text-sm font-semibold text-white/80 flex-1 truncate text-left">
+              <span className="text-[15px] font-semibold text-[#0F1F17] flex-1 truncate text-left">
                 {player.playerName.split(' ')[0]}
               </span>
 
@@ -184,8 +189,8 @@ export function MoneyTracker({
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0, opacity: 0 }}
                       className={cn(
-                        "flex items-center gap-0.5 text-[11px] font-semibold",
-                        player.change > 0 ? "text-[#F0EE3A]/80" : "text-[#EF4444]/80"
+                        "flex items-center gap-0.5 text-[12px] font-semibold tabular-nums",
+                        player.change > 0 ? "text-[#14532D]" : "text-[#B42318]"
                       )}
                     >
                       {player.change > 0 ? (
@@ -203,11 +208,11 @@ export function MoneyTracker({
                   key={player.currentBalance}
                   initial={{ scale: 1.15 }}
                   animate={{ scale: 1 }}
-                  className="text-2xl font-black tabular-nums min-w-[72px] text-right"
+                  className="text-[20px] font-extrabold tabular-nums min-w-[64px] text-right"
                   style={{ color: balanceColor }}
                 >
                   {player.currentBalance === 0 ? (
-                    <span className="text-white">E</span>
+                    <span className="text-[15px] font-semibold text-[#5A6B61]">Even</span>
                   ) : (
                     <NumberFlow
                       value={Math.abs(player.currentBalance)}
@@ -217,7 +222,7 @@ export function MoneyTracker({
                 </motion.span>
 
                 {/* Tap indicator */}
-                <ChevronRight className="w-4 h-4 text-white/20" />
+                <ChevronRight className="w-4 h-4 text-[#B4BDB7]" />
               </div>
             </motion.button>
           );
@@ -229,17 +234,17 @@ export function MoneyTracker({
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="px-4 pb-3 text-[11px] font-semibold text-white/40"
+          className="px-4 pb-3 pt-1 text-[12px] font-medium text-[#5A6B61] border-t border-[#E7E9E3]"
         >
-          <span className="text-white/70 font-bold">{leader.playerName.split(' ')[0]}</span>
+          <span className="text-[#0F1F17] font-semibold">{leader.playerName.split(' ')[0]}</span>
           {' '}leads by{' '}
-          <span className="text-[#F0EE3A] font-bold">${leadMargin.toFixed(0)}</span>
+          <span className="text-[#14532D] font-bold">${leadMargin.toFixed(0)}</span>
         </motion.p>
       )}
 
       {/* No money message */}
       {!hasAnyMoney && (
-        <p className="px-4 py-3 text-sm text-white/30 text-center">
+        <p className="px-4 py-3 text-[13px] font-medium text-[#5A6B61] text-center border-t border-[#E7E9E3]">
           All even so far
         </p>
       )}

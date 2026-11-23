@@ -17,7 +17,7 @@ export function FriendCodeQR({ friendCode }: FriendCodeQRProps) {
       animate={{ opacity: 1, scale: 1 }}
       className="flex flex-col items-center gap-3"
     >
-      <div className="p-3 bg-white rounded-xl border-2 border-border shadow-lg">
+      <div className="p-3 bg-white rounded-[20px] border border-border">
         <Suspense fallback={<div className="w-[140px] h-[140px] bg-muted rounded-lg animate-pulse" />}>
           <QRCodeSVG
             value={addFriendUrl}
@@ -25,11 +25,11 @@ export function FriendCodeQR({ friendCode }: FriendCodeQRProps) {
             level="M"
             includeMargin={false}
             bgColor="#ffffff"
-            fgColor="#000000"
+            fgColor="#0F1F17"
           />
         </Suspense>
       </div>
-      <p className="text-xs text-muted-foreground text-center max-w-[160px]">
+      <p className="text-[13px] text-muted-foreground text-center max-w-[180px]">
         Scan to add as friend instantly
       </p>
     </motion.div>

@@ -26,7 +26,7 @@ const VALID_IDS = new Set([
   'format_skins','format_skins_back9_only','format_match_play','format_stroke_play',
   'format_stableford','format_modified_stableford','format_wolf','format_vegas',
   'format_hammer','format_bingo_bango_bongo','format_rabbit','format_quota',
-  'format_defender','bonus_par5_double','bonus_par3_special','bonus_birdie_unit',
+  'format_defender','format_nines','bonus_par5_double','bonus_par3_special','bonus_birdie_unit',
   'bonus_eagle_unit','bonus_greenie','bonus_sandie','bonus_barkie','bonus_oozle',
   'bonus_chippy','bonus_polie','bonus_last_hole_double','bonus_garbage_tracking',
   'carryover_skins_halved','carryover_cap','carryover_jackpot_18',
@@ -52,7 +52,7 @@ Each standard object has exactly these fields:
 { "id": string, "value": any, "confidence": "high" | "medium" | "low" }
 
 Valid standard ids:
-press_auto_x_down, press_auto_birdie, press_auto_eagle, press_manual_request, press_requires_acceptance, press_double_or_nothing, press_max_per_round, press_new_submatch, press_no_dormie, press_back9_auto, format_nassau, format_skins, format_skins_back9_only, format_match_play, format_stroke_play, format_stableford, format_modified_stableford, format_wolf, format_vegas, format_hammer, format_bingo_bango_bongo, format_rabbit, format_quota, format_defender, bonus_par5_double, bonus_par3_special, bonus_birdie_unit, bonus_eagle_unit, bonus_greenie, bonus_sandie, bonus_barkie, bonus_oozle, bonus_chippy, bonus_polie, bonus_last_hole_double, bonus_garbage_tracking, carryover_skins_halved, carryover_cap, carryover_jackpot_18, carryover_reset_on_win, carryover_nassau_halved, handicap_full, handicap_90_pct, handicap_80_pct, handicap_75_pct, handicap_stroke_index, handicap_ghost_player, handicap_scratch, handicap_max_cap, handicap_bump_and_run, handicap_mixed_tees, casual_gimme_distance, casual_breakfast_ball, casual_mulligans, casual_no_blood, casual_preferred_lies, casual_concede_match, casual_foot_wedge, settlement_unit_value, settlement_pay_per_hole, settlement_end_of_round, settlement_running_tab, settlement_net_out, settlement_rain_shortened, settlement_max_loss_cap, settlement_ties_split, settlement_ties_carryover, group_min_players, group_pickup_rule, group_sub_in, group_teams_fixed, group_teams_rotating, group_wolf_lone_multiplier, group_sixes, group_point_bank
+press_auto_x_down, press_auto_birdie, press_auto_eagle, press_manual_request, press_requires_acceptance, press_double_or_nothing, press_max_per_round, press_new_submatch, press_no_dormie, press_back9_auto, format_nassau, format_skins, format_skins_back9_only, format_match_play, format_stroke_play, format_stableford, format_modified_stableford, format_wolf, format_vegas, format_hammer, format_bingo_bango_bongo, format_rabbit, format_quota, format_defender, format_nines, bonus_par5_double, bonus_par3_special, bonus_birdie_unit, bonus_eagle_unit, bonus_greenie, bonus_sandie, bonus_barkie, bonus_oozle, bonus_chippy, bonus_polie, bonus_last_hole_double, bonus_garbage_tracking, carryover_skins_halved, carryover_cap, carryover_jackpot_18, carryover_reset_on_win, carryover_nassau_halved, handicap_full, handicap_90_pct, handicap_80_pct, handicap_75_pct, handicap_stroke_index, handicap_ghost_player, handicap_scratch, handicap_max_cap, handicap_bump_and_run, handicap_mixed_tees, casual_gimme_distance, casual_breakfast_ball, casual_mulligans, casual_no_blood, casual_preferred_lies, casual_concede_match, casual_foot_wedge, settlement_unit_value, settlement_pay_per_hole, settlement_end_of_round, settlement_running_tab, settlement_net_out, settlement_rain_shortened, settlement_max_loss_cap, settlement_ties_split, settlement_ties_carryover, group_min_players, group_pickup_rule, group_sub_in, group_teams_fixed, group_teams_rotating, group_wolf_lone_multiplier, group_sixes, group_point_bank
 
 Standard value field rules:
 - Most primitives: null
@@ -104,6 +104,7 @@ Do NOT mark as infeasible: money bets based on score outcomes (bogey totals, las
 - When user says "net out" or "settle at the end" or "settle up at the end" → include settlement_net_out (value: null).
 - When user says "full handicap" or just "handicaps" or "using handicaps" → include handicap_full (value: null).
 - When user says "back 9 skins" or "skins on the back" → use format_skins_back9_only, NOT format_skins.
+- "Nines", "5-3-1" or "9 points" → format_nines. Nines is a 3-player game where 9 points are split on EVERY hole (best score 5, middle 3, worst 1). It is NOT about the front or back nine. Do not create a custom primitive to explain how Nines scores.
 - Only include rules clearly described or strongly implied. Never invent rules not mentioned.
 - Use "low" confidence only for genuinely ambiguous interpretations.
 
