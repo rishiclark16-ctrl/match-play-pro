@@ -53,3 +53,6 @@ AuthKey_*.p8
 .agents/
 .playwright-mcp/
 ios/App/.claude-flow/
+
+# Local-only Playwright config for cloud containers (see CLAUDE.md P3.5)
+pw-local.config.ts
