@@ -1,4 +1,3 @@
 [
-  "a11y meta-viewport: meta[name=\"viewport\"]",
-  "a11y nested-interactive: .rounded-\\[28px\\]"
+  "a11y meta-viewport: meta[name=\"viewport\"]"
 ]

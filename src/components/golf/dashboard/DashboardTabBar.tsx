@@ -25,16 +25,20 @@ export function DashboardTabBar({ tabs, activeIndex, onChange }: DashboardTabBar
   return (
     <div
       ref={scrollRef}
-      className="flex gap-1 px-4 py-2 overflow-x-auto scrollbar-hide bg-[#FAFAF7] border-b border-border/30"
+      role="tablist"
+      aria-label="Round views"
+      className="flex gap-1 px-4 py-1.5 overflow-x-auto scrollbar-hide bg-[#FAFAF7] border-b border-border/30"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
       {tabs.map((tab, i) => (
         <button
           key={tab}
           ref={(el) => { buttonRefs.current[i] = el; }}
+          role="tab"
+          aria-selected={activeIndex === i}
           onClick={() => { hapticLight(); onChange(i); }}
           className={cn(
-            'relative px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap transition-colors flex-shrink-0',
+            'relative h-11 px-4 rounded-full text-[13px] font-semibold whitespace-nowrap transition-colors flex-shrink-0',
             activeIndex === i
               ? 'text-white'
               : 'text-muted-foreground'

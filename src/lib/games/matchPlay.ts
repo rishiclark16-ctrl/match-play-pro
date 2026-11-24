@@ -351,9 +351,9 @@ export function getMatchPlayStatusColor(result: MatchPlayResult, playerId: strin
     return 'text-muted-foreground';
   }
   if (result.leaderId === playerId) {
-    return 'text-success';
+    return 'text-primary';
   }
-  return 'text-danger';
+  return 'text-loss';
 }
 
 

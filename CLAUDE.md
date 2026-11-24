@@ -549,6 +549,14 @@ Phase P3.7 (QA suite) — 2026-11-24, merged to `main` (PR #5, `7b6c615`); the `
 - Run locally in cloud containers: `QA_CHROMIUM=/opt/pw-browsers/chromium bun run test:qa`.
 - CI job runs on `ubuntu-24.04` (pinned): `ubuntu-latest` is 26.04 and Playwright 1.59 refuses to install Chromium deps there. Unpin when Playwright is upgraded.
 - **First debt paydown (2026-11-24): 158 → 137.** `/play` review: tee chip 36→44pt, player rows ≥44pt; composer examples ≥48pt; Home live hero lime-tile labels ("Thru", "of 18") at full Forest instead of 80% (contrast).
+- **Second debt paydown (2026-11-24): 137 → 49.** What remains: 45 × `meta-viewport` (zoom disabled; a deliberate Capacitor choice, left alone) and 4 × `scrollable-region-focusable` on the shared `AppLayout` `<main>` (stats, social, dashboard on SE). Fixed:
+  - `ui/switch.tsx`: the button is now a 44pt-tall touch target; the 30pt track is drawn by `::before` (looks identical). Fixes every settings switch app-wide.
+  - Profile: inputs `h-11`; home-course clear (`X`) was a `role=button` span inside the trigger button (nested + unnamed) — now a sibling 44pt button labelled "Clear home course"; header "Handicap" label at full strength.
+  - Round dashboard: tabs are a `tablist` of 44pt `tab`s with `aria-selected`; back button 44pt + "Back" label; yardage/handicap rows at full muted colour, 11px; scorecard table is a focusable labelled region. **Bug fixed:** player rows sat ~16px right of the hole columns because the name column was `min-w-[80px]` and long names grew it; now a fixed 96px column showing "Jack T.".
+  - Home live hero: was a `role=button` div wrapping the delete button (nested-interactive). Now a plain tappable div plus a full-card `<button>` for keyboard/VoiceOver beside the delete button.
+  - Contrast: `text-[#14532D]/80` on lime → full Forest in WinnerCard, LeaderboardParts, HoleSummary, AddToGroupTab; StatsHero "/N"; `getMatchPlayStatusColor` returns Fairway Day tokens `text-primary` / `text-loss` (was `text-success` / `text-danger`, 4.2:1).
+  - Scorecard: React "`ref` is not a prop" warning gone — `popLayout`'s child no longer carries a ref (moved to an inner div).
+  - `QA_DUMP=1` prints every finding with its detail (colours, sizes) — use it to see what a baseline key actually is.
 
 ## V2 Feature Status
 | Feature | Status | Notes |

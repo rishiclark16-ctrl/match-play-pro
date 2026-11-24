@@ -467,7 +467,7 @@ describe('getMatchPlayStatusColor', () => {
 
     const result = calculateMatchPlay(scores, twoPlayers, nineHoles, undefined, 9);
 
-    expect(getMatchPlayStatusColor(result, 'p1')).toBe('text-success');
+    expect(getMatchPlayStatusColor(result, 'p1')).toBe('text-primary');
   });
 
   it('should return danger for trailer', () => {
@@ -478,7 +478,7 @@ describe('getMatchPlayStatusColor', () => {
 
     const result = calculateMatchPlay(scores, twoPlayers, nineHoles, undefined, 9);
 
-    expect(getMatchPlayStatusColor(result, 'p2')).toBe('text-danger');
+    expect(getMatchPlayStatusColor(result, 'p2')).toBe('text-loss');
   });
 });
 

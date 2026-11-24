@@ -212,7 +212,7 @@ export default function Profile() {
 
   const spring = { type: 'spring' as const, stiffness: 300, damping: 28 };
   const section = (delay: number) => ({ initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { ...spring, delay } });
-  const fieldInput = 'bg-transparent border-0 text-right text-foreground focus:ring-0 p-0 outline-none placeholder:text-muted-foreground/50';
+  const fieldInput = 'h-11 bg-transparent border-0 text-right text-foreground focus:ring-0 p-0 outline-none placeholder:text-muted-foreground/50';
 
   return (
     <AppLayout header={null} mainClassName="bg-background pb-10">

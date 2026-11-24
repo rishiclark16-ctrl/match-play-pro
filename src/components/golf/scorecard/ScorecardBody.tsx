@@ -54,7 +54,6 @@ export function ScorecardBody({
                 return (
                   <motion.div
                     key={player.id}
-                    ref={index === 0 ? playerCardRef : undefined}
                     layout
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -64,19 +63,21 @@ export function ScorecardBody({
                       opacity: { duration: 0.2 },
                     }}
                   >
-                    <PlayerCard
-                      player={player}
-                      currentHoleScore={holeScore}
-                      currentHolePar={currentHolePar}
-                      currentHoleNumber={currentHole}
-                      isLeading={player.id === leadingPlayerId}
-                      onScoreTap={canEditScores && !player.isGhost ? () => onSelectPlayer(player.id) : undefined}
-                      onQuickScore={canEditScores && !player.isGhost ? score => onQuickScore(player.id, score) : undefined}
-                      showNetScores={true}
-                      voiceHighlight={isListening}
-                      voiceSuccess={voiceSuccessPlayerIds.has(player.id)}
-                      isGhost={player.isGhost}
-                    />
+                    <div ref={index === 0 ? playerCardRef : undefined}>
+                      <PlayerCard
+                        player={player}
+                        currentHoleScore={holeScore}
+                        currentHolePar={currentHolePar}
+                        currentHoleNumber={currentHole}
+                        isLeading={player.id === leadingPlayerId}
+                        onScoreTap={canEditScores && !player.isGhost ? () => onSelectPlayer(player.id) : undefined}
+                        onQuickScore={canEditScores && !player.isGhost ? score => onQuickScore(player.id, score) : undefined}
+                        showNetScores={true}
+                        voiceHighlight={isListening}
+                        voiceSuccess={voiceSuccessPlayerIds.has(player.id)}
+                        isGhost={player.isGhost}
+                      />
+                    </div>
                   </motion.div>
                 );
               })}

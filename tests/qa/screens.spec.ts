@@ -52,6 +52,8 @@ for (const screen of SCREENS) {
     await testInfo.attach(`${screen.name}.png`, { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' });
 
     const findings = await audit(page, consoleFindings);
+    // QA_DUMP=1 prints every finding with its detail (colours, sizes) to help fix known debt.
+    if (process.env.QA_DUMP) console.log(findings.map(f => `[${testInfo.project.name}/${screen.name}] ${f.key}  (${f.detail})`).join('\n'));
     const { added, fixed } = ratchet(findings, screen.name, testInfo);
     if (fixed.length) testInfo.annotations.push({ type: 'fixed', description: `${fixed.length} known issue(s) gone. Run UPDATE_QA_BASELINE=1 to record: ${fixed.join(' | ')}` });
     expect(added.map(f => `${f.key}  (${f.detail})`), `New UI issues on ${screen.name}`).toEqual([]);
