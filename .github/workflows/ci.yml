@@ -54,7 +54,9 @@ jobs:
 
   qa:
     name: QA (screens + journeys, 3 device sizes)
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04, which Playwright 1.59 can't install
+    # Chromium dependencies for. Move this when Playwright is upgraded.
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
 
     env:

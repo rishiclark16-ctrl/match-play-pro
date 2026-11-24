@@ -547,6 +547,7 @@ Phase P3.7 (QA suite) — 2026-11-24:
 - Flake root-caused, not retried away: the leaderboard's Live/Offline badge depended on an unanswered realtime socket; the mock now answers it. Two clean full runs with `--retries=0`.
 - Splash root has `data-splash`; audits wait for it to detach (axe was catching the wordmark mid-fade).
 - Run locally in cloud containers: `QA_CHROMIUM=/opt/pw-browsers/chromium bun run test:qa`.
+- CI job runs on `ubuntu-24.04` (pinned): `ubuntu-latest` is 26.04 and Playwright 1.59 refuses to install Chromium deps there. Unpin when Playwright is upgraded.
 - **First debt paydown (2026-11-24): 158 → 137.** `/play` review: tee chip 36→44pt, player rows ≥44pt; composer examples ≥48pt; Home live hero lime-tile labels ("Thru", "of 18") at full Forest instead of 80% (contrast).
 
 ## V2 Feature Status
