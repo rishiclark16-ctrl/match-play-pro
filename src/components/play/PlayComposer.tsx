@@ -160,7 +160,7 @@ export function PlayComposer({ initialText, lastRoundText, busy, autoListen, onS
             <button
               key={ex}
               onClick={() => { hapticLight(); setText(ex); }}
-              className="w-full rounded-[16px] bg-muted px-4 py-3 text-left text-[14px] leading-snug text-foreground flex gap-2.5"
+              className="w-full min-h-[48px] rounded-[16px] bg-muted px-4 py-3 text-left text-[14px] leading-snug text-foreground flex items-center gap-2.5"
             >
               <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
               {ex}

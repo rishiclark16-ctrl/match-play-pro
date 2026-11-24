@@ -62,7 +62,7 @@ export function PlayReview({ draft, friends, creating, failure, onUpdate, onEdit
             </button>
             <div className="mt-4 flex flex-wrap gap-2">
               {draft.tee && (
-                <button onClick={() => setSheet('tee')} className="h-9 rounded-full bg-gold text-gold-foreground px-3.5 text-[14px] font-bold flex items-center gap-1.5">
+                <button onClick={() => setSheet('tee')} className="h-11 rounded-full bg-gold text-gold-foreground px-3.5 text-[14px] font-bold flex items-center gap-1.5">
                   <Flag className="h-3.5 w-3.5" /> {draft.tee.tee_name} tees <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               )}
@@ -91,7 +91,7 @@ export function PlayReview({ draft, friends, creating, failure, onUpdate, onEdit
                   <button
                     disabled={p.kind === 'you'}
                     onClick={() => setSheet({ spoken: p.spoken, current: p.profileId })}
-                    className="flex-1 min-w-0 text-left"
+                    className="flex-1 min-w-0 min-h-[44px] text-left flex flex-col justify-center"
                   >
                     <span className="block text-[16px] font-semibold text-foreground truncate">{p.name}{p.kind === 'you' && ' (you)'}</span>
                     <span className="block text-[13px] text-muted-foreground truncate">

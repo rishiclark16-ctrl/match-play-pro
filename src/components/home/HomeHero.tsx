@@ -37,14 +37,14 @@ function HeroTile({ label, value, sub, hot }: { label: string; value: string | n
         hot ? 'bg-gold text-gold-foreground' : 'bg-white/10 text-white'
       )}
     >
-      <p className={cn('text-[12px] font-semibold leading-none', hot ? 'text-gold-foreground/80' : 'text-on-forest-muted')}>
+      <p className={cn('text-[12px] font-semibold leading-none', hot ? 'text-gold-foreground' : 'text-on-forest-muted')}>
         {label}
       </p>
       <p className="mt-2 text-[30px] font-extrabold leading-none tracking-[-0.04em] tabular-nums truncate">
         {value}
       </p>
       {sub && (
-        <p className={cn('mt-1.5 text-[12px] font-medium leading-none truncate', hot ? 'text-gold-foreground/80' : 'text-on-forest-muted')}>
+        <p className={cn('mt-1.5 text-[12px] font-medium leading-none truncate', hot ? 'text-gold-foreground' : 'text-on-forest-muted')}>
           {sub}
         </p>
       )}
