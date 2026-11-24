@@ -1,0 +1,19 @@
+[
+  "a11y button-name: .w-9",
+  "a11y color-contrast: 154",
+  "a11y color-contrast: 168",
+  "a11y color-contrast: 366",
+  "a11y color-contrast: 377",
+  "a11y color-contrast: 401",
+  "a11y color-contrast: 432",
+  "a11y color-contrast: 512",
+  "a11y color-contrast: Yds",
+  "a11y meta-viewport: meta[name=\"viewport\"]",
+  "a11y scrollable-region-focusable: .rounded-2xl > .overflow-x-auto",
+  "tap-target: button \"\"",
+  "tap-target: button \"Games\"",
+  "tap-target: button \"Highlights\"",
+  "tap-target: button \"Money\"",
+  "tap-target: button \"Scorecard\"",
+  "tap-target: button \"Stats\""
+]

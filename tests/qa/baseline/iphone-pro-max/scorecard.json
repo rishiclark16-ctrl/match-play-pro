@@ -1,0 +1,4 @@
+[
+  "a11y meta-viewport: meta[name=\"viewport\"]",
+  "console.error: Warning: %s: `ref` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component"
+]

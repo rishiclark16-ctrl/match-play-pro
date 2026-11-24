@@ -56,3 +56,6 @@ ios/App/.claude-flow/
 
 # Local-only Playwright config for cloud containers (see CLAUDE.md P3.5)
 pw-local.config.ts
+
+# QA suite HTML report
+qa-report/

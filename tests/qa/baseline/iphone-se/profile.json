@@ -1,0 +1,12 @@
+[
+  "a11y aria-command-name: .p-1\\.5",
+  "a11y color-contrast: Handicap",
+  "a11y meta-viewport: meta[name=\"viewport\"]",
+  "tap-target: button \"Always confirm\"",
+  "tap-target: button \"Continuous listening\"",
+  "tap-target: button \"Net scoring\"",
+  "tap-target: input \"Discoverable email\"",
+  "tap-target: input \"Discoverable phone\"",
+  "tap-target: input \"Full name\"",
+  "tap-target: input \"Handicap index\""
+]
