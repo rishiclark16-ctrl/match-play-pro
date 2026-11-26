@@ -13,6 +13,7 @@ import {
   fourballOptions,
   MatchPlayResult,
 } from '@/lib/games/matchPlay';
+import { customGamesTransfers } from '@/lib/games/custom/round';
 import {
   calculateMatchPlayStrokes,
   buildMatchPlayStrokesMap,
@@ -246,6 +247,12 @@ export function useRoundCompleteSettlements({
     return fourballMoney(game, fb, true);
   }, [round, playersWithScores, rawScores]);
 
+  // Custom games (rule sets composed by the round builder).
+  const customPayments = useMemo(
+    () => (round ? customGamesTransfers(round.games, playersWithScores, rawScores, round.holeInfo, true) : []),
+    [round, playersWithScores, rawScores],
+  );
+
   const settlements = useMemo(() => {
     if (!round || playersWithScores.length === 0) return [];
 
@@ -268,9 +275,9 @@ export function useRoundCompleteSettlements({
       gameResults?.ninesResult,
       gameResults?.defenderResult,
       gameResults?.sixesResult,
-      fourballPayments,
+      [...fourballPayments, ...customPayments],
     );
-  }, [round, playersWithScores, rawPlayers, rawScores, gameResults, matchPlayResult, propBets, fourballPayments]);
+  }, [round, playersWithScores, rawPlayers, rawScores, gameResults, matchPlayResult, propBets, fourballPayments, customPayments]);
 
   // Ghost pot: amounts that would flow TO ghost players — real players owe this to the pot
   const ghostPotEntries = useMemo(

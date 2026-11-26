@@ -16,7 +16,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CASES, FRIENDS, type EvalCase } from './cases';
 import { scoreCase, type CaseScore } from './score';
-import { PLAN_SCHEMA, SYSTEM, userContent } from '../../supabase/functions/_shared/planRoundPrompt';
+import { PLAN_SCHEMA, SYSTEM, userContent, wireToPlan } from '../../supabase/functions/_shared/planRoundPrompt';
 import { localParse } from '../../src/lib/roundPlan/localParse';
 import type { RoundPlan } from '../../src/lib/roundPlan/types';
 
@@ -28,7 +28,8 @@ const args = Object.fromEntries(process.argv.slice(2).map(a => {
 const local = args.local === 'true';
 const repeat = Math.max(1, Number(args.repeat ?? 1));
 const grep = args.grep ? new RegExp(args.grep, 'i') : null;
-const cases = CASES.filter(c => !grep || grep.test(c.id));
+// The offline parser is only scored on what it can set up without the AI.
+const cases = CASES.filter(c => (!grep || grep.test(c.id)) && !(local && c.aiOnly));
 
 const client = local ? null : new Anthropic({ timeout: 60_000, maxRetries: 2 });
 let inputTokens = 0;
@@ -40,7 +41,8 @@ async function planWithModel(c: EvalCase): Promise<{ plan: RoundPlan | null; err
   const request: Anthropic.MessageCreateParamsNonStreaming = {
     model: MODEL,
     max_tokens: 4096,
-    system: SYSTEM,
+    // The instructions and glossary are identical on every call: cache them.
+    system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
     output_config: { effort: 'low', format: { type: 'json_schema', schema: PLAN_SCHEMA as unknown as Record<string, unknown> } },
     messages: [{ role: 'user', content: userContent(c.text, c.friends ?? FRIENDS) }],
   };
@@ -56,7 +58,7 @@ async function planWithModel(c: EvalCase): Promise<{ plan: RoundPlan | null; err
       return { plan: null, error: `stop_reason ${msg.stop_reason}`, ms: Date.now() - started };
     }
     const text = msg.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === 'text')?.text ?? '';
-    return { plan: JSON.parse(text) as RoundPlan, ms: Date.now() - started };
+    return { plan: wireToPlan(JSON.parse(text)) as unknown as RoundPlan, ms: Date.now() - started };
   } catch (err) {
     const why = err instanceof Anthropic.APIError ? `API ${err.status}: ${err.message}` : String(err);
     return { plan: null, error: why, ms: Date.now() - started };

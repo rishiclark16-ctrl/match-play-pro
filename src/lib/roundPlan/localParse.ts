@@ -10,7 +10,8 @@
  *     caught before anyone plays for it.
  */
 import type { PlanGame, PlanGameType, RoundPlan } from './types';
-import { KNOWN_UNPLAYABLE } from '../../../supabase/functions/_shared/golfGames';
+import { GOLF_GAMES, KNOWN_UNPLAYABLE } from '../../../supabase/functions/_shared/golfGames';
+import { OFFLINE_PRESETS, planFromSpec } from './customPlan';
 
 const NUMBER_WORDS: Record<string, number> = {
   zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
@@ -61,7 +62,7 @@ interface Amount { value: number; index: number }
 /** Amounts golfers say without a number: "a buck a hole", "a quarter a point", "fifty cents". */
 const SPOKEN_AMOUNTS: [RegExp, (m: RegExpExecArray) => number][] = [
   [/\b(?:a|one)\s+(?:buck|dollar|bone|clam)\b/gi, () => 1],
-  [/\b(?:a|one)\s+quarter\b|\btwenty[\s-]five cents\b|\b25 cents\b/gi, () => 0.25],
+  [/\b(?:a|one)\s+quarter\b|\bquarter (?=(?:a|per) (?:point|hole|skin|man|side)\b)|\btwenty[\s-]five cents\b|\b25 cents\b/gi, () => 0.25],
   [/\bhalf a (?:buck|dollar)\b|\bfifty cents\b|\b50 cents\b/gi, () => 0.5],
   [/\b(\d{1,2})\s*cents\b/gi, m => Number(m[1]) / 100],
 ];
@@ -282,6 +283,7 @@ function extractGames(text: string, amounts: Amount[]): PlanGame[] {
       teams: type === 'match' || type === 'bestball' || type === 'vegas' ? teams : null,
       teamScoring: type === 'match' ? teamScoringSaid(text) : null,
       perHole: type === 'match' ? (perHoleRe.test(near) || (found.length === 1 && perHoleRe.test(text)) ? true : null) : null,
+      custom: null,
     };
   });
 }
@@ -297,7 +299,11 @@ const escapeRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 function flagUnsupported(text: string, games: PlanGame[]): { unsupported: string[]; games: PlanGame[] } {
   const unsupported: string[] = [];
   let kept = games;
-  for (const g of KNOWN_UNPLAYABLE) {
+  const offlineUnplayable = [
+    ...KNOWN_UNPLAYABLE,
+    ...GOLF_GAMES.filter(g => g.support.plan?.startsWith('custom') && !OFFLINE_PRESETS[g.id]),
+  ];
+  for (const g of offlineUnplayable) {
     const hit = g.aliases.find(a => new RegExp(String.raw`\b${escapeRe(a)}s?\b`, 'i').test(text));
     if (!hit) continue;
     unsupported.push(g.name);
@@ -306,6 +312,32 @@ function flagUnsupported(text: string, games: PlanGame[]): { unsupported: string
     kept = kept.filter(x => !new RegExp(String.raw`\b${escapeRe(x.type)}\b`, 'i').test(hit));
   }
   return { unsupported, games: kept };
+}
+
+/**
+ * Named games the app plays as custom rule sets (Daytona, Split Sixes, a dollar a
+ * stroke...). Offline, they are set up from the catalogue presets; a game whose
+ * name contains a supported game's word ("split sixes") replaces that game.
+ */
+function presetGames(text: string, games: PlanGame[], players: string[], amounts: Amount[]): PlanGame[] {
+  let kept = games;
+  const added: PlanGame[] = [];
+  for (const g of GOLF_GAMES) {
+    const make = OFFLINE_PRESETS[g.id];
+    if (!make) continue;
+    const hit = g.aliases.find(a => new RegExp(String.raw`\b${escapeRe(a)}s?\b`, 'i').test(text));
+    if (!hit) continue;
+    const spec = make(extractTeams(text), ['me', ...players]);
+    if (!spec) continue;
+    kept = kept.filter(x => !new RegExp(String.raw`\b${escapeRe(x.type)}\b`, 'i').test(hit));
+    const at = text.toLowerCase().indexOf(hit.toLowerCase());
+    const amount = [...amounts].sort((a, b) => Math.abs(a.index - at) - Math.abs(b.index - at))[0];
+    added.push({
+      type: 'custom', stake: amount?.value ?? null, carryover: null, autoPress: null, modified: null,
+      teams: null, teamScoring: null, perHole: null, custom: planFromSpec(spec),
+    });
+  }
+  return [...kept, ...added];
 }
 
 function extractHandicaps(text: string): RoundPlan['handicaps'] {
@@ -335,7 +367,7 @@ export function localParse(text: string): RoundPlan {
       const h = /\b(?:i'?m|i am)\s+an?\s+(\d{1,2}(?:\.\d)?)\b(?!\s*(?:dollars?|bucks?))/i.exec(clean);
       return h ? Number(h[1]) : null;
     })(),
-    ...flagUnsupported(clean, extractGames(clean, amounts)),
+    ...flagUnsupported(clean, presetGames(clean, extractGames(clean, amounts), players, amounts)),
     handicaps: extractHandicaps(clean),
   };
 }

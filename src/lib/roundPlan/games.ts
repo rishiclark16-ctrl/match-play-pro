@@ -9,10 +9,11 @@
 import type { GameConfig, Team } from '@/types/golf';
 import type { DraftAssumption, DraftIssue, DraftPlayer, PlanGame, PlanGameType } from './types';
 import { normalizeName, sameFirstName } from './names';
+import { resolveCustom } from './customPlan';
 
 export const GAME_LABEL: Record<PlanGameType, string> = {
   skins: 'Skins', nassau: 'Nassau', match: 'Match play', stableford: 'Stableford',
-  bestball: 'Best ball', wolf: 'Wolf', vegas: 'Vegas', nines: 'Nines', defender: 'Defender', sixes: 'Sixes',
+  bestball: 'Best ball', wolf: 'Wolf', vegas: 'Vegas', nines: 'Nines', defender: 'Defender', sixes: 'Sixes', custom: 'Custom game',
 };
 
 /** Default stake and what one unit of it is, per game. Defaults match NewRound's. */
@@ -25,6 +26,7 @@ export const STAKE_UNIT: Record<PlanGameType, { default: number; unit: string } 
   nines: { default: 1, unit: 'a point' },
   defender: { default: 1, unit: 'a point' },
   sixes: { default: 1, unit: 'a point' },
+  custom: { default: 1, unit: 'a point' },
   stableford: null,
   bestball: null,
 };
@@ -41,6 +43,7 @@ const PLAYER_COUNTS: Record<PlanGameType, number[]> = {
   nines: [3],
   defender: [3, 4],
   sixes: [4],
+  custom: [2, 3, 4, 5, 6, 7, 8],
 };
 
 const FREE_GAMES = new Set<PlanGameType>(['match', 'skins']);
@@ -62,6 +65,12 @@ function dollars(n: number): string {
 /** "$5 a hole, a man" for a game as configured (the review screen's stake label). */
 export function stakeLabel(g: GameConfig): string {
   if (g.type === 'match') return `${dollars(g.stakes)} ${matchUnit(g)}`;
+  if (g.type === 'custom' && g.spec) {
+    const perMan = g.spec.sides.kind !== 'individual' && g.spec.money === 'per_man' ? ', a man' : '';
+    return g.spec.payout === 'per_segment'
+      ? `${dollars(g.stakes)} a bet${perMan}`
+      : `${dollars(g.stakes)} a ${g.spec.scoring === 'holes' ? 'hole' : 'point'}${perMan}`;
+  }
   return formatStake(g.type as PlanGameType, g.stakes);
 }
 
@@ -158,6 +167,8 @@ export interface ResolveGamesInput {
   isPro: boolean;
   useNet: boolean;
   generateId: () => string;
+  /** Hole numbers of the round (custom games are validated against them). Default 1–18. */
+  holes?: number[];
 }
 
 export interface ResolvedGames {
@@ -174,19 +185,26 @@ export interface ResolvedGames {
   playerOrder: string[] | null;
 }
 
-export function resolveGames({ games, players, isPro, useNet, generateId }: ResolveGamesInput): ResolvedGames {
+export function resolveGames({ games, players, isPro, useNet, generateId, holes = Array.from({ length: 18 }, (_, i) => i + 1) }: ResolveGamesInput): ResolvedGames {
   const out: GameConfig[] = [];
   const issues: DraftIssue[] = [];
   const assumptions: DraftAssumption[] = [];
   const needsPro: PlanGameType[] = [];
   let playerOrder: string[] | null = null;
-  const seen = new Set<PlanGameType>();
+  const seen = new Set<string>();
   const n = players.length;
 
   for (const said of games) {
     const g = normalizeGame(said, n, assumptions);
-    if (seen.has(g.type)) continue; // "skins ... and skins carry over" is one game
-    seen.add(g.type);
+    // "skins ... and skins carry over" is one game; distinct custom games are not.
+    const seenKey = g.type === 'custom' ? `custom:${g.custom?.name ?? ''}` : g.type;
+    if (seen.has(seenKey)) continue;
+    seen.add(seenKey);
+    // A game type from a newer server than this app: say so rather than fail.
+    if (!(g.type in PLAYER_COUNTS)) {
+      issues.push({ field: 'games', message: `"${String(g.type)}" needs a newer version of the app` });
+      continue;
+    }
     const label = GAME_LABEL[g.type];
 
     if (g.type === 'match' && g.teamScoring && g.teamScoring !== 'best' && n !== 4) {
@@ -302,6 +320,20 @@ export function resolveGames({ games, players, isPro, useNet, generateId }: Reso
           teams = players.map((p, i) => ({ id: `team-${i + 1}`, name: p.name, playerIds: [p.key], color: '#22c55e' }));
         }
         config.teams = teams;
+        break;
+      }
+      case 'custom': {
+        if (!g.custom) {
+          issues.push({ field: 'games', message: 'A custom game came through without its rules. Say it again' });
+          continue;
+        }
+        const r = resolveCustom(g.custom, players.map(p => p.key), spoken => findPlayerKey(spoken, players), useNet, holes);
+        if (!r.spec) {
+          for (const m of r.issues) issues.push({ field: 'games', message: m });
+          continue;
+        }
+        config.spec = r.spec;
+        config.useNet = r.spec.net;
         break;
       }
       default:

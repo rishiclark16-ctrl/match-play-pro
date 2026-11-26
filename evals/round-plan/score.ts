@@ -3,7 +3,7 @@
  * so a failing case reads like a bug report ("low-total-named: match teamScoring
  * was best, expected aggregate").
  */
-import type { PlanGame, RoundPlan } from '../../src/lib/roundPlan/types';
+import type { PlanCustomSpec, PlanGame, RoundPlan } from '../../src/lib/roundPlan/types';
 import type { EvalCase, GameExpect } from './cases';
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
@@ -17,13 +17,43 @@ function sameTeams(actual: [string[], string[]] | null, expected: [string[], str
   return a[0] === e[0] && a[1] === e[1];
 }
 
+/**
+ * A custom game matches when its structure does: the kind of sides (and the teams),
+ * the set of contests (kind + metric, and rank tables), ties when they matter,
+ * multipliers, segments count, scoring, payout and quota. Names and money style
+ * defaults are not compared.
+ */
+function customDiffs(got: PlanCustomSpec | null, want: PlanCustomSpec): string[] {
+  if (!got) return ['custom rules missing'];
+  const out: string[] = [];
+  if (got.sides.kind !== want.sides.kind) out.push(`custom sides were ${got.sides.kind}, expected ${want.sides.kind}`);
+  if (want.sides.teams?.length === 2 && !sameTeams((got.sides.teams as [string[], string[]]) ?? null, want.sides.teams as [string[], string[]])) {
+    out.push(`custom teams were ${JSON.stringify(got.sides.teams)}, expected ${JSON.stringify(want.sides.teams)}`);
+  }
+  if (want.sides.kind === 'one_vs_field' && got.sides.loneWeight !== want.sides.loneWeight) out.push(`custom loneWeight was ${got.sides.loneWeight}, expected ${want.sides.loneWeight}`);
+  const key = (c: PlanCustomSpec['contests'][number]) => `${c.kind}:${c.kind === 'diff' || c.kind === 'rank' || want.sides.kind !== 'one_vs_field' ? c.metric : '*'}${c.kind === 'rank' ? `:${(c.table ?? []).join('/')}` : ''}`;
+  const g = got.contests.map(key).sort().join(', ');
+  const w = want.contests.map(key).sort().join(', ');
+  if (g !== w) out.push(`custom contests were [${g}], expected [${w}]`);
+  if (want.contests.some(c => c.kind === 'low_wins') && got.ties !== want.ties) out.push(`custom ties were ${got.ties}, expected ${want.ties}`);
+  const mul = (m: PlanCustomSpec['multipliers']) => m.map(x => `${x.when}x${x.factor}${x.holes ? `@${x.holes.join('/')}` : ''}`).sort().join(', ');
+  if (mul(got.multipliers) !== mul(want.multipliers)) out.push(`custom multipliers were [${mul(got.multipliers)}], expected [${mul(want.multipliers)}]`);
+  if (got.segments.length !== want.segments.length) out.push(`custom has ${got.segments.length} bets, expected ${want.segments.length}`);
+  if (got.scoring !== want.scoring) out.push(`custom scoring was ${got.scoring}, expected ${want.scoring}`);
+  if (got.payout !== want.payout) out.push(`custom payout was ${got.payout}, expected ${want.payout}`);
+  if (got.quota !== want.quota) out.push(`custom quota was ${got.quota}, expected ${want.quota}`);
+  return out;
+}
+
 /** Mismatches between one actual game and one expectation. */
 function gameDiffs(g: PlanGame, e: GameExpect): string[] {
   const out: string[] = [];
   for (const [field, want] of Object.entries(e)) {
     if (field === 'type') continue;
     const got = (g as unknown as Record<string, unknown>)[field];
-    if (field === 'teams') {
+    if (field === 'custom') {
+      out.push(...customDiffs(g.custom ?? null, want as PlanCustomSpec));
+    } else if (field === 'teams') {
       if (!sameTeams(g.teams, want as [string[], string[]])) out.push(`${g.type} teams were ${JSON.stringify(g.teams)}, expected ${JSON.stringify(want)}`);
     } else if (want === false) {
       if (got === true) out.push(`${g.type} ${field} was true, expected not`);

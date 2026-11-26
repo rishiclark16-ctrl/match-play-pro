@@ -5,6 +5,7 @@ import { calculateSettlement, NetSettlement } from '@/lib/games/settlement';
 import { calculateSkins } from '@/lib/games/skins';
 import { calculateNassau } from '@/lib/games/nassau';
 import { calculateMatchPlay, calculateFourballMatchPlay, fourballMoney, fourballOptions } from '@/lib/games/matchPlay';
+import { customGamesTransfers } from '@/lib/games/custom/round';
 import { useGameResults } from '@/hooks/useGameResults';
 
 interface UseSettlementPreviewOptions {
@@ -132,7 +133,7 @@ export function useSettlementPreview({
       gameResults?.ninesResult,
       gameResults?.defenderResult,
       gameResults?.sixesResult,
-      fourballPayments,
+      [...fourballPayments, ...customGamesTransfers(round.games, playersWithScores, scores, round.holeInfo, false)],
     );
   }, [round, playersWithScores, scores, propBets, gameResults]);
 }

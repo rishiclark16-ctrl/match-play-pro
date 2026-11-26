@@ -40,7 +40,8 @@ async function fetchAllFriends(userId: string): Promise<FriendLike[]> {
 
 /** Asks the plan-round edge function; null means "use the offline parser". */
 async function planWithAI(text: string, friendNames: string[]): Promise<RoundPlan | null> {
-  const call = supabase.functions.invoke('plan-round', { body: { text, friends: friendNames } });
+  // capabilities: what this build can play. The server keeps anything newer out of older apps.
+  const call = supabase.functions.invoke('plan-round', { body: { text, friends: friendNames, capabilities: ['teamScoring', 'custom'] } });
   const timeout = new Promise<null>(resolve => setTimeout(() => resolve(null), AI_TIMEOUT_MS));
   try {
     const res = await Promise.race([call, timeout]);

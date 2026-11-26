@@ -8,6 +8,7 @@ import { calculateNines } from './nines';
 import { calculateDefender } from './defender';
 import { calculateSixes } from './sixes';
 import { calculateHouseGame } from './houseGame';
+import { settleCustomGame } from './custom/engine';
 import { buildScoringConfig } from '@/lib/houseGame/engine';
 import { getStrokesPerHole } from '@/lib/handicapUtils';
 import { PlayerMoney, PropBet, isPenaltyPropBet } from '@/types/betting';
@@ -22,6 +23,7 @@ interface MoneyBreakdown {
   defender: number;
   sixes: number;
   houseGame: number;
+  custom: number;
   propBets: number;
   total: number;
 }
@@ -52,7 +54,7 @@ export function calculateLiveMoney(
   
   // Initialize breakdown for each player
   players.forEach(p => {
-    breakdown.set(p.id, { skins: 0, nassau: 0, match: 0, wolf: 0, vegas: 0, nines: 0, defender: 0, sixes: 0, houseGame: 0, propBets: 0, total: 0 });
+    breakdown.set(p.id, { skins: 0, nassau: 0, match: 0, wolf: 0, vegas: 0, nines: 0, defender: 0, sixes: 0, houseGame: 0, custom: 0, propBets: 0, total: 0 });
   });
 
   // Filter scores up to the current hole
@@ -215,6 +217,21 @@ export function calculateLiveMoney(
             const pb = breakdown.get(standing.playerId);
             if (pb) { pb.defender += standing.earnings; pb.total += standing.earnings; }
           });
+        }
+        break;
+      }
+
+      case 'custom': {
+        if (!game.spec || !(game.stakes > 0)) break;
+        const { transfers } = settleCustomGame({
+          spec: game.spec, playerIds: players.map(p => p.id), scores: relevantScores, holeInfo,
+          strokes: strokesMap, stake: game.stakes, final: false,
+        });
+        for (const t of transfers) {
+          const fromPb = breakdown.get(t.from);
+          const toPb = breakdown.get(t.to);
+          if (fromPb) { fromPb.custom -= t.amount; fromPb.total -= t.amount; }
+          if (toPb) { toPb.custom += t.amount; toPb.total += t.amount; }
         }
         break;
       }
