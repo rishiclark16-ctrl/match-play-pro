@@ -12,7 +12,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk@1.12.0";
 import { z } from "npm:zod@3.25.76";
-import { GAME_TYPES, PLAN_SCHEMA, SYSTEM, TEAM_SCORING, userContent as buildUserContent } from "../_shared/planRoundPrompt.ts";
+import { GAME_TYPES, METRICS, PLAN_SCHEMA, SYSTEM, TEAM_SCORING, userContent as buildUserContent } from "../_shared/planRoundPrompt.ts";
 
 const MODEL = "claude-opus-5-5";
 const MAX_TEXT = 1000;
@@ -39,6 +39,46 @@ function limited(userId: string): boolean {
 }
 
 // Validation after the model, independent of the API's schema enforcement.
+// Bounds keep a confused or adversarial plan from reaching the engine; the app's
+// own validator (src/lib/games/custom/validate.ts) checks the rules themselves.
+const Name = z.string().min(1).max(60);
+const Hole = z.number().int().min(1).max(18);
+const Teams = z.array(z.array(Name).min(1).max(4)).min(2).max(8);
+const CustomZ = z.object({
+  name: z.string().max(60),
+  sides: z.object({
+    kind: z.enum(["individual", "teams", "rotating_teams", "one_vs_field"]),
+    teams: Teams.nullable(),
+    rotations: z.array(z.object({ from: Hole, to: Hole, teams: Teams })).max(18).nullable(),
+    order: z.array(Name).max(12).nullable(),
+    loneWeight: z.number().min(0.5).max(10).nullable(),
+    fieldMetric: z.enum(["best", "total"]).nullable(),
+  }),
+  contests: z.array(z.object({
+    kind: z.enum(["low_wins", "rank", "vs_par", "diff"]),
+    metric: z.enum(METRICS),
+    points: z.number().min(0).max(100).nullable(),
+    table: z.array(z.number().min(-100).max(100)).max(12).nullable(),
+    ties: z.enum(["share", "void"]).nullable(),
+    parTable: z.object({
+      albatross: z.number(), eagle: z.number(), birdie: z.number(), par: z.number(),
+      bogey: z.number(), double: z.number(), worse: z.number(),
+    }).nullable(),
+  })).min(1).max(6),
+  ties: z.enum(["halve", "carry"]),
+  multipliers: z.array(z.object({
+    when: z.enum(["winner_birdie", "any_birdie", "par3", "par5", "holes"]),
+    holes: z.array(Hole).max(18).nullable(),
+    factor: z.number().min(0.5).max(10),
+  })).max(6),
+  segments: z.array(z.object({ from: Hole, to: Hole, label: z.string().max(30) })).max(6),
+  scoring: z.enum(["points", "holes"]),
+  payout: z.enum(["per_point", "per_segment"]),
+  money: z.enum(["per_man", "each_opponent"]).nullable(),
+  net: z.boolean().nullable(),
+  quota: z.boolean(),
+});
+
 const PlanZ = z.object({
   course: z.object({
     query: z.string().max(120).nullable(),
@@ -59,6 +99,7 @@ const PlanZ = z.object({
       .transform(t => (t ? [t[0] ?? [], t[1] ?? []] as [string[], string[]] : null)),
     teamScoring: z.enum(TEAM_SCORING).nullable(),
     perHole: z.boolean().nullable(),
+    custom: CustomZ.nullable(),
   })).max(8),
   handicaps: z.object({ mode: z.enum(["full", "none", "percent"]), percent: z.number().nullable() }).nullable(),
   unsupported: z.array(z.string().max(120)).max(10),
@@ -77,7 +118,7 @@ Deno.serve(async (req: Request) => {
   if (authError || !user) return json({ error: "unauthorized" }, 401);
   if (limited(user.id)) return json({ error: "rate_limited" }, 429);
 
-  let body: { text?: unknown; friends?: unknown };
+  let body: { text?: unknown; friends?: unknown; capabilities?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -97,7 +138,8 @@ Deno.serve(async (req: Request) => {
   const request: Anthropic.MessageCreateParamsNonStreaming = {
     model: MODEL,
     max_tokens: 4096,
-    system: SYSTEM,
+    // The instructions and glossary are identical on every call: cache them.
+    system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
     output_config: { effort: "low", format: { type: "json_schema", schema: PLAN_SCHEMA as unknown as Record<string, unknown> } },
     messages: [{ role: "user", content: userContent }],
   };
@@ -144,6 +186,16 @@ Deno.serve(async (req: Request) => {
     console.error("plan-round: schema mismatch", plan.error.issues.slice(0, 3));
     return json({ error: "model_error" }, 502);
   }
+  // Apps from before custom games can't play them (and their planner doesn't know the
+  // type): name the game as not set up instead.
+  const caps = Array.isArray(body.capabilities) ? body.capabilities : [];
+  const result = plan.data;
+  if (!caps.includes("custom")) {
+    for (const g of result.games.filter(g => g.type === "custom")) {
+      result.unsupported.push(g.custom?.name ? `${g.custom.name} (update the app to play it)` : "a custom game (update the app)");
+    }
+    result.games = result.games.filter(g => g.type !== "custom");
+  }
   console.log(`plan-round ok ${Date.now() - started}ms`);
-  return json({ plan: plan.data });
+  return json({ plan: result });
 });

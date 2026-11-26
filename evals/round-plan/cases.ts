@@ -14,6 +14,8 @@
  * `catalog` ties a case to the game it exercises in supabase/functions/_shared/golfGames.ts.
  */
 import type { PlanGame, PlanGameType } from '../../src/lib/roundPlan/types';
+import { PRESETS, STABLEFORD_TABLE } from '../../src/lib/games/custom/presets';
+import { planFromSpec } from '../../src/lib/roundPlan/customPlan';
 import type { GameConfig } from '../../src/types/golf';
 
 export type GameExpect = Partial<Omit<PlanGame, 'type'>> & { type: PlanGameType };
@@ -24,6 +26,8 @@ export interface EvalCase {
   catalog: string[];
   /** Friends' full names on the user's account (prompt context). */
   friends?: string[];
+  /** Only the AI can set this up (the offline parser is not scored on it). */
+  aiOnly?: boolean;
   expect: {
     /** Other players as said (not the speaker). Omit to skip the check. */
     players?: string[];
@@ -47,6 +51,11 @@ export interface EvalCase {
     issue?: string;
     /** An assumption whose message matches this. */
     assumption?: string;
+    /**
+     * Money from playing the resolved games on a short card. rows[hole] are gross
+     * scores in seat order: "me" then the players as listed. balance is by name.
+     */
+    money?: { rows: number[][]; stake?: number; balance: Record<string, number> };
   };
 }
 
@@ -400,9 +409,10 @@ export const CASES: EvalCase[] = [
 
   // ── Known games the app doesn't play: must be flagged, never forced ─────
   {
-    id: 'unsupported-per-stroke', catalog: ['per_stroke'],
+    id: 'custom-per-stroke', catalog: ['per_stroke'],
     text: 'a dollar a stroke with Jack',
-    expect: { players: ['Jack'], noGames: true, unsupported: ['stroke'] },
+    expect: { players: ['Jack'], games: [{ type: 'custom', stake: 1, custom: planFromSpec(PRESETS.dollarAStroke()) }] },
+    engine: { money: { rows: [[4, 4], [5, 4], [3, 5]], stake: 1, balance: { me: 1, Jack: -1 } } },
   },
   {
     id: 'unsupported-scramble', catalog: ['scramble'],
@@ -415,24 +425,27 @@ export const CASES: EvalCase[] = [
     expect: { players: FOUR, noGames: true, unsupported: ['alternate'] },
   },
   {
-    id: 'unsupported-high-low', catalog: ['high_low'],
+    id: 'custom-high-low', catalog: ['high_low'],
     text: 'high low, me and Jack vs Jim and Tim, a dollar a point',
-    expect: { players: FOUR, noGames: true, unsupported: ['high'] },
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 1, custom: planFromSpec(PRESETS.highLow([['me', 'Jack'], ['Jim', 'Tim']])) }] },
+    // Hole 1: low ball me 3 vs Jim 4 (us), high ball Jack 6 vs Tim 5 (them): 1-1.
+    engine: { money: { rows: [[3, 6, 4, 5], [4, 4, 5, 5]], stake: 1, balance: { me: 2, Jack: 2, Jim: -2, Tim: -2 } } },
   },
   {
-    id: 'unsupported-split-sixes', catalog: ['split_sixes'],
+    id: 'custom-split-sixes', catalog: ['split_sixes'],
     text: 'split sixes with Jack and Jim for a dollar',
-    expect: { players: ['Jack', 'Jim'], noGames: true, unsupported: ['split sixes'] },
+    expect: { players: ['Jack', 'Jim'], games: [{ type: 'custom', stake: 1, custom: planFromSpec(PRESETS.splitSixes()) }] },
+    engine: { money: { rows: [[3, 4, 5]], stake: 1, balance: { me: 6, Jack: 0, Jim: -6 } } },
   },
   {
-    id: 'unsupported-daytona', catalog: ['daytona'],
+    id: 'custom-daytona', catalog: ['daytona'],
     text: 'daytona, me and Jack vs Jim and Tim, quarter a point',
-    expect: { players: FOUR, noGames: true, unsupported: ['daytona'] },
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 0.25, custom: planFromSpec(PRESETS.daytona([['me', 'Jack'], ['Jim', 'Tim']])) }] },
   },
   {
-    id: 'unsupported-acey-deucey', catalog: ['acey_deucey'],
+    id: 'custom-acey-deucey', catalog: ['acey_deucey'],
     text: 'acey deucey with Jack Jim and Tim, a dollar',
-    expect: { players: FOUR, noGames: true, unsupported: ['acey'] },
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 1, custom: planFromSpec(PRESETS.aceyDeucey()) }] },
   },
   {
     id: 'unsupported-scotch', catalog: ['scotch'],
@@ -450,9 +463,9 @@ export const CASES: EvalCase[] = [
     expect: { players: FOUR, noGames: true, unsupported: ['banker'] },
   },
   {
-    id: 'unsupported-wolfman', catalog: ['wolfman'],
+    id: 'custom-wolfman', catalog: ['wolfman'],
     text: 'wolfman for a dollar with Jack and Jim',
-    expect: { players: ['Jack', 'Jim'], noGames: true, unsupported: ['wolfman'] },
+    expect: { players: ['Jack', 'Jim'], games: [{ type: 'custom', stake: 1, custom: planFromSpec(PRESETS.wolfman(['me', 'Jack', 'Jim'])) }] },
   },
   {
     id: 'unsupported-lone-ranger', catalog: ['lone_ranger'],
@@ -460,9 +473,9 @@ export const CASES: EvalCase[] = [
     expect: { players: FOUR, unsupported: ['money ball'], extraGames: true },
   },
   {
-    id: 'unsupported-medal', catalog: ['stroke_play_bet'],
+    id: 'custom-medal', catalog: ['stroke_play_bet'],
     text: 'low net wins $20 from everyone, with Jack Jim and Tim',
-    expect: { players: FOUR, noGames: true, unsupported: ['net|medal|stroke'] },
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 20, custom: planFromSpec(PRESETS.medal()) }] },
   },
   {
     id: 'unsupported-let-it-ride', catalog: ['let_it_ride'],
@@ -502,9 +515,9 @@ export const CASES: EvalCase[] = [
     expect: { players: FOUR, noGames: true, unsupported: ['rabbit'] },
   },
   {
-    id: 'builder-quota', catalog: ['quota'],
+    id: 'custom-quota', catalog: ['quota'],
     text: 'chicago, the quota game, with Jack and Tim',
-    expect: { players: ['Jack', 'Tim'], noGames: true, unsupported: ['quota'] },
+    expect: { players: ['Jack', 'Tim'], games: [{ type: 'custom', custom: planFromSpec(PRESETS.quota()) }] },
   },
   {
     id: 'builder-hammer', catalog: ['hammer'],
@@ -517,9 +530,34 @@ export const CASES: EvalCase[] = [
     expect: { players: ['Jack'], games: [{ type: 'nassau', stake: 5 }], unsupported: ['press'] },
   },
   {
-    id: 'builder-birdies-pay', catalog: ['birdie_bonus', 'skins'],
+    id: 'custom-skins-birdies-double', catalog: ['birdie_bonus', 'skins'], aiOnly: true,
     text: '$5 skins with Jack and birdies pay double',
-    expect: { players: ['Jack'], games: [{ type: 'skins', stake: 5 }], unsupported: ['birdie'] },
+    expect: { players: ['Jack'], games: [{ type: 'custom', stake: 5, custom: planFromSpec({ ...PRESETS.skins(false), multipliers: [{ when: 'winner_birdie', factor: 2 }] }) }] },
+  },
+  {
+    id: 'custom-skins-carry-18-double', catalog: ['skins'], aiOnly: true,
+    text: 'skins with Jack, Jim and Tim, two bucks, ties carry, birdies count double and 18 is double',
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 2, custom: planFromSpec({ ...PRESETS.skins(true), multipliers: [{ when: 'winner_birdie', factor: 2 }, { when: 'holes', holes: [18], factor: 2 }] }) }] },
+  },
+  {
+    id: 'custom-nassau-18-double', catalog: ['nassau'], aiOnly: true,
+    text: '$10 nassau with Jack but 18 counts double',
+    expect: { players: ['Jack'], games: [{ type: 'custom', stake: 10, custom: planFromSpec({ ...PRESETS.nassau(), multipliers: [{ when: 'holes', holes: [18], factor: 2 }] }) }] },
+  },
+  {
+    id: 'custom-team-stableford', catalog: ['stableford'], aiOnly: true,
+    text: 'team stableford, me and Jack vs Jim and Tim, both scores count, a dollar a point',
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 1, custom: planFromSpec({ ...PRESETS.lowTotal([['me', 'Jack'], ['Jim', 'Tim']]), name: 'Team Stableford', contests: [{ kind: 'vs_par', metric: 'total', table: STABLEFORD_TABLE }] }) }] },
+  },
+  {
+    id: 'custom-low-total-sixes', catalog: ['low_total', 'sixes'], aiOnly: true,
+    text: 'me, Jack, Jim and Tim, switch partners every six holes, low total wins the hole, $5 a man for each six',
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 5, custom: planFromSpec({ ...PRESETS.sixes(['me', 'Jack', 'Jim', 'Tim']), contests: [{ kind: 'low_wins', metric: 'total', points: 1 }] }) }] },
+  },
+  {
+    id: 'custom-lblt-birdie-double', catalog: ['low_ball_low_total'], aiOnly: true,
+    text: 'low ball low total, me and Jack vs Jim and Tim, a dollar a point, birdies double',
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 1, custom: planFromSpec({ ...PRESETS.lowBallLowTotal([['me', 'Jack'], ['Jim', 'Tim']]), multipliers: [{ when: 'winner_birdie', factor: 2 }] }) }] },
   },
   {
     id: 'side-junk', catalog: ['junk', 'greenie', 'sandie', 'nassau'],

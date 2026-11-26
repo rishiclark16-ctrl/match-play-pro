@@ -15,6 +15,8 @@ function money(n: number): string {
 
 function describeGame(g: GameConfig): string | null {
   if (!(PLAN_GAME_TYPES as readonly string[]).includes(g.type)) return null;
+  // A custom game is said back by name; the planner rebuilds its rules from it.
+  if (g.type === 'custom') return g.spec ? (g.stakes > 0 ? `${g.spec.name} for ${money(g.stakes)}` : g.spec.name) : null;
   const type = g.type as PlanGameType;
   const label = GAME_LABEL[type].toLowerCase();
   const unit = STAKE_UNIT[type];

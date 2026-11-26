@@ -54,8 +54,8 @@ const plan = {
   players: [{ name: 'Jack', handicap: null }, { name: 'Jim', handicap: null }, { name: 'Tim', handicap: null }],
   userPlaying: true, userHandicap: null,
   games: [
-    { type: 'match', stake: 20, carryover: null, autoPress: null, modified: null, teams: [['me', 'Jack'], ['Jim', 'Tim']], teamScoring: 'best', perHole: false },
-    { type: 'sixes', stake: 2, carryover: null, autoPress: null, modified: null, teams: null, teamScoring: null, perHole: null },
+    { type: 'match', stake: 20, carryover: null, autoPress: null, modified: null, teams: [['me', 'Jack'], ['Jim', 'Tim']], teamScoring: 'best', perHole: false, custom: null },
+    { type: 'sixes', stake: 2, carryover: null, autoPress: null, modified: null, teams: null, teamScoring: null, perHole: null, custom: null },
   ],
   handicaps: null, unsupported: [],
 };
@@ -75,6 +75,8 @@ export interface BackendOptions {
   plan?: unknown;
   /** Merged into the live and finished rounds' team match (e.g. { teamScoring: 'aggregate' }). */
   match?: Record<string, unknown>;
+  /** Replaces the live and finished rounds' games. */
+  games?: unknown[];
 }
 
 export interface Backend {
@@ -117,7 +119,7 @@ export async function mockBackend(page: Page, opts: BackendOptions = {}): Promis
   const session = { access_token: 'x', refresh_token: 'y', expires_at: Math.floor(Date.now() / 1000) + 3600, expires_in: 3600, token_type: 'bearer', user };
   const tables: Record<string, Record<string, unknown>[]> = {
     rounds: (() => {
-      const g = opts.match ? games.map(x => (x.type === 'match' ? { ...x, ...opts.match } : x)) : games;
+      const g = opts.games ?? (opts.match ? games.map(x => (x.type === 'match' ? { ...x, ...opts.match } : x)) : games);
       return [round(R_LIVE, 'active', g), round(R_DONE, 'complete', g)];
     })(),
     players: [...playersFor(R_LIVE), ...playersFor(R_DONE)],

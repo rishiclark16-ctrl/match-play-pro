@@ -4,6 +4,8 @@
  */
 import { test, expect } from '@playwright/test';
 import { mockBackend, R_DONE, R_LIVE, SENTENCE } from './mockBackend';
+import { PRESETS } from '../../src/lib/games/custom/presets';
+import { planFromSpec } from '../../src/lib/roundPlan/customPlan';
 
 test.beforeEach(({}, info) => {
   test.skip(info.project.name === 'ipad', 'journeys run on phone sizes');
@@ -48,7 +50,7 @@ test('low total, $5 a hole: the 2 v 2 game where partners add their scores', asy
       course: { query: 'Sonoma Golf Club', tee: 'II', holes: null, nine: null },
       players: [{ name: 'Jack', handicap: null }, { name: 'Jim', handicap: null }, { name: 'Tim', handicap: null }],
       userPlaying: true, userHandicap: null,
-      games: [{ type: 'match', stake: 5, carryover: null, autoPress: null, modified: null, teams: [['me', 'Jack'], ['Jim', 'Tim']], teamScoring: 'aggregate', perHole: true }],
+      games: [{ type: 'match', stake: 5, carryover: null, autoPress: null, modified: null, teams: [['me', 'Jack'], ['Jim', 'Tim']], teamScoring: 'aggregate', perHole: true, custom: null }],
       handicaps: null, unsupported: [],
     },
   });
@@ -67,6 +69,52 @@ test('low total, $5 a hole: the 2 v 2 game where partners add their scores', asy
   expect(round.games[0]).toMatchObject({
     type: 'match', stakes: 5, matchPlayFormat: 'fourball', teamScoring: 'aggregate', matchPayout: 'per_hole',
   });
+});
+
+test('custom game: Daytona is set up from its rules and saved with the real player ids', async ({ page }) => {
+  const daytona = planFromSpec(PRESETS.daytona([['me', 'Jack'], ['Jim', 'Tim']]));
+  const backend = await mockBackend(page, {
+    plan: {
+      course: { query: 'Sonoma Golf Club', tee: 'II', holes: null, nine: null },
+      players: [{ name: 'Jack', handicap: null }, { name: 'Jim', handicap: null }, { name: 'Tim', handicap: null }],
+      userPlaying: true, userHandicap: null,
+      games: [{ type: 'custom', stake: 0.25, carryover: null, autoPress: null, modified: null, teams: null, teamScoring: null, perHole: null, custom: daytona }],
+      handicaps: null, unsupported: [],
+    },
+  });
+  await page.goto('/play');
+  await page.getByLabel('Describe your round').fill('Daytona, me and Jack vs Jim and Tim, a quarter a point');
+  await page.getByRole('button', { name: 'Set it up' }).click();
+
+  // The rules the golfer confirms are generated from the spec that will be scored.
+  const rules = page.getByTestId('custom-rules');
+  await expect(rules).toBeVisible({ timeout: 15_000 });
+  await expect(rules).toContainText('Sam & Jack vs James & Tim');
+  await expect(rules).toContainText('the difference between the Daytona numbers counts');
+  await expect(page.getByText('$0.25 a point, a man')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Tee off' }).click();
+  await expect(page).toHaveURL(/\/round\/[0-9a-f-]{36}$/);
+  const round = backend.writes.find(w => w.table === 'rounds')?.body as { games: { type: string; stakes: number; spec: { sides: { teams: string[][] } } }[] };
+  const players = backend.writes.find(w => w.table === 'players')?.body as { id: string }[];
+  expect(round.games[0].type).toBe('custom');
+  expect(round.games[0].stakes).toBe(0.25);
+  // Teams reference the inserted players, not names or setup-screen keys.
+  const ids = players.map(p => p.id);
+  expect(round.games[0].spec.sides.teams).toEqual([[ids[0], ids[1]], [ids[2], ids[3]]]);
+});
+
+test('custom game on the scorecard: rules, points and live money', async ({ page }) => {
+  await mockBackend(page, {
+    games: [{ id: 'g9', type: 'custom', stakes: 1, useNet: true, spec: PRESETS.highLow([['p1', 'p2'], ['p3', 'p4']]) }],
+  });
+  await page.goto(`/round/${R_LIVE}`);
+  const card = page.getByTestId('custom-game');
+  await expect(card).toBeVisible({ timeout: 15_000 });
+  await expect(card).toContainText('High-low');
+  await expect(card).toContainText('Thru 12');
+  await card.getByRole('button', { name: /Sam & Jack vs James & Tim/ }).click();
+  await expect(card).toContainText('1 point for the better high ball');
 });
 
 test('no AI: the offline parser still sets the round up, and says so', async ({ page }) => {

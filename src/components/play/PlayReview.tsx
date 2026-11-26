@@ -7,6 +7,7 @@ import { CtaFooter, SectionLabel } from '@/components/golf/setupUi';
 import { PaywallModal } from '@/components/subscription/PaywallModal';
 import { canTeeOff, type DraftOverrides, type RoundDraft } from '@/lib/roundPlan/buildDraft';
 import { GAME_LABEL, TEAM_SCORING_LABEL, stakeLabel } from '@/lib/roundPlan/games';
+import { describeSpec } from '@/lib/games/custom/describe';
 import type { FriendLike } from '@/lib/roundPlan/names';
 import type { PlanGameType } from '@/lib/roundPlan/types';
 import type { GameConfig } from '@/types/golf';
@@ -124,11 +125,24 @@ export function PlayReview({ draft, friends, creating, failure, onUpdate, onEdit
             {draft.games.map(g => {
               const type = g.type as PlanGameType;
               const detail = gameDetail(g, firstNames);
+              // A custom game shows its rules exactly as they will be scored.
+              const rules = g.type === 'custom' && g.spec
+                ? describeSpec(g.spec, key => firstNames.get(key) ?? '?', 0).filter(l => l !== 'Net scores' && l !== 'Gross scores')
+                : null;
               return (
-                <div key={g.id} className="px-4 py-3 flex items-center gap-3">
+                <div key={g.id} className={cn('px-4 py-3 flex gap-3', rules ? 'items-start' : 'items-center')}>
                   <span className="flex-1 min-w-0">
-                    <span className="block text-[16px] font-semibold text-foreground">{GAME_LABEL[type] ?? g.type}</span>
-                    {detail && <span className="block text-[13px] text-muted-foreground truncate">{detail}</span>}
+                    <span className="block text-[16px] font-semibold text-foreground">{g.spec?.name ?? GAME_LABEL[type] ?? g.type}</span>
+                    {detail && !rules && <span className="block text-[13px] text-muted-foreground truncate">{detail}</span>}
+                    {rules && (
+                      <ul className="mt-1 space-y-0.5" data-testid="custom-rules">
+                        {rules.map(line => (
+                          <li key={line} className="flex gap-2 text-[13px] leading-snug text-muted-foreground">
+                            <span className="mt-[7px] h-1 w-1 flex-shrink-0 rounded-full bg-primary" />{line}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </span>
                   {g.stakes > 0 && <span className="text-[15px] font-bold text-primary tabular-nums">{stakeLabel(g)}</span>}
                 </div>

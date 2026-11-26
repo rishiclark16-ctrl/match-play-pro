@@ -14,7 +14,8 @@
  * sheets. Rules vary by group; each entry gives the common form and the usual options.
  *
  * support.status:
- *  - 'yes':     say-it-and-play sets it up directly (support.plan says how).
+ *  - 'yes':     say-it-and-play sets it up directly (support.plan says how; "custom: ..." means
+ *               a custom rule set, src/lib/games/custom, built from the blocks named).
  *  - 'as':      set up as an equivalent supported game (support.plan + note say which).
  *  - 'builder': not from one sentence; the AI Game Builder (house games) handles it.
  *  - 'side':    a side bet / junk; added during the round from the scorecard.
@@ -83,11 +84,11 @@ export const GOLF_GAMES: GolfGame[] = [
   {
     id: 'stroke_play_bet',
     name: 'Stroke play / medal bet',
-    aliases: ['stroke play', 'medal', 'low net', 'low gross', 'total score', 'lowest score wins'],
+    aliases: ['medal', 'low net', 'low gross', 'lowest score wins', 'total score', 'medal play'],
     players: '2-8', teams: 'none',
     rules: 'Lowest total (net) score for the round wins.',
     money: 'Usually a pot or a fixed amount to the winner.',
-    support: { status: 'no', note: 'Stroke play is scored, but a medal bet with money is not modelled.' },
+    support: { status: 'yes', plan: 'custom: individual, diff score, per_segment (lowest total takes the stake from each player)' },
   },
   {
     id: 'per_stroke',
@@ -96,7 +97,7 @@ export const GOLF_GAMES: GolfGame[] = [
     players: '2-4', teams: 'none',
     rules: 'At the end, the difference in total (net) score.',
     money: 'The stake times the stroke difference between each pair of players.',
-    support: { status: 'no' },
+    support: { status: 'yes', plan: 'custom: individual, diff score, per_point' },
   },
   {
     id: 'stableford',
@@ -115,7 +116,7 @@ export const GOLF_GAMES: GolfGame[] = [
     players: '1-8', teams: 'none',
     rules: 'Each player\'s quota is 36 minus handicap. Points: bogey 1, par 2, birdie 4, eagle 8. Beat your quota by the most.',
     money: 'Paid on points over or under quota, or a pot.',
-    support: { status: 'builder', note: 'Quota is in the AI Game Builder.' },
+    support: { status: 'yes', plan: 'custom: individual, vs_par quota table (bogey 1, par 2, birdie 4, eagle 8), quota true, gross, per_point' },
   },
   {
     id: 'let_it_ride',
@@ -198,7 +199,7 @@ export const GOLF_GAMES: GolfGame[] = [
     players: '3', teams: 'none',
     rules: 'Six points a hole: 4-2-0 by finish; ties split (3-3-0, 4-1-1, 2-2-2).',
     money: 'Per point difference.',
-    support: { status: 'no', note: 'Close to Nines with a different table.' },
+    support: { status: 'yes', plan: 'custom: individual, rank 4-2-0 ties share, per_point' },
   },
   {
     id: 'acey_deucey',
@@ -207,7 +208,7 @@ export const GOLF_GAMES: GolfGame[] = [
     players: '4', teams: 'none',
     rules: 'Each hole: the outright low score (ace) collects from everyone; the outright high score (deuce) pays everyone.',
     money: 'Two stakes per hole, one for the ace and one for the deuce.',
-    support: { status: 'no' },
+    support: { status: 'yes', plan: 'custom: individual, rank 1-0-0-(-1) ties void, per_point' },
   },
   {
     id: 'wolf',
@@ -226,7 +227,7 @@ export const GOLF_GAMES: GolfGame[] = [
     players: '3', teams: '1 vs field',
     rules: 'Middle drive is the Wolfman; the other two add their scores against the Wolfman\'s score doubled.',
     money: 'Hunters win or lose a unit, the Wolfman two.',
-    support: { status: 'no' },
+    support: { status: 'yes', plan: 'custom: one_vs_field loneWeight 2 fieldMetric total, low_wins, each_opponent', note: 'The lone player rotates in seat order instead of by middle drive.' },
   },
   {
     id: 'defender',
@@ -293,7 +294,7 @@ export const GOLF_GAMES: GolfGame[] = [
     players: '4', teams: 'fixed 2v2',
     rules: 'Two points a hole: low ball vs low ball, and high ball vs high ball (the partners\' worse scores).',
     money: 'Per point.',
-    support: { status: 'no', note: 'Close to low ball, low total, but compares the worse balls instead of the totals.' },
+    support: { status: 'yes', plan: 'custom: teams, low_wins best + low_wins worst, per_point' },
   },
   {
     id: 'scotch',
@@ -321,7 +322,7 @@ export const GOLF_GAMES: GolfGame[] = [
     players: '4', teams: 'fixed 2v2',
     rules: 'Like Vegas, but when a team makes par or better the low digit leads, and when it makes bogey or worse the high digit leads.',
     money: 'Per point.',
-    support: { status: 'no', note: 'Vegas is supported; Daytona\'s bogey flip is not.' },
+    support: { status: 'yes', plan: 'custom: teams, diff daytona, per_point' },
   },
   {
     id: 'sixes',
@@ -443,7 +444,7 @@ export const GOLF_GAMES: GolfGame[] = [
     rules: 'Varies by group, often closest to the pin in regulation who then makes par.', money: 'A dot.', support: { status: 'side', note: 'Agree the meaning first.' } },
   { id: 'birdie_bonus', name: 'Birdies / eagles pay', aliases: ['birdies pay', 'birdie bonus', 'eagles pay double', 'birdies double'],
     players: '2-8', teams: 'none', rules: 'A birdie (or eagle) earns a bonus from each player.', money: 'A unit per birdie, more for eagles.',
-    support: { status: 'builder' } },
+    support: { status: 'yes', plan: 'custom: a winner_birdie multiplier on the game it modifies, or vs_par points for birdies' } },
 ];
 
 /** Games say-it-and-play can set up, directly or as an equivalent. */

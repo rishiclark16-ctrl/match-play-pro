@@ -22,11 +22,12 @@ describe('plan-round parity', () => {
     const m = /required: \["type", ([^\]]+)\]/.exec(prompt);
     expect(m).not.toBeNull();
     const fields = [...m![1].matchAll(/"([A-Za-z]+)"/g)].map(x => x[1]).sort();
-    expect(fields).toEqual(['autoPress', 'carryover', 'modified', 'perHole', 'stake', 'teamScoring', 'teams']);
+    expect(fields).toEqual(['autoPress', 'carryover', 'custom', 'modified', 'perHole', 'stake', 'teamScoring', 'teams']);
   });
   it('validates the new fields after the model', () => {
     expect(src).toMatch(/teamScoring: z\.enum\(TEAM_SCORING\)/);
     expect(src).toMatch(/perHole: z\.boolean\(\)/);
+    expect(src).toMatch(/custom: CustomZ\.nullable\(\)/);
   });
   it('never asks the model for database ids', () => {
     expect(src).not.toMatch(/profileId|friendId|course_id/);

@@ -28,7 +28,8 @@ const args = Object.fromEntries(process.argv.slice(2).map(a => {
 const local = args.local === 'true';
 const repeat = Math.max(1, Number(args.repeat ?? 1));
 const grep = args.grep ? new RegExp(args.grep, 'i') : null;
-const cases = CASES.filter(c => !grep || grep.test(c.id));
+// The offline parser is only scored on what it can set up without the AI.
+const cases = CASES.filter(c => (!grep || grep.test(c.id)) && !(local && c.aiOnly));
 
 const client = local ? null : new Anthropic({ timeout: 60_000, maxRetries: 2 });
 let inputTokens = 0;
@@ -40,7 +41,8 @@ async function planWithModel(c: EvalCase): Promise<{ plan: RoundPlan | null; err
   const request: Anthropic.MessageCreateParamsNonStreaming = {
     model: MODEL,
     max_tokens: 4096,
-    system: SYSTEM,
+    // The instructions and glossary are identical on every call: cache them.
+    system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
     output_config: { effort: 'low', format: { type: 'json_schema', schema: PLAN_SCHEMA as unknown as Record<string, unknown> } },
     messages: [{ role: 'user', content: userContent(c.text, c.friends ?? FRIENDS) }],
   };

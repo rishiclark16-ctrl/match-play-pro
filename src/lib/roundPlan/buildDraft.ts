@@ -275,6 +275,7 @@ export async function buildDraft(
   const dropped = new Set(overrides.dropGames ?? []);
   const g = resolveGames({
     games: plan.games.filter(x => !dropped.has(x.type)), players, isPro: deps.isPro, useNet: handicapMode !== 'none', generateId: deps.generateId,
+    holes: holeInfo.map(h => h.number),
   });
   issues.push(...g.issues);
   assumptions.push(...g.assumptions);

@@ -134,7 +134,14 @@ const guest = (key: string, name: string): DraftPlayer => ({ key, name, kind: 'g
 const four = [you, guest('p1', 'Jack Turner'), guest('p2', 'Jim Reid'), guest('p3', 'Tim Shaw')];
 let n = 0;
 const gid = () => `g${++n}`;
-const game = (g: Partial<PlanGame> & Pick<PlanGame, 'type'>): PlanGame => ({ stake: null, carryover: null, autoPress: null, modified: null, teams: null, teamScoring: null, perHole: null, ...g });
+const game = (g: Partial<PlanGame> & Pick<PlanGame, 'type'>): PlanGame => ({ stake: null, carryover: null, autoPress: null, modified: null, teams: null, teamScoring: null, perHole: null, custom: null, ...g });
+
+describe('games from a newer server', () => {
+  it('an unknown game type is an issue, not a crash', () => {
+    const r = resolveGames({ games: [game({ type: 'hammer_time' as never })], players: four, isPro: true, useNet: true, generateId: gid });
+    expect(r.issues[0].message).toMatch(/newer version/);
+  });
+});
 
 describe('games', () => {
   it('skins $5 a hole for four players', () => {

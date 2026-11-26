@@ -13,7 +13,7 @@
 
 export const PLAN_GAME_TYPES = [
   'skins', 'nassau', 'match', 'stableford', 'bestball',
-  'wolf', 'vegas', 'nines', 'defender', 'sixes',
+  'wolf', 'vegas', 'nines', 'defender', 'sixes', 'custom',
 ] as const;
 export type PlanGameType = typeof PLAN_GAME_TYPES[number];
 
@@ -46,6 +46,42 @@ export interface PlanGame {
   teamScoring: 'best' | 'aggregate' | 'best_and_aggregate' | null;
   /** Match only: the stake is per hole (or point) up rather than on the match. */
   perHole: boolean | null;
+  /** type 'custom' only: the rules, composed from the custom game building blocks. */
+  custom: PlanCustomSpec | null;
+}
+
+/**
+ * A custom game as the planner writes it: the GameSpec building blocks
+ * (src/lib/games/custom/types.ts) with players named as said ("me", "Jack"),
+ * flattened so every field is always present. The resolver maps names to players
+ * and validates the result before anyone can tee off.
+ */
+export interface PlanCustomSpec {
+  name: string;
+  sides: {
+    kind: 'individual' | 'teams' | 'rotating_teams' | 'one_vs_field';
+    teams: string[][] | null;
+    rotations: { from: number; to: number; teams: string[][] }[] | null;
+    order: string[] | null;
+    loneWeight: number | null;
+    fieldMetric: 'best' | 'total' | null;
+  };
+  contests: {
+    kind: 'low_wins' | 'rank' | 'vs_par' | 'diff';
+    metric: 'score' | 'best' | 'worst' | 'total' | 'vegas' | 'daytona';
+    points: number | null;
+    table: number[] | null;
+    ties: 'share' | 'void' | null;
+    parTable: { albatross: number; eagle: number; birdie: number; par: number; bogey: number; double: number; worse: number } | null;
+  }[];
+  ties: 'halve' | 'carry';
+  multipliers: { when: 'winner_birdie' | 'any_birdie' | 'par3' | 'par5' | 'holes'; holes: number[] | null; factor: number }[];
+  segments: { from: number; to: number; label: string }[];
+  scoring: 'points' | 'holes';
+  payout: 'per_point' | 'per_segment';
+  money: 'per_man' | 'each_opponent' | null;
+  net: boolean | null;
+  quota: boolean;
 }
 
 export interface RoundPlan {
