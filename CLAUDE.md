@@ -260,8 +260,8 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1465 pass, 0 fail** (1462 across 69 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
-- `bun test src/hooks src/lib src/engine src/components` (1462 tests)
+**1467 pass, 0 fail** (1464 across 69 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
+- `bun test src/hooks src/lib src/engine src/components` (1464 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
 **Why split:** module mocks (`vi.mock` and bun's `mock.module`) leak into downstream files when bun's CI scheduler reuses workers. Running pages in their own `bun test` invocation gives them a fresh process and keeps hook/lib tests pristine. Page-test factories must include every named export the page tree imports at module load (e.g., `TIER_LIMITS` from `useSubscription` is read by `PlayersStep`).
@@ -582,12 +582,13 @@ Phase P3.9 (custom games: "a golfer can create almost any game") — 2026-11-26:
   - 37 tests: matches `calculateSkins` (±carry), `calculateNines` and the team match calculator (all three team scorings, per hole) on random scorecards; zero-sum on 12 presets; hand-computed Acey Deucey, Daytona, high-low, Wolfman, Nassau, Sixes, Quota, carryovers, multipliers, net strokes, missing scores, live vs final; validation; rules text.
 - **App**: `GameConfig.type 'custom'` + `spec`. Settled in `useRoundCompleteState`, `useSettlementPreview` (live) and `moneyTracker` (`breakdown.custom`); `GamesSection` renders `games/CustomGameSection.tsx` (name, rules on tap, points, live money, bet leaders). `remapTeamPlayerIds` remaps spec player ids. `BettingBreakdownSheet` now lists Vegas/Nines/Defender/Sixes/custom (they were missing) and hides games with no money.
 - **Planner**: `PlanGame.custom` (`PlanCustomSpec`, flattened, names as said) → `customPlan.ts` `resolveCustom` (names → seats, `validateSpec`, issues block tee-off). Custom is a Pro game, default $1 a point. Review shows the spec's name + `describeSpec` lines (`data-testid="custom-rules"`) and `stakeLabel` ("$0.25 a point, a man", "$20 a bet"). "Same as last time" says a custom game by name. Unknown game types from a newer server are an issue, not a crash.
-- **Prompt**: `GAME_TYPES` + `custom`; `CUSTOM_SCHEMA`; block-by-block instructions; 12 worked examples in `_shared/customExamples.ts` (each resolves and validates in `customExamples.test.ts`; six score identically to presets). Events and in-hole decisions (closest, first on, putts, hammer) stay unsupported. System prompt (~4.5k tokens) is sent with `cache_control`.
+- **Structured-output budget**: the API rejects schemas with more than 16 union-typed (`anyOf`) fields or 24 optional ones, which would fail every request. The plan uses 15 nullable fields, so custom games travel in a separate top-level `customGames` list with no nullable fields ("not said" values: `[]`, `1`, `"default"`, `"unsaid"`, `stakeSaid: false`); `wireToPlan()` (shared by the edge function and `run.ts`) turns them into ordinary `games` entries of type `custom`, so the app's `RoundPlan` is unchanged. `planParity.test.ts` fails if the schema goes over 16 `anyOf` or gains an optional field.
+- **Prompt**: `GAME_TYPES` + `custom`; `WIRE_CUSTOM_SCHEMA`; block-by-block instructions; 12 worked examples in `_shared/customExamples.ts` (each resolves and validates in `customExamples.test.ts`; six score identically to presets). Events and in-hole decisions (closest, first on, putts, hammer) stay unsupported. System prompt (~4.5k tokens) is sent with `cache_control`.
 - **Compatibility**: the app sends `capabilities: ['teamScoring','custom']`; `plan-round` moves custom games into `unsupported` ("Daytona (update the app to play it)") for apps that don't send it, so 3.1 builds on phones never receive a type they can't plan.
 - **Catalogue**: split sixes, acey deucey, high-low, Daytona, dollar a stroke, medal ("stroke play" alone is no longer a medal alias), Wolfman, Quota and birdie bonuses are now `yes` (custom). Offline, `localParse` builds the presets in `OFFLINE_PRESETS` (Daytona/high-low need spoken teams) and reports AI-only custom games as not set up.
 - **Evals**: 92 cases; 8 converted from "unsupported" to custom expectations, 6 AI-only custom variants (skins birdies double, skins carry + 18 double, nassau 18 double, team Stableford, rotating low total, low ball low total birdies double). Scorer compares custom structure (sides, teams, contests, ties, multipliers, bets, scoring, payout, quota). Engine eval plays `engine.money` cards (dollar a stroke, high-low, split sixes). Offline parser 86/86 of the cases it can set up (`LOCAL_BASELINE = 86`; AI-only cases skipped).
 - QA: journeys "custom game: Daytona..." (review rules, $0.25 a point a man, saved spec teams = inserted player ids) and "custom game on the scorecard"; `mockBackend({ games })`. Full QA 95/95.
-- Tests: **1462 unit** (+3 page), typecheck 157, lint 0 errors.
+- Tests: **1464 unit** (+3 page), typecheck 157, lint 0 errors.
 
 ## V2 Feature Status
 | Feature | Status | Notes |

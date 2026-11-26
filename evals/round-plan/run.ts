@@ -16,7 +16,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CASES, FRIENDS, type EvalCase } from './cases';
 import { scoreCase, type CaseScore } from './score';
-import { PLAN_SCHEMA, SYSTEM, userContent } from '../../supabase/functions/_shared/planRoundPrompt';
+import { PLAN_SCHEMA, SYSTEM, userContent, wireToPlan } from '../../supabase/functions/_shared/planRoundPrompt';
 import { localParse } from '../../src/lib/roundPlan/localParse';
 import type { RoundPlan } from '../../src/lib/roundPlan/types';
 
@@ -58,7 +58,7 @@ async function planWithModel(c: EvalCase): Promise<{ plan: RoundPlan | null; err
       return { plan: null, error: `stop_reason ${msg.stop_reason}`, ms: Date.now() - started };
     }
     const text = msg.content.find((b): b is Anthropic.Beta.BetaTextBlock => b.type === 'text')?.text ?? '';
-    return { plan: JSON.parse(text) as RoundPlan, ms: Date.now() - started };
+    return { plan: wireToPlan(JSON.parse(text)) as unknown as RoundPlan, ms: Date.now() - started };
   } catch (err) {
     const why = err instanceof Anthropic.APIError ? `API ${err.status}: ${err.message}` : String(err);
     return { plan: null, error: why, ms: Date.now() - started };

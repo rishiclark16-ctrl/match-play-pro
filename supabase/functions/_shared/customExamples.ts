@@ -12,48 +12,57 @@ export interface CustomExample {
   said: string;
   /** The other players named in `said`, in order (the speaker is "me"). */
   players: string[];
+  /** The amount said, per point (or per bet); null when none was said. */
+  stake: number | null;
   custom: Record<string, unknown>;
 }
 
 export const CUSTOM_EXAMPLES: CustomExample[] = [
   {
     said: "Daytona, me and Jack vs Jim and Tim, a quarter a point",
+    stake: 0.25,
     players: ["Jack", "Jim", "Tim"],
     custom: { name: "Daytona", sides: { ...SIDES_NONE, kind: "teams", teams: [["me", "Jack"], ["Jim", "Tim"]] },
       contests: [{ ...C, kind: "diff", metric: "daytona" }], ...BASE },
   },
   {
     said: "Me and Jack vs Jim and Tim, a point for low ball and a point for high ball, a buck a point",
+    stake: 1,
     players: ["Jack", "Jim", "Tim"],
     custom: { name: "High-low", sides: { ...SIDES_NONE, kind: "teams", teams: [["me", "Jack"], ["Jim", "Tim"]] },
       contests: [{ ...C, kind: "low_wins", metric: "best", points: 1 }, { ...C, kind: "low_wins", metric: "worst", points: 1 }], ...BASE },
   },
   {
     said: "Split sixes with Jack and Jim, a dollar a point",
+    stake: 1,
     players: ["Jack", "Jim"],
     custom: { name: "Split Sixes", sides: { ...SIDES_NONE, kind: "individual" },
       contests: [{ ...C, kind: "rank", metric: "score", table: [4, 2, 0], ties: "share" }], ...BASE },
   },
   {
     said: "Acey deucey with Jack, Jim and Tim, a dollar",
+    stake: 1,
     players: ["Jack", "Jim", "Tim"],
     custom: { name: "Acey Deucey", sides: { ...SIDES_NONE, kind: "individual" },
       contests: [{ ...C, kind: "rank", metric: "score", table: [1, 0, 0, -1], ties: "void" }], ...BASE },
   },
   {
     said: "A dollar a stroke with Jack, gross",
+    stake: 1,
     players: ["Jack"],
     custom: { name: "Dollar a stroke", sides: { ...SIDES_NONE, kind: "individual" },
       contests: [{ ...C, kind: "diff", metric: "score" }], ...BASE, net: false },
   },
   {
     said: "Low net takes $20 from everyone, with Jack and Jim",
+    stake: 20,
     players: ["Jack", "Jim"],
     custom: { name: "Low net", sides: { ...SIDES_NONE, kind: "individual" },
       contests: [{ ...C, kind: "diff", metric: "score" }], ...BASE, payout: "per_segment", net: true },
   },
   {
     said: "Skins with Jack, Jim and Tim, ties carry, birdies count double and 18 is double",
+    stake: null,
     players: ["Jack", "Jim", "Tim"],
     custom: { name: "Skins", sides: { ...SIDES_NONE, kind: "individual" },
       contests: [{ ...C, kind: "low_wins", metric: "score", points: 1 }], ...BASE, ties: "carry",
@@ -61,12 +70,14 @@ export const CUSTOM_EXAMPLES: CustomExample[] = [
   },
   {
     said: "Wolfman with Jack and Jim",
+    stake: null,
     players: ["Jack", "Jim"],
     custom: { name: "Wolfman", sides: { ...SIDES_NONE, kind: "one_vs_field", order: ["me", "Jack", "Jim"], loneWeight: 2, fieldMetric: "total" },
       contests: [{ ...C, kind: "low_wins", metric: "score", points: 1 }], ...BASE, money: "each_opponent" },
   },
   {
     said: "The quota game with Jack and Tim",
+    stake: null,
     players: ["Jack", "Tim"],
     custom: { name: "Quota", sides: { ...SIDES_NONE, kind: "individual" },
       contests: [{ ...C, kind: "vs_par", metric: "score", parTable: { albatross: 8, eagle: 8, birdie: 4, par: 2, bogey: 1, double: 0, worse: 0 } }],
@@ -74,12 +85,14 @@ export const CUSTOM_EXAMPLES: CustomExample[] = [
   },
   {
     said: "Team stableford, me and Jack vs Jim and Tim, both scores count, $1 a point",
+    stake: 1,
     players: ["Jack", "Jim", "Tim"],
     custom: { name: "Team Stableford", sides: { ...SIDES_NONE, kind: "teams", teams: [["me", "Jack"], ["Jim", "Tim"]] },
       contests: [{ ...C, kind: "vs_par", metric: "total", parTable: STABLEFORD }], ...BASE },
   },
   {
     said: "Me, Jack, Jim and Tim, switch partners every six, low total wins the hole, $5 a man per six",
+    stake: 5,
     players: ["Jack", "Jim", "Tim"],
     custom: { name: "Low total sixes",
       sides: { ...SIDES_NONE, kind: "rotating_teams", rotations: [
@@ -93,6 +106,7 @@ export const CUSTOM_EXAMPLES: CustomExample[] = [
   },
   {
     said: "Nassau with Jack but 18 counts double, $10",
+    stake: 10,
     players: ["Jack"],
     custom: { name: "Nassau", sides: { ...SIDES_NONE, kind: "individual" },
       contests: [{ ...C, kind: "low_wins", metric: "score", points: 1 }], ...BASE,
