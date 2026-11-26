@@ -557,6 +557,7 @@ Phase P3.7 (QA suite) — 2026-11-24, merged to `main` (PR #5, `7b6c615`); the `
   - Contrast: `text-[#14532D]/80` on lime → full Forest in WinnerCard, LeaderboardParts, HoleSummary, AddToGroupTab; StatsHero "/N"; `getMatchPlayStatusColor` returns Fairway Day tokens `text-primary` / `text-loss` (was `text-success` / `text-danger`, 4.2:1).
   - Scorecard: React "`ref` is not a prop" warning gone — `popLayout`'s child no longer carries a ref (moved to an inner div).
   - `QA_DUMP=1` prints every finding with its detail (colours, sizes) — use it to see what a baseline key actually is.
+- **Coverage 15 → 25 screens (2026-11-26):** added auth (signed out: `mockBackend(page, { signedIn: false })`), join, watch party, friend profile, onboarding, privacy policy, terms, support, 404 and the paywall (free tier, opened from Profile). Their 29 findings were recorded as baseline, not fixed yet: small legal links on auth/paywall/legal pages, "Go Home" on watch, onboarding name input 36pt, friend-profile "Handicap" contrast, and the paywall `DialogContent` missing a `DialogTitle` (screen readers get no name).
 
 ## V2 Feature Status
 | Feature | Status | Notes |

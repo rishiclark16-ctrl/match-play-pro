@@ -69,6 +69,8 @@ export interface BackendOptions {
   tier?: 'pro' | 'free';
   /** false: the AI planner fails, so /play must fall back to the offline parser. */
   ai?: boolean;
+  /** false: no stored session, so the app shows the sign-in screen. */
+  signedIn?: boolean;
 }
 
 export interface Backend {
@@ -120,18 +122,21 @@ export async function mockBackend(page: Page, opts: BackendOptions = {}): Promis
   const backend: Backend = { writes: [] };
 
   await page.addInitScript(s => {
-    localStorage.setItem('sb-puqgbsxabcyxrbwwoznn-auth-token', JSON.stringify(s));
+    if (s) localStorage.setItem('sb-puqgbsxabcyxrbwwoznn-auth-token', JSON.stringify(s));
     localStorage.setItem('ai_builder_tutorial_seen_v1', '1');
     localStorage.setItem('match_tutorial_seen', '1');
     localStorage.setItem('match-golf-settings', JSON.stringify({ tutorialDismissed: true, tutorialViewCount: 9 }));
-  }, session);
+  }, opts.signedIn === false ? null : session);
 
   await page.route(/supabase\.co/, async (r: Route) => {
     const req = r.request();
     const u = req.url();
     const method = req.method();
     const one = (req.headers()['accept'] || '').includes('vnd.pgrst.object');
-    if (u.includes('/auth/v1/')) return r.fulfill({ json: u.includes('/user') ? user : session });
+    if (u.includes('/auth/v1/')) {
+      if (opts.signedIn === false) return r.fulfill({ status: 401, json: { error: 'not signed in' } });
+      return r.fulfill({ json: u.includes('/user') ? user : session });
+    }
     if (u.includes('/functions/v1/plan-round')) {
       return opts.ai === false ? r.fulfill({ status: 502, json: { error: 'model_error' } }) : r.fulfill({ json: { plan } });
     }
