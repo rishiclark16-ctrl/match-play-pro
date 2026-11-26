@@ -601,6 +601,7 @@ Phase P3.10 (plan-round outage fix + model comparison) — 2026-11-26:
   - **Sonnet 5.5:** 90/92, p50 1.8 s, about $0.005. Missed `low-total-threesome` (dropped the game instead of flagging it) and `wolf-carry` (left out "ties carry").
   - **Haiku 5.5:** 89/92, p50 1.7 s, about $0.0003. Dropped "18 counts double" on skins and on a Nassau, setting up the plain game and silently changing the money. It also missed the presses-unsupported note.
   - **Decision:** stay on Opus 5.5. The cheaper models' misses are valid-looking plans with the wrong money, which no check after the model can detect, and the saving is a few dollars a month. Kimi was considered and rejected: no cheaper than Haiku, unverified strict-schema support, and golfers' words and friends' names would go to a China-hosted provider.
+- **Merged to `main`** in PR #8 (`dfdd9e4`), so the repo now matches deployed v5. It touches only edge functions and evals, so the TestFlight build is unchanged.
 - **Lesson:** after any change to the prompt or schema, run the live eval through `plan-round-eval` before or right after deploying. A 401 smoke test only proves the function boots.
 - Test baseline: **1465 unit + 3 page**, typecheck 157, lint 0 errors. Offline parser 86/86.
 
