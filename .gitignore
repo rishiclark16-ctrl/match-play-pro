@@ -59,3 +59,4 @@ pw-local.config.ts
 
 # QA suite HTML report
 qa-report/
+evals/round-plan/results/

@@ -94,14 +94,18 @@ export function HomeLiveHero({ round, playerCount, currentHole, onOpen, onDelete
     <motion.div
       whileTap={{ scale: 0.99 }}
       onClick={onOpen}
-      role="button"
-      tabIndex={0}
-      aria-label={`Open live round at ${round.courseName}`}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
       className={cn(heroBase, 'cursor-pointer select-none')}
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       <HeroContours />
+      {/* The card opens on a tap anywhere; this button is its keyboard/VoiceOver handle.
+          It sits beside the delete button rather than wrapping it (no button inside a button). */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onOpen(); }}
+        aria-label={`Open live round at ${round.courseName}`}
+        className="absolute inset-0 rounded-[28px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-inset"
+      />
 
       <div className="relative flex items-center justify-between gap-3">
         <span className="inline-flex items-center gap-2 rounded-full bg-white/10 pl-2.5 pr-3 h-8 text-[13px] font-semibold">

@@ -46,7 +46,7 @@ export function StatsHero({ winRate, holesWon, holesPlayed, roundsWon, longestWi
       <div className="grid grid-cols-3 gap-2 mt-5">
         <Tile hot label="Holes won">
           <CountUp value={holesWon} className="text-[22px] font-extrabold leading-tight" />
-          <span className="text-[13px] font-semibold text-[#14532D]/70 ml-0.5">/{holesPlayed}</span>
+          <span className="text-[13px] font-semibold text-[#14532D] ml-0.5">/{holesPlayed}</span>
         </Tile>
         <Tile label="Rounds won">
           <CountUp value={roundsWon} className="text-[22px] font-extrabold leading-tight" />

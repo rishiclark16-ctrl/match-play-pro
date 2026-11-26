@@ -89,7 +89,7 @@ export const BONUS_PRIMITIVES: HouseGamePrimitive[] = [
     id: 'bonus_polie',
     category: 'bonus',
     label: 'Polies (Poles)',
-    description: 'The player who 2-putts from the longest distance on a hole wins a polie.',
+    description: 'Holing a putt longer than the flagstick wins a polie.',
     valueType: 'none',
     defaultValue: null,
     implemented: false,

@@ -49,30 +49,32 @@ export function HomeCourseSelector({
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <button
-          type="button"
-          className="flex items-center gap-1.5 text-right min-h-[44px]"
-        >
-          <span className={cn('text-[14px] font-semibold truncate max-w-[150px]', courseName ? 'text-foreground' : 'text-muted-foreground')}>
-            {courseName ?? 'None'}
-          </span>
-          {courseName ? (
-            <span
-              role="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onClear();
-              }}
-              className="p-1.5 rounded-full bg-muted hover:bg-border transition-colors"
-            >
+      <div className="flex items-center gap-1">
+        <SheetTrigger asChild>
+          <button
+            type="button"
+            className="flex items-center gap-1.5 text-right min-h-[44px] min-w-0"
+          >
+            <span className={cn('text-[14px] font-semibold truncate max-w-[140px]', courseName ? 'text-foreground' : 'text-muted-foreground')}>
+              {courseName ?? 'None'}
+            </span>
+            {!courseName && <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+          </button>
+        </SheetTrigger>
+        {courseName && (
+          // A sibling of the trigger, not inside it: a button in a button is unreachable for VoiceOver.
+          <button
+            type="button"
+            onClick={onClear}
+            aria-label="Clear home course"
+            className="h-11 w-11 -mr-2.5 flex-shrink-0 flex items-center justify-center"
+          >
+            <span className="p-1.5 rounded-full bg-muted">
               <X className="w-3.5 h-3.5 text-muted-foreground" />
             </span>
-          ) : (
-            <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-          )}
-        </button>
-      </SheetTrigger>
+          </button>
+        )}
+      </div>
 
       <SheetContent side="bottom" className="h-[80vh] rounded-t-[28px] px-5">
         <SheetHeader className="pb-4">

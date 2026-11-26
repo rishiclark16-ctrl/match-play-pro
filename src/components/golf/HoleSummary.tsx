@@ -274,13 +274,13 @@ export function HoleSummary({ round, players, scores, currentHole, currentHoleIn
         const isHot = tile.key === hotKey;
         const body = (
           <>
-            <span className={cn('flex items-center gap-1 text-[12px] font-semibold leading-tight', isHot ? 'text-[#14532D]/80' : 'text-[#CFE3D6]')}>
+            <span className={cn('flex items-center gap-1 text-[12px] font-semibold leading-tight', isHot ? 'text-[#14532D]' : 'text-[#CFE3D6]')}>
               <span className="truncate">{tile.label}</span>
               {tile.onPress && <ChevronRight className="w-3 h-3 shrink-0" strokeWidth={2.5} />}
             </span>
             <span className="mt-0.5 text-[18px] font-extrabold leading-tight tracking-[-0.01em] truncate">{tile.value}</span>
             {tile.sub && (
-              <span className={cn('mt-0.5 text-[11px] font-medium leading-tight truncate', isHot ? 'text-[#14532D]/80' : 'text-[#CFE3D6]')}>
+              <span className={cn('mt-0.5 text-[11px] font-medium leading-tight truncate', isHot ? 'text-[#14532D]' : 'text-[#CFE3D6]')}>
                 {tile.sub}
               </span>
             )}

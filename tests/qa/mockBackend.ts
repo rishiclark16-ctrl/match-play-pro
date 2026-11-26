@@ -35,10 +35,10 @@ const games = [
   ] },
   { id: 'g2', type: 'sixes', stakes: 2, useNet: true },
 ];
-const round = (id: string, status: string) => ({
+const round = (id: string, status: string, gameList: unknown[] = games) => ({
   id, course_name: 'Sonoma GC (II)', course_id: null, holes: 18, hole_info: holeInfo, stroke_play: true, match_play: true,
   stakes: 20, slope: 136, rating: 72.7, status, created_at: now, updated_at: now, join_code: 'FORE42', created_by: UID,
-  scorekeeper_ids: [UID], games, teams: null, handicap_mode: 'auto', tee_sets: null, mixed_tees: false, stableford: false, modified_stableford: false,
+  scorekeeper_ids: [UID], games: gameList, teams: null, handicap_mode: 'auto', tee_sets: null, mixed_tees: false, stableford: false, modified_stableford: false,
 });
 const playersFor = (rid: string) => people.map((p, i) => ({
   id: p.pid, name: p.name, handicap: p.hcp, profile_id: p.profile, order_index: i, round_id: rid,
@@ -54,8 +54,8 @@ const plan = {
   players: [{ name: 'Jack', handicap: null }, { name: 'Jim', handicap: null }, { name: 'Tim', handicap: null }],
   userPlaying: true, userHandicap: null,
   games: [
-    { type: 'match', stake: 20, carryover: null, autoPress: null, modified: null, teams: [['me', 'Jack'], ['Jim', 'Tim']] },
-    { type: 'sixes', stake: 2, carryover: null, autoPress: null, modified: null, teams: null },
+    { type: 'match', stake: 20, carryover: null, autoPress: null, modified: null, teams: [['me', 'Jack'], ['Jim', 'Tim']], teamScoring: 'best', perHole: false },
+    { type: 'sixes', stake: 2, carryover: null, autoPress: null, modified: null, teams: null, teamScoring: null, perHole: null },
   ],
   handicaps: null, unsupported: [],
 };
@@ -69,6 +69,12 @@ export interface BackendOptions {
   tier?: 'pro' | 'free';
   /** false: the AI planner fails, so /play must fall back to the offline parser. */
   ai?: boolean;
+  /** false: no stored session, so the app shows the sign-in screen. */
+  signedIn?: boolean;
+  /** What the AI planner returns, instead of the default Sonoma foursome plan. */
+  plan?: unknown;
+  /** Merged into the live and finished rounds' team match (e.g. { teamScoring: 'aggregate' }). */
+  match?: Record<string, unknown>;
 }
 
 export interface Backend {
@@ -110,7 +116,10 @@ export async function mockBackend(page: Page, opts: BackendOptions = {}): Promis
   const user = { id: UID, email: profile.email, app_metadata: {}, user_metadata: { full_name: profile.full_name }, aud: 'authenticated', role: 'authenticated', created_at: '2026-01-01T00:00:00Z' };
   const session = { access_token: 'x', refresh_token: 'y', expires_at: Math.floor(Date.now() / 1000) + 3600, expires_in: 3600, token_type: 'bearer', user };
   const tables: Record<string, Record<string, unknown>[]> = {
-    rounds: [round(R_LIVE, 'active'), round(R_DONE, 'complete')],
+    rounds: (() => {
+      const g = opts.match ? games.map(x => (x.type === 'match' ? { ...x, ...opts.match } : x)) : games;
+      return [round(R_LIVE, 'active', g), round(R_DONE, 'complete', g)];
+    })(),
     players: [...playersFor(R_LIVE), ...playersFor(R_DONE)],
     scores: [...scoresFor(R_LIVE, 12), ...scoresFor(R_DONE, 18)],
     profiles: [profile, ...friendProfiles],
@@ -120,20 +129,23 @@ export async function mockBackend(page: Page, opts: BackendOptions = {}): Promis
   const backend: Backend = { writes: [] };
 
   await page.addInitScript(s => {
-    localStorage.setItem('sb-puqgbsxabcyxrbwwoznn-auth-token', JSON.stringify(s));
+    if (s) localStorage.setItem('sb-puqgbsxabcyxrbwwoznn-auth-token', JSON.stringify(s));
     localStorage.setItem('ai_builder_tutorial_seen_v1', '1');
     localStorage.setItem('match_tutorial_seen', '1');
     localStorage.setItem('match-golf-settings', JSON.stringify({ tutorialDismissed: true, tutorialViewCount: 9 }));
-  }, session);
+  }, opts.signedIn === false ? null : session);
 
   await page.route(/supabase\.co/, async (r: Route) => {
     const req = r.request();
     const u = req.url();
     const method = req.method();
     const one = (req.headers()['accept'] || '').includes('vnd.pgrst.object');
-    if (u.includes('/auth/v1/')) return r.fulfill({ json: u.includes('/user') ? user : session });
+    if (u.includes('/auth/v1/')) {
+      if (opts.signedIn === false) return r.fulfill({ status: 401, json: { error: 'not signed in' } });
+      return r.fulfill({ json: u.includes('/user') ? user : session });
+    }
     if (u.includes('/functions/v1/plan-round')) {
-      return opts.ai === false ? r.fulfill({ status: 502, json: { error: 'model_error' } }) : r.fulfill({ json: { plan } });
+      return opts.ai === false ? r.fulfill({ status: 502, json: { error: 'model_error' } }) : r.fulfill({ json: { plan: opts.plan ?? plan } });
     }
     if (u.includes('/functions/v1/golf-course-lookup')) {
       const q = new URL(u).searchParams;

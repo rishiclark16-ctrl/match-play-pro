@@ -16,7 +16,11 @@ const Switch = React.forwardRef<
   return (
     <SwitchPrimitives.Root
       className={cn(
-        "peer inline-flex h-[30px] w-[50px] shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors data-[state=checked]:bg-primary data-[state=unchecked]:bg-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
+        // The track is drawn by ::before so the button itself is a full 44pt touch target.
+        "peer relative inline-flex h-11 w-[50px] shrink-0 cursor-pointer items-center rounded-full bg-transparent outline-none",
+        "before:absolute before:inset-x-0 before:top-1/2 before:h-[30px] before:-translate-y-1/2 before:rounded-full before:transition-colors before:content-['']",
+        "data-[state=checked]:before:bg-primary data-[state=unchecked]:before:bg-border-strong",
+        "focus-visible:before:ring-2 focus-visible:before:ring-ring focus-visible:before:ring-offset-2 focus-visible:before:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}
       onCheckedChange={handleCheckedChange}
@@ -25,7 +29,7 @@ const Switch = React.forwardRef<
     >
       <SwitchPrimitives.Thumb
         className={cn(
-          "pointer-events-none block h-[26px] w-[26px] rounded-full bg-white shadow-[0_2px_6px_rgba(15,31,23,0.2)] ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0",
+          "pointer-events-none relative ml-[2px] block h-[26px] w-[26px] rounded-full bg-white shadow-[0_2px_6px_rgba(15,31,23,0.2)] ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0",
         )}
       />
     </SwitchPrimitives.Root>

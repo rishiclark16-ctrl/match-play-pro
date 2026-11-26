@@ -9,7 +9,8 @@ import {
 import {
   calculateMatchPlay,
   calculateFourballMatchPlay,
-  fourballTransfers,
+  fourballMoney,
+  fourballOptions,
   MatchPlayResult,
 } from '@/lib/games/matchPlay';
 import {
@@ -241,8 +242,8 @@ export function useRoundCompleteSettlements({
     if (!round || !game || game.matchPlayFormat !== 'fourball' || game.matchPlayTeams?.length !== 2) return [];
     const strokes = new Map<string, Map<number, number>>();
     for (const p of playersWithScores) if (p.strokesPerHole) strokes.set(p.id, p.strokesPerHole);
-    const fb = calculateFourballMatchPlay(rawScores, playersWithScores, round.holeInfo, game.useNet !== false && strokes.size ? strokes : undefined, round.holes, game.matchPlayTeams);
-    return fourballTransfers(game.matchPlayTeams, fb.winnerId, game.stakes);
+    const fb = calculateFourballMatchPlay(rawScores, playersWithScores, round.holeInfo, game.useNet !== false && strokes.size ? strokes : undefined, round.holes, game.matchPlayTeams, fourballOptions(game));
+    return fourballMoney(game, fb, true);
   }, [round, playersWithScores, rawScores]);
 
   const settlements = useMemo(() => {

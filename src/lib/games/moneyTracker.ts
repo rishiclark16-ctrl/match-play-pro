@@ -1,7 +1,7 @@
 import { PlayerWithScores, GameConfig, HoleInfo, Score, Press } from '@/types/golf';
 import { calculateSkins, SkinsResult } from './skins';
 import { calculateNassau, NassauResult } from './nassau';
-import { calculateMatchPlay, calculateFourballMatchPlay, fourballTransfers, MatchPlayResult } from './matchPlay';
+import { calculateMatchPlay, calculateFourballMatchPlay, fourballMoney, fourballOptions, MatchPlayResult } from './matchPlay';
 import { calculateWolfStandings } from './wolf';
 import { calculateVegas } from './vegas';
 import { calculateNines } from './nines';
@@ -128,11 +128,10 @@ export function calculateLiveMoney(
         if (game.matchPlayFormat === 'fourball' && game.matchPlayTeams?.length === 2 && game.stakes > 0) {
           const fb = calculateFourballMatchPlay(
             relevantScores, players, holeInfo, game.useNet ? strokesMap : undefined,
-            (holeInfo.length <= 9 ? 9 : 18) as 9 | 18, game.matchPlayTeams,
+            (holeInfo.length <= 9 ? 9 : 18) as 9 | 18, game.matchPlayTeams, fourballOptions(game),
           );
           // Like singles: credit the leading team, "if the match ended here".
-          const leaderTeam = fb.winnerId ?? (fb.holesUp > 0 ? fb.leaderId : null);
-          for (const t of fourballTransfers(game.matchPlayTeams, leaderTeam, game.stakes)) {
+          for (const t of fourballMoney(game, fb, false)) {
             const fromPb = breakdown.get(t.from);
             const toPb = breakdown.get(t.to);
             if (fromPb) { fromPb.match -= t.amount; fromPb.total -= t.amount; }

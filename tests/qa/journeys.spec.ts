@@ -20,7 +20,7 @@ test('say it and play: sentence to a live round', async ({ page }) => {
   await expect(page.getByRole('button', { name: /II tees/ })).toBeVisible();
   await expect(page.getByText('James Reid')).toBeVisible();
   await expect(page.getByText(/you said “Jim”/)).toBeVisible();
-  await expect(page.getByText('$20 on the match')).toBeVisible();
+  await expect(page.getByText('$20 a man on the match')).toBeVisible();
   await expect(page.getByText('$2 a point')).toBeVisible();
   await expect(page.getByText(/No "blues" tee on this card/)).toBeVisible();
 
@@ -39,6 +39,34 @@ test('say it and play: sentence to a live round', async ({ page }) => {
   // Team members are the inserted player ids, not the setup screen's.
   const ids = players.map(p => p.id);
   expect(games[0].matchPlayTeams?.map(t => t.playerIds)).toEqual([[ids[0], ids[1]], [ids[2], ids[3]]]);
+});
+
+test('low total, $5 a hole: the 2 v 2 game where partners add their scores', async ({ page }) => {
+  const said = 'Me and Jack vs Jim and Tim, we add both scores and the lower total wins the hole, five bucks a hole';
+  const backend = await mockBackend(page, {
+    plan: {
+      course: { query: 'Sonoma Golf Club', tee: 'II', holes: null, nine: null },
+      players: [{ name: 'Jack', handicap: null }, { name: 'Jim', handicap: null }, { name: 'Tim', handicap: null }],
+      userPlaying: true, userHandicap: null,
+      games: [{ type: 'match', stake: 5, carryover: null, autoPress: null, modified: null, teams: [['me', 'Jack'], ['Jim', 'Tim']], teamScoring: 'aggregate', perHole: true }],
+      handicaps: null, unsupported: [],
+    },
+  });
+  await page.goto('/play');
+  await page.getByLabel('Describe your round').fill(said);
+  await page.getByRole('button', { name: 'Set it up' }).click();
+
+  await expect(page.getByText(/low total/).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText('$5 a hole, a man')).toBeVisible();
+  await expect(page.getByText(/Sam & Jack vs James & Tim/)).toBeVisible();
+
+  await page.getByRole('button', { name: 'Tee off' }).click();
+  await expect(page).toHaveURL(/\/round\/[0-9a-f-]{36}$/);
+  const round = backend.writes.find(w => w.table === 'rounds')?.body as { games: Record<string, unknown>[] };
+  expect(round.games).toHaveLength(1);
+  expect(round.games[0]).toMatchObject({
+    type: 'match', stakes: 5, matchPlayFormat: 'fourball', teamScoring: 'aggregate', matchPayout: 'per_hole',
+  });
 });
 
 test('no AI: the offline parser still sets the round up, and says so', async ({ page }) => {

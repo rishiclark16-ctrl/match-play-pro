@@ -182,7 +182,7 @@ export function WinnerCard({
                 {t.value}
               </p>
               {t.sub && (
-                <p className={cn('text-[11px] font-medium truncate', i === 0 ? 'text-[#14532D]/80' : 'text-[#CFE3D6]')}>
+                <p className={cn('text-[11px] font-medium truncate', i === 0 ? 'text-[#14532D]' : 'text-[#CFE3D6]')}>
                   {t.sub}
                 </p>
               )}

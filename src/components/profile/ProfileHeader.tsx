@@ -96,7 +96,7 @@ export function ProfileHeader({
         {/* Sub-tiles: the handicap is the "hot" number, so it gets the one lime tile */}
         <div className="grid grid-cols-3 gap-2 mt-5">
           <div className="bg-gold text-gold-foreground rounded-[16px] px-3 py-2.5">
-            <p className="text-[12px] font-semibold opacity-80">Handicap</p>
+            <p className="text-[12px] font-semibold">Handicap</p>
             <p className="text-[24px] font-extrabold tracking-[-0.02em] leading-tight tabular-nums">
               {handicap ?? '—'}
             </p>

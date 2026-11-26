@@ -40,6 +40,7 @@ Never re-record to make a new issue pass. Fix it.
 bun run test:qa                                   # starts vite on 127.0.0.1:4173
 QA_CHROMIUM=/opt/pw-browsers/chromium bun run test:qa   # cloud containers (repo pins its own Playwright)
 bunx playwright show-report qa-report             # screenshots + failures
+QA_DUMP=1 bun run test:qa -- --grep stats         # print every finding with colours/sizes
 ```
 
 In CI the report and screenshots are uploaded as the `qa-report-<run>` artifact.

@@ -74,7 +74,7 @@ export function LeaderHeroCard({ leaders, relativeToPar, displayScore, holeInfo,
               )}
             >
               <p className="text-[20px] font-extrabold leading-none tabular-nums">{t.value}</p>
-              <p className={cn('text-[11px] font-semibold mt-1', t.hot ? 'text-[#14532D]/80' : 'text-[#CFE3D6]')}>{t.label}</p>
+              <p className={cn('text-[11px] font-semibold mt-1', t.hot ? 'text-[#14532D]' : 'text-[#CFE3D6]')}>{t.label}</p>
             </div>
           ))}
         </div>

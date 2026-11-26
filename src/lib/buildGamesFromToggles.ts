@@ -13,6 +13,8 @@ interface BuildGamesArgs {
   matchPlayFormat: 'singles' | 'fourball';
   matchPlayTeamA: string[];
   matchPlayTeamB: string[];
+  /** Team match: how a team's hole score is formed and how the stake is paid. */
+  teamMatchOptions?: Pick<GameConfig, 'teamScoring' | 'matchPayout'>;
   stakes: string;
   // Side games
   skinsEnabled: boolean; skinsStakes: string; skinsCarryover: boolean;
@@ -48,7 +50,7 @@ interface BuildGamesResult {
 export function buildGamesFromToggles(args: BuildGamesArgs): BuildGamesResult {
   const {
     validPlayerCount, validPlayers,
-    matchPlay, matchPlayFormat, matchPlayTeamA, matchPlayTeamB, stakes,
+    matchPlay, matchPlayFormat, matchPlayTeamA, matchPlayTeamB, teamMatchOptions, stakes,
     skinsEnabled, skinsStakes, skinsCarryover,
     nassauEnabled, nassauStakes, nassauAutoPress,
     stablefordEnabled, stablefordModified,
@@ -180,6 +182,9 @@ export function buildGamesFromToggles(args: BuildGamesArgs): BuildGamesResult {
         { id: 'team-a', name: 'Team A', playerIds: matchPlayTeamA, color: '#22C55E' },
         { id: 'team-b', name: 'Team B', playerIds: matchPlayTeamB, color: '#6366F1' },
       ];
+      // Only stored when not the default, so existing rounds read the same.
+      if (teamMatchOptions?.teamScoring && teamMatchOptions.teamScoring !== 'best') matchConfig.teamScoring = teamMatchOptions.teamScoring;
+      if (teamMatchOptions?.matchPayout === 'per_hole') matchConfig.matchPayout = 'per_hole';
     }
     games.push(matchConfig);
   }

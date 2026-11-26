@@ -18,6 +18,14 @@ function describeGame(g: GameConfig): string | null {
   const type = g.type as PlanGameType;
   const label = GAME_LABEL[type].toLowerCase();
   const unit = STAKE_UNIT[type];
+  if (type === 'match' && g.matchPlayFormat === 'fourball') {
+    // Said back the way golfers say it, so the parser reads it the same way.
+    const kind = g.teamScoring === 'aggregate' ? 'low total match'
+      : g.teamScoring === 'best_and_aggregate' ? 'low ball, low total match' : 'best ball match';
+    if (!(g.stakes > 0)) return kind;
+    if (g.matchPayout === 'per_hole') return `${kind}, ${money(g.stakes)} a ${g.teamScoring === 'best_and_aggregate' ? 'point' : 'hole'}`;
+    return `${money(g.stakes)} ${kind}`;
+  }
   let s = unit && g.stakes > 0 ? `${money(g.stakes)} ${label}` : label;
   if (g.carryover) s += ' with carryovers';
   if (g.autoPress) s += ' with auto presses';

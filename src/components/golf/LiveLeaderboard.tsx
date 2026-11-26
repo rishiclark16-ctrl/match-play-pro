@@ -4,7 +4,7 @@ import { Crown, Swords } from 'lucide-react';
 import { PlayerWithScores, HoleInfo, Score, Team } from '@/types/golf';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { calculateFourballMatchPlay, StrokesPerHoleMap } from '@/lib/games/matchPlay';
+import { calculateFourballMatchPlay, StrokesPerHoleMap, type FourballOptions } from '@/lib/games/matchPlay';
 
 interface LiveLeaderboardProps {
   players: PlayerWithScores[];
@@ -15,6 +15,8 @@ interface LiveLeaderboardProps {
   /** When set + matchPlayTeams has 2 entries, renders the team-vs-team match status. */
   matchPlayFormat?: 'singles' | 'fourball';
   matchPlayTeams?: Team[];
+  /** Team match scoring and payout (best ball, combined total, or both). */
+  matchOptions?: FourballOptions;
 }
 
 function getInitials(name: string | null | undefined): string {
@@ -117,6 +119,12 @@ function formatMatchPlayScore(status: MatchPlayStatus, isLeader: boolean): strin
   return `${status.holesUp} DN`;
 }
 
+const TEAM_MATCH_TITLE = {
+  best: 'Best ball match',
+  aggregate: 'Low total match',
+  best_and_aggregate: 'Low ball, low total',
+} as const;
+
 export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(function LiveLeaderboard({
   players,
   useNetScoring = false,
@@ -125,6 +133,7 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
   scores = [],
   matchPlayFormat,
   matchPlayTeams,
+  matchOptions,
 }, ref) {
 
   // Calculate match play status for 2-player matches
@@ -143,8 +152,8 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
       ? new Map(players.filter(p => p.strokesPerHole).map(p => [p.id, p.strokesPerHole as Map<number, number>]))
       : undefined;
     const totalHoles = (holeInfo.length === 9 ? 9 : 18) as 9 | 18;
-    return calculateFourballMatchPlay(scores, players, holeInfo, strokesMap, totalHoles, matchPlayTeams);
-  }, [matchPlayFormat, matchPlayTeams, players, scores, holeInfo, useNetScoring]);
+    return calculateFourballMatchPlay(scores, players, holeInfo, strokesMap, totalHoles, matchPlayTeams, matchOptions);
+  }, [matchPlayFormat, matchPlayTeams, matchOptions, players, scores, holeInfo, useNetScoring]);
 
   // Sort players by score (relative to par) for stroke play
   const sortedPlayers = useMemo(() => {
@@ -239,7 +248,7 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
           <div className="flex items-center justify-center gap-2 mb-3">
             <Swords className="w-4 h-4 text-[#5A6B61]" />
             <span className="text-[12px] font-semibold text-[#5A6B61]">
-              Fourball match play
+              {TEAM_MATCH_TITLE[fourballResult.scoring ?? 'best']}
             </span>
             {isDormie && (
               <span className="bg-[#0F1F17] text-white text-[11px] font-semibold px-2 py-0.5 rounded-full">Dormie</span>
@@ -260,7 +269,9 @@ export const LiveLeaderboard = forwardRef<HTMLDivElement, LiveLeaderboardProps>(
                   ? 'AS'
                   : isOver && fourballResult.winMargin
                     ? fourballResult.winMargin
-                    : `${fourballResult.holesUp} up`}
+                    : fourballResult.scoring === 'best_and_aggregate'
+                      ? `${fourballResult.holesUp} ${fourballResult.holesUp === 1 ? 'pt' : 'pts'}`
+                      : `${fourballResult.holesUp} up`}
               </div>
               <p className="text-[12px] text-[#5A6B61] font-medium mt-1 whitespace-nowrap">
                 Thru {fourballResult.holesPlayed} · {fourballResult.holesRemaining} to play

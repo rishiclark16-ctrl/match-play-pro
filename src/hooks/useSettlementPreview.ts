@@ -4,7 +4,7 @@ import { PropBet } from '@/types/betting';
 import { calculateSettlement, NetSettlement } from '@/lib/games/settlement';
 import { calculateSkins } from '@/lib/games/skins';
 import { calculateNassau } from '@/lib/games/nassau';
-import { calculateMatchPlay, calculateFourballMatchPlay, fourballTransfers } from '@/lib/games/matchPlay';
+import { calculateMatchPlay, calculateFourballMatchPlay, fourballMoney, fourballOptions } from '@/lib/games/matchPlay';
 import { useGameResults } from '@/hooks/useGameResults';
 
 interface UseSettlementPreviewOptions {
@@ -98,8 +98,8 @@ export function useSettlementPreview({
           if (matchStrokesMap.size === 0) matchStrokesMap = undefined;
         }
         if (game.matchPlayFormat === 'fourball' && game.matchPlayTeams?.length === 2) {
-          const fb = calculateFourballMatchPlay(scores, playersWithScores, round.holeInfo, matchStrokesMap, round.holes, game.matchPlayTeams);
-          fourballPayments = fourballTransfers(game.matchPlayTeams, fb.winnerId, game.stakes);
+          const fb = calculateFourballMatchPlay(scores, playersWithScores, round.holeInfo, matchStrokesMap, round.holes, game.matchPlayTeams, fourballOptions(game));
+          fourballPayments = fourballMoney(game, fb, true);
           continue;
         }
         const matchResult = calculateMatchPlay(

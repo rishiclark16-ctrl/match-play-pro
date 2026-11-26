@@ -210,7 +210,8 @@ export default function RoundDashboard() {
         <div className="flex items-center px-4 py-3">
           <button
             onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-full bg-white border border-border/40 flex items-center justify-center mr-3 flex-shrink-0"
+            aria-label="Back"
+            className="w-11 h-11 rounded-full bg-white border border-border/40 flex items-center justify-center mr-3 flex-shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>

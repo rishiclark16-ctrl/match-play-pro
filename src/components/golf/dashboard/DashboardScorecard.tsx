@@ -20,6 +20,13 @@ function formatRelPar(n: number): string {
   return n > 0 ? `+${n}` : `${n}`;
 }
 
+/** "Jack Turner" -> "Jack T." so names fit the sticky column. */
+function shortName(name: string): string {
+  const [first, ...rest] = name.trim().split(/\s+/);
+  const last = rest[rest.length - 1];
+  return last ? `${first} ${last[0].toUpperCase()}.` : first || 'Player';
+}
+
 export function DashboardScorecard({ round, playersWithScores }: DashboardScorecardProps) {
   const holes = round.holeInfo.sort((a, b) => a.number - b.number);
   const is18 = round.holes >= 18;
@@ -31,7 +38,7 @@ export function DashboardScorecard({ round, playersWithScores }: DashboardScorec
 
   const cellBase = 'min-w-[38px] h-[36px] flex items-center justify-center text-[12px] border-r border-b border-border/30';
   const headerCell = cn(cellBase, 'bg-[#0F1F17] text-white/70 font-bold text-[11px]');
-  const labelCell = 'min-w-[80px] h-[36px] flex items-center px-3 text-[12px] font-semibold border-r border-b border-border/30 bg-white sticky left-0 z-10';
+  const labelCell = 'w-[96px] shrink-0 h-[36px] flex items-center px-3 text-[12px] font-semibold border-r border-b border-border/30 bg-white sticky left-0 z-10';
   const subtotalCell = cn(cellBase, 'bg-muted/50 font-black text-[12px] min-w-[44px]');
 
   const getPlayerHoleScore = (p: PlayerWithScores, holeNum: number) =>
@@ -52,6 +59,9 @@ export function DashboardScorecard({ round, playersWithScores }: DashboardScorec
       <div className="bg-white rounded-2xl border border-border/40 shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
         <div
           className="overflow-x-auto"
+          tabIndex={0}
+          role="region"
+          aria-label="Scorecard, scrolls sideways"
           style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y' }}
           onPointerDownCapture={(e) => e.stopPropagation()}
         >
@@ -88,22 +98,22 @@ export function DashboardScorecard({ round, playersWithScores }: DashboardScorec
             {/* Yardage row */}
             {holes[0]?.yardage != null && (
               <div className="flex">
-                <div className={cn(labelCell, 'text-muted-foreground/60 text-[10px]')}>Yds</div>
+                <div className={cn(labelCell, 'text-muted-foreground text-[11px]')}>Yds</div>
                 {front9.map(h => (
-                  <div key={h.number} className={cn(cellBase, 'text-[10px] text-muted-foreground/50')}>{h.yardage}</div>
+                  <div key={h.number} className={cn(cellBase, 'text-[11px] text-muted-foreground')}>{h.yardage}</div>
                 ))}
-                <div className={cn(subtotalCell, 'text-[10px] text-muted-foreground/50')}>
+                <div className={cn(subtotalCell, 'text-[11px] text-muted-foreground')}>
                   {front9.reduce((s, h) => s + (h.yardage ?? 0), 0)}
                 </div>
                 {is18 && back9.map(h => (
-                  <div key={h.number} className={cn(cellBase, 'text-[10px] text-muted-foreground/50')}>{h.yardage}</div>
+                  <div key={h.number} className={cn(cellBase, 'text-[11px] text-muted-foreground')}>{h.yardage}</div>
                 ))}
                 {is18 && (
-                  <div className={cn(subtotalCell, 'text-[10px] text-muted-foreground/50')}>
+                  <div className={cn(subtotalCell, 'text-[11px] text-muted-foreground')}>
                     {back9.reduce((s, h) => s + (h.yardage ?? 0), 0)}
                   </div>
                 )}
-                <div className={cn(subtotalCell, 'text-[10px] text-muted-foreground/50 min-w-[48px]')}>
+                <div className={cn(subtotalCell, 'text-[11px] text-muted-foreground min-w-[48px]')}>
                   {holes.reduce((s, h) => s + (h.yardage ?? 0), 0)}
                 </div>
               </div>
@@ -112,13 +122,13 @@ export function DashboardScorecard({ round, playersWithScores }: DashboardScorec
             {/* Hdcp row */}
             {holes[0]?.handicap != null && (
               <div className="flex">
-                <div className={cn(labelCell, 'text-muted-foreground/60 text-[10px]')}>Hdcp</div>
+                <div className={cn(labelCell, 'text-muted-foreground text-[11px]')}>Hdcp</div>
                 {front9.map(h => (
-                  <div key={h.number} className={cn(cellBase, 'text-[10px] text-muted-foreground/50')}>{h.handicap}</div>
+                  <div key={h.number} className={cn(cellBase, 'text-[11px] text-muted-foreground')}>{h.handicap}</div>
                 ))}
                 <div className={cn(subtotalCell, 'text-[10px]')} />
                 {is18 && back9.map(h => (
-                  <div key={h.number} className={cn(cellBase, 'text-[10px] text-muted-foreground/50')}>{h.handicap}</div>
+                  <div key={h.number} className={cn(cellBase, 'text-[11px] text-muted-foreground')}>{h.handicap}</div>
                 ))}
                 {is18 && <div className={cn(subtotalCell, 'text-[10px]')} />}
                 <div className={cn(subtotalCell, 'text-[10px] min-w-[48px]')} />
@@ -136,7 +146,7 @@ export function DashboardScorecard({ round, playersWithScores }: DashboardScorec
               return (
                 <div key={p.id} className="flex">
                   <div className={cn(labelCell, pi % 2 === 0 ? 'bg-white' : 'bg-muted/10')}>
-                    <span className="truncate max-w-[72px]">{p.name}</span>
+                    <span className="truncate max-w-[72px]" title={p.name}>{shortName(p.name)}</span>
                   </div>
                   {front9.map(h => {
                     const score = getPlayerHoleScore(p, h.number);

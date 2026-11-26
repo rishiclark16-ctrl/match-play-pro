@@ -32,7 +32,7 @@ export function AddToGroupTab({
           </span>
           <div>
             <p className="text-[14px] font-semibold text-[#14532D]">Added to {name} tab</p>
-            <p className="text-[12px] text-[#14532D]/80">Visible in the group ledger</p>
+            <p className="text-[12px] text-[#14532D]">Visible in the group ledger</p>
           </div>
         </div>
       </motion.div>
