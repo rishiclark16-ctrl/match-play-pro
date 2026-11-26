@@ -3,6 +3,7 @@ import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Mic } from 'lucide-react';
 import { PlayerCard } from '@/components/golf/PlayerCard';
 import { GamesSection } from '@/components/golf/GamesSection';
+import { fourballOptions } from '@/lib/games/matchPlay';
 import { LiveLeaderboard } from '@/components/golf/LiveLeaderboard';
 import { MoneyTracker } from '@/components/golf/MoneyTracker';
 import { PlayerWithScores, Press, Round, Score } from '@/types/golf';
@@ -97,6 +98,7 @@ export function ScorecardBody({
               scores={roundScores}
               matchPlayFormat={matchGame?.matchPlayFormat}
               matchPlayTeams={matchGame?.matchPlayTeams}
+              matchOptions={matchGame ? fourballOptions(matchGame) : undefined}
             />
           </div>
         )}

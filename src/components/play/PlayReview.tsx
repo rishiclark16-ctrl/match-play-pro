@@ -6,7 +6,7 @@ import { fdPrimaryCta, fdCard } from '@/components/golf/setupStyles';
 import { CtaFooter, SectionLabel } from '@/components/golf/setupUi';
 import { PaywallModal } from '@/components/subscription/PaywallModal';
 import { canTeeOff, type DraftOverrides, type RoundDraft } from '@/lib/roundPlan/buildDraft';
-import { GAME_LABEL, formatStake } from '@/lib/roundPlan/games';
+import { GAME_LABEL, TEAM_SCORING_LABEL, stakeLabel } from '@/lib/roundPlan/games';
 import type { FriendLike } from '@/lib/roundPlan/names';
 import type { PlanGameType } from '@/lib/roundPlan/types';
 import type { GameConfig } from '@/types/golf';
@@ -17,6 +17,7 @@ function gameDetail(g: GameConfig, names: Map<string, string>): string | null {
   if (g.carryover) bits.push('carryovers');
   if (g.autoPress) bits.push('auto presses');
   if (g.modifiedStableford) bits.push('modified');
+  if (g.type === 'match' && g.matchPlayFormat === 'fourball') bits.push(TEAM_SCORING_LABEL[g.teamScoring ?? 'best']);
   const teams = g.matchPlayTeams ?? (g.type === 'bestball' && g.teams && g.teams.length === 2 ? g.teams : null);
   if (teams) bits.push(teams.map(t => t.playerIds.map(id => names.get(id) ?? '?').join(' & ')).join(' vs '));
   if (g.useNet === false) bits.push('gross');
@@ -129,7 +130,7 @@ export function PlayReview({ draft, friends, creating, failure, onUpdate, onEdit
                     <span className="block text-[16px] font-semibold text-foreground">{GAME_LABEL[type] ?? g.type}</span>
                     {detail && <span className="block text-[13px] text-muted-foreground truncate">{detail}</span>}
                   </span>
-                  {g.stakes > 0 && <span className="text-[15px] font-bold text-primary tabular-nums">{formatStake(type, g.stakes)}</span>}
+                  {g.stakes > 0 && <span className="text-[15px] font-bold text-primary tabular-nums">{stakeLabel(g)}</span>}
                 </div>
               );
             })}

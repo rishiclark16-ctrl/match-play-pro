@@ -106,7 +106,7 @@ All routes except `/auth` and legal pages require auth via `<AuthGuard>`.
 All game logic lives in `src/lib/games/` as pure functions with extensive tests:
 - **Nassau** (27 tests) — front/back/overall with auto-press; full 9-hole support via `holesInRound` param
 - **Skins** (24 tests) — individual hole wins, optional carryover; auto-adapts to any hole count including 9
-- **Match Play** (31 tests) — 2-player head-to-head, net scoring
+- **Match Play** (31 tests) — 2-player head-to-head, net scoring; team (fourball) matches score best ball, low total (aggregate) or low ball + low total, paid on the match or per hole up (P3.8)
 - **Wolf** (58 tests) — 3-4 player rotating wolf, blind wolf, catch-up mechanic on holes 17-18
 - **Stableford** (42 tests) — points-based, standard + modified
 - **Best Ball** (30 tests) — team format, best score per team per hole
@@ -260,8 +260,8 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1310 pass, 0 fail** (1307 across 65 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
-- `bun test src/hooks src/lib src/engine src/components` (1307 tests)
+**1396 pass, 0 fail** (1393 across 67 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
+- `bun test src/hooks src/lib src/engine src/components` (1393 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
 **Why split:** module mocks (`vi.mock` and bun's `mock.module`) leak into downstream files when bun's CI scheduler reuses workers. Running pages in their own `bun test` invocation gives them a fresh process and keeps hook/lib tests pristine. Page-test factories must include every named export the page tree imports at module load (e.g., `TIER_LIMITS` from `useSubscription` is read by `PlayersStep`).
@@ -558,6 +558,21 @@ Phase P3.7 (QA suite) — 2026-11-24, merged to `main` (PR #5, `7b6c615`); the `
   - Scorecard: React "`ref` is not a prop" warning gone — `popLayout`'s child no longer carries a ref (moved to an inner div).
   - `QA_DUMP=1` prints every finding with its detail (colours, sizes) — use it to see what a baseline key actually is.
 - **Coverage 15 → 25 screens (2026-11-26):** added auth (signed out: `mockBackend(page, { signedIn: false })`), join, watch party, friend profile, onboarding, privacy policy, terms, support, 404 and the paywall (free tier, opened from Profile). Their 29 findings were recorded as baseline, not fixed yet: small legal links on auth/paywall/legal pages, "Go Home" on watch, onboarding name input 36pt, friend-profile "Handicap" contrast, and the paywall `DialogContent` missing a `DialogTitle` (screen readers get no name).
+
+Phase P3.8 (golf game grounding, team aggregate, round-plan evals) — 2026-11-26, on `claude/matchplay-golf-app-2hb6ib` (not yet on `main`):
+- **Why:** the user reported the AI builder "doesn't fully understand the games of golf or betting practices", e.g. their own 2v2 game ("add both scores, lower total wins the hole") couldn't be set up at all.
+- **Grounding catalogue `supabase/functions/_shared/golfGames.ts`** (~60 games/bets: aliases, rules, money, player counts, `support.status` yes / as / builder / side / no). Researched from Golf Compendium's ~370-entry dictionary, Golf.com, Golf Digest, GolfLink, Golf News Net, USGA. Pure data, loaded by Deno and bun.
+- **Shared prompt `supabase/functions/_shared/planRoundPrompt.ts`**: `SYSTEM`, `PLAN_SCHEMA`, `GAME_TYPES`, `userContent()`; the game glossary in the prompt is generated from the catalogue. `plan-round/index.ts` imports it (and keeps zod validation, now with `teamScoring` + `perHole`). `planParity.test.ts` reads the shared module.
+- **New team match options** (`GameConfig.teamScoring`: `best` | `aggregate` | `best_and_aggregate`; `GameConfig.matchPayout`: `match` | `per_hole`). `calculateFourballMatchPlay(..., options)` scores low total (partners' net scores added; a hole counts once all four have a score) and low ball + low total (a point each, `holesUp` counts points, `teamPoints`/`teamTotals` per hole). Per-hole bets never close out early. `fourballMoney(game, result, final)` pays stake × holes/points up (per hole) or the stake per man on the match. Wired into settlement, live tracker, preview, GamesSection, LiveLeaderboard ("Low total match" / "Low ball, low total" card), round-completion notifier. Defaults are unchanged for existing rounds (fields only stored when not default). 12 tests in `games/teamScoring.test.ts`.
+- **Manual setup**: MatchPlaySection (fourball) shows "Team score on each hole" (Best ball / Low total / Both) and "Money" (On the match / Per hole up); state in NewRound via `components/golf/teamMatchOptions.ts`. NewRound is 501 lines (1 over target).
+- **Planner**: `PlanGame.teamScoring` + `perHole`. Resolver normalises: "$5 a hole" between two players → skins without carryovers (same money, says so); money on best ball in a foursome → best-ball match; low total with ≠4 players → blocking issue. Review shows "low total · $5 a hole, a man" (`stakeLabel()`); "same as last time" says the team game back. Team match stake labels now say "a man" (the app always charged per man).
+- **Offline parser (`localParse.ts`) 18 → 87/87 eval cases**: comma-less name lists, "me X and Y", "playing X", trailing name lists, "Jack's an 8", team sides only from the clause next to "vs", "best ball match" as one game, shared amounts ("$5 skins and nassau"), "no presses", "ties carry", "I'm a 12", spoken amounts ("a buck", "a quarter", "fifty cents"), and it now flags catalogue games it can't play ("Rabbit") instead of dropping them silently.
+- **Bug fixed: correct AI plans were blocked.** `unsaidAmounts` (the money safety check) didn't recognise "a quarter", "fifty cents" or "a buck", so "Vegas, a quarter a point" was rejected as an amount nobody said.
+- **Junk definitions fixed**: Arnie was "par after hitting a tree" (that's a barkie) → par on a par 4/5 without hitting the fairway; Polie was "3-putt but par" → holing a putt longer than the flagstick (prop bet list + house-game primitive).
+- **Eval suite `evals/round-plan/`** (README there): 87 cases. Deterministic half in CI (`src/lib/roundPlan/evals.test.ts`: engine resolution per case, catalogue coverage, offline parser ratchet `LOCAL_BASELINE = 87`, word-amount safety test). Live half `bun evals/round-plan/run.ts` calls the real prompt with `@anthropic-ai/sdk@1.12.0` (devDependency, same call as the edge function incl. server-side fallback); `--local`, `--grep`, `--repeat`. Reports in `evals/round-plan/results/` (gitignored).
+- QA: `mockBackend` takes `plan` (planner reply) and `match` (merged into the round's team match); new journey "low total, $5 a hole" checks the review and the saved game (`teamScoring: 'aggregate'`, `matchPayout: 'per_hole'`). Full QA 91/91.
+- **Not deployed yet:** `plan-round` must be redeployed (with the two `_shared` files) for the new prompt and fields; deploy it with the build that ships the client (an older client ignores `teamScoring` and would set up a best-ball match).
+- Test baseline: **1393 unit + 3 page tests**, 0 fail. Typecheck 157 (unchanged). Lint 0 errors.
 
 ## V2 Feature Status
 | Feature | Status | Notes |

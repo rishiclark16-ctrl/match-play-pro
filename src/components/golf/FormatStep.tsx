@@ -10,6 +10,7 @@ import { SavedFormatsPicker } from './SavedFormatsPicker';
 import { HeroCard, HeroTile } from './setupUi';
 import { buildConfig, summarizeScoringConfig } from '@/engine/HouseGameEngine';
 import { MatchPlaySection } from './MatchPlaySection';
+import type { TeamMatchOptions } from './teamMatchOptions';
 import {
   SkinsSection,
   NassauSection,
@@ -45,6 +46,8 @@ interface FormatStepProps {
   matchPlayFormat: 'singles' | 'fourball';
   matchPlayTeamA: string[];
   matchPlayTeamB: string[];
+  teamMatchOptions?: TeamMatchOptions;
+  onTeamMatchOptionsChange?: (options: TeamMatchOptions) => void;
   stakes: string;
   onStrokePlayChange: (enabled: boolean) => void;
   onMatchPlayChange: (enabled: boolean) => void;
@@ -122,6 +125,8 @@ export function FormatStep({
   matchPlayFormat,
   matchPlayTeamA,
   matchPlayTeamB,
+  teamMatchOptions,
+  onTeamMatchOptionsChange,
   stakes,
   onStrokePlayChange,
   onMatchPlayChange,
@@ -305,6 +310,8 @@ export function FormatStep({
         onMatchPlayFormatChange={onMatchPlayFormatChange}
         onMatchPlayTeamsChange={onMatchPlayTeamsChange}
         onStakesChange={onStakesChange}
+        teamOptions={teamMatchOptions}
+        onTeamOptionsChange={onTeamMatchOptionsChange}
       />
 
       {/* Side Games */}

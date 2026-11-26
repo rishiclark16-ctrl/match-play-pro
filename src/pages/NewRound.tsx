@@ -6,6 +6,7 @@ import { TeeSelector } from '@/components/golf/TeeSelector';
 import { CourseStep } from '@/components/golf/CourseStep';
 import { PlayersStep } from '@/components/golf/PlayersStep';
 import { FormatStep } from '@/components/golf/FormatStep';
+import { DEFAULT_TEAM_MATCH, type TeamMatchOptions } from '@/components/golf/teamMatchOptions';
 import { NewRoundStepHeader } from '@/components/golf/NewRoundStepHeader';
 import { NewRoundFormatHeader } from '@/components/golf/NewRoundFormatHeader';
 import { NewRoundBottomCta } from '@/components/golf/NewRoundBottomCta';
@@ -93,6 +94,7 @@ export default function NewRound() {
   const [matchPlayFormat, setMatchPlayFormat] = useState<'singles' | 'fourball'>('singles');
   const [matchPlayTeamA, setMatchPlayTeamA] = useState<string[]>([]);
   const [matchPlayTeamB, setMatchPlayTeamB] = useState<string[]>([]);
+  const [teamMatchOptions, setTeamMatchOptions] = useState<TeamMatchOptions>(DEFAULT_TEAM_MATCH);
   const [stakes, setStakes] = useState('');
   const [skinsEnabled, setSkinsEnabled] = useState(false);
   const [skinsStakes, setSkinsStakes] = useState('2');
@@ -267,7 +269,7 @@ export default function NewRound() {
   const { isCreating: isCreatingMulti, startRound } = useStartRound({ createRound });
   const handleStartRound = () => startRound({
     selectedCourse, holeCount, players, handicapMode,
-    strokePlay, matchPlay, matchPlayFormat, matchPlayTeamA, matchPlayTeamB, stakes,
+    strokePlay, matchPlay, matchPlayFormat, matchPlayTeamA, matchPlayTeamB, teamMatchOptions, stakes,
     skinsEnabled, skinsStakes, skinsCarryover,
     nassauEnabled, nassauStakes, nassauAutoPress,
     stablefordEnabled, stablefordModified, bestBallEnabled, bestBallTeams,
@@ -408,6 +410,7 @@ export default function NewRound() {
               matchPlay={matchPlay} onMatchPlayChange={setMatchPlay}
               matchPlayFormat={matchPlayFormat}
               matchPlayTeamA={matchPlayTeamA} matchPlayTeamB={matchPlayTeamB}
+              teamMatchOptions={teamMatchOptions} onTeamMatchOptionsChange={setTeamMatchOptions}
               stakes={stakes} onStakesChange={setStakes}
               onMatchPlayFormatChange={(fmt) => {
                 setMatchPlayFormat(fmt);

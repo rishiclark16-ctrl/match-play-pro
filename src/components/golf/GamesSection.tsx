@@ -7,7 +7,7 @@ import { calculateNassau, canPress, createPress } from '@/lib/games/nassau';
 import { calculateStableford } from '@/lib/games/stableford';
 import { calculateBestBall } from '@/lib/games/bestball';
 import { calculateWolf } from '@/lib/games/wolf';
-import { calculateMatchPlay, calculateFourballMatchPlay } from '@/lib/games/matchPlay';
+import { calculateMatchPlay, calculateFourballMatchPlay, fourballOptions } from '@/lib/games/matchPlay';
 import { calculateVegas } from '@/lib/games/vegas';
 import { calculateNines } from '@/lib/games/nines';
 import { calculateDefender } from '@/lib/games/defender';
@@ -140,7 +140,7 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
     if (!hasMatchPlay) return null;
     const isFourball = matchGame?.matchPlayFormat === 'fourball' && matchGame?.matchPlayTeams?.length === 2;
     if (isFourball) {
-      return calculateFourballMatchPlay(scores, players, round.holeInfo, buildStrokesMap, round.holes, matchGame.matchPlayTeams!);
+      return calculateFourballMatchPlay(scores, players, round.holeInfo, buildStrokesMap, round.holes, matchGame.matchPlayTeams!, fourballOptions(matchGame));
     }
     if (players.length !== 2) return null;
     return calculateMatchPlay(scores, players, round.holeInfo, buildStrokesMap, round.holes);

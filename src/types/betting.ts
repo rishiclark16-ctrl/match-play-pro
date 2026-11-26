@@ -7,8 +7,8 @@ export type PropBetType =
   | 'barkie'        // Hit a tree, still make par or better
   | 'oozle'         // Miss green on par 3 + still make par
   | 'chippy'        // Chip in from off the green for par or better
-  | 'polie'         // 3-putt or worse but still make par
-  | 'arnie'         // Par or better after hitting a tree
+  | 'polie'         // Hole a putt longer than the flagstick
+  | 'arnie'         // Par or better on a par 4/5 without hitting the fairway
   | 'ferret'        // Hole out from off the green
   | 'snake'         // 3-putt (negative, loser pays)
   | 'custom';
@@ -58,8 +58,8 @@ export const PROP_BET_TEMPLATES = [
   { type: 'barkie' as const, label: 'Barkie', icon: '🌲', description: 'Hit a tree, still make par or better', category: 'junk' },
   { type: 'oozle' as const, label: 'Oozle', icon: '💧', description: 'Miss the green on a par 3, still make par', category: 'junk' },
   { type: 'chippy' as const, label: 'Chippy', icon: '🏌️', description: 'Chip in from off the green for par or better', category: 'junk' },
-  { type: 'polie' as const, label: 'Polie', icon: '🏁', description: '3-putt or worse but still make par', category: 'junk' },
-  { type: 'arnie' as const, label: 'Arnie', icon: '⛳', description: 'Par or better after hitting a tree', category: 'junk' },
+  { type: 'polie' as const, label: 'Polie', icon: '🏁', description: 'Hole a putt longer than the flagstick', category: 'junk' },
+  { type: 'arnie' as const, label: 'Arnie', icon: '⛳', description: 'Par on a par 4 or 5 without hitting the fairway', category: 'junk' },
   { type: 'ferret' as const, label: 'Ferret', icon: '🦡', description: 'Hole out from off the green', category: 'junk' },
 
   // Negative bets (loser pays)

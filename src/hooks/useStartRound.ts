@@ -1,3 +1,4 @@
+import type { GameConfig } from '@/types/golf';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -60,6 +61,7 @@ interface StartRoundInputs {
   matchPlayFormat: 'singles' | 'fourball';
   matchPlayTeamA: string[];
   matchPlayTeamB: string[];
+  teamMatchOptions?: Pick<GameConfig, 'teamScoring' | 'matchPayout'>;
   stakes: string;
   // Side games
   skinsEnabled: boolean; skinsStakes: string; skinsCarryover: boolean;
@@ -133,6 +135,7 @@ export function useStartRound({ createRound }: UseStartRoundArgs): UseStartRound
         matchPlayFormat: inputs.matchPlayFormat,
         matchPlayTeamA: inputs.matchPlayTeamA,
         matchPlayTeamB: inputs.matchPlayTeamB,
+        teamMatchOptions: inputs.teamMatchOptions,
         stakes: inputs.stakes,
         skinsEnabled: inputs.skinsEnabled, skinsStakes: inputs.skinsStakes, skinsCarryover: inputs.skinsCarryover,
         nassauEnabled: inputs.nassauEnabled, nassauStakes: inputs.nassauStakes, nassauAutoPress: inputs.nassauAutoPress,

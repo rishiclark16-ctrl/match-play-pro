@@ -1,4 +1,4 @@
-import { calculateMatchPlay, calculateFourballMatchPlay, generateMatchPlayHeadline } from './games/matchPlay';
+import { calculateMatchPlay, calculateFourballMatchPlay, fourballOptions, generateMatchPlayHeadline } from './games/matchPlay';
 import { sendPushToProfiles as defaultSendPushToProfiles } from './pushUtils';
 import { supabase as defaultSupabase } from '@/integrations/supabase/client';
 import type { GameConfig, PlayerWithScores, Score } from '@/types/golf';
@@ -56,7 +56,7 @@ export async function sendRoundCompletionNotifications({
     }
 
     const mpResult = isFourball
-      ? calculateFourballMatchPlay(roundScores, playersWithScores, round.holeInfo, strokesPerHole, round.holes as 9 | 18, matchPlayGame.matchPlayTeams!)
+      ? calculateFourballMatchPlay(roundScores, playersWithScores, round.holeInfo, strokesPerHole, round.holes as 9 | 18, matchPlayGame.matchPlayTeams!, fourballOptions(matchPlayGame))
       : playersWithScores.length === 2
         ? calculateMatchPlay(roundScores, playersWithScores, round.holeInfo, strokesPerHole, round.holes as 9 | 18)
         : null;

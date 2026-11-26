@@ -25,6 +25,16 @@ export interface BingoBangoHoleResult {
   bongoPlayerId: string | null;  // first to hole out
 }
 
+/**
+ * How a two-man team's score on a hole is formed in a team match.
+ * best: the better ball counts (four-ball). aggregate: both scores are added
+ * ("low total", "combined"). best_and_aggregate: a point for low ball and a point
+ * for low total on every hole ("low ball, low total", "two-point game").
+ */
+export type TeamScoring = 'best' | 'aggregate' | 'best_and_aggregate';
+/** match: the stake rides on the whole match. per_hole: the stake is paid per hole (or point) up at the end. */
+export type MatchPayout = 'match' | 'per_hole';
+
 // Betting game configuration
 export interface GameConfig {
   id: string;
@@ -36,6 +46,8 @@ export interface GameConfig {
   teams?: Team[];                // Best Ball: team assignments
   matchPlayFormat?: 'singles' | 'fourball'; // Match Play: singles (2p) or fourball (3-4p teams)
   matchPlayTeams?: Team[];       // Match Play fourball: team assignments
+  teamScoring?: TeamScoring;     // Match Play fourball: how a team's hole score is formed (default best)
+  matchPayout?: MatchPayout;     // Match Play fourball: stake on the match (default) or per hole/point up
   useNet?: boolean;              // Use handicap strokes for this game
   blindWolfMultiplier?: number;  // Wolf: Blind Wolf point multiplier (default 2x)
   wolfResults?: WolfHoleResult[]; // Wolf: Results for each hole

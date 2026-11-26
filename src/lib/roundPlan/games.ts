@@ -48,6 +48,29 @@ const FREE_GAMES = new Set<PlanGameType>(['match', 'skins']);
 /** Largest stake we accept without asking: protects against "fifty" heard as "fifteen hundred". */
 export const MAX_STAKE = 500;
 
+/** What one unit of a team match stake is, given how it's paid. */
+function matchUnit(g: Pick<GameConfig, 'matchPlayFormat' | 'matchPayout' | 'teamScoring'>): string {
+  if (g.matchPlayFormat !== 'fourball') return 'on the match';
+  if (g.matchPayout === 'per_hole') return g.teamScoring === 'best_and_aggregate' ? 'a point, a man' : 'a hole, a man';
+  return 'a man on the match';
+}
+
+function dollars(n: number): string {
+  return Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`;
+}
+
+/** "$5 a hole, a man" for a game as configured (the review screen's stake label). */
+export function stakeLabel(g: GameConfig): string {
+  if (g.type === 'match') return `${dollars(g.stakes)} ${matchUnit(g)}`;
+  return formatStake(g.type as PlanGameType, g.stakes);
+}
+
+export const TEAM_SCORING_LABEL = {
+  best: 'best ball',
+  aggregate: 'low total',
+  best_and_aggregate: 'low ball, low total',
+} as const;
+
 export function formatStake(type: PlanGameType, stake: number): string {
   const unit = STAKE_UNIT[type]?.unit ?? '';
   const amount = Number.isInteger(stake) ? `$${stake}` : `$${stake.toFixed(2)}`;
@@ -111,6 +134,24 @@ function resolveTeams(
   return { teams: [teamA, teamB], issue: null, assumed: false };
 }
 
+/**
+ * Turns what was said into the game the app actually plays, and says so:
+ * - "$5 a hole" between two players is skins without carryovers (pays the same);
+ * - money on best ball in a foursome is a best-ball match (best ball alone is a
+ *   stroke game with no bet).
+ */
+function normalizeGame(g: PlanGame, n: number, assumptions: DraftAssumption[]): PlanGame {
+  if (g.type === 'match' && n === 2 && g.perHole) {
+    assumptions.push({ field: 'games', message: 'A bet per hole between two players is played as skins with no carryovers' });
+    return { ...g, type: 'skins', carryover: false, teams: null, teamScoring: null, perHole: null };
+  }
+  if (g.type === 'bestball' && n === 4 && g.stake != null && g.stake > 0) {
+    assumptions.push({ field: 'games', message: 'Best ball for money is played as a best-ball match' });
+    return { ...g, type: 'match', teamScoring: g.teamScoring ?? 'best' };
+  }
+  return g;
+}
+
 export interface ResolveGamesInput {
   games: PlanGame[];
   players: DraftPlayer[];
@@ -142,10 +183,16 @@ export function resolveGames({ games, players, isPro, useNet, generateId }: Reso
   const seen = new Set<PlanGameType>();
   const n = players.length;
 
-  for (const g of games) {
+  for (const said of games) {
+    const g = normalizeGame(said, n, assumptions);
     if (seen.has(g.type)) continue; // "skins ... and skins carry over" is one game
     seen.add(g.type);
     const label = GAME_LABEL[g.type];
+
+    if (g.type === 'match' && g.teamScoring && g.teamScoring !== 'best' && n !== 4) {
+      issues.push({ field: 'games', message: `${TEAM_SCORING_LABEL[g.teamScoring]} needs two teams of two; you have ${n} players` });
+      continue;
+    }
 
     if (!PLAYER_COUNTS[g.type].includes(n)) {
       issues.push({
@@ -164,12 +211,15 @@ export function resolveGames({ games, players, isPro, useNet, generateId }: Reso
     if (unit) {
       if (g.stake == null) {
         stake = unit.default;
-        assumptions.push({ field: 'games', message: `${label} at ${formatStake(g.type, stake)}. No amount was said` });
+        const shown = g.type === 'match' && n === 4
+          ? `${dollars(stake)} ${matchUnit({ matchPlayFormat: 'fourball', matchPayout: g.perHole ? 'per_hole' : 'match', teamScoring: g.teamScoring ?? 'best' })}`
+          : formatStake(g.type, stake);
+        assumptions.push({ field: 'games', message: `${label} at ${shown}. No amount was said` });
       } else if (!(g.stake > 0) || !Number.isFinite(g.stake)) {
         issues.push({ field: 'games', message: `${label}: the amount didn't come through` });
         continue;
       } else if (g.stake > MAX_STAKE) {
-        issues.push({ field: 'games', message: `${label} at ${formatStake(g.type, g.stake)}? Check the amount` });
+        issues.push({ field: 'games', message: `${label} at ${dollars(g.stake)}? Check the amount` });
         continue;
       } else {
         stake = Math.round(g.stake * 100) / 100;
@@ -221,6 +271,8 @@ export function resolveGames({ games, players, isPro, useNet, generateId }: Reso
             continue;
           }
           config.matchPlayFormat = 'fourball';
+          if (g.teamScoring && g.teamScoring !== 'best') config.teamScoring = g.teamScoring;
+          if (g.perHole) config.matchPayout = 'per_hole';
           config.matchPlayTeams = [
             { id: 'team-a', name: teamName(t.teams[0], players), playerIds: t.teams[0], color: '#22C55E' },
             { id: 'team-b', name: teamName(t.teams[1], players), playerIds: t.teams[1], color: '#6366F1' },

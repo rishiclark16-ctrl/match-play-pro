@@ -38,6 +38,14 @@ export interface PlanGame {
   modified: boolean | null;
   /** Two teams of player names, for match play fourball / best ball. */
   teams: [string[], string[]] | null;
+  /**
+   * Team match only: how a team's hole score is formed. 'best' = better ball,
+   * 'aggregate' = partners' scores added ("low total"), 'best_and_aggregate' =
+   * a point for each ("low ball, low total"). Null when not said.
+   */
+  teamScoring: 'best' | 'aggregate' | 'best_and_aggregate' | null;
+  /** Match only: the stake is per hole (or point) up rather than on the match. */
+  perHole: boolean | null;
 }
 
 export interface RoundPlan {
