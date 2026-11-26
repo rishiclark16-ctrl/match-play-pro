@@ -11,8 +11,8 @@
 // with the eval suite); the glossary is built from ../_shared/golfGames.ts.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk@1.12.0";
-import { z } from "npm:zod@3.25.76";
-import { GAME_TYPES, METRICS, PLAN_SCHEMA, SYSTEM, TEAM_SCORING, userContent as buildUserContent, wireToPlan } from "../_shared/planRoundPrompt.ts";
+import { PLAN_SCHEMA, SYSTEM, userContent as buildUserContent } from "../_shared/planRoundPrompt.ts";
+import { finalizePlan } from "./validate.ts";
 
 const MODEL = "claude-opus-5-5";
 const MAX_TEXT = 1000;
@@ -37,76 +37,6 @@ function limited(userId: string): boolean {
   hits.set(userId, recent);
   return recent.length > 20;
 }
-
-// Validation after the model, independent of the API's schema enforcement.
-// Bounds keep a confused or adversarial plan from reaching the engine; the app's
-// own validator (src/lib/games/custom/validate.ts) checks the rules themselves.
-const Name = z.string().min(1).max(60);
-const Hole = z.number().int().min(1).max(18);
-const Teams = z.array(z.array(Name).min(1).max(4)).min(2).max(8);
-const Holes = z.array(Hole).max(18);
-const CustomZ = z.object({
-  name: z.string().max(60),
-  stake: z.number().nonnegative().max(100000),
-  stakeSaid: z.boolean(),
-  sides: z.object({
-    kind: z.enum(["individual", "teams", "rotating_teams", "one_vs_field"]),
-    teams: z.array(z.array(Name).min(1).max(4)).max(8),
-    rotations: z.array(z.object({ from: Hole, to: Hole, teams: Teams })).max(18),
-    order: z.array(Name).max(12),
-    loneWeight: z.number().min(0.5).max(10),
-    fieldMetric: z.enum(["best", "total"]),
-  }),
-  contests: z.array(z.object({
-    kind: z.enum(["low_wins", "rank", "vs_par", "diff"]),
-    metric: z.enum(METRICS),
-    points: z.number().min(0).max(100),
-    table: z.array(z.number().min(-100).max(100)).max(12),
-    ties: z.enum(["share", "void"]),
-    parTable: z.object({
-      albatross: z.number(), eagle: z.number(), birdie: z.number(), par: z.number(),
-      bogey: z.number(), double: z.number(), worse: z.number(),
-    }),
-  })).min(1).max(6),
-  ties: z.enum(["halve", "carry"]),
-  multipliers: z.array(z.object({
-    when: z.enum(["winner_birdie", "any_birdie", "par3", "par5", "holes"]),
-    holes: Holes,
-    factor: z.number().min(0.5).max(10),
-  })).max(6),
-  segments: z.array(z.object({ from: Hole, to: Hole, label: z.string().max(30) })).max(6),
-  scoring: z.enum(["points", "holes"]),
-  payout: z.enum(["per_point", "per_segment"]),
-  money: z.enum(["per_man", "each_opponent", "default"]),
-  net: z.enum(["net", "gross", "unsaid"]),
-  quota: z.boolean(),
-});
-
-const PlanZ = z.object({
-  course: z.object({
-    query: z.string().max(120).nullable(),
-    tee: z.string().max(40).nullable(),
-    holes: z.union([z.literal(9), z.literal(18)]).nullable(),
-    nine: z.enum(["front", "back"]).nullable(),
-  }),
-  players: z.array(z.object({ name: z.string().min(1).max(60), handicap: z.number().min(-10).max(54).nullable() })).max(12),
-  userPlaying: z.boolean(),
-  userHandicap: z.number().min(-10).max(54).nullable(),
-  games: z.array(z.object({
-    type: z.enum(GAME_TYPES).refine(t => t !== "custom", "custom games go in customGames"),
-    stake: z.number().nonnegative().max(100000).nullable(),
-    carryover: z.boolean().nullable(),
-    autoPress: z.boolean().nullable(),
-    modified: z.boolean().nullable(),
-    teams: z.array(z.array(z.string().max(60)).max(4)).max(2).nullable()
-      .transform(t => (t ? [t[0] ?? [], t[1] ?? []] as [string[], string[]] : null)),
-    teamScoring: z.enum(TEAM_SCORING).nullable(),
-    perHole: z.boolean().nullable(),
-  })).max(8),
-  customGames: z.array(CustomZ).max(4),
-  handicaps: z.object({ mode: z.enum(["full", "none", "percent"]), percent: z.number().nullable() }).nullable(),
-  unsupported: z.array(z.string().max(120)).max(10),
-});
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -162,11 +92,11 @@ Deno.serve(async (req: Request) => {
       try {
         message = await client.messages.create(request);
       } catch (inner) {
-        console.error("plan-round: model call failed", inner instanceof Anthropic.APIError ? inner.status : String(inner));
+        console.error("plan-round: model call failed", inner instanceof Anthropic.APIError ? `${inner.status} ${inner.message.slice(0, 300)}` : String(inner));
         return json({ error: "model_error" }, 502);
       }
     } else {
-      console.error("plan-round: model call failed", err instanceof Anthropic.APIError ? err.status : String(err));
+      console.error("plan-round: model call failed", err instanceof Anthropic.APIError ? `${err.status} ${err.message.slice(0, 300)}` : String(err));
       return json({ error: "model_error" }, 502);
     }
   }
@@ -184,25 +114,12 @@ Deno.serve(async (req: Request) => {
     console.error("plan-round: non-JSON output");
     return json({ error: "model_error" }, 502);
   }
-  const plan = PlanZ.safeParse(parsed);
-  if (!plan.success) {
-    console.error("plan-round: schema mismatch", plan.error.issues.slice(0, 3));
+  const caps = Array.isArray(body.capabilities) ? body.capabilities : [];
+  const final = finalizePlan(parsed, caps);
+  if (!final.ok) {
+    console.error("plan-round: schema mismatch", final.reason);
     return json({ error: "model_error" }, 502);
   }
-  // Apps from before custom games can't play them (and their planner doesn't know the
-  // type): name the game as not set up instead.
-  const caps = Array.isArray(body.capabilities) ? body.capabilities : [];
-  // The model's customGames become ordinary games of type "custom" for the app.
-  const result = wireToPlan(plan.data) as {
-    games: { type: string; custom: { name?: string } | null }[];
-    unsupported: string[];
-  };
-  if (!caps.includes("custom")) {
-    for (const g of result.games.filter(g => g.type === "custom")) {
-      result.unsupported.push(g.custom?.name ? `${g.custom.name} (update the app to play it)` : "a custom game (update the app)");
-    }
-    result.games = result.games.filter(g => g.type !== "custom");
-  }
   console.log(`plan-round ok ${Date.now() - started}ms`);
-  return json({ plan: result });
+  return json({ plan: final.plan });
 });

@@ -18,56 +18,17 @@ const obj = (properties: Record<string, unknown>) => ({
 export const METRICS = ["score", "best", "worst", "total", "vegas", "daytona"] as const;
 
 /**
- * Structured outputs allow at most 16 nullable (anyOf) fields per request, and the
- * plan already uses 15. So custom games travel in their own top-level list,
- * `customGames`, where every field is always present and "not said" is a value
- * ([] / 1 / "default" / "unsaid" / stakeSaid false), not null. wireToPlan() turns
- * them back into ordinary `games` entries of type "custom" for the app.
+ * How custom games travel. Structured outputs allow at most 16 nullable (anyOf) fields
+ * (the plan uses 15) and reject a schema whose compiled grammar is too large; a nested
+ * custom-game object pushed it over ("The compiled grammar is too large", every request
+ * failed). So each custom game is a JSON string in `customGames`, with every field present
+ * and "not said" written as a value ([] / 1 / "default" / "unsaid" / stakeSaid false), not
+ * null. plan-round/validate.ts parses and bounds-checks each string (zod) and wireToPlan()
+ * turns them into ordinary `games` entries of type "custom" for the app.
  */
-const PAR_TABLE = obj({
-  albatross: { type: "number" }, eagle: { type: "number" }, birdie: { type: "number" }, par: { type: "number" },
-  bogey: { type: "number" }, double: { type: "number" }, worse: { type: "number" },
-});
-
-export const WIRE_CUSTOM_SCHEMA = obj({
-  name: { type: "string" },
-  stake: { type: "number" },
-  stakeSaid: { type: "boolean" },
-  sides: obj({
-    kind: { type: "string", enum: ["individual", "teams", "rotating_teams", "one_vs_field"] },
-    teams: names2d,
-    rotations: { type: "array", items: obj({ from: { type: "integer" }, to: { type: "integer" }, teams: names2d }) },
-    order: { type: "array", items: { type: "string" } },
-    loneWeight: { type: "number" },
-    fieldMetric: { type: "string", enum: ["best", "total"] },
-  }),
-  contests: {
-    type: "array",
-    items: obj({
-      kind: { type: "string", enum: ["low_wins", "rank", "vs_par", "diff"] },
-      metric: { type: "string", enum: [...METRICS] },
-      points: { type: "number" },
-      table: { type: "array", items: { type: "number" } },
-      ties: { type: "string", enum: ["share", "void"] },
-      parTable: PAR_TABLE,
-    }),
-  },
-  ties: { type: "string", enum: ["halve", "carry"] },
-  multipliers: {
-    type: "array",
-    items: obj({
-      when: { type: "string", enum: ["winner_birdie", "any_birdie", "par3", "par5", "holes"] },
-      holes: { type: "array", items: { type: "integer" } },
-      factor: { type: "number" },
-    }),
-  },
-  segments: { type: "array", items: obj({ from: { type: "integer" }, to: { type: "integer" }, label: { type: "string" } }) },
-  scoring: { type: "string", enum: ["points", "holes"] },
-  payout: { type: "string", enum: ["per_point", "per_segment"] },
-  money: { type: "string", enum: ["per_man", "each_opponent", "default"] },
-  net: { type: "string", enum: ["net", "gross", "unsaid"] },
-  quota: { type: "boolean" },
-});
+export const CUSTOM_GAME_KEYS = 'name, stake, stakeSaid, sides {kind, teams, rotations [{from, to, teams}], order, loneWeight, fieldMetric}, ' +
+  'contests [{kind, metric, points, table, ties, parTable {albatross, eagle, birdie, par, bogey, double, worse}}], ' +
+  'ties, multipliers [{when, holes, factor}], segments [{from, to, label}], scoring, payout, money, net, quota';
 
 /** Game types the model may put in `games` (custom games go in `customGames`). */
 const LISTED_TYPES = GAME_TYPES.filter(t => t !== "custom");
@@ -151,15 +112,23 @@ export function toWireCustom(c: Rec, stake: number | null): WireCustom {
 
 /** The model's output -> the app's RoundPlan: custom games become `games` entries. */
 export function wireToPlan(raw: Rec): Rec {
-  const { customGames, ...rest } = raw as Rec & { customGames?: WireCustom[] };
+  const { customGames, ...rest } = raw as Rec & { customGames?: (WireCustom | string)[] };
   const games: Rec[] = (rest.games as Rec[]).map(g => ({ ...g, custom: null }));
-  for (const c of customGames ?? []) {
-    games.push({
-      type: "custom", stake: c.stakeSaid ? c.stake : null, carryover: null, autoPress: null, modified: null,
-      teams: null, teamScoring: null, perHole: null, custom: fromWireCustom(c),
-    });
+  const unsupported = [...((rest.unsupported as string[] | undefined) ?? [])];
+  for (const entry of customGames ?? []) {
+    // The model writes each custom game as a JSON string; plan-round/validate.ts passes
+    // objects it has already checked. Anything unreadable is named, never dropped.
+    try {
+      const c = (typeof entry === "string" ? JSON.parse(entry) : entry) as WireCustom;
+      games.push({
+        type: "custom", stake: c.stakeSaid ? c.stake : null, carryover: null, autoPress: null, modified: null,
+        teams: null, teamScoring: null, perHole: null, custom: fromWireCustom(c),
+      });
+    } catch {
+      unsupported.push("a custom game (couldn't set it up)");
+    }
   }
-  return { ...rest, games };
+  return { ...rest, games, unsupported };
 }
 
 export const PLAN_SCHEMA = {
@@ -210,7 +179,7 @@ export const PLAN_SCHEMA = {
         },
       },
     },
-    customGames: { type: "array", items: WIRE_CUSTOM_SCHEMA },
+    customGames: { type: "array", items: { type: "string" } },
     handicaps: nullable({
       type: "object",
       additionalProperties: false,
@@ -267,7 +236,7 @@ games, with the stake in dollars per the game's unit:
 - bestball: a best-ball team STROKE game over the round with no hole-by-hole bet. If the speaker puts money on best ball with four players, use match with teamScoring "best" instead.
 - stableford: no stake. modified true for "modified stableford".
 - wolf, vegas, nines (also "5-3-1", "nine point"), defender, sixes (also "round robin", "Hollywood", "six-six-six"): stake per point.
-- custom games go in customGames, never in games. A custom game is any other game decided by the strokes on the card, or a named game above with rules its options can't express ("skins, birdies double", "nassau where 18 counts double", "low total but ties carry"). Use a named game whenever it fits as said. Compose each one from these blocks. Every field is always filled; where a field doesn't apply use its "not said" value: [] for lists, 1 for points and loneWeight, "best" for fieldMetric, "share" for ties in a contest, all zeros for parTable, "default" for money, "unsaid" for net.
+- custom games go in customGames, never in games. Each entry of customGames is a string holding one custom game as a JSON object with exactly these keys: ${CUSTOM_GAME_KEYS}. A custom game is any other game decided by the strokes on the card, or a named game above with rules its options can't express ("skins, birdies double", "nassau where 18 counts double", "low total but ties carry"). Use a named game whenever it fits as said. Compose each one from these blocks. Every field is always filled; where a field doesn't apply use its "not said" value: [] for lists, 1 for points and loneWeight, "best" for fieldMetric, "share" for ties in a contest, all zeros for parTable, "default" for money, "unsaid" for net.
   - name: what the speaker called it ("Daytona", "Our usual", "High-low").
   - sides.kind: "individual" (everyone for themselves), "teams" (sides.teams, names, "me" for the speaker), "rotating_teams" (sides.rotations: hole ranges covering the round with their teams), "one_vs_field" (sides.order: the rotation, "me" first unless said; loneWeight: the lone player's score multiplier, 2 if their score counts double; fieldMetric: "best" or "total").
   - contests, scored every hole and added up: "low_wins" (the side with the lower metric takes points, default 1); "rank" (points by finish order, table e.g. [4,2,0]; ties "share" splits the points, "void" scores nothing for a tied place); "vs_par" (parTable points for the metric against par; metric "total" sums every player's points); "diff" (the metric difference itself is the points: a dollar a stroke, Vegas-style numbers).
@@ -284,7 +253,7 @@ handicaps: {"mode":"none"} for "no handicaps", "gross", "scratch", "straight up"
 
 unsupported: short phrases for anything asked that the app does not set up (see the glossary), so the app can say it wasn't set up. Never turn an unsupported game into a different supported one: "scramble" is not best ball; a hammer is not a match. Custom games are decided by the strokes on the card: anything that needs who hit the green first, closest to the pin, putts, drives, or a decision made during the hole (hammer, wolf choices, presses on demand) cannot be custom; list it in unsupported.
 
-customGames examples (players named as said):
+customGames examples (players named as said; each object is one string in customGames):
 ${customExamples()}
 
 <glossary>

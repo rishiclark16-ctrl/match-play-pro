@@ -255,13 +255,13 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 ## Supabase Project
 - **Project ID:** `puqgbsxabcyxrbwwoznn`
 - **URL:** `https://puqgbsxabcyxrbwwoznn.supabase.co`
-- **Edge functions:** delete-account, subscription-webhook, sync-subscription, send-push, parse-house-game, plan-round, golf-course-lookup, redeem-promo, sentry-webhook, speech-to-text, weekly-recap
+- **Edge functions:** delete-account, subscription-webhook, sync-subscription, send-push, parse-house-game, plan-round (v5), plan-round-eval (eval only, token-locked), golf-course-lookup, redeem-promo, sentry-webhook, speech-to-text, weekly-recap
 - **Migrations:** 22 files in `supabase/migrations/`
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1467 pass, 0 fail** (1464 across 69 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
-- `bun test src/hooks src/lib src/engine src/components` (1464 tests)
+**1468 pass, 0 fail** (1465 across 69 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
+- `bun test src/hooks src/lib src/engine src/components` (1465 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
 **Why split:** module mocks (`vi.mock` and bun's `mock.module`) leak into downstream files when bun's CI scheduler reuses workers. Running pages in their own `bun test` invocation gives them a fresh process and keeps hook/lib tests pristine. Page-test factories must include every named export the page tree imports at module load (e.g., `TIER_LIMITS` from `useSubscription` is read by `PlayersStep`).
@@ -575,7 +575,7 @@ Phase P3.8 (golf game grounding, team aggregate, round-plan evals) — 2026-11-2
 - Test baseline: **1393 unit + 3 page tests**, 0 fail. Typecheck 157 (unchanged). Lint 0 errors.
 
 Phase P3.9 (custom games: "a golfer can create almost any game") — 2026-11-26:
-- **Shipped:** merged to `main` in PR #7; **`plan-round` v4 deployed** (adds `_shared/customExamples.ts`; boot verified: the function answers its own 401 to an anon key). The live model eval (`bun evals/round-plan/run.ts`) has not been run against the custom-games prompt: no `ANTHROPIC_API_KEY` in the cloud environment. Run it before relying on custom games from the AI planner beyond the 12 worked examples.
+- **Shipped:** merged to `main` in PR #7; `plan-round` v4 deployed. **v4 broke every live request** (see P3.10): a boot check (the function's own 401) does not prove the model call works. Fixed in v5.
 - **P3.8 merged to `main`** in PR #6 (`982bab8`); `plan-round` deployed as v3 (v2 briefly shipped a placeholder catalogue, replaced minutes later). Deploying with the Supabase CLI returns 403 through this proxy; deploy with the Supabase MCP `deploy_edge_function`, passing `index.ts` plus `../_shared/*.ts` files, then `get_edge_function` to compare.
 - **Engine `src/lib/games/custom/`** (pure): `types.ts` (GameSpec), `engine.ts` (`calculateCustomGame`, `customGameTransfers`, `settleCustomGame`), `validate.ts` (plain-English issues), `describe.ts` (the rules as sentences — the review screen and scorecard show exactly what is scored), `presets.ts` (skins, nines, split sixes, acey deucey, dollar a stroke, medal, stableford, quota, nassau, best ball, low total, low ball + low total, high-low, Daytona, Wolfman, Sixes), `round.ts` (`mapSpecPlayers`, `customGamesTransfers`).
   - Blocks: sides (individual / fixed teams / rotating partners by hole range / one vs the field with a lone-score weight); side metric (score, best, worst, total, Vegas, Daytona); contests (low_wins, rank table with ties share|void, vs_par table, diff); ties halve|carry; multipliers (winner_birdie, any_birdie, par3, par5, holes); segments; scoring points|holes; payout per_point|per_segment; money per_man|each_opponent; net; quota.
@@ -590,6 +590,19 @@ Phase P3.9 (custom games: "a golfer can create almost any game") — 2026-11-26:
 - **Evals**: 92 cases; 8 converted from "unsupported" to custom expectations, 6 AI-only custom variants (skins birdies double, skins carry + 18 double, nassau 18 double, team Stableford, rotating low total, low ball low total birdies double). Scorer compares custom structure (sides, teams, contests, ties, multipliers, bets, scoring, payout, quota). Engine eval plays `engine.money` cards (dollar a stroke, high-low, split sixes). Offline parser 86/86 of the cases it can set up (`LOCAL_BASELINE = 86`; AI-only cases skipped).
 - QA: journeys "custom game: Daytona..." (review rules, $0.25 a point a man, saved spec teams = inserted player ids) and "custom game on the scorecard"; `mockBackend({ games })`. Full QA 95/95.
 - Tests: **1464 unit** (+3 page), typecheck 157, lint 0 errors.
+
+Phase P3.10 (plan-round outage fix + model comparison) — 2026-11-26:
+- **Outage, 14:57–16:43 UTC:** `plan-round` v4 sent a schema the API refused on every request: `400 "The compiled grammar is too large"`. The nested custom-game object made the constrained grammar too big (a separate limit from the 16-`anyOf` / 24-optional budget, and not checkable offline). The app fell back to the offline parser for every round setup, so golfers saw the "set up without AI" path. v3 (same schema without custom games) was fine. The function logged only the status code, so the logs didn't show why.
+- **Fix (v5, deployed 16:43 UTC):** each custom game is now a **JSON string** in `customGames` (`PLAN_SCHEMA.properties.customGames = array of string`), so it stays out of the constrained grammar. The prompt lists the keys (`CUSTOM_GAME_KEYS`). New `supabase/functions/plan-round/validate.ts` (`finalizePlan`) runs zod on the plan, parses and bounds-checks every custom string (`CustomZ`), names a bad one in `unsupported` (`"Daytona (couldn't set it up)"`) instead of failing the whole plan, then applies `wireToPlan` and the capability gate. `wireToPlan` accepts strings too. Model errors now log the API message. Test: `planParity.test.ts` "keeps custom games out of the constrained grammar".
+- **`plan-round-eval` edge function** (new, not called by the app): runs the production request with the project's `ANTHROPIC_API_KEY` and returns the plan from `finalizePlan`, so the eval tests the exact production path without a key in the container. It is locked by a one-off token, and only its SHA-256 is in the source. To run a new eval, generate a token, put its hash in `TOKEN_SHA256` and redeploy. Models allowed: Opus 5.5, Sonnet 5.5, Haiku 5.5. `run.ts` takes `--model`, `--effort` and `EVAL_ENDPOINT` / `EVAL_TOKEN` / `EVAL_APIKEY`. `rescore.ts` re-scores saved reports.
+- **Scorer:** players and teams are compared by the friend the app's `matchFriend` resolves them to, falling back to first name. "Michael" and "Mike" are both Michael Brooks, which is what the golfer gets.
+- **Live eval (92 cases, effort low, first full live run since custom games):**
+  - **Opus 5.5:** 92/92, p50 2.2 s, about $0.007 per setup (the cached system prompt is ~93% of input).
+  - **Sonnet 5.5:** 90/92, p50 1.8 s, about $0.005. Missed `low-total-threesome` (dropped the game instead of flagging it) and `wolf-carry` (left out "ties carry").
+  - **Haiku 5.5:** 89/92, p50 1.7 s, about $0.0003. Dropped "18 counts double" on skins and on a Nassau, setting up the plain game and silently changing the money. It also missed the presses-unsupported note.
+  - **Decision:** stay on Opus 5.5. The cheaper models' misses are valid-looking plans with the wrong money, which no check after the model can detect, and the saving is a few dollars a month. Kimi was considered and rejected: no cheaper than Haiku, unverified strict-schema support, and golfers' words and friends' names would go to a China-hosted provider.
+- **Lesson:** after any change to the prompt or schema, run the live eval through `plan-round-eval` before or right after deploying. A 401 smoke test only proves the function boots.
+- Test baseline: **1465 unit + 3 page**, typecheck 157, lint 0 errors. Offline parser 86/86.
 
 ## V2 Feature Status
 | Feature | Status | Notes |
