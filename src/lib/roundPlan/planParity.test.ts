@@ -10,7 +10,8 @@ import { PLAN_GAME_TYPES } from './types';
 import { PLAN_SCHEMA, wireToPlan, toWireCustom, fromWireCustom } from '../../../supabase/functions/_shared/planRoundPrompt';
 import { CUSTOM_EXAMPLES } from '../../../supabase/functions/_shared/customExamples';
 
-const src = readFileSync(resolve(__dirname, '../../../supabase/functions/plan-round/index.ts'), 'utf8');
+const src = readFileSync(resolve(__dirname, '../../../supabase/functions/plan-round/index.ts'), 'utf8') +
+  readFileSync(resolve(__dirname, '../../../supabase/functions/plan-round/validate.ts'), 'utf8');
 const prompt = readFileSync(resolve(__dirname, '../../../supabase/functions/_shared/planRoundPrompt.ts'), 'utf8');
 
 describe('plan-round parity', () => {
@@ -29,7 +30,8 @@ describe('plan-round parity', () => {
   it('validates the new fields after the model', () => {
     expect(src).toMatch(/teamScoring: z\.enum\(TEAM_SCORING\)/);
     expect(src).toMatch(/perHole: z\.boolean\(\)/);
-    expect(src).toMatch(/customGames: z\.array\(CustomZ\)/);
+    expect(src).toMatch(/customGames: z\.array\(z\.string\(\)/);
+    expect(src).toMatch(/CustomZ\.safeParse/);
   });
   // Structured outputs reject a schema with more than 16 union-typed (anyOf) fields or
   // more than 24 optional ones, and the whole plan would then fail for every golfer.
@@ -51,6 +53,17 @@ describe('plan-round parity', () => {
     }
     const plan = wireToPlan({ games: [], customGames: [toWireCustom(CUSTOM_EXAMPLES[0].custom, 0.25)], unsupported: [] }) as { games: { type: string; stake: number; custom: unknown }[] };
     expect(plan.games[0]).toMatchObject({ type: 'custom', stake: 0.25, custom: CUSTOM_EXAMPLES[0].custom });
+    // The model writes each custom game as a JSON string.
+    const fromString = wireToPlan({ games: [], customGames: [JSON.stringify(toWireCustom(CUSTOM_EXAMPLES[0].custom, 0.25))], unsupported: [] }) as typeof plan;
+    expect(fromString.games[0]).toEqual(plan.games[0]);
+    const broken = wireToPlan({ games: [], customGames: ['{"name": "Daytona", "sides":'], unsupported: [] }) as { games: unknown[]; unsupported: string[] };
+    expect(broken.games).toEqual([]);
+    expect(broken.unsupported).toEqual(["a custom game (couldn't set it up)"]);
+  });
+  // A nested custom-game object made the compiled grammar too large and every request
+  // failed in production. Custom games stay a plain list of strings.
+  it('keeps custom games out of the constrained grammar', () => {
+    expect(PLAN_SCHEMA.properties.customGames).toEqual({ type: 'array', items: { type: 'string' } });
   });
   it('never asks the model for database ids', () => {
     expect(src).not.toMatch(/profileId|friendId|course_id/);

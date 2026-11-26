@@ -30,10 +30,23 @@ ANTHROPIC_API_KEY=... bun evals/round-plan/run.ts            # all cases, ~$1–
 ANTHROPIC_API_KEY=... bun evals/round-plan/run.ts --grep=low  # some cases
 ANTHROPIC_API_KEY=... bun evals/round-plan/run.ts --repeat=3  # consistency
 bun evals/round-plan/run.ts --local                           # offline parser, free
+bun evals/round-plan/run.ts --model=claude-haiku-5-5 --effort=low   # another model
+```
+
+**Without a key here, through the app's key:** the `plan-round-eval` edge function runs the
+same request as `plan-round` (same prompt, schema and `plan-round/validate.ts` checks) with
+the project's `ANTHROPIC_API_KEY`, and returns the plan the app would get. It is locked by a
+one-off token: generate one, put its SHA-256 in `TOKEN_SHA256` in
+`supabase/functions/plan-round-eval/index.ts`, redeploy, then:
+
+```bash
+EVAL_ENDPOINT=https://puqgbsxabcyxrbwwoznn.supabase.co/functions/v1/plan-round-eval \
+EVAL_TOKEN=<token> EVAL_APIKEY=<anon key> bun evals/round-plan/run.ts --model=claude-opus-5-5
 ```
 
 Run it after any change to the prompt, the schema or the catalogue, before deploying `plan-round`.
-Reports land in `evals/round-plan/results/` (gitignored).
+A schema the API refuses fails every case with a 400 (that is how the "compiled grammar is too
+large" outage was found). Reports land in `evals/round-plan/results/` (gitignored).
 
 ## Adding a game
 

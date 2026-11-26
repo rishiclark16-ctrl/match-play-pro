@@ -4,14 +4,28 @@
  * was best, expected aggregate").
  */
 import type { PlanCustomSpec, PlanGame, RoundPlan } from '../../src/lib/roundPlan/types';
-import type { EvalCase, GameExpect } from './cases';
+import { FRIENDS, type EvalCase, type GameExpect } from './cases';
+import { matchFriend, type FriendLike } from '../../src/lib/roundPlan/names';
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
 const SELF = new Set(['me', 'i', 'myself', 'you']);
 
+/**
+ * Who a name ends up being in the app. A name that the app's friend matcher resolves
+ * ("Jim", "James" and "James Reid" all become the friend James Reid) is that friend;
+ * anything else is compared by first name. So the eval scores the round the golfer
+ * gets, not the model's spelling. Set per case by scoreCase().
+ */
+let friendPool: FriendLike[] = [];
+function person(name: string): string {
+  if (SELF.has(norm(name))) return 'me';
+  const m = matchFriend(name, friendPool);
+  return m.kind === 'match' ? norm(m.friend.name) : norm(name).split(' ')[0];
+}
+
 function sameTeams(actual: [string[], string[]] | null, expected: [string[], string[]]): boolean {
   if (!actual) return false;
-  const key = (t: string[]) => t.map(n => (SELF.has(norm(n)) ? 'me' : norm(n).split(' ')[0])).sort().join('+');
+  const key = (t: string[]) => t.map(person).sort().join('+');
   const a = [key(actual[0]), key(actual[1])].sort();
   const e = [key(expected[0]), key(expected[1])].sort();
   return a[0] === e[0] && a[1] === e[1];
@@ -75,10 +89,11 @@ export interface CaseScore {
 export function scoreCase(c: EvalCase, plan: RoundPlan): CaseScore {
   const f: string[] = [];
   const e = c.expect;
+  friendPool = (c.friends ?? FRIENDS).map((name, i) => ({ profileId: `f${i}`, name, handicap: null }));
 
   if (e.players) {
-    const got = plan.players.map(p => norm(p.name).split(' ')[0]).sort();
-    const want = e.players.map(n => norm(n).split(' ')[0]).sort();
+    const got = plan.players.map(p => person(p.name)).sort();
+    const want = e.players.map(person).sort();
     if (got.join(',') !== want.join(',')) f.push(`players were [${got}], expected [${want}]`);
   }
 
