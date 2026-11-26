@@ -41,6 +41,7 @@ import { VegasSection } from './games/VegasSection';
 import { NinesSection } from './games/NinesSection';
 import { DefenderSection } from './games/DefenderSection';
 import { SixesSection } from './games/SixesSection';
+import { CustomGameSection } from './games/CustomGameSection';
 
 export function GamesSection({ round, players, scores, currentHole, onAddPress, propBets = [] }: GamesSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -190,8 +191,9 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
 
   const hasPropBets = propBets.length > 0;
   const hasStrokePlay = round.strokePlay;
+  const customGames = (round.games ?? []).filter(g => g.type === 'custom' && g.spec);
 
-  if (!skinsGame && !nassauGame && !stablefordGame && !bestBallGame && !wolfGame && !vegasGame && !ninesGame && !defenderGame && !sixesGame && !hasMatchPlay && !hasPropBets && !hasStrokePlay && !houseGameEntry)
+  if (!skinsGame && !nassauGame && !stablefordGame && !bestBallGame && !wolfGame && !vegasGame && !ninesGame && !defenderGame && !sixesGame && !hasMatchPlay && !hasPropBets && !hasStrokePlay && !houseGameEntry && !customGames.length)
     return null;
 
   const handleConfirmPress = () => {
@@ -251,6 +253,10 @@ export function GamesSection({ round, players, scores, currentHole, onAddPress, 
 
   if (sixesGame && sixesResult) {
     sections.push(<SixesSection key="sixes" sixesGame={sixesGame} sixesResult={sixesResult} players={players} />);
+  }
+
+  for (const g of customGames) {
+    sections.push(<CustomGameSection key={`custom-${g.id}`} game={g} players={players} scores={scores} holeInfo={round.holeInfo} />);
   }
 
   if (hasStrokePlay && players.length > 0) {

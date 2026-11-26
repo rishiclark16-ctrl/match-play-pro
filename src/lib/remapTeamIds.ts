@@ -1,3 +1,4 @@
+import { mapSpecPlayers } from '@/lib/games/custom/round';
 import type { GameConfig, Team } from '@/types/golf';
 
 /**
@@ -12,5 +13,6 @@ export function remapTeamPlayerIds(games: GameConfig[], idMap: Map<string, strin
     ...g,
     ...(g.matchPlayTeams ? { matchPlayTeams: g.matchPlayTeams.map(remapTeam) } : {}),
     ...(g.teams ? { teams: g.teams.map(remapTeam) } : {}),
+    ...(g.spec ? { spec: mapSpecPlayers(g.spec, id => idMap.get(id) ?? id) } : {}),
   }));
 }

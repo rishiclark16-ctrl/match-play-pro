@@ -1,3 +1,4 @@
+import type { GameSpec } from '@/lib/games/custom/types';
 export interface Course {
   id: string;
   name: string;
@@ -38,7 +39,7 @@ export type MatchPayout = 'match' | 'per_hole';
 // Betting game configuration
 export interface GameConfig {
   id: string;
-  type: 'skins' | 'nassau' | 'match' | 'stableford' | 'bestball' | 'wolf' | 'vegas' | 'nines' | 'defender' | 'sixes' | 'house';
+  type: 'skins' | 'nassau' | 'match' | 'stableford' | 'bestball' | 'wolf' | 'vegas' | 'nines' | 'defender' | 'sixes' | 'house' | 'custom';
   stakes: number;
   carryover?: boolean;           // Skins/Wolf: ties carry to next hole
   autoPress?: boolean;           // Nassau: auto-press when 2 down
@@ -48,6 +49,7 @@ export interface GameConfig {
   matchPlayTeams?: Team[];       // Match Play fourball: team assignments
   teamScoring?: TeamScoring;     // Match Play fourball: how a team's hole score is formed (default best)
   matchPayout?: MatchPayout;     // Match Play fourball: stake on the match (default) or per hole/point up
+  spec?: GameSpec;               // Custom game (type === 'custom'): the rule set, scored by lib/games/custom
   useNet?: boolean;              // Use handicap strokes for this game
   blindWolfMultiplier?: number;  // Wolf: Blind Wolf point multiplier (default 2x)
   wolfResults?: WolfHoleResult[]; // Wolf: Results for each hole

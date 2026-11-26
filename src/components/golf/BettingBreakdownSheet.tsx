@@ -10,7 +10,12 @@ interface MoneyBreakdown {
   nassau: number;
   match: number;
   wolf: number;
+  vegas?: number;
+  nines?: number;
+  defender?: number;
+  sixes?: number;
   houseGame: number;
+  custom?: number;
   propBets: number;
   total: number;
 }
@@ -35,7 +40,12 @@ const GAME_CONFIG = [
   { key: 'nassau', label: 'Nassau', icon: Flag, color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
   { key: 'match', label: 'Match Play', icon: Swords, color: 'text-orange-500', bgColor: 'bg-orange-500/20' },
   { key: 'wolf', label: 'Wolf', icon: Users, color: 'text-purple-500', bgColor: 'bg-purple-500/20' },
+  { key: 'vegas', label: 'Vegas', icon: Users, color: 'text-purple-500', bgColor: 'bg-purple-500/20' },
+  { key: 'nines', label: 'Nines', icon: Target, color: 'text-amber-500', bgColor: 'bg-[#ECFCCB]0/20' },
+  { key: 'defender', label: 'Defender', icon: Swords, color: 'text-orange-500', bgColor: 'bg-orange-500/20' },
+  { key: 'sixes', label: 'Sixes', icon: Users, color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
   { key: 'houseGame', label: 'House Game', icon: Sparkles, color: 'text-pink-500', bgColor: 'bg-pink-500/20' },
+  { key: 'custom', label: 'Your game', icon: Sparkles, color: 'text-pink-500', bgColor: 'bg-pink-500/20' },
   { key: 'propBets', label: 'Side Bets', icon: Trophy, color: 'text-[#14532D]', bgColor: 'bg-[#ECFCCB]0/20' },
 ] as const;
 
@@ -66,6 +76,11 @@ export function BettingBreakdownSheet({
       Math.abs(p.breakdown.match),
       Math.abs(p.breakdown.wolf),
       Math.abs(p.breakdown.houseGame),
+      Math.abs(p.breakdown.vegas ?? 0),
+      Math.abs(p.breakdown.nines ?? 0),
+      Math.abs(p.breakdown.defender ?? 0),
+      Math.abs(p.breakdown.sixes ?? 0),
+      Math.abs(p.breakdown.custom ?? 0),
       Math.abs(p.breakdown.propBets),
     ]),
     1 // minimum to prevent division by zero
@@ -182,6 +197,8 @@ export function BettingBreakdownSheet({
                     {GAME_CONFIG.map(({ key, label, icon: Icon, color, bgColor }, index) => {
                       const value = activePlayer.breakdown[key as keyof MoneyBreakdown];
                       if (typeof value !== 'number') return null;
+                      // Only the games this round is playing (some money moved for someone).
+                      if (!players.some(p => (p.breakdown[key as keyof MoneyBreakdown] ?? 0) !== 0)) return null;
 
                       const barWidth = maxValue > 0 ? (Math.abs(value) / maxValue) * 100 : 0;
                       const hasValue = value !== 0;
