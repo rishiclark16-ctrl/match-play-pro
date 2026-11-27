@@ -353,4 +353,39 @@ platform :ios do
     puts "❌ Error in lane #{lane}: #{exception.message}"
   end
 
+  # ==========================================
+  # SCREENSHOTS - upload App Store screenshots only (no binary, no text)
+  # ==========================================
+  # Uploads fastlane/screenshots/<locale>/*.png to the version that is open for
+  # editing ("Prepare for Submission"), replacing the screenshots there.
+  # Env: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (or ASC_KEY_P8_BASE64), optional APP_VERSION.
+  desc "Upload App Store screenshots (CI)"
+  lane :ci_screenshots do
+    key_p8 = ENV["ASC_KEY_P8"].to_s.strip
+    key_p8 = Base64.decode64(ENV.fetch("ASC_KEY_P8_BASE64")) if key_p8.empty?
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_content: key_p8,
+      is_key_content_base64: false,
+      in_house: false
+    )
+    options = {
+      api_key: api_key,
+      app_identifier: APP_IDENTIFIER,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_app_version_update: true,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      screenshots_path: "./fastlane/screenshots",
+      submit_for_review: false,
+      run_precheck_before_submit: false,
+      force: true
+    }
+    version = ENV["APP_VERSION"].to_s.strip
+    options[:app_version] = version unless version.empty?
+    upload_to_app_store(**options)
+  end
+
 end

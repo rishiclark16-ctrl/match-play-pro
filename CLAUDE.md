@@ -616,6 +616,13 @@ Phase P3.11 (held-out evals, two money fixes, QA debt to zero) — 2026-11-26/27
 - Offline parser 88/88 (`LOCAL_BASELINE = 88`). Tests: **1484 unit + 3 page**, typecheck 157, lint 0 errors, QA journeys 20/20, screens 75/75.
 - **Repo vs prod:** v6 is built from this branch; merge it to `main` so a redeploy from `main` can't roll production back to v5.
 
+Phase P3.12 (App Store screenshots by CI) — 2026-11-27:
+- 3.1 screenshots (6 × iPhone 6.9" 1320×2868, 6 × iPad 13" 2064×2752) live in `ios/App/fastlane/screenshots/en-US/`. Product-page creatives (header 3840×1646, search 3840×2560, universal 5244×2950) are in `docs/appstore/product-page-images/`; they are not uploadable via the API yet, so add them in App Store Connect by hand.
+- New lane `ci_screenshots` (deliver: screenshots only, `overwrite_screenshots`, no binary/metadata, never submits).
+- **Custom Product Pages**: `appstore/product-pages.json` (4 pages: Say it and play, Betting games, Voice scoring, Settle up; promo text + screenshot order) synced by `scripts/appstore/product-pages.mjs` (`status` / `check` / `sync [--dry-run] [--submit]`) on a dependency-free API client `scripts/appstore/asc.mjs` (ES256 JWT, paging, retries, screenshot upload). Matched by name; live/in-review pages get a new draft version; never deletes. Guide: `appstore/README.md`.
+- Workflow `.github/workflows/appstore.yml` (replaces `appstore-screenshots.yml`): on merge to `main` touching screenshots or the config it uploads screenshots then syncs pages (as drafts); PRs run a dry-run check; manual dispatch `task` = status | product-pages | screenshots, `submit_pages`, `app_version`. Pushes from Claude's branch don't trigger Actions, so it only runs from `main`.
+- Not yet run against the live API (needs merge). Product Page Optimization and In-App Events are also in the API; not built.
+
 ## V2 Feature Status
 | Feature | Status | Notes |
 |---------|--------|-------|

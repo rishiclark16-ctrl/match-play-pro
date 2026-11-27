@@ -1,0 +1,101 @@
+name: App Store
+
+# App Store Connect automation (never builds or submits the app itself).
+#   screenshots    replace the main product page screenshots (editable version)
+#   product-pages  create/update the Custom Product Pages in appstore/product-pages.json
+#   status         list custom product pages, their review state and links
+# Runs automatically on main when the screenshots or the page config change.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ios/App/fastlane/screenshots/**'
+      - 'appstore/product-pages.json'
+  pull_request:
+    paths:
+      - 'appstore/**'
+      - 'scripts/appstore/**'
+      - 'ios/App/fastlane/screenshots/**'
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'What to do'
+        type: choice
+        options: [status, product-pages, screenshots]
+        default: status
+      submit_pages:
+        description: 'product-pages: also send the pages to App Review'
+        type: boolean
+        default: false
+      app_version:
+        description: 'screenshots: version to update (blank = the one in Prepare for Submission)'
+        required: false
+        default: ''
+
+concurrency:
+  group: appstore
+  cancel-in-progress: false
+
+env:
+  ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+  ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+  ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+  ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+
+jobs:
+  check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: node scripts/appstore/product-pages.mjs sync --dry-run
+
+  screenshots:
+    if: github.event_name == 'push' || inputs.task == 'screenshots'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      APP_VERSION: ${{ inputs.app_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Changed?
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" != "push" ] || git diff --name-only ${{ github.event.before }} HEAD | grep -q '^ios/App/fastlane/screenshots/'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: ruby/setup-ruby@v1
+        if: steps.changed.outputs.run == 'true'
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: ios/App
+      - name: Upload screenshots
+        if: steps.changed.outputs.run == 'true'
+        working-directory: ios/App
+        run: bundle exec fastlane ci_screenshots
+
+  product-pages:
+    # After screenshots, so a push that changes both uses the new files.
+    needs: [screenshots]
+    if: >-
+      always() && needs.screenshots.result != 'failure' &&
+      github.event_name != 'pull_request' && inputs.task != 'screenshots'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Custom product pages
+        run: |
+          if [ "${{ inputs.task }}" = "status" ]; then
+            node scripts/appstore/product-pages.mjs status
+          elif [ "${{ inputs.submit_pages }}" = "true" ]; then
+            node scripts/appstore/product-pages.mjs sync --submit
+          else
+            node scripts/appstore/product-pages.mjs sync
+          fi
