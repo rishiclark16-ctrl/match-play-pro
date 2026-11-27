@@ -227,17 +227,26 @@ export function calculateCustomGame({ spec, playerIds, scores, holeInfo, strokes
     const ctx: HoleCtx = { hole: info.number, par: info.par, sides, play, gross };
     const mult = holeMultiplier(spec, ctx);
     const pts = sides.map(() => 0);
+    // Tied holes released to each side by a carry, in holes (for match-style scoring).
+    const carriedHoles = sides.map(() => 0);
     spec.contests.forEach((c, ci) => {
-      const r = scoreContest(spec, c, ctx, carries[ci]);
+      const carryIn = carries[ci];
+      const r = scoreContest(spec, c, ctx, carryIn);
       carries[ci] = r.carryOut;
+      if (r.winner >= 0 && carryIn > 0 && c.kind === 'low_wins' && c.points > 0) carriedHoles[r.winner] += carryIn / c.points;
       const f = mult * winnerBirdieFactor(spec, ctx, r.winner);
       r.points.forEach((p, i) => { pts[i] += p * f; });
     });
     let sidePoints = pts;
     if (spec.scoring === 'holes') {
+      // The hole goes to the side with the most points. It counts as one hole, times
+      // the hole's multipliers ("18 counts double", "birdies double"), plus any tied
+      // holes a carry hands over: before, every won hole counted 1 and those rules
+      // silently paid nothing.
       const best = Math.max(...pts);
-      const leaders = pts.filter(p => p === best).length;
-      sidePoints = pts.map(p => (p === best && leaders === 1 ? 1 : 0));
+      const lead = pts.filter(p => p === best).length === 1 ? pts.indexOf(best) : -1;
+      const value = lead >= 0 ? mult * winnerBirdieFactor(spec, ctx, lead) + carriedHoles[lead] : 0;
+      sidePoints = pts.map((_, i) => (i === lead ? value : 0));
     }
     sides.forEach((side, i) => side.forEach(p => { byPlayer[p] = (byPlayer[p] ?? 0) + sidePoints[i]; }));
     holes.push({ hole: info.number, played: true, sides, points: sidePoints, carried: carries.reduce((a, b) => a + b, 0), multiplier: mult });

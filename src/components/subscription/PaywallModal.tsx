@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Crown, Loader2, Check } from 'lucide-react';
 import { PRO_FEATURES, paywallHeadline, annualSavingsPercent } from './paywallCopy';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import { useSubscription } from '@/hooks/useSubscription';
 import {
   getOfferings,
@@ -143,12 +143,12 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
                 <Crown className="w-3.5 h-3.5" />
                 MATCH Pro
               </span>
-              <h2 className="mt-3 text-[26px] font-extrabold tracking-[-0.02em] leading-[1.1]">
+              <SheetTitle className="mt-3 text-[26px] font-extrabold tracking-[-0.02em] leading-[1.1] text-white">
                 {headline.title}
-              </h2>
-              <p className="mt-1.5 text-[14px] text-on-forest-muted leading-snug">
+              </SheetTitle>
+              <SheetDescription className="mt-1.5 text-[14px] text-on-forest-muted leading-snug">
                 {headline.subtitle}
-              </p>
+              </SheetDescription>
             </div>
           </div>
 
@@ -258,9 +258,9 @@ export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps)
               Cancel anytime. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.
             </p>
             <p className="text-[11px] text-center text-muted-foreground pb-2 !mt-1">
-              <a href="https://matchgolf.info/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Privacy Policy</a>
+              <a href="https://matchgolf.info/privacy" target="_blank" rel="noopener noreferrer" className="inline-block min-w-11 py-[15px] -my-[15px] px-1 text-center underline underline-offset-2">Privacy Policy</a>
               {' · '}
-              <a href="https://matchgolf.info/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Terms of Use</a>
+              <a href="https://matchgolf.info/terms" target="_blank" rel="noopener noreferrer" className="inline-block min-w-11 py-[15px] -my-[15px] px-1 text-center underline underline-offset-2">Terms of Use</a>
             </p>
           </div>
         </div>

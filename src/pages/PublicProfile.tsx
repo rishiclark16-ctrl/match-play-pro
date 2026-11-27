@@ -170,7 +170,7 @@ export default function PublicProfile() {
 
           <div className="mt-5 grid grid-cols-2 gap-2">
             <div className="rounded-[18px] bg-gold px-4 py-3 text-gold-foreground">
-              <p className="text-[12px] font-semibold leading-none text-gold-foreground/80">Handicap</p>
+              <p className="text-[12px] font-semibold leading-none text-gold-foreground">Handicap</p>
               <p className="mt-2 text-[32px] font-extrabold leading-none tracking-[-0.04em] tabular-nums">{hcp}</p>
             </div>
             <div className="rounded-[18px] bg-white/10 px-4 py-3">

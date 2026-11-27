@@ -1,4 +1,3 @@
 [
-  "a11y meta-viewport: meta[name=\"viewport\"]",
-  "tap-target: button \"Go Home\""
+  "a11y meta-viewport: meta[name=\"viewport\"]"
 ]

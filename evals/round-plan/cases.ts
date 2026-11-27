@@ -594,4 +594,111 @@ export const CASES: EvalCase[] = [
     text: '$10 nassau with Jim, $5 closest to the pin on the par 3s and long drive on 18',
     expect: { players: ['Jim'], games: [{ type: 'nassau', stake: 10 }], unsupported: ['closest'] },
   },
+
+  // ── Held out: custom games built from blocks the prompt's worked examples never show ──
+  // Written after the prompt, to check the planner composes rules it hasn't been shown.
+  {
+    id: 'novel-skins-par3-double', catalog: ['skins'], aiOnly: true,
+    text: '$2 skins with Jack, Jim and Tim, par 3s count double',
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 2, custom: planFromSpec({ ...PRESETS.skins(false), multipliers: [{ when: 'par3', factor: 2 }] }) }] },
+  },
+  {
+    id: 'novel-skins-par5-18-triple', catalog: ['skins'], aiOnly: true,
+    text: 'skins for five bucks with Jack and Jim, carryovers, par 5s are double and 18 is worth triple',
+    expect: { players: ['Jack', 'Jim'], games: [{ type: 'custom', stake: 5, custom: planFromSpec({ ...PRESETS.skins(true), multipliers: [{ when: 'par5', factor: 2 }, { when: 'holes', holes: [18], factor: 3 }] }) }] },
+  },
+  {
+    id: 'novel-three-point-game', catalog: ['high_low', 'low_ball_low_total'], aiOnly: true,
+    text: 'me and Jack against Jim and Tim, a point for low ball, a point for high ball and a point for low total, a dollar a point',
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 1, custom: planFromSpec({ ...PRESETS.highLow(TEAMS_JACK), name: 'Three point game', contests: [
+      { kind: 'low_wins', metric: 'best', points: 1 }, { kind: 'low_wins', metric: 'worst', points: 1 }, { kind: 'low_wins', metric: 'total', points: 1 },
+    ] }) }] },
+  },
+  {
+    id: 'novel-stableford-for-money', catalog: ['stableford'], aiOnly: true,
+    text: 'stableford with Jack and Tim for a buck a point',
+    expect: { players: ['Jack', 'Tim'], games: [{ oneOf: [{ type: 'stableford', stake: 1 }, { type: 'custom', stake: 1, custom: planFromSpec(PRESETS.stablefordBet()) }] }] },
+    engine: { games: [{ type: 'custom', stakes: 1 }] },
+  },
+  {
+    id: 'novel-modified-stableford-money', catalog: ['stableford'], aiOnly: true,
+    text: 'modified stableford, Jack Jim and Tim, two dollars a point',
+    expect: { players: FOUR, games: [{ oneOf: [{ type: 'stableford', stake: 2, modified: true }, { type: 'custom', stake: 2, custom: planFromSpec({ ...PRESETS.stablefordBet(), name: 'Modified Stableford',
+      contests: [{ kind: 'vs_par', metric: 'score', table: { albatross: 8, eagle: 5, birdie: 2, par: 0, bogey: -1, double: -3, worse: -3 } }] }) }] }] },
+    engine: { games: [{ type: 'custom', stakes: 2 }] },
+  },
+  {
+    id: 'novel-low-ball-ties-carry', catalog: ['fourball_match'], aiOnly: true,
+    text: 'me and Jack vs Jim and Tim, low ball wins the hole, ties carry over, $5 a hole',
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 5, custom: planFromSpec({ ...PRESETS.bestBall(TEAMS_JACK), ties: 'carry' }) }] },
+  },
+  {
+    id: 'novel-team-medal', catalog: ['stroke_play_bet'], aiOnly: true,
+    text: 'me and Jack vs Jim and Tim, add up our scores for the whole round, lower team total wins $20 a man',
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 20, custom: planFromSpec({ ...PRESETS.medal(), name: 'Team total',
+      sides: { kind: 'teams', teams: TEAMS_JACK }, contests: [{ kind: 'diff', metric: 'total' }] }) }] },
+  },
+  {
+    id: 'novel-split-sixes-ties-void', catalog: ['split_sixes'], aiOnly: true,
+    text: 'split sixes with Jack and Jim, a dollar a point, but a tie gets nothing',
+    expect: { players: ['Jack', 'Jim'], games: [{ type: 'custom', stake: 1, custom: planFromSpec({ ...PRESETS.splitSixes(),
+      contests: [{ kind: 'rank', metric: 'score', table: [4, 2, 0], ties: 'void' }] }) }] },
+  },
+  {
+    id: 'novel-messy-low-high', catalog: ['acey_deucey'], aiOnly: true,
+    text: 'uh yeah so it is me Jack and Jim, everyone pays the low guy a buck on each hole and the high guy pays everyone a buck',
+    expect: { players: ['Jack', 'Jim'], games: [{ type: 'custom', stake: 1, custom: planFromSpec({ ...PRESETS.aceyDeucey(), name: 'Low and high',
+      contests: [{ kind: 'rank', metric: 'score', table: [1, 0, -1], ties: 'void' }] }) }] },
+  },
+  {
+    id: 'novel-two-medals', catalog: ['stroke_play_bet'], aiOnly: true,
+    text: 'with Jack and Jim: low net takes $10 from each guy, and low gross takes $5 from each',
+    expect: { players: ['Jack', 'Jim'], games: [
+      { type: 'custom', stake: 10, custom: planFromSpec(PRESETS.medal()) },
+      { type: 'custom', stake: 5, custom: planFromSpec({ ...PRESETS.medal(), name: 'Low gross', net: false }) },
+    ] },
+  },
+  {
+    id: 'novel-low-total-birdies-double', catalog: ['low_total', 'birdie_bonus'], aiOnly: true,
+    text: 'me and Jack vs Jim and Tim, we add our two scores, low total wins the hole for $2, and a hole won with a birdie is double',
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 2, custom: planFromSpec({ ...PRESETS.lowTotal(TEAMS_JACK), multipliers: [{ when: 'winner_birdie', factor: 2 }] }) }] },
+  },
+  {
+    id: 'novel-low-ball-plus-closest', catalog: ['fourball_match', 'ctp'],
+    text: 'low ball, me and Jack vs Jim and Tim, $5 a hole, and closest to the pin is worth a point',
+    expect: { players: FOUR, unsupported: ['closest'], games: [{ oneOf: [
+      { type: 'match', stake: 5, teams: TEAMS_JACK, teamScoring: 'best', perHole: true },
+      { type: 'custom', stake: 5, custom: planFromSpec(PRESETS.bestBall(TEAMS_JACK)) },
+    ] }] },
+  },
+  {
+    id: 'novel-worst-ball', catalog: ['high_low'], aiOnly: true,
+    text: 'me and Jack vs Jim and Tim, worst ball on the team counts, a dollar a hole',
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 1, custom: planFromSpec({ ...PRESETS.bestBall(TEAMS_JACK), name: 'Worst ball',
+      contests: [{ kind: 'low_wins', metric: 'worst', points: 1 }] }) }] },
+  },
+  {
+    id: 'novel-switch-at-the-turn', catalog: ['fourball_match', 'sixes'], aiOnly: true,
+    text: 'me and Jack vs Jim and Tim on the front, then me and Jim vs Jack and Tim on the back, best ball, $10 a man each nine',
+    expect: { players: FOUR, games: [{ type: 'custom', stake: 10, custom: planFromSpec({ ...PRESETS.sixes(['me', 'Jack', 'Jim', 'Tim']), name: 'Switch at the turn',
+      sides: { kind: 'rotating_teams', rotations: [
+        { from: 1, to: 9, teams: [['me', 'Jack'], ['Jim', 'Tim']] },
+        { from: 10, to: 18, teams: [['me', 'Jim'], ['Jack', 'Tim']] },
+      ] },
+      segments: [{ from: 1, to: 9, label: 'Front' }, { from: 10, to: 18, label: 'Back' }] }) }] },
+  },
+  {
+    id: 'novel-birdie-points', catalog: ['birdie_bonus'], aiOnly: true,
+    text: 'me Jack and Jim, a point for a birdie and two for an eagle, a buck a point',
+    expect: { players: ['Jack', 'Jim'], games: [{ type: 'custom', stake: 1, custom: planFromSpec({ ...PRESETS.stablefordBet(), name: 'Birdies',
+      contests: [{ kind: 'vs_par', metric: 'score', table: { albatross: 3, eagle: 2, birdie: 1, par: 0, bogey: 0, double: 0, worse: 0 } }] }) }] },
+  },
+  {
+    id: 'novel-hammer-in-custom', catalog: ['hammer', 'low_total'],
+    text: 'low total, me and Jack vs Jim and Tim, $2 a hole, and you can hammer to double it',
+    expect: { players: FOUR, unsupported: ['hammer'], games: [{ oneOf: [
+      { type: 'match', stake: 2, teams: TEAMS_JACK, teamScoring: 'aggregate', perHole: true },
+      { type: 'custom', stake: 2, custom: planFromSpec(PRESETS.lowTotal(TEAMS_JACK)) },
+    ] }] },
+  },
 ];

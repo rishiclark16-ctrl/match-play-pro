@@ -255,13 +255,13 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 ## Supabase Project
 - **Project ID:** `puqgbsxabcyxrbwwoznn`
 - **URL:** `https://puqgbsxabcyxrbwwoznn.supabase.co`
-- **Edge functions:** delete-account, subscription-webhook, sync-subscription, send-push, parse-house-game, plan-round (v5), plan-round-eval (eval only, token-locked), golf-course-lookup, redeem-promo, sentry-webhook, speech-to-text, weekly-recap
+- **Edge functions:** delete-account, subscription-webhook, sync-subscription, send-push, parse-house-game, plan-round (v6), plan-round-eval (v4, eval only, token-locked), golf-course-lookup, redeem-promo, sentry-webhook, speech-to-text, weekly-recap
 - **Migrations:** 22 files in `supabase/migrations/`
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1468 pass, 0 fail** (1465 across 69 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
-- `bun test src/hooks src/lib src/engine src/components` (1465 tests)
+**1487 pass, 0 fail** (1484 across 69 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
+- `bun test src/hooks src/lib src/engine src/components` (1484 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
 **Why split:** module mocks (`vi.mock` and bun's `mock.module`) leak into downstream files when bun's CI scheduler reuses workers. Running pages in their own `bun test` invocation gives them a fresh process and keeps hook/lib tests pristine. Page-test factories must include every named export the page tree imports at module load (e.g., `TIER_LIMITS` from `useSubscription` is read by `PlayersStep`).
@@ -601,8 +601,20 @@ Phase P3.10 (plan-round outage fix + model comparison) — 2026-11-26:
   - **Sonnet 5.5:** 90/92, p50 1.8 s, about $0.005. Missed `low-total-threesome` (dropped the game instead of flagging it) and `wolf-carry` (left out "ties carry").
   - **Haiku 5.5:** 89/92, p50 1.7 s, about $0.0003. Dropped "18 counts double" on skins and on a Nassau, setting up the plain game and silently changing the money. It also missed the presses-unsupported note.
   - **Decision:** stay on Opus 5.5. The cheaper models' misses are valid-looking plans with the wrong money, which no check after the model can detect, and the saving is a few dollars a month. Kimi was considered and rejected: no cheaper than Haiku, unverified strict-schema support, and golfers' words and friends' names would go to a China-hosted provider.
+- **Merged to `main`** in PR #8 (`dfdd9e4`), so the repo now matches deployed v5. It touches only edge functions and evals, so the TestFlight build is unchanged.
 - **Lesson:** after any change to the prompt or schema, run the live eval through `plan-round-eval` before or right after deploying. A 401 smoke test only proves the function boots.
 - Test baseline: **1465 unit + 3 page**, typecheck 157, lint 0 errors. Offline parser 86/86.
+
+Phase P3.11 (held-out evals, two money fixes, QA debt to zero) — 2026-11-26/27:
+- **16 held-out eval cases** (`novel-*` in `evals/round-plan/cases.ts`, 108 cases in all): custom games the prompt's worked examples never show (par 3s double, par 5s double + 18 triple, a three-point game, Stableford for money, Modified Stableford for money, low ball with carries, team medal, split sixes with void ties, messy-speech low/high, two medals in one sentence, low total with birdies double, worst ball, switching partners at the turn, birdie points, plus two "custom rule + unsupported event" cases: closest-to-the-pin and hammer).
+- **Opus, 3 runs per case, found two real money bugs:**
+  - **"A buck a point" Stableford paid nothing.** The model used plain Stableford (no stake), so the money was dropped. Fixed twice: the prompt now asks for Stableford with a stake per point, and the resolver (`roundPlan/games.ts` `normalizeGame`) turns any Stableford with a stake into a custom points-for-money game (Modified Stableford table when `modified`), with an assumption saying so. Test in `roundPlan.test.ts`.
+  - **Engine bug: match-style (`scoring: 'holes'`) custom games ignored multipliers and carries.** Every won hole counted 1, so "Nassau, 18 counts double" (a worked example), "birdies double" and carried ties silently paid nothing extra. `engine.ts` now counts a won hole as its multiplier × winner-birdie factor, plus carried holes. With no multipliers or carries it is still exactly 1 per hole (all existing differential tests pass). Two new engine tests. The prompt now uses `holes` only for match-style bets paid per bet (`per_segment`).
+  - The Wolf and Vegas prompt line now covers carryovers ("with carryovers" was dropped 2 runs in 3).
+- **Result:** Opus 108/108 on the final prompt (17 carry/Stableford cases × 5 runs all pass; full × 3 before the last fix: 107/108). **`plan-round` v6 deployed** 2026-11-27 (boot verified; the eval endpoint runs the identical shared files). `plan-round-eval` is v4.
+- **QA debt: everything fixed except the deliberate zoom setting** (75 = `meta-viewport` × 25 screens × 3 devices). The paywall sheet's headline is now its `SheetTitle`/`SheetDescription` (screen readers had no name); legal links on Auth and the paywall have 44pt hit areas without changing the line (`inline-block min-w-11 py-[13/15px] -my-…`); "Go Home" on Watch is 44pt; the onboarding name field is `min-h-11`; Public Profile's "Handicap" label has full contrast; the `AppLayout` `<main>` and `PullToRefresh` scroll regions are focusable (`tabIndex=0`, inset focus ring). The QA tap-target audit now follows WCAG 2.5.8's exemption for links inside running text (legal pages).
+- Offline parser 88/88 (`LOCAL_BASELINE = 88`). Tests: **1484 unit + 3 page**, typecheck 157, lint 0 errors, QA journeys 20/20, screens 75/75.
+- **Repo vs prod:** v6 is built from this branch; merge it to `main` so a redeploy from `main` can't roll production back to v5.
 
 ## V2 Feature Status
 | Feature | Status | Notes |

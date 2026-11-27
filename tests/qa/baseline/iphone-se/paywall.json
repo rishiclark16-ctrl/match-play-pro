@@ -1,6 +1,3 @@
 [
-  "a11y meta-viewport: meta[name=\"viewport\"]",
-  "console.error: `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.",
-  "tap-target: a \"Privacy Policy\"",
-  "tap-target: a \"Terms of Use\""
+  "a11y meta-viewport: meta[name=\"viewport\"]"
 ]

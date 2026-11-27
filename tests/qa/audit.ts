@@ -80,6 +80,12 @@ async function tapTargets(page: Page): Promise<Finding[]> {
       if (!r.width || !r.height || style.visibility === 'hidden' || style.display === 'none' || (el as HTMLButtonElement).disabled) continue;
       if (r.bottom < 0 || r.top > window.innerHeight * 3) continue;
       if (r.width >= 44 && r.height >= 44) continue;
+      // WCAG 2.5.8: a link inside running text is exempt (its size is set by the line).
+      if (el.tagName === 'A' && el.parentElement) {
+        const own = ((el as HTMLElement).innerText || '').trim().length;
+        const around = (el.parentElement.innerText || '').trim().length;
+        if (around >= own + 60) continue;
+      }
       // A small control inside a large tappable row is fine.
       const big = el.parentElement?.closest(sel);
       if (big) { const b = big.getBoundingClientRect(); if (b.width >= 44 && b.height >= 44) continue; }

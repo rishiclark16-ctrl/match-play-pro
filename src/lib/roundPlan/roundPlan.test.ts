@@ -149,6 +149,18 @@ describe('games', () => {
     expect(r.issues).toEqual([]);
     expect(r.games[0]).toMatchObject({ type: 'skins', stakes: 5, carryover: false, useNet: true });
   });
+  it('Stableford for money settles the points instead of dropping the stake', () => {
+    const r = resolveGames({ games: [game({ type: 'stableford', stake: 1 })], players: four, isPro: true, useNet: true, generateId: gid });
+    expect(r.issues).toEqual([]);
+    expect(r.games[0]).toMatchObject({ type: 'custom', stakes: 1 });
+    expect(r.games[0].spec?.contests[0]).toMatchObject({ kind: 'vs_par', table: { birdie: 3, par: 2 } });
+    expect(r.assumptions.map(a => a.message).join(' ')).toMatch(/\$1 a point/);
+    const mod = resolveGames({ games: [game({ type: 'stableford', stake: 2, modified: true })], players: four, isPro: true, useNet: true, generateId: gid });
+    expect(mod.games[0].spec?.contests[0]).toMatchObject({ kind: 'vs_par', table: { birdie: 2, par: 0, bogey: -1 } });
+    // Without money it is still plain Stableford.
+    const free = resolveGames({ games: [game({ type: 'stableford' })], players: four, isPro: true, useNet: true, generateId: gid });
+    expect(free.games[0].type).toBe('stableford');
+  });
   it('rejects a game the player count cannot support', () => {
     const r = resolveGames({ games: [game({ type: 'vegas', stake: 1 })], players: four.slice(0, 3), isPro: true, useNet: true, generateId: gid });
     expect(r.games).toEqual([]);

@@ -291,9 +291,9 @@ function FormSheet({
 
           <p className="text-center text-[12px] text-muted-foreground mt-1 pb-8 leading-relaxed">
             By continuing, you agree to our{' '}
-            <a href="/terms-of-service" className="underline underline-offset-2 text-foreground">Terms</a>
+            <a href="/terms-of-service" className="inline-block min-w-11 py-[13px] -my-[13px] px-1 text-center underline underline-offset-2 text-foreground">Terms</a>
             {' '}and{' '}
-            <a href="/privacy-policy" className="underline underline-offset-2 text-foreground">Privacy Policy</a>
+            <a href="/privacy-policy" className="inline-block min-w-11 py-[13px] -my-[13px] px-1 text-center underline underline-offset-2 text-foreground">Privacy Policy</a>
           </p>
         </form>
       </div>
@@ -402,9 +402,9 @@ export default function Auth() {
                 className="text-center text-[12px] leading-relaxed pt-2 pb-4 text-white/60"
               >
                 By continuing you agree to our{' '}
-                <a href="/terms-of-service" className="underline underline-offset-2 text-white/85">Terms</a>
+                <a href="/terms-of-service" className="inline-block min-w-11 py-[13px] -my-[13px] px-1 text-center underline underline-offset-2 text-white/85">Terms</a>
                 {' '}and{' '}
-                <a href="/privacy-policy" className="underline underline-offset-2 text-white/85">Privacy Policy</a>
+                <a href="/privacy-policy" className="inline-block min-w-11 py-[13px] -my-[13px] px-1 text-center underline underline-offset-2 text-white/85">Privacy Policy</a>
               </motion.p>
             </div>
           </motion.div>

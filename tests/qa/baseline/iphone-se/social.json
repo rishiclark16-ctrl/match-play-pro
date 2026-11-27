@@ -1,4 +1,3 @@
 [
-  "a11y meta-viewport: meta[name=\"viewport\"]",
-  "a11y scrollable-region-focusable: main"
+  "a11y meta-viewport: meta[name=\"viewport\"]"
 ]

@@ -187,6 +187,27 @@ describe('hand-computed games', () => {
     expect(balance(transfers)).toEqual({ a: 5, b: -5 });
   });
 
+  it('nassau where 18 counts double: winning 18 counts as two holes', () => {
+    // a wins 1-9, b wins 10-18. Level on the total without the rule; with it b wins 10-9.
+    const rows = Array.from({ length: 18 }, (_, i) => (i < 9 ? [3, 4] : [5, 4]));
+    const spec = { ...PRESETS.nassau(), multipliers: [{ when: 'holes' as const, holes: [18], factor: 2 }] };
+    const { transfers, result } = settle(spec, ['a', 'b'], card(['a', 'b'], rows), 5);
+    expect(result.segments.map(s => s.leaders)).toEqual([['a'], ['b'], ['b']]);
+    expect(balance(transfers)).toEqual({ a: -5, b: 5 });
+  });
+
+  it('match-style scoring keeps birdie doubles and carried ties', () => {
+    const base = { ...PRESETS.skins(false), scoring: 'holes' as const };
+    // Hole 1 (par 4): a birdies and wins -> worth 2 with birdies double. Everything else halved.
+    const birdie = Array.from({ length: 18 }, (_, i) => (i === 0 ? [3, 4] : [4, 4]));
+    const doubled = settle({ ...base, multipliers: [{ when: 'winner_birdie' as const, factor: 2 }] }, ['a', 'b'], card(['a', 'b'], birdie), 1);
+    expect(balance(doubled.transfers)).toEqual({ a: 2, b: -2 });
+    // Hole 1 halved and carried, a wins hole 2 (par 5) with a par: two holes.
+    const carry = Array.from({ length: 18 }, (_, i) => (i === 1 ? [5, 6] : [4, 4]));
+    const carried = settle({ ...base, ties: 'carry' as const }, ['a', 'b'], card(['a', 'b'], carry), 1);
+    expect(carried.result.holes[1].points).toEqual([2, 0]);
+  });
+
   it('sixes: each six-hole match is its own bet with new partners', () => {
     // a wins every hole with a 3; everyone else makes 5.
     const rows = Array.from({ length: 18 }, () => [3, 5, 5, 5]);

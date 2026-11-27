@@ -107,7 +107,7 @@ export const GOLF_GAMES: GolfGame[] = [
     rules: 'Points per hole from net score vs par: double bogey 0, bogey 1, par 2, birdie 3, eagle 4, albatross 5. Most points wins.',
     money: 'Usually a pot or per point difference.',
     options: ['modified Stableford (pros\' table: eagle 5, birdie 2, par 0, bogey −1, double −3)'],
-    support: { status: 'yes', plan: 'stableford', note: 'Scored without money.' },
+    support: { status: 'yes', plan: 'stableford (stake per point when money is said)', note: 'With money on the points, the app settles the point difference between players.' },
   },
   {
     id: 'quota',

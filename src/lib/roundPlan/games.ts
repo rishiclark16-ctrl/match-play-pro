@@ -9,7 +9,11 @@
 import type { GameConfig, Team } from '@/types/golf';
 import type { DraftAssumption, DraftIssue, DraftPlayer, PlanGame, PlanGameType } from './types';
 import { normalizeName, sameFirstName } from './names';
-import { resolveCustom } from './customPlan';
+import { planFromSpec, resolveCustom } from './customPlan';
+import { PRESETS } from '@/lib/games/custom/presets';
+
+/** The pros' Modified Stableford table (eagle 5, birdie 2, par 0, bogey -1, double or worse -3). */
+const MODIFIED_STABLEFORD = { albatross: 8, eagle: 5, birdie: 2, par: 0, bogey: -1, double: -3, worse: -3 };
 
 export const GAME_LABEL: Record<PlanGameType, string> = {
   skins: 'Skins', nassau: 'Nassau', match: 'Match play', stableford: 'Stableford',
@@ -153,6 +157,14 @@ function normalizeGame(g: PlanGame, n: number, assumptions: DraftAssumption[]): 
   if (g.type === 'match' && n === 2 && g.perHole) {
     assumptions.push({ field: 'games', message: 'A bet per hole between two players is played as skins with no carryovers' });
     return { ...g, type: 'skins', carryover: false, teams: null, teamScoring: null, perHole: null };
+  }
+  // Stableford itself carries no money; "a buck a point" means points settle in dollars.
+  // Without this the stake was dropped and the game paid nothing.
+  if (g.type === 'stableford' && g.stake != null && g.stake > 0) {
+    assumptions.push({ field: 'games', message: `Stableford for money is played as points settled at $${g.stake} a point` });
+    const spec = PRESETS.stablefordBet();
+    if (g.modified) spec.contests = [{ kind: 'vs_par', metric: 'score', table: MODIFIED_STABLEFORD }];
+    return { ...g, type: 'custom', custom: planFromSpec({ ...spec, name: g.modified ? 'Modified Stableford' : 'Stableford' }), modified: null };
   }
   if (g.type === 'bestball' && n === 4 && g.stake != null && g.stake > 0) {
     assumptions.push({ field: 'games', message: 'Best ball for money is played as a best-ball match' });

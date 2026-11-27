@@ -63,4 +63,4 @@ export function OnboardingProgress({ total, current }: { total: number; current:
 
 /** Text input styles for the big onboarding fields (bare input inside OnboardingField). */
 export const onboardingInputClass =
-  'w-full min-w-0 bg-transparent outline-none focus-visible:outline-none text-foreground font-extrabold tracking-[-0.01em] placeholder:text-muted-foreground/35 placeholder:font-bold';
+  'w-full min-w-0 min-h-11 bg-transparent outline-none focus-visible:outline-none text-foreground font-extrabold tracking-[-0.01em] placeholder:text-muted-foreground/35 placeholder:font-bold';
