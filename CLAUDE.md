@@ -614,7 +614,7 @@ Phase P3.11 (held-out evals, two money fixes, QA debt to zero) — 2026-11-26/27
 - **Result:** Opus 108/108 on the final prompt (17 carry/Stableford cases × 5 runs all pass; full × 3 before the last fix: 107/108). **`plan-round` v6 deployed** 2026-11-27 (boot verified; the eval endpoint runs the identical shared files). `plan-round-eval` is v4.
 - **QA debt: everything fixed except the deliberate zoom setting** (75 = `meta-viewport` × 25 screens × 3 devices). The paywall sheet's headline is now its `SheetTitle`/`SheetDescription` (screen readers had no name); legal links on Auth and the paywall have 44pt hit areas without changing the line (`inline-block min-w-11 py-[13/15px] -my-…`); "Go Home" on Watch is 44pt; the onboarding name field is `min-h-11`; Public Profile's "Handicap" label has full contrast; the `AppLayout` `<main>` and `PullToRefresh` scroll regions are focusable (`tabIndex=0`, inset focus ring). The QA tap-target audit now follows WCAG 2.5.8's exemption for links inside running text (legal pages).
 - Offline parser 88/88 (`LOCAL_BASELINE = 88`). Tests: **1484 unit + 3 page**, typecheck 157, lint 0 errors, QA journeys 20/20, screens 75/75.
-- **Repo vs prod:** v6 is built from this branch; merge it to `main` so a redeploy from `main` can't roll production back to v5.
+- **Merged to `main`** in PR #9 (`6f75297`), so the repo matches deployed v6. The merge includes app changes (engine fix, QA fixes), so it starts a TestFlight build.
 
 ## V2 Feature Status
 | Feature | Status | Notes |
