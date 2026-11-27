@@ -113,7 +113,7 @@ describe('round-plan eval: catalogue coverage', () => {
  * case it can set up (AI-only cases are skipped), unsupported flags included. Raise
  * LOCAL_BASELINE when it improves; never lower it for the same set of cases.
  */
-const LOCAL_BASELINE = 86;
+const LOCAL_BASELINE = 88;
 
 describe('round-plan eval: offline parser', () => {
   it(`passes at least ${LOCAL_BASELINE} of the ${CASES.filter(c => !c.aiOnly).length} cases it can set up`, () => {

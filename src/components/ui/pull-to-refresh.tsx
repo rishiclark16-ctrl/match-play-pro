@@ -74,7 +74,9 @@ export function PullToRefresh({ onRefresh, children, className }: PullToRefreshP
   return (
     <div 
       ref={scrollRef}
-      className={cn("h-full overflow-y-auto overscroll-y-contain", className)}
+      // Keyboard and switch users can scroll it (axe scrollable-region-focusable).
+      tabIndex={0}
+      className={cn("h-full overflow-y-auto overscroll-y-contain focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40", className)}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

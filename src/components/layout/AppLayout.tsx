@@ -59,7 +59,10 @@ export function AppLayout({
 
       {/* Scrollable Content Area */}
       <main
+        // Keyboard and switch users can scroll the page region (axe scrollable-region-focusable).
+        tabIndex={disableScroll ? undefined : 0}
         className={cn(
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40",
           "flex-1 min-h-0 relative z-10",
           !disableScroll && "overflow-y-auto overscroll-y-contain",
           disableScroll && "overflow-hidden",

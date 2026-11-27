@@ -21,6 +21,7 @@ Checks that "say it and play" understands golf the way golfers say it.
 - **Engine**: each case's expected plan resolves into the right games (team scoring, payout, stakes). A model that understands perfectly is useless if the engine can't play it.
 - **Coverage**: every catalogue game has a case; every game the app can't play has a case checking it is flagged, never forced into another game.
 - **Offline parser**: the no-signal fallback must keep passing every case it can set up (`LOCAL_BASELINE`; `aiOnly` cases are skipped).
+- **Held-out cases** (`novel-*`, at the end of `cases.ts`): custom games built from blocks the prompt's worked examples never show (par 3s double, a three-point game, team medal, worst ball, switching partners at the turn, two medals in one sentence, messy speech). Add new ones here *without* adding them to the prompt, so they keep measuring whether the planner composes rules on its own. Run them with `--repeat=3`: a case that passes once can still be flaky.
 - **Custom games** (`src/lib/games/custom`): their own tests compare the engine with the dedicated calculators on random scorecards and check money is zero-sum.
 
 ## On demand (live model, costs money)

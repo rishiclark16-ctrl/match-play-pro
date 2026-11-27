@@ -86,7 +86,7 @@ export default function WatchParty() {
         </p>
         <button
           onClick={() => navigate('/')}
-          className="text-violet-600 font-semibold text-[14px]"
+          className="h-11 px-4 text-violet-600 font-semibold text-[14px]"
         >
           Go Home
         </button>
