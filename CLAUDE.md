@@ -94,6 +94,13 @@ supabase/
 /friends                Friend management
 /groups                 Golf groups
 /stats                  Player stats
+/rounds                 All rounds
+/social                 Feed, upcoming, friends (/friends redirects here)
+/round/:id/dashboard    Finished round scorecard (from results)
+/watch/:roundId         Watch party
+/profile/:id            Public profile
+/onboarding             First-run setup
+/my-formats/*, /groups/:gid/house-game/*   AI Game Builder (house games, saved formats)
 /privacy-policy, /terms-of-service, /support  (public)
 ```
 All routes except `/auth` and legal pages require auth via `<AuthGuard>`.
@@ -125,7 +132,7 @@ All game logic lives in `src/lib/games/` as pure functions with extensive tests:
 - Golf terms: "birdie" = par-1, "bogey" = par+1, "eagle" = par-2
 - Phonetic variations: "tree"=3, "ate"=8, "fore"=4, "won"=1, "to"=2
 - Returns confidence (high/medium/low) → `VoiceConfirmationModal`
-- Uses native Web Speech API (no API key needed)
+- Audio goes through the `speech-to-text` edge function (Deepgram, OpenAI fallback) via `lib/speechProvider.ts`, so voice scoring needs a connection. (Older notes said Web Speech API and a phonetic table: both out of date; `lib/phoneticMatch.ts` is not wired in.)
 
 ### Real-time Sync
 - `useSupabaseRound` hook subscribes to Postgres changes on `scores`, `players`, `rounds`
@@ -256,12 +263,12 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 - **Project ID:** `puqgbsxabcyxrbwwoznn`
 - **URL:** `https://puqgbsxabcyxrbwwoznn.supabase.co`
 - **Edge functions:** delete-account, subscription-webhook, sync-subscription, send-push, parse-house-game, plan-round (v6), plan-round-eval (v4, eval only, token-locked), golf-course-lookup, redeem-promo, sentry-webhook, speech-to-text, weekly-recap
-- **Migrations:** 22 files in `supabase/migrations/`
+- **Migrations:** 41 files in `supabase/migrations/`
 - **Edge functions:** delete-account, send-push, subscription-webhook, sync-subscription, parse-house-game, golf-course-lookup
 
 ## Test Baseline
-**1487 pass, 0 fail** (1484 across 69 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
-- `bun test src/hooks src/lib src/engine src/components` (1484 tests)
+**1488 pass, 0 fail** (1485 across 69 files + 3 page tests). All tests pass. Run with `bun test`. CI splits into two invocations:
+- `bun test src/hooks src/lib src/engine src/components` (1485 tests)
 - `bun test src/pages` (3 tests — page smoke tests)
 
 **Why split:** module mocks (`vi.mock` and bun's `mock.module`) leak into downstream files when bun's CI scheduler reuses workers. Running pages in their own `bun test` invocation gives them a fresh process and keeps hook/lib tests pristine. Page-test factories must include every named export the page tree imports at module load (e.g., `TIER_LIMITS` from `useSubscription` is read by `PlayersStep`).
@@ -615,6 +622,40 @@ Phase P3.11 (held-out evals, two money fixes, QA debt to zero) — 2026-11-26/27
 - **QA debt: everything fixed except the deliberate zoom setting** (75 = `meta-viewport` × 25 screens × 3 devices). The paywall sheet's headline is now its `SheetTitle`/`SheetDescription` (screen readers had no name); legal links on Auth and the paywall have 44pt hit areas without changing the line (`inline-block min-w-11 py-[13/15px] -my-…`); "Go Home" on Watch is 44pt; the onboarding name field is `min-h-11`; Public Profile's "Handicap" label has full contrast; the `AppLayout` `<main>` and `PullToRefresh` scroll regions are focusable (`tabIndex=0`, inset focus ring). The QA tap-target audit now follows WCAG 2.5.8's exemption for links inside running text (legal pages).
 - Offline parser 88/88 (`LOCAL_BASELINE = 88`). Tests: **1484 unit + 3 page**, typecheck 157, lint 0 errors, QA journeys 20/20, screens 75/75.
 - **Merged to `main`** in PR #9 (`6f75297`), so the repo matches deployed v6. The merge includes app changes (engine fix, QA fixes), so it starts a TestFlight build.
+
+Phase P3.12 (team review) — 2026-11-27:
+- **Five read-only reviewers** (pages/workflows, games/money, data/backend, AI + voice, code health). The headline findings were checked against the code. Full write-up: artifact "MATCH Golf App Review" (https://claude.ai/artifact/3eamW6opc93uUvPpeTGip3).
+- **Fixed during the review:** free users couldn't start a round after a paid Stableford was flagged. `normalizeGame` turns it into a custom game, so "Start without Custom game" sent `dropGames: ['custom']` while `buildDraft` filtered on the type as said. New `playedAsType()` in `roundPlan/games.ts`; `buildDraft` drops by type as said or as played. Test in `roundPlan.test.ts`.
+- **Open, security (verified):**
+  - `sync-subscription` trusts the client's `isPro` and writes Pro with the service role, so anyone signed in can self-grant Pro.
+  - `send-push` takes any `profileIds` plus free-text title/body with no relationship check.
+  - The "Editors can…" score policies (migration 20260201) let any player write or delete any score.
+- **Open, money (verified):**
+  - `useRoundCompletePlayers` builds players without `strokesPerHole`, so final settle-up scores net games other than singles match play as gross.
+  - `useGameResults.ts:66` builds the strokes map only when skins or Nassau is net.
+  - Manual setup never sets `useNet`; net/gross is decided four different ways.
+  - Wolf never pays: nothing writes `wolfResults`, and `WolfSelection` is unused.
+  - `calculateNassau` settles only 2 players, so 3+ players pay $0.
+  - Duplicate auto-presses: every phone runs the effect and there is no unique index.
+  - Ghost money is booked to the host on the group tab.
+  - House games: back-nine skins pays $0; par-5 double and last-hole double are partly ignored.
+- **Open, reliability (verified):**
+  - **No `<Toaster />` is mounted** (removed in `c48a93a`, April), so none of the ~197 toast calls show.
+  - The offline queue (`saveScoreOffline`) is never called, so offline scores can be lost.
+  - No refetch on app resume.
+  - Realtime channel-name reuse likely breaks leaderboard live updates (confirm on device).
+  - A network error shows "Round not found" with no retry.
+  - "Finish round" by a non-creator silently does nothing.
+  - plan-round failures aren't logged client-side.
+- **Open, simplify:**
+  - Four money paths: the live tracker, the preview, settle-up and `RoundDashboard`. Replace them with one `computeRoundMoney()` plus golden tests.
+  - Two AI rule builders: fold `parse-house-game` into plan-round.
+  - 49 unreachable files and ~25 unused packages; 3 money formatters; 946 hardcoded hex colours (tokens lack `<alpha-value>`).
+  - Auth, profile and subscription are fetched per component (45 / 10 / 13 copies).
+  - Stats hit the 1,000-row cutoff.
+  - ~1.1 MB of JS is parsed at launch (Sentry replay and PostHog are eager) and 21 MB of sign-in videos ship in the app.
+- **CLAUDE.md corrections:** routes list, migration count (41), voice pipeline, 15 lint warnings (14 `react-refresh` + 1 deps). The "untracked directories" open item is mostly gone: `out/`, `content/`, `public/audio`, `public/screens` no longer exist, while `brand/` and `previews/` are tracked.
+- Test baseline: **1485 unit + 3 page**, typecheck 157.
 
 ## V2 Feature Status
 | Feature | Status | Notes |
