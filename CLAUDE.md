@@ -616,6 +616,11 @@ Phase P3.11 (held-out evals, two money fixes, QA debt to zero) — 2026-11-26/27
 - Offline parser 88/88 (`LOCAL_BASELINE = 88`). Tests: **1484 unit + 3 page**, typecheck 157, lint 0 errors, QA journeys 20/20, screens 75/75.
 - **Repo vs prod:** v6 is built from this branch; merge it to `main` so a redeploy from `main` can't roll production back to v5.
 
+Phase P3.12 (App Store screenshots by CI) — 2026-11-27:
+- 3.1 screenshots (6 × iPhone 6.9" 1320×2868, 6 × iPad 13" 2064×2752) live in `ios/App/fastlane/screenshots/en-US/`. Product-page creatives (header 3840×1646, search 3840×2560, universal 5244×2950) are in `docs/appstore/product-page-images/`; they are not uploadable via the API yet, so add them in App Store Connect by hand.
+- New lane `ci_screenshots` (deliver: screenshots only, `overwrite_screenshots`, no binary/metadata, never submits) and workflow `.github/workflows/appstore-screenshots.yml` (runs on changes to the screenshots folder or manual dispatch; `app_version` input, blank = the version in Prepare for Submission). Uses the existing ASC secrets.
+- App Store Connect API also covers Custom Product Pages, Product Page Optimization and In-App Events; not built yet.
+
 ## V2 Feature Status
 | Feature | Status | Notes |
 |---------|--------|-------|
