@@ -153,6 +153,15 @@ function resolveTeams(
  * - money on best ball in a foursome is a best-ball match (best ball alone is a
  *   stroke game with no bet).
  */
+/**
+ * The type a game is actually played as, for `n` players ("Stableford for money" is a
+ * custom game). The review screen's "start without X" uses these types, so dropping a
+ * game must match on them too.
+ */
+export function playedAsType(g: PlanGame, n: number): PlanGameType {
+  return normalizeGame(g, n, []).type;
+}
+
 function normalizeGame(g: PlanGame, n: number, assumptions: DraftAssumption[]): PlanGame {
   if (g.type === 'match' && n === 2 && g.perHole) {
     assumptions.push({ field: 'games', message: 'A bet per hole between two players is played as skins with no carryovers' });

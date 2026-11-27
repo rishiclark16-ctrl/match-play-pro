@@ -341,6 +341,20 @@ describe('buildDraft', () => {
     expect(canTeeOff(d2)).toBe(true);
   });
 
+  it('a free user can start without a paid Stableford (played as a custom game)', async () => {
+    const t = 'Sonoma with Jack and Tim, stableford for a buck a point and $5 skins';
+    const plan = { ...localParse(t), games: [
+      { type: 'stableford' as const, stake: 1, carryover: null, autoPress: null, modified: null, teams: null, teamScoring: null, perHole: null, custom: null },
+      { type: 'skins' as const, stake: 5, carryover: null, autoPress: null, modified: null, teams: null, teamScoring: null, perHole: null, custom: null },
+    ] };
+    const d1 = await buildDraft(plan, t, 'local', deps);
+    expect(d1.needsPro).toEqual(['custom']);
+    const d2 = await buildDraft(plan, t, 'local', deps, { dropGames: d1.needsPro });
+    expect(d2.needsPro).toEqual([]);
+    expect(d2.games.map(g => g.type)).toEqual(['skins']);
+    expect(canTeeOff(d2)).toBe(true);
+  });
+
   it('back nine uses holes 10-18', () => {
     const h = holeInfoFor(SONOMA_TEES[0], 9, 'back');
     expect(h).toHaveLength(9);

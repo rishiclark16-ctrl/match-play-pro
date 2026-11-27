@@ -13,7 +13,7 @@ import type {
 import { displayName, matchFriend, type FriendLike } from './names';
 import { courseDisplayName, courseQueryVariants, pickCourse, type CourseCandidate } from './courseMatch';
 import { chooseTee, type TeeLike } from './teeMatch';
-import { resolveGames } from './games';
+import { playedAsType, resolveGames } from './games';
 import { unsaidAmounts } from './localParse';
 
 export interface CourseTee extends TeeLike {
@@ -274,7 +274,9 @@ export async function buildDraft(
   // ── Games ──
   const dropped = new Set(overrides.dropGames ?? []);
   const g = resolveGames({
-    games: plan.games.filter(x => !dropped.has(x.type)), players, isPro: deps.isPro, useNet: handicapMode !== 'none', generateId: deps.generateId,
+    // Match the dropped types both as said and as played ("Stableford for a buck a point"
+    // is played as a custom game, so "Start without Custom game" must drop it).
+    games: plan.games.filter(x => !dropped.has(x.type) && !dropped.has(playedAsType(x, players.length))), players, isPro: deps.isPro, useNet: handicapMode !== 'none', generateId: deps.generateId,
     holes: holeInfo.map(h => h.number),
   });
   issues.push(...g.issues);
